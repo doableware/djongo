@@ -5,17 +5,15 @@ Use Mongodb as a backend database for your django project, without changing a si
 
 <h2>Usage:</h2>
 
-  1. Clone djongo directory into Lib\site-packages\django\db\backends
-  2. Add: 
+  1. pip install djongo
+  2. Into settings.py file of your project, add: 
   
     DATABASES = {
       'default': {
-          'ENGINE': 'django.db.backends.djongo',
+          'ENGINE': 'djongo',
           'NAME': 'your-db-name',
       }
    }
-   
-   Into settings.py file of your project.
    
    3. YOUR ARE SET! HAVE FUN!
 
