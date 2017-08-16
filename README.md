@@ -29,3 +29,7 @@ Use Mongodb as a backend database for your django project, without changing a si
     'django.contrib.sessions',
     
  and others... fully supported.
+ 
+ <h2>Questions</h2>
+ 
+   Any questions or issues regarding the usage. Please raise a git-hub issue ticket.
