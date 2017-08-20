@@ -19,7 +19,7 @@ Use Mongodb as a backend database for your django project, without changing a si
    
 <h2>Requirements:</h2>
 
-  1. djongo requires python 3.5 or above.
+  1. djongo requires <b>python 3.5 or above</b>.
   2. MongoDB is a schema free DB, hence manage.py migrate is not needed and not supported.
 
 <h2>How it works:</h2>
