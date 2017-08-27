@@ -15,12 +15,13 @@ Use Mongodb as a backend database for your django project, without changing a si
       }
    }
    
-   3. YOUR ARE SET! HAVE FUN!
+   3. Run manage.py migrate (ONLY the first time to create collections in mongoDB)
+   4. YOUR ARE SET! HAVE FUN!
    
 <h2>Requirements:</h2>
 
   1. djongo requires <b>python 3.5 or above</b>.
-  2. MongoDB is a schema free DB, hence manage.py migrate is not needed and not supported.
+  2. MongoDB is a schema free DB, hence manage.py migrate is not needed.
 
 <h2>How it works:</h2>
 
