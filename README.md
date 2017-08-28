@@ -1,13 +1,12 @@
-# djongo
-
-<h1>Driver for allowing Django to use NoSQL/MongoDB databases</h1>
+<h1>djongo</h1>
+<h2>Driver for allowing Django to use NoSQL/MongoDB databases</h2>
 
 Use Mongodb as a backend database for your django project, without changing a single django model!!!
 
 <h2>Usage:</h2>
-
-  1. pip install djongo
-  2. Into settings.py file of your project, add: 
+<ol>
+<li> pip install djongo </li>
+<li> Into settings.py file of your project, add: 
   
     DATABASES = {
       'default': {
@@ -15,10 +14,10 @@ Use Mongodb as a backend database for your django project, without changing a si
           'NAME': 'your-db-name',
       }
     }
-   
-   3. Run manage.py migrate (ONLY the first time to create collections in mongoDB)
-   4. YOUR ARE SET! HAVE FUN!
-   
+</li>   
+   <li> Run <code>manage.py migrate</code> (ONLY the first time to create collections in mongoDB) </li>
+   <li> YOUR ARE SET! HAVE FUN! </li>
+</ol>
 <h2>Requirements:</h2>
 
   1. djongo requires <b>python 3.5 or above</b>.
