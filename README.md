@@ -7,13 +7,15 @@ Use Mongodb as a backend database for your django project, without changing a si
 <ol>
 <li> pip install djongo </li>
 <li> Into settings.py file of your project, add: 
-  
-    DATABASES = {
-      'default': {
-          'ENGINE': 'djongo',
-          'NAME': 'your-db-name',
-      }
+<pre><code>  
+DATABASES = {
+    'default': {
+        'ENGINE': 'djongo',
+        'NAME': 'your-db-name',
     }
+}
+
+</code></pre>
 </li>   
    <li> Run <code>manage.py migrate</code> (ONLY the first time to create collections in mongoDB) </li>
    <li> YOUR ARE SET! HAVE FUN! </li>
@@ -29,11 +31,12 @@ Use Mongodb as a backend database for your django project, without changing a si
   As djongo translates a SQL query string into a MongoDB command, all Django features, models etc work as is.
   
   Django contrib modules: 
-  
-    'django.contrib.admin',
-    'django.contrib.auth',    
-    'django.contrib.sessions',
-    
+<pre><code>  
+'django.contrib.admin',
+'django.contrib.auth',    
+'django.contrib.sessions',
+
+</code></pre>
  and others... fully supported.
  
  <h2>Features:</h2>
@@ -73,15 +76,16 @@ class BlogPage(models.Model):
         
  <h3>Embedded Form Fields</h3>
     <p>Embed multiple sub-forms, inside the parent form. Directly translate it into an embedded model and <code>.save()</code> it into mongoDB. No foriegn key lookups necessary!</p>
-    
-    Name:
-    Address:
-        No:
-        Street:
-    Phone:
-        Landline:
-        Mobile:
-    
+<pre><code>   
+Name:
+Address:
+    No:
+    Street:
+Phone:
+    Landline:
+    Mobile:
+        
+</code></pre>    
  <h2>Questions</h2>
  
    Any questions or issues regarding the usage. Please raise a git-hub issue ticket.

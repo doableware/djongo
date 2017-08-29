@@ -1,0 +1,8 @@
+TODOs:
+
+Development road map:
+   improve test coverage
+   support of db-name, port etc in settings
+   Some features in admin not fully working
+   convert from printf to debug.
+   Better code structuring.
