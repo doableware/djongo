@@ -7,22 +7,22 @@ Use Mongodb as a backend database for your django project, without changing a si
 <ol>
 <li> pip install djongo </li>
 <li> Into settings.py file of your project, add: 
-<pre><code>  
+
+``` 
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
         'NAME': 'your-db-name',
     }
 }
-
-</code></pre>
+```
 </li>   
    <li> Run <code>manage.py migrate</code> (ONLY the first time to create collections in mongoDB) </li>
    <li> YOUR ARE SET! HAVE FUN! </li>
 </ol>
 <h2>Requirements:</h2>
 
-  1. djongo requires <b>python 3.5 or above</b>.
+  1. djongo requires <b>python 3.5 or above.</b>
 
 
 <h2>How it works:</h2>
