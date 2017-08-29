@@ -39,9 +39,11 @@ DATABASES = {
  and others... fully supported.
  
  # Stop the immigrations
+ 
  MongoDB is a schema free DB. You no longer need to run <code> manage.py migrate</code> every time you change a model.
     
  # Embedded Model
+ 
  SQL prevents the usage of embedded objects in your models without serialization. <b>Not any more.</b> With mongoDB as your django backend, embed any other model into your parent model and save it as an embedded doucument into mongoDB
 
 ```python
@@ -60,6 +62,7 @@ class BlogPost(models.Model):
 ```
 
 # Embedded Array
+
 MongoDB allows array of embedded documents inside the parent document. You can create an <b>array(list) of embedded models inside the parent model</b> and store it directly into mongoDB.
 
 ```python
@@ -74,6 +77,7 @@ class BlogPage(models.Model):
 ```
       
 # Embedded Form Fields
+
 Embed multiple sub-forms, inside the parent form. Directly translate it into an embedded model and ```.save()``` it into mongoDB. No foriegn key lookups necessary!
 
 <pre><code>   
