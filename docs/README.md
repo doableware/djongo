@@ -38,13 +38,13 @@ DATABASES = {
 </code></pre>
  and others... fully supported.
  
- # Stop the immigrations
+# Stop the immigrations
  
- MongoDB is a schema free DB. You no longer need to run <code> manage.py migrate</code> every time you change a model.
+  MongoDB is a schema free DB. You no longer need to run <code> manage.py migrate</code> every time you change a model.
     
- # Embedded Model
+# Embedded Model
  
- SQL prevents the usage of embedded objects in your models without serialization. <b>Not any more.</b> With mongoDB as your django backend, embed any other model into your parent model and save it as an embedded doucument into mongoDB
+ SQL prevents the usage of embedded objects in your models without serialization. <b>Not anymore.</b> With mongoDB as your django backend, embed any other model into your parent model and save it as an embedded doucument into mongoDB
 
 ```python
 from djongo import models
@@ -90,6 +90,3 @@ Phone:
     Mobile:
         
 </code></pre>    
- <h2>Questions</h2>
- 
-   Any questions or issues regarding the usage. Please raise a git-hub issue ticket.
