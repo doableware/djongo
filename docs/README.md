@@ -1,6 +1,6 @@
 Use Mongodb as a backend database for your django project, without changing a single django model!!!
 
-# Usage:
+# Usage
 <ol>
 <li> pip install djongo </li>
 <li> Into settings.py file of your project, add: 
@@ -18,12 +18,12 @@ DATABASES = {
    <li> YOUR ARE SET! HAVE FUN! </li>
 </ol>
 
-# Requirements:
+# Requirements
 
   1. djongo requires <b>python 3.5 or above</b>.
 
 
-# How it works:
+# How it works
 
   djongo is a SQL to mongodb query complier. It translates every SQL query into a mongoDB query document and quries the backend instance.
   
