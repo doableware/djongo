@@ -31,7 +31,7 @@ ORDER_BY_MAP = {
 }
 
 
-class Parse():
+class Parse:
     def __init__(self, connection, sql, params):
         self.params = params
         logger.debug('params: {}'.format(params))
@@ -533,7 +533,7 @@ class InOp(Op):
 
 class NotOp(Op):
     def __init__(self, *args, **kwargs):
-        super(AndOp, self).__init__(*args, **kwargs, op_name='NOT')
+        super(NotOp, self).__init__(*args, **kwargs, op_name='NOT')
 
     def evaluate(self):
         assert self.rhs and self.rhs['obj']

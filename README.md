@@ -27,8 +27,7 @@ DATABASES = {
 
 <h2>How it works:</h2>
 
-  djongo is a SQL to mongodb query complier. It translates every SQL query into a mongoDB query document and quries the backend instance.
-  As djongo translates a SQL query string into a MongoDB command, all Django features, models etc work as is.
+djongo is a SQL to mongodb query complier. It translates a SQL query string into a mongoDB query document. As a result, all Django features, models etc work as is.
   
   Django contrib modules: 
 <pre><code>  

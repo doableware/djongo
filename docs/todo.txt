@@ -6,3 +6,86 @@ Development road map:
    Some features in admin not fully working
    convert from printf to debug.
    Better code structuring.
+
+# Embedded Array
+
+MongoDB allows array of embedded documents inside the parent document. You can create an <b>array(list) of embedded models inside the parent model</b> and store it directly into mongoDB.
+
+```python
+class BlogPage(models.Model):
+    title = models.CharField(max_length=100)
+    blog_posts = models.ArrayModelField(
+      model_container=BlogPost,
+      model_form=BlogPostForm
+    )
+
+    objects = models.DjongoManager()
+```
+
+## ArrayModelField
+
+
+# Embedded Form
+
+Embed multiple sub-forms, inside the parent form. Directly translate it into an embedded model and ```.save()``` it into mongoDB. No foriegn key lookups necessary!
+
+<pre><code>
+Name:
+Address:
+    No:
+    Street:
+Phone:
+    Landline:
+    Mobile:
+
+</code></pre>
+
+## EmbeddedFormField
+
+## EmbeddedFormWidget
+
+## ArrayFormField
+
+# Djongo Manager
+ The Djongo Manager extends the  functionality of the usual Django Manager. Define your manager as Djongo Manager in the model.
+
+ ```python
+class BlogPage(models.Model):
+    title = models.CharField(max_length=100)
+    objects = models.DjongoManager()
+```
+
+Use it like the usual Django manager:
+
+```python
+  page = BlogPage.objects.get(pk=p_key)
+```
+
+Will [get a model object](https://docs.djangoproject.com/en/1.11/topics/db/queries/#retrieving-a-single-object-with-get) having primary key `p_key`.
+
+## Direct pymongo access
+
+MongoDB has powerful query syntax and `DjongoManager` lets you exploit it fully.
+
+```python
+class BlogView(DetailView):
+
+    def get_object(self, queryset=None):
+        index = [i for i in BlogPage.objects.mongo_aggregate([
+            {
+                '$match': {
+                    'title': self.kwargs['path']
+                }
+            },
+            {
+                '$project': {
+                    '_id': 0,
+                }
+            }
+        ])]
+
+        return index
+
+```
+
+You can directly *access any pymongo command* by appending `mongo_` to the command name. Eg. to perform `aggregate` on the BlogPage collection (BlogPage is stored as a table in SQL or a collection in MongoDB) the function name becomes `mongo_aggregate`. To directly insert a document (instead of `.save()` a model) use `mongo_insert_one()`

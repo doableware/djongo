@@ -2,12 +2,13 @@ from django.db.models import *
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db import connection
-
+import typing
 
 def make_mdl(mdl, mdl_dict):
     for field_name in mdl_dict:
         field = mdl._meta.get_field(field_name)
         mdl_dict[field_name] = field.to_python(mdl_dict[field_name])
+
     return mdl(**mdl_dict)
 
 
@@ -20,6 +21,7 @@ class DjongoManager(Manager):
     def __getattr__(self, name):
         try:
             return super().__getattr__(name)
+
         except AttributeError:
             if not name.startswith('mongo_'):
                 raise AttributeError
@@ -39,17 +41,22 @@ class ArrayModelField(Field):
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
         kwargs['model_container'] = self.model_container
+
         if self.model_form is not None:
             kwargs['model_form'] = self.model_form
+
         if self.model_form_kwargs_l:
             kwargs['model_form_kwargs_l'] = self.model_form_kwargs_l
+
         return name, path, args, kwargs
 
     def get_db_prep_value(self, value, connection, prepared):
         if prepared:
             return value
+
         if not isinstance(value, list):
             raise TypeError('Object must be of type list')
+
         ret = []
         for a_mdl in value:
             mdl_ob = {}
@@ -61,6 +68,7 @@ class ArrayModelField(Field):
                 fld_value = getattr(a_mdl, fld.attname)
                 mdl_ob[fld.attname] = fld.get_db_prep_value(fld_value, connection, prepared)
             ret.append(mdl_ob)
+
         return ret
 
     def from_db_value(self, value, expression, connection, context):
@@ -78,6 +86,7 @@ class ArrayModelField(Field):
                 continue
             mdl = make_mdl(self.model_container, mdl_dict)
             ret.append(mdl)
+
         return ret
 
     def formfield(self, **kwargs):
@@ -121,6 +130,7 @@ class ArrayFormField(forms.Field):
     def clean(self, value):
         if not value:
             return []
+
         form_set = self.ArrayFormSet(value, prefix=self.name)
         if form_set.is_valid():
             ret = []
@@ -130,6 +140,7 @@ class ArrayFormField(forms.Field):
                 itm.pop('DELETE')
                 ret.append(self.mdl_form._meta.model(**itm))
             return ret
+
         else:
             raise ValidationError(form_set.errors + form_set.non_form_errors())
 
@@ -157,6 +168,7 @@ class ArrayFormBoundField(forms.BoundField):
                             fields=field.mdl_form._meta.fields,
                             exclude=field.mdl_form._meta.exclude
                         ))
+
         self.form_set = ArrayFormSet(data, initial=initial,
                                      prefix=name)
 
@@ -199,12 +211,16 @@ class ArrayFormWidget(forms.Widget):
 
 
 class EmbeddedModelField(Field):
-    def __init__(self, model_container,
-                 model_form=None, model_form_kwargs={},
+    def __init__(self,
+                 model_container: typing.Type[Model],
+                 model_form: typing.Type[forms.ModelForm]=None,
+                 model_form_kwargs: dict=None,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.model_container = model_container
         self.model_form = model_form
+        if model_form_kwargs is None:
+            model_form_kwargs = {}
         self.model_form_kwargs = model_form_kwargs
 
     def deconstruct(self):
@@ -217,12 +233,14 @@ class EmbeddedModelField(Field):
     def get_db_prep_value(self, value):
         if not isinstance(value, Model):
             raise TypeError('Object must be of type Model')
+
         mdl_ob = {}
         for fld in value._meta.get_fields():
             if not useful_field(fld):
                 continue
             fld_value = getattr(a_mdl, fld.attname)
             mdl_ob[fld.attname] = fld.get_db_prep_value(fld_value)
+
         return mdl_ob
 
     def from_db_value(self, value, expression, connection, context):
@@ -237,12 +255,14 @@ class EmbeddedModelField(Field):
     def formfield(self, **kwargs):
         if not self.model_form:
             raise ValidationError('Implementing model form class needed to create field')
+
         defaults = {
             'form_class': EmbeddedFormField,
             'mdl_form': self.model_form,
             'mdl_form_kw': self.model_form_kwargs,
             'name': self.attname
         }
+
         defaults.update(kwargs)
         return super().formfield(**defaults)
 
@@ -252,16 +272,19 @@ class EmbeddedFormField(forms.MultiValueField):
         form_fields = []
         mdl_form_field_names = []
         widgets = []
+
         try:
             mdl_form_kw['prefix'] = '{}-{}'.format(mdl_form_kw['prefix'], name)
         except KeyError:
             mdl_form_kw['prefix'] = name
+
         mdl_form = mdl_form(**mdl_form_kw)
         self.mdl_form = mdl_form
 
         error_messages = {
             'incomplete': 'Enter all required fields.',
         }
+
         for fld_name, fld in mdl_form.fields.items():
             if isinstance(fld, (forms.ModelChoiceField, forms.ModelMultipleChoiceField)):
                 continue
