@@ -237,7 +237,7 @@ class EmbeddedModelField(Field):
             kwargs['model_form'] = self.model_form
         return name, path, args, kwargs
 
-    def get_db_prep_value(self, value):
+    def get_db_prep_value(self, value, connection=None, prepared=False):
         if not isinstance(value, Model):
             raise TypeError('Object must be of type Model')
 
@@ -245,8 +245,8 @@ class EmbeddedModelField(Field):
         for fld in value._meta.get_fields():
             if not useful_field(fld):
                 continue
-            fld_value = getattr(a_mdl, fld.attname)
-            mdl_ob[fld.attname] = fld.get_db_prep_value(fld_value)
+            fld_value = getattr(value, fld.attname)
+            mdl_ob[fld.attname] = fld.get_db_prep_value(fld_value, connection, prepared)
 
         return mdl_ob
 
