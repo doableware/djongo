@@ -27,7 +27,7 @@ DATABASES = {
 
 <h2>How it works:</h2>
 
-djongo is a SQL to mongodb query complier. It translates a SQL query string into a mongoDB query document. As a result, all Django features, models etc work as is.
+djongo is a SQL to mongodb query compiler. It translates a SQL query string into a mongoDB query document. As a result, all Django features, models etc work as is.
   
   Django contrib modules: 
 <pre><code>  
@@ -49,4 +49,4 @@ djongo is a SQL to mongodb query complier. It translates a SQL query string into
 
  <h2>Questions</h2>
  
-   Any questions or issues regarding the usage. Please raise a git-hub issue ticket.
+   Any questions, suggestions for improvements or issues regarding the usage. Please raise a git-hub issue ticket.

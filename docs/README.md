@@ -75,19 +75,20 @@ Embed the above model inside the parent model by creating an `EmbeddedModelField
 ```python
 class EmbeddedModelField(Field):
     def __init__(self,
-                 model_container: Type[Model],
-                 model_form: Optional[Type[forms.ModelForm]]=None,
-                 model_form_kwargs: Optional[dict]=None,
+                 model_container: typing.Type[Model],
+                 model_form: typing.Optional[Type[forms.ModelForm]]=None,
+                 model_form_kwargs: typing.Optional[dict]=None,
                  *args, **kwargs):
 ```
 
 ### Parameters
 
-  * `model_container: models.Model` The child model class type (not instance) that this embedded field will contain.
-  * `model_form: Optional[models.forms.ModelForm]` The child model form class type of the embedded model.
+  * `model_container: Type[models.Model]` The child model class type (not instance) that this embedded field will contain.
+  * `model_form: Optional[Type[models.forms.ModelForm]]` The child model form class type of the embedded model.
   * `model_form_kwargs: Optional[dict]` The kwargs (if any) that must be passed to the embedded model form while instantiating it.
   
-### Example:
+### Example
+
 ```python
 class BlogContentForm(forms.ModelForm):
     class Meta:
@@ -97,15 +98,151 @@ class BlogContentForm(forms.ModelForm):
         )
 
 
+class BlogContent(models.Model):
+    comment = models.CharField(max_length=100)
+    author = models.CharField(max_length=100)
+    class Meta:
+        abstract = True
+        
+
 class BlogPost(models.Model):
     h1 = models.CharField(max_length=100)
     content = models.EmbeddedModelField(
         model_container=BlogContent,
         model_form=BlogContentForm
     )
+    
+    objects = models.DjongoManager()
 ```
 
+# Embedded Array
 
+With MongoDB there can be an array of embedded documents inside the parent document. You can create an **embed array/list of models inside the parent model** and store it directly into MongoDB.
+
+Define the model to embed into parent model, like any Django model:
+
+```python
+from djongo import models
+
+class BlogContent(models.Model):
+    comment = models.CharField(max_length=100)
+    author = models.CharField(max_length=100)
+    class Meta:
+        abstract = True
+```
+
+## ArrayModelField
+Create an array of the above child model inside the parent model by creating an `ArrayModelField`. The `ArrayModelField` is similar to other Django Fields (like the `CharField`.)
+
+```python
+class ArrayModelField(Field):
+    def __init__(self,
+                 model_container: typing.Type[Model],
+                 model_form: typing.Type[forms.ModelForm]=None,
+                 model_form_kwargs_l: dict=None,
+                 *args, **kwargs):
+```
+
+### Parameters
+
+  * `model_container: Type[models.Model]` The child model class type (not instance) that this array field will contain.
+  * `model_form: Optional[Type[models.forms.ModelForm]]` The child model form class type of the array model. All child models inside the array must be of the same type. Mixing different types of child models inside the embedded array is not supported.
+  * `model_form_kwargs: Optional[dict]` The kwargs (if any) that must be passed to the embedded model form while instantiating it.
+  
+### Example
+
+```python
+class BlogContentForm(forms.ModelForm):
+    class Meta:
+        model = BlogContent
+        fields = (
+            'comment', 'author'
+        )
+
+
+class BlogContent(models.Model):
+    comment = models.CharField(max_length=100)
+    author = models.CharField(max_length=100)
+    class Meta:
+        abstract = True
+        
+        
+class BlogPost(models.Model):
+    h1 = models.CharField(max_length=100)
+    content = models.ArrayModelField(
+        model_container=BlogContent,
+        model_form=BlogContentForm
+    )
+    
+    objects = models.DjongoManager()
+```
+
+# Embedded Form
+
+Embed multiple sub-forms, inside the parent form. Directly translate it into an embedded model and `.save()` it into mongoDB. No foreign key lookups necessary!
+
+<pre><code>
+Name:
+Address:
+    No:
+    Street:
+Phone:
+    Landline:
+    Mobile:
+
+</code></pre>
+
+While creating a Form from a Model [the ModelForm](https://docs.djangoproject.com/en/1.11/topics/forms/modelforms/) the embedded form **gets automatically generated** if the Model contains an embedded model inside it.
+
+Multiple embedded forms get automatically generated when the Model contains an array of embedded models.
+
+# Djongo Manager
+ The Djongo Manager extends the  functionality of the usual Django Manager. Define your manager as Djongo Manager in the model.
+
+ ```python
+class BlogPost(models.Model):
+    h1 = models.CharField(max_length=100)
+    objects = models.DjongoManager()
+```
+
+Use it like the usual Django manager:
+
+```python
+page = BlogPost.objects.get(pk=p_key)
+```
+
+Will [get a model object](https://docs.djangoproject.com/en/1.11/topics/db/queries/#retrieving-a-single-object-with-get) having primary key `p_key`.
+
+## Direct pymongo access
+
+MongoDB has powerful query syntax and `DjongoManager` lets you exploit it fully.
+
+```python
+class BlogView(DetailView):
+
+    def get_object(self, queryset=None):
+        index = [i for i in BlogPost.objects.mongo_aggregate([
+            {
+                '$match': {
+                    'title': self.kwargs['path']
+                }
+            },
+            {
+                '$project': {
+                    '_id': 0,
+                }
+            }
+        ])]
+
+        return index
+
+```
+
+You can directly *access any pymongo command* by appending `mongo_` to the command name. Eg. to perform `aggregate` on the BlogPage collection (BlogPage is stored as a table in SQL or a collection in MongoDB) the function name becomes `mongo_aggregate`. To directly insert a document (instead of `.save()` a model) use `mongo_insert_one()`
+
+# Questions
+ 
+Any questions, suggestions for improvements, issues regarding the usage or to contribute to the package, please raise a git-hub issue ticket.
 
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
