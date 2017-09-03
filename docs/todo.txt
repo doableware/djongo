@@ -1,9 +1,10 @@
 TODOs:
 
 Development road map:
-   improve test coverage
-   support of db-name, port etc in settings
-   Some features in admin not fully working
+   1. Some features in admin not fully working
+   2. Doc string model.py
+   2. improve test coverage
+   3. support of db-name, port etc in settings
    convert from printf to debug.
    Better code structuring.
 

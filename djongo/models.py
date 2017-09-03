@@ -31,6 +31,7 @@ class DjongoManager(Manager):
 
 
 class ArrayModelField(Field):
+
     def __init__(self,
                  model_container: typing.Type[Model],
                  model_form: typing.Type[forms.ModelForm]=None,
@@ -199,7 +200,7 @@ class ArrayFormWidget(forms.Widget):
         self.first_field_id = first_field_id
         super().__init__(attrs)
 
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
         assert False
 
     def id_for_label(self, id_):

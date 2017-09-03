@@ -1,12 +1,9 @@
 from django.db.backends.base.base import BaseDatabaseWrapper
-from django.db.backends.base.validation import BaseDatabaseValidation
 from django.db.backends.base.client import BaseDatabaseClient
 from django.db.backends.base.creation import BaseDatabaseCreation
-from django.db.backends.base.features import BaseDatabaseFeatures
 from django.db.utils import Error
 from .introspection import DatabaseIntrospection
 from pymongo import MongoClient
-import pymongo, os
 
 from .operations import DatabaseOperations
 from .schema import DatabaseSchemaEditor
@@ -16,6 +13,7 @@ from . import database
 
 
 class DatabaseWrapper(BaseDatabaseWrapper):
+
     data_types = {
         'AutoField': 'integer',
         'BigAutoField': 'integer',
@@ -66,6 +64,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         'istartswith': 'LIKE %s',
         'iendswith': 'LIKE %s',
     }
+
     vendor = 'djongo'
     SchemaEditorClass = DatabaseSchemaEditor
     Database = database
@@ -79,6 +78,11 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     def __init__(self, *args, **kwargs):
         super(DatabaseWrapper, self).__init__(*args, **kwargs)
 
+    def is_usable(self):
+        if self.connection is not None:
+            return True
+        return False
+
     def get_connection_params(self):
         if not self.settings_dict['NAME']:
             from django.core.exceptions import ImproperlyConfigured
@@ -88,11 +92,11 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         return self.settings_dict['NAME']
 
     def get_new_connection(self, db_name):
+        """
+        This needs to be made more generic to accept
+        other MongoClient parameters.
+        """
         return MongoClient()[db_name]
-        # if os.name == 'nt':
-        # return MongoClient(port=27016)[db_name]
-        # else:
-        # return MongoClient()[db_name]
 
     def _set_autocommit(self, autocommit):
         pass
@@ -114,7 +118,3 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     def _commit(self):
         pass
 
-        # def is_usable(self):
-        # a = MongoClient()
-        # a.is_locked
-        # self.connection

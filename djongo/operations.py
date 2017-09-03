@@ -4,7 +4,7 @@ import datetime, calendar
 
 
 class DatabaseOperations(BaseDatabaseOperations):
-    # compiler_module = "django.db.backends.djongo.compiler"
+
     def quote_name(self, name):
         if name.startswith('"') and name.endswith('"'):
             return name

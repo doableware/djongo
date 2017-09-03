@@ -208,7 +208,7 @@ class BlogPost(models.Model):
 Use it like the usual Django manager:
 
 ```python
-page = BlogPost.objects.get(pk=p_key)
+post = BlogPost.objects.get(pk=p_key)
 ```
 
 Will [get a model object](https://docs.djangoproject.com/en/1.11/topics/db/queries/#retrieving-a-single-object-with-get) having primary key `p_key`.
@@ -238,7 +238,7 @@ class BlogView(DetailView):
 
 ```
 
-You can directly *access any pymongo command* by appending `mongo_` to the command name. Eg. to perform `aggregate` on the BlogPage collection (BlogPage is stored as a table in SQL or a collection in MongoDB) the function name becomes `mongo_aggregate`. To directly insert a document (instead of `.save()` a model) use `mongo_insert_one()`
+You can directly *access any pymongo command* by prefixing `mongo_` to the command name. Eg. to perform `aggregate` on the BlogPage collection (BlogPage is stored as a table in SQL or a collection in MongoDB) the function name becomes `mongo_aggregate`. To directly insert a document (instead of `.save()` a model) use `mongo_insert_one()`
 
 # Questions
  
