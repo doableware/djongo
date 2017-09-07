@@ -4,7 +4,7 @@ setup(
     name='djongo',
     version='1.2.2',
     packages=['djongo'],
-    url='https://github.com/nesdis/djongo',
+    url='https://nesdis.github.io/djongo/',
     license='BSD',
     author='nesdis',
     author_email='nesdis@gmail.com',
