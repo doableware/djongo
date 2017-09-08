@@ -3,9 +3,9 @@
 
 #### python script
 <The complete python script used to produce the issue.>
-
-```python
 <copy and paste code here>
+```python
+
 ```
 
 #### Traceback
