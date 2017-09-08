@@ -37,7 +37,11 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
 
 </code></pre>
  and others... fully supported.
- 
+
+## Top Star Contributors
+
+[rudolfce](https://github.com/rudolfce)
+
 <h2>Features:</h2>
 
   * Stop the immigrations.    
