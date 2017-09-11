@@ -37,19 +37,25 @@ DATABASES = {
 </code></pre>
  and others... fully supported.
  
-# Integration with Django
+# Usage with Django
 
 ## Reuse Django Models
  
- Django is a stable framework with continuous development and enhancements. The Django ORM is quite extensive and feature rich. Defining *another* ORM to work with MongoDB means reproducing the entire Django ORM again. The new ORM needs to constantly align with the Django ORM. The idea behind Djongo is to **reuse** existing Django ORM features by finally translating SQL queries to MongoDB syntax. 
+ Django is a stable framework with continuous development and enhancements. The Django ORM is quite extensive and feature rich. Defining *a thrid party* ORM to work with MongoDB means reproducing the entire Django ORM again. The new ORM needs to constantly align with the Django ORM. Several Django features will never make it into the third party ORM. The idea behind Djongo is to **reuse** existing Django ORM features by finally translating SQL queries to MongoDB syntax. 
+ 
+## Future proof your code
  
  As **SQL syntax will never change** regardless of future additions to Django, by using Djongo your code is now future proof!  
   
 ## Stop the immigrations
  
   MongoDB is a schema free DB. You no longer need to run <code> manage.py migrate</code> every time you change a model. Making changes to your models is easier.
+  
+## Work on the Real Django
+
+Djongo does not need you to use a forked version of Django, access MonogDB with the Real Django framework. 
     
-# Embedded Model
+# The Embedded Model
  
 SQL prevents the usage of embedded objects in your models without serialization. <b>Not anymore.</b> With mongoDB as your django backend, embed any other model into your parent model and save it as an embedded document into mongoDB
 
