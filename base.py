@@ -84,11 +84,13 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         return False
 
     def get_connection_params(self):
+        # TODO: Add other parameters here
         if not self.settings_dict['NAME']:
-            from django.core.exceptions import ImproperlyConfigured
-            raise ImproperlyConfigured(
-                "settings.DATABASES is improperly configured. "
-                "Please supply the NAME value.")
+            return 'djongo_test'
+            # from django.core.exceptions import ImproperlyConfigured
+            # raise ImproperlyConfigured(
+            #     "settings.DATABASES is improperly configured. "
+            #     "Please supply the NAME value.")
         return self.settings_dict['NAME']
 
     def get_new_connection(self, db_name):
