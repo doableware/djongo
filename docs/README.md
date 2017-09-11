@@ -41,7 +41,7 @@ DATABASES = {
 
 ## Reuse Django Models
  
- Django is a stable framework with continuous development and enhancements. The Django ORM is quite extensive and feature rich. Defining *another* ORM to work with MongoDB means reproducing the entire Django ORM again. The new ORM needs to constantly align with the Django ORM. The idea behind Djongo is to **reuse** existing Django ORM features by finally translating SQL queries to MongoDB syntax. 
+ Django is a stable framework with continuous development and enhancements. The Django ORM is quite extensive and feature rich. Defining *another* ORM/ODM to work with MongoDB means reproducing the entire Django ORM again. The new ORM/ODM needs to constantly align with the Django ORM. The idea behind Djongo is to **reuse** existing Django ORM features by finally translating SQL queries to MongoDB syntax. 
  
  As **SQL syntax will never change** regardless of future additions to Django, by using Djongo your code is now future proof!  
   
