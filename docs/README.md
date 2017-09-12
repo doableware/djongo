@@ -1,4 +1,4 @@
-<meta name="google-site-verification" content="tFNu7Nc9hzKF9v7f6kYaoMbBCNyGREchcKMVdxJuyJo" />
+
 Use Mongodb as a backend database for your django project, without changing a single django model!!!
 
 # Usage
@@ -26,7 +26,7 @@ DATABASES = {
 
 # How it works
 
-  djongo is a SQL to mongodb query compiler. It translates a SQL query string into a mongoDB query document. As a result, all Django features, models etc work as is.
+  djongo is a SQL to mongodb query compiler. It translates a SQL query string into a [mongoDB query document](https://docs.mongodb.com/manual/tutorial/query-documents/). As a result, all Django features, models etc work as is.
   
   Django contrib modules: 
 <pre><code>  
@@ -41,7 +41,7 @@ DATABASES = {
 
 ## Reuse Django Models
  
- Django is a stable framework with continuous development and enhancements. The Django ORM is quite extensive and feature rich. Defining *a thrid party* ORM to work with MongoDB means reproducing the entire Django ORM again. The new ORM needs to constantly align with the Django ORM. Several Django features will never make it into the third party ORM. The idea behind Djongo is to **reuse** existing Django ORM features by finally translating SQL queries to MongoDB syntax. 
+ Django is a stable framework with continuous development and enhancements. The Django ORM is quite extensive and feature rich. Defining *a thrid party* ORM to work with MongoDB means reproducing the entire Django ORM again. The new ORM needs to constantly align with the Django ORM. Several Django features will never make it into the third party ORM. The idea behind Djongo is to **reuse** existing [Django ORM](https://docs.djangoproject.com/en/1.11/topics/db/models/) features by finally translating SQL queries to MongoDB syntax. 
  
 ## Future proof your code
  
@@ -49,7 +49,7 @@ DATABASES = {
   
 ## Stop the immigrations
  
-  MongoDB is a schema free DB. You no longer need to run <code> manage.py migrate</code> every time you change a model. Making changes to your models is easier.
+  MongoDB is a [schema free](https://docs.mongodb.com/manual/data-modeling/) DB. You no longer need to run <code> manage.py migrate</code> every time you change a model. Making changes to your models is easier.
   
 ## Work on the Real Django
 
@@ -57,7 +57,7 @@ Djongo does not need you to use a forked version of Django, access MonogDB with 
     
 # The Embedded Model
  
-SQL prevents the usage of embedded objects in your models without serialization. <b>Not anymore.</b> With mongoDB as your django backend, embed any other model into your parent model and save it as an embedded document into mongoDB
+SQL prevents the usage of embedded objects in your models without serialization. <b>Not anymore.</b> With mongoDB as your django backend, embed any other model into your parent model and save it as an [embedded document](https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding) into mongoDB
 
 Define the model to embed into parent model, like any Django model:
 
@@ -73,7 +73,7 @@ class BlogContent(models.Model):
 
 In case you dont plan on using your embedded model as a standalone model (which means it will always be embedded inside a parent model) you should add the `class Meta` and `abstract = True` as shown above. This way Djongo will never register this model as an [actual model](https://docs.djangoproject.com/en/1.11/topics/db/models/#abstract-base-classes).
 
-It is always a good practice to **make embedded models as abstract models** and this is strongly recommended.
+It is always a good practice to **make embedded models as abstract models** and this is **strongly recommended**.
 
 ## EmbeddedModelField
 
@@ -124,7 +124,7 @@ class BlogPost(models.Model):
 
 # Embedded Array
 
-With MongoDB there can be an array of embedded documents inside the parent document. You can create an **embed array/list of models inside the parent model** and store it directly into MongoDB.
+With MongoDB there can be an [array](https://docs.mongodb.com/manual/core/document/#arrays) of embedded documents inside the parent document. You can create an **embed array/list of models inside the parent model** and store it directly into MongoDB.
 
 Define the model to embed into parent model, like any Django model:
 
@@ -204,7 +204,7 @@ While creating a Form from a Model [the ModelForm](https://docs.djangoproject.co
 Multiple embedded forms get automatically generated when the Model contains an array of embedded models.
 
 # Djongo Manager
- The Djongo Manager extends the  functionality of the usual Django Manager. Define your manager as Djongo Manager in the model.
+ The Djongo Manager extends the  functionality of the usual [Django Manager](https://docs.djangoproject.com/en/1.11/topics/db/managers/). Define your manager as Djongo Manager in the model.
 
  ```python
 class BlogPost(models.Model):
@@ -245,7 +245,7 @@ class BlogView(DetailView):
 
 ```
 
-You can directly *access any pymongo command* by prefixing `mongo_` to the command name. Eg. to perform `aggregate` on the BlogPage collection (BlogPage is stored as a table in SQL or a collection in MongoDB) the function name becomes `mongo_aggregate`. To directly insert a document (instead of `.save()` a model) use `mongo_insert_one()`
+You can directly *access any [pymongo](https://api.mongodb.com/python/current/) command* by prefixing `mongo_` to the command name. Eg. to perform `aggregate` on the BlogPage collection (BlogPage is stored as a table in SQL or a collection in MongoDB) the function name becomes `mongo_aggregate`. To directly insert a document (instead of `.save()` a model) use `mongo_insert_one()`
 
 # Questions
  
