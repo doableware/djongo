@@ -37,11 +37,13 @@ DATABASES = {
 </code></pre>
  and others... fully supported.
  
+## How Djongo translates relational SQL lookups 
+ 
 # Usage with Django
 
 ## Reuse Django Models
  
- Django is a stable framework with continuous development and enhancements. The Django ORM is quite extensive and feature rich. Defining *a thrid party* ORM to work with MongoDB means reproducing the entire Django ORM again. The new ORM needs to constantly align with the Django ORM. Several Django features will never make it into the third party ORM. The idea behind Djongo is to **reuse** existing [Django ORM](https://docs.djangoproject.com/en/1.11/topics/db/models/) features by finally translating SQL queries to MongoDB syntax. 
+ Django is a stable framework with continuous development and enhancements. The [Django ORM](https://docs.djangoproject.com/en/1.11/topics/db/models/) is quite extensive and feature rich. Defining *a thrid party* ORM to work with MongoDB means reproducing the entire Django ORM again. The new ORM needs to constantly align with the Django ORM. Several Django features will never make it into the third party ORM. The idea behind Djongo is to **reuse** existing Django ORM features by finally translating SQL queries to MongoDB syntax. 
  
 ## Future proof your code
  
