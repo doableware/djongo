@@ -8,7 +8,7 @@ Insights into the Django ORM design will help in understanding ways to integrate
 
 The Django ORM can be broadly thought of as multiple Abstraction Layers stacked on top of each other.
 
-![Abstraction Layers](/images/layers.svg)
+![Abstraction Layers](/djongo/images/layers.svg)
 
 ### User Layer
 
