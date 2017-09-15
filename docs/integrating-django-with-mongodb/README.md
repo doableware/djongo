@@ -76,9 +76,13 @@ Djongo does not need you to use a forked version of Django, access MonogDB with 
 
 #### Common misconceptions 
 
- * Relational data cannot be represented within a non relational data-store
+##### Relational data cannot be represented within a non relational data store
 
- * Unstructured data is a super set of structured data 
+Relations between objects and subsequent joins can be done in non relational data stores by performing multiple [application level lookups](https://www.mongodb.com/blog/post/6-rules-of-thumb-for-mongodb-schema-design-part-2) 
+
+##### Unstructured database cannot store structured data 
+ 
+Unstructured data is a super set of structured data. Specifying the data structure MongoDB will only be ignored by it.  
 
 #### SQL to MongoDB query mapping.
 
@@ -104,5 +108,6 @@ CREATE INDEX | create_indexes
 DROP INDEX | drop_index
 
 INNER JOIN can be done using three application level find operations in pymongo.
+
 LEFT JOIN can be done using a single aggregation lookup operation.
   
