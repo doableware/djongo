@@ -8,7 +8,7 @@ Insights into the Django ORM design will help in understanding ways to integrate
 
 The Django ORM can be broadly thought of as multiple Abstraction Layers stacked on top of each other.
 
-<div style="max-width: 25%; margin-left: auto; margin-right: auto">
+<div style="max-width: 150px; margin-left: auto; margin-right: auto">
     <img src="/djongo/images/layers.svg" alt="Abstraction Layers">
 </div>
 
@@ -36,7 +36,7 @@ The Database only accepts SQL query string specific to its type.
 
 Object Document Mapping(ODM) is the Object Relational Mapping(ORM) for non-relational document oriented databases (like MongoDB). In an ODM, python objects (or group of them) are stored as documents instead of tables. Implementing an ODM for Django would entail rewriting several Django modules.
 
-<div style="max-width: 25%; margin-left: auto; margin-right: auto">
+<div style="max-width: 400px; margin-left: auto; margin-right: auto">
     <img src="/djongo/images/orm2odm.svg" alt="Abstraction Layers">
 </div>
 
@@ -52,7 +52,7 @@ Object Document Mapping(ODM) is the Object Relational Mapping(ORM) for non-relat
 
 A different approach is to translate Django SQL query syntax into pymongo commands.
 
- <div style="max-width: 25%; margin-left: auto; margin-right: auto">
+ <div style="max-width: 400px; margin-left: auto; margin-right: auto">
     <img src="/djongo/images/sql2mongodb.svg" alt="Abstraction Layers">
 </div>
 
@@ -74,11 +74,11 @@ This has several advantages
 
 Djongo does not need you to use a forked version of Django, access MonogDB with the Real Django framework. 
 
-#### A common misconception 
+#### Common misconceptions 
 
-#### Relational data cannot be represented within a non relational data-store
+ * Relational data cannot be represented within a non relational data-store
 
-#### Unstructured data is a super set of structured data 
+ * Unstructured data is a super set of structured data 
 
 #### SQL to MongoDB query mapping.
 
