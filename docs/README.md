@@ -43,7 +43,7 @@ DATABASES = {
 
 ## Reuse Django Models
  
- Django is a stable framework with continuous development and enhancements. The [Django ORM](https://docs.djangoproject.com/en/1.11/topics/db/models/) is quite extensive and feature rich. Defining *a thrid party* ORM to work with MongoDB means reproducing the entire Django ORM again. The new ORM needs to constantly align with the Django ORM. Several Django features will never make it into the third party ORM. The idea behind Djongo is to **reuse** existing Django ORM features by finally translating SQL queries to MongoDB syntax. 
+ Django is a stable framework with continuous development and enhancements. The [Django ORM](https://docs.djangoproject.com/en/dev/topics/db/models/) is quite extensive and feature rich. Defining *a thrid party* ORM to work with MongoDB means reproducing the entire Django ORM again. The new ORM needs to constantly align with the Django ORM. Several Django features will never make it into the third party ORM. The idea behind Djongo is to **reuse** existing Django ORM features by finally translating SQL queries to MongoDB syntax. 
  
 ## Future proof your code
  
@@ -73,7 +73,7 @@ class BlogContent(models.Model):
         abstract = True
 ```
 
-In case you dont plan on using your embedded model as a standalone model (which means it will always be embedded inside a parent model) you should add the `class Meta` and `abstract = True` as shown above. This way Djongo will never register this model as an [actual model](https://docs.djangoproject.com/en/1.11/topics/db/models/#abstract-base-classes).
+In case you dont plan on using your embedded model as a standalone model (which means it will always be embedded inside a parent model) you should add the `class Meta` and `abstract = True` as shown above. This way Djongo will never register this model as an [actual model](https://docs.djangoproject.com/en/dev/topics/db/models/#abstract-base-classes).
 
 It is always a good practice to **make embedded models as abstract models** and this is **strongly recommended**.
 
@@ -201,12 +201,12 @@ Phone:
 
 </code></pre>
 
-While creating a Form from a Model [the ModelForm](https://docs.djangoproject.com/en/1.11/topics/forms/modelforms/) the embedded form **gets automatically generated** if the Model contains an embedded model inside it.
+While creating a Form from a Model [the ModelForm](https://docs.djangoproject.com/en/dev/topics/forms/modelforms/) the embedded form **gets automatically generated** if the Model contains an embedded model inside it.
 
 Multiple embedded forms get automatically generated when the Model contains an array of embedded models.
 
 # Djongo Manager
- The Djongo Manager extends the  functionality of the usual [Django Manager](https://docs.djangoproject.com/en/1.11/topics/db/managers/). Define your manager as Djongo Manager in the model.
+ The Djongo Manager extends the  functionality of the usual [Django Manager](https://docs.djangoproject.com/en/dev/topics/db/managers/). Define your manager as Djongo Manager in the model.
 
  ```python
 class BlogPost(models.Model):
@@ -220,7 +220,7 @@ Use it like the usual Django manager:
 post = BlogPost.objects.get(pk=p_key)
 ```
 
-Will [get a model object](https://docs.djangoproject.com/en/1.11/topics/db/queries/#retrieving-a-single-object-with-get) having primary key `p_key`.
+Will [get a model object](https://docs.djangoproject.com/en/dev/topics/db/queries/#retrieving-a-single-object-with-get) having primary key `p_key`.
 
 ## Direct pymongo access
 
