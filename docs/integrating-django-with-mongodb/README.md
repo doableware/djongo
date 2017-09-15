@@ -9,7 +9,7 @@ Insights into the Django ORM design will help in understanding ways to integrate
 The Django ORM can be broadly thought of as multiple Abstraction Layers stacked on top of each other.
 
 <div style="max-width: 50%; margin-left: auto; margin-right: auto:">
-    <img src="/djongo/images/layers.png" alt="Abstraction Layers"
+    <img src="/djongo/images/layers.png" alt="Abstraction Layers">
 </div>
 
 
