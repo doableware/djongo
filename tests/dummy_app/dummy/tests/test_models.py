@@ -1,16 +1,16 @@
 from django.core import management
 from django.test import TestCase
-from django.db import models
+from dummy.models import Dummy
 
-import os
 
-# os.environ['DJANGO_SETTINGS_MODULE'] = 'dummy_app.settings'
+# class Test(models.Model):
+#     test = models.CharField(max_length=10)
+
 class TestWithDjango(TestCase):
 
     def test_models(self):
-        class Test(models.Model):
-            test = models.CharField(max_length=10)
 
-        test = Test(test='test')
+        test = Dummy(test='test data')
         test.save()
+        tdel = Dummy.objects.get(test='test data')
         print('shimataa')

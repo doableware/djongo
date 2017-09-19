@@ -48,7 +48,7 @@ class Parse:
             if sql_ob.field in doc:
                 ret_tup.append(doc[sql_ob.field])
             elif '{}.{}'.format(sql_ob.coll, sql_ob.field) in doc:
-                ret_tup.append(doc['{}.{}'. \
+                ret_tup.append(doc['{}.{}'.
                                format(sql_ob.coll, sql_ob.field)])
             else:  # This is possible only because we have not implemented multiple joins.
                 ret_tup.append(None)
@@ -64,10 +64,15 @@ class Parse:
         if len(statmntL) > 1: assert False
         sm = statmntL[0]
         sm_type = sm.get_type()
+
+        # Some of these commands can be ignored, some need to be implemented.
+        if sm_type in ('CREATE', 'ALTER', 'DROP'):
+            return None
+
         try:
             return self.FUNC_MAP[sm_type](self, sm)
         except KeyError:
-            logger.debug('\n ## Not implemented{} ##'.format(sm_type))
+            print('\n Not implemented {} {}'.format(sm_type, sm))
             raise NotImplementedError
             # assert False
 
@@ -674,7 +679,7 @@ class Cursor():
         else:
             assert False
 
-    def execute(self, sql, params):
+    def execute(self, sql, params=None):
         self.result_ob = Parse(self.m_cli_connection, sql, params)
         try:
             self.mongo_cursor = self.result_ob.get_mongo_cur()
@@ -685,7 +690,7 @@ class Cursor():
                 self.rowcount = 1
 
         except Exception as e:
-            logger.exception('ERROR!')
+            print(e)
             assert False
 
     def fetchmany(self, size=1):

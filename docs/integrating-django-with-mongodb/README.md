@@ -60,7 +60,7 @@ This has several advantages
 
 #### Reuse Django Models
  
- Django is a stable framework with continuous development and enhancements. The [Django ORM](https://docs.djangoproject.com/en/dev/topics/db/models/) is quite extensive and feature rich. Defining *a thrid party* ORM to work with MongoDB means reproducing the entire Django ORM again. The new ORM needs to constantly align with the Django ORM. Several Django features will never make it into the third party ORM. The idea behind Djongo is to **reuse** existing Django ORM features by finally translating SQL queries to MongoDB syntax. 
+ Django is a stable framework with continuous development and enhancements. The [Django ORM](https://docs.djangoproject.com/en/dev/topics/db/models/) is quite extensive and feature rich. Defining *a third party* ORM to work with MongoDB means reproducing the entire Django ORM again. The new ORM needs to constantly align with the Django ORM. Several Django features will never make it into the third party ORM. The idea behind Djongo is to **reuse** existing Django ORM features by finally translating SQL queries to MongoDB syntax. 
  
 #### Future proof your code
  
@@ -72,7 +72,7 @@ This has several advantages
   
 #### Work on the Real Django
 
-Djongo does not need you to use a forked version of Django, access MonogDB with the Real Django framework. 
+Djongo does not make you use a forked version of Django, access MongoDB with the Real Django framework. 
 
 ### Common misconceptions 
 
@@ -82,7 +82,7 @@ Relations between objects and subsequent joins can be done in non relational dat
 
 #### Unstructured database cannot store structured data 
  
-Unstructured data is a super set of structured data. Specifying the data structure MongoDB will only be ignored by it.  
+Unstructured data is a super set of structured data. Specifying the data structure to MongoDB will only be ignored by it.  
 
 ### SQL to MongoDB query mapping.
 

@@ -40,4 +40,4 @@ db = MongoClient()['django-db']
 test = Parse(db, sql, [1, 2, 3, 4, 5])
 cur = test.get_mongo_cur()
 
-print(cur.count())
+# print(cur.count())

@@ -33,14 +33,11 @@ DATABASES = {
         'NAME': 'djongo-test',
 
     },
-
-
-
 }
 # Application definition
 
 INSTALLED_APPS = [
-    'dummy.apps.DummyConfig',
+    'tests.dummy_app.dummy.apps.DummyConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
