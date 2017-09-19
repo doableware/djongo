@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='djongo',
-    version='1.2.2',
+    version='1.2.3',
     packages=['djongo'],
     url='https://nesdis.github.io/djongo/',
     license='BSD',
