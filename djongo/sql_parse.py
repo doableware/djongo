@@ -21,6 +21,7 @@ OPERATOR_PRECEDENCE = {
 
 
 class SQLObj:
+
     def __init__(self, field, coll=None):
         self.field = field
         self.coll = coll
@@ -56,6 +57,7 @@ class SQLObj:
 
 
 class CmpOb(SQLObj):
+
     def __init__(self, operator, rhs_obj, *args, **kwargs):
         super(CmpOb, self).__init__(*args, **kwargs)
         self.operator = operator
@@ -70,6 +72,7 @@ class CmpOb(SQLObj):
 
 
 class Op:
+
     def __init__(self, lhs=None, rhs=None, op_name='generic'):
         self.lhs = lhs
         self.rhs = rhs
@@ -103,15 +106,18 @@ class Op:
 
                 elif next_tok.match(tokens.Keyword, 'IN'):
                     helper()
-                    yield InOp(lhs=lhs_tok, rhs=hanging_obj)
+                    raise NotImplementedError
+                    # yield InOp(lhs=lhs_tok, rhs=hanging_obj)
 
                 elif next_tok.match(tokens.Keyword, 'NOT'):
                     helper()
-                    yield NotOp(lhs=lhs_tok, rhs=hanging_obj)
+                    raise NotImplementedError
+                    # yield NotOp(lhs=lhs_tok, rhs=hanging_obj)
 
                 elif next_tok.match(tokens.Keyword, '.*'):
                     helper()
-                    yield Op(lhs=lhs_tok, rhs=hanging_obj)
+                    raise NotImplementedError
+                    # yield Op(lhs=lhs_tok, rhs=hanging_obj)
 
                 elif next_tok.match(tokens.Punctuation, ')'):
                     break
@@ -130,7 +136,7 @@ class Op:
                     op_list.insert(i, operator_obj)
                     break
             else:
-                op_list.insert(i + 1, operator_obj)
+                op_list.insert(len(op_list), operator_obj)
 
         op_list = []
 
@@ -151,6 +157,7 @@ class Op:
 
 
 class AndOp(Op):
+
     def __init__(self, *args, **kwargs):
         super(AndOp, self).__init__(*args, **kwargs, op_name='AND')
         self._and = []
@@ -194,6 +201,7 @@ class AndOp(Op):
 
 
 class OrOp(Op):
+
     def __init__(self, *args, **kwargs):
         super(OrOp, self).__init__(*args, **kwargs, op_name='OR')
         self._or = []

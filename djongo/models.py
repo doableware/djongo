@@ -13,7 +13,7 @@ def make_mdl(mdl, mdl_dict):
 
 
 def useful_field(field):
-    return field.concrete and not (field.is_relation \
+    return field.concrete and not (field.is_relation
                                    or isinstance(field, (AutoField, BigAutoField)))
 
 
@@ -31,11 +31,18 @@ class DjongoManager(Manager):
 
 
 class ArrayModelField(Field):
-    def __init__(self, model_container, model_form=None,
-                 model_form_kwargs_l={}, *args, **kwargs):
+
+    def __init__(self,
+                 model_container: typing.Type[Model],
+                 model_form: typing.Type[forms.ModelForm]=None,
+                 model_form_kwargs_l: dict=None,
+                 *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.model_container = model_container
         self.model_form = model_form
+
+        if model_form_kwargs_l is None:
+            model_form_kwargs_l = {}
         self.model_form_kwargs_l = model_form_kwargs_l
 
     def deconstruct(self):
@@ -193,7 +200,7 @@ class ArrayFormWidget(forms.Widget):
         self.first_field_id = first_field_id
         super().__init__(attrs)
 
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
         assert False
 
     def id_for_label(self, id_):
@@ -219,6 +226,7 @@ class EmbeddedModelField(Field):
         super().__init__(*args, **kwargs)
         self.model_container = model_container
         self.model_form = model_form
+
         if model_form_kwargs is None:
             model_form_kwargs = {}
         self.model_form_kwargs = model_form_kwargs
@@ -230,7 +238,7 @@ class EmbeddedModelField(Field):
             kwargs['model_form'] = self.model_form
         return name, path, args, kwargs
 
-    def get_db_prep_value(self, value):
+    def get_db_prep_value(self, value, connection=None, prepared=False):
         if not isinstance(value, Model):
             raise TypeError('Object must be of type Model')
 
@@ -238,8 +246,8 @@ class EmbeddedModelField(Field):
         for fld in value._meta.get_fields():
             if not useful_field(fld):
                 continue
-            fld_value = getattr(a_mdl, fld.attname)
-            mdl_ob[fld.attname] = fld.get_db_prep_value(fld_value)
+            fld_value = getattr(value, fld.attname)
+            mdl_ob[fld.attname] = fld.get_db_prep_value(fld_value, connection, prepared)
 
         return mdl_ob
 

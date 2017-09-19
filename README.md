@@ -1,5 +1,5 @@
 <h1>djongo</h1>
-<h2>Driver for allowing Django to use NoSQL/MongoDB databases</h2>
+<h2>Driver for allowing Django to use MongoDB as the database backend</h2>
 
 Use Mongodb as a backend database for your django project, without changing a single django model!!!
 
@@ -27,7 +27,7 @@ DATABASES = {
 
 <h2>How it works:</h2>
 
-djongo is a SQL to mongodb query complier. It translates a SQL query string into a mongoDB query document. As a result, all Django features, models etc work as is.
+djongo is a SQL to mongodb query compiler. It translates a SQL query string into a mongoDB query document. As a result, all Django features, models etc work as is.
   
   Django contrib modules: 
 <pre><code>  
@@ -37,7 +37,11 @@ djongo is a SQL to mongodb query complier. It translates a SQL query string into
 
 </code></pre>
  and others... fully supported.
- 
+
+## Top Star Contributors
+
+[Rudolfce](https://github.com/rudolfce)
+
 <h2>Features:</h2>
 
   * Stop the immigrations.    
@@ -49,4 +53,8 @@ djongo is a SQL to mongodb query complier. It translates a SQL query string into
 
  <h2>Questions</h2>
  
-   Any questions or issues regarding the usage. Please raise a git-hub issue ticket.
+   Any questions, suggestions for improvements or issues regarding the usage. Please raise a git-hub issue ticket.
+   
+ ## Contribute
+ 
+ If you think djongo is cool, **don't feel shy to share it** with the world! Happiness increases with sharing.

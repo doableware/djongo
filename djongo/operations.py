@@ -4,7 +4,7 @@ import datetime, calendar
 
 
 class DatabaseOperations(BaseDatabaseOperations):
-    # compiler_module = "django.db.backends.djongo.compiler"
+
     def quote_name(self, name):
         if name.startswith('"') and name.endswith('"'):
             return name
@@ -49,3 +49,7 @@ class DatabaseOperations(BaseDatabaseOperations):
         elif internal_type == 'TimeField':
             converters.append(self.convert_timefield_value)
         return converters
+
+    def sql_flush(self, style, tables, sequences, allow_cascade=False):
+        # TODO: Need to implement this fully
+        return ['ALTER TABLE']
