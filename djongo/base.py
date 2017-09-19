@@ -85,20 +85,21 @@ class DatabaseWrapper(BaseDatabaseWrapper):
 
     def get_connection_params(self):
         # TODO: Add other parameters here
-        if not self.settings_dict['NAME']:
-            return 'djongo_test'
-            # from django.core.exceptions import ImproperlyConfigured
-            # raise ImproperlyConfigured(
-            #     "settings.DATABASES is improperly configured. "
-            #     "Please supply the NAME value.")
-        return self.settings_dict['NAME']
+        settings_dict = {}
 
-    def get_new_connection(self, db_name):
+        settings_dict['name'] = self.settings_dict.get('NAME') or 'djongo_test'
+        settings_dict['host'] = self.settings_dict.get('HOST') or 'localhost'
+        settings_dict['port'] = self.settings_dict.get('PORT') or 27017
+
+        return settings_dict
+
+    def get_new_connection(self, settings_dict):
         """
         This needs to be made more generic to accept
         other MongoClient parameters.
         """
-        return MongoClient()[db_name]
+        NAME = settings_dict.pop('name')
+        return MongoClient(**settings_dict)[NAME]
 
     def _set_autocommit(self, autocommit):
         pass
@@ -119,4 +120,3 @@ class DatabaseWrapper(BaseDatabaseWrapper):
 
     def _commit(self):
         pass
-
