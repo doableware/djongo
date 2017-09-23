@@ -87,9 +87,9 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         # TODO: Add other parameters here
         settings_dict = {}
 
-        settings_dict['name'] = self.settings_dict.get('NAME') or 'djongo_test'
-        settings_dict['host'] = self.settings_dict.get('HOST') or 'localhost'
-        settings_dict['port'] = self.settings_dict.get('PORT') or 27017
+        settings_dict['name'] = self.settings_dict.get('NAME', 'djongo_test')
+        settings_dict['host'] = self.settings_dict.get('HOST', 'localhost')
+        settings_dict['port'] = self.settings_dict.get('PORT', 27017)
 
         return settings_dict
 
@@ -98,8 +98,8 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         This needs to be made more generic to accept
         other MongoClient parameters.
         """
-        NAME = settings_dict.pop('name')
-        return MongoClient(**settings_dict)[NAME]
+        name = settings_dict.pop('name')
+        return MongoClient(**settings_dict)[name]
 
     def _set_autocommit(self, autocommit):
         pass
