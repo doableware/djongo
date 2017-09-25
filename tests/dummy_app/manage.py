@@ -2,7 +2,14 @@
 import os
 import sys
 
+from logging import getLogger, DEBUG, StreamHandler
+
 if __name__ == "__main__":
+
+    root_logger = getLogger()
+    root_logger.setLevel(DEBUG)
+    root_logger.addHandler(StreamHandler())
+
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dummy_app.settings")
     try:
         from django.core.management import execute_from_command_line

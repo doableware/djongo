@@ -39,12 +39,13 @@ DATABASES = {
   
 # Usage with Django
 
-Djongo connector for MongoDB means you get to:
+Djongo connector for MongoDB ensures that you:
 
  * Reuse Django Models
  * Future proof your code
  * Stop the immigrations
  * Work on the Real Django
+ * Atomic SQL JOIN operations
  
 For a more detailed discussion on usage with Django check out [Integrating Django with MongoDB](/djongo/integrating-django-with-mongodb/)
     
@@ -244,6 +245,12 @@ You can directly *access any [pymongo](https://api.mongodb.com/python/current/) 
  
 Any questions, suggestions for improvements, issues regarding the usage or to contribute to the package, please raise a git-hub issue ticket.
 
+## Contribute
+ 
+If you think djongo is useful, **feel free to share it** with the world! Happiness increases by sharing.
+ 
+You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](https://nesdis.github.io/djongo/django-mongodb-connector-design-document/) is implemented
+ 
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

@@ -84,33 +84,8 @@ Relations between objects and subsequent joins can be done in non relational dat
  
 Unstructured data is a super set of structured data. Specifying the data structure to MongoDB will only be ignored by it.  
 
-### SQL to MongoDB query mapping.
-
-SQL query | pymongo API
-----------|------------
-SELECT | find(projection=)
-WHERE | find(filter=)
-AND | $and
-OR | $or
-NOT | $neq
-IN | $in
-INNER JOIN | find(), find(), find()
-LEFT JOIN | aggregate($lookup)
-UPDATE | update_many
-DELETE | delete_many
-INSERT INTO | insert_many
-CREATE DATABASE | implicit
-ALTER DATABASE | implicit
-CREATE TABLE | implicit
-ALTER TABLE | implicit
-DROP TABLE | drop_collection
-CREATE INDEX | create_indexes
-DROP INDEX | drop_index
-
-INNER JOIN can be done using three application level find operations in pymongo.
-
-LEFT JOIN can be done using a single aggregation lookup operation.
-  
+More details on [implementing Django MongoDB connector](/djongo/django-mongodb-connector-design-document/) can be found in the design document.
+   
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

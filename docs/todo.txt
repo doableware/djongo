@@ -7,4 +7,4 @@ Development road map:
    3. support of db-name, port etc in settings
    convert from printf to debug.
    Better code structuring.
-
+   [comment](Providing 'rollback' and 'transaction' support for Django)
