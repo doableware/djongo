@@ -2,8 +2,9 @@ from sqlparse import parse as sql_parse
 from sqlparse import tokens
 from sqlparse.sql import IdentifierList, \
     Identifier, Parenthesis, Where, Comparison, Token
-from traceback import print_exc
 from pymongo import ReturnDocument, ASCENDING, DESCENDING
+from pymongo.cursor import Cursor as PymongoCursor
+from pymongo.command_cursor import CommandCursor as PymongoCommandCursor
 import re
 import logging
 
@@ -31,6 +32,10 @@ ORDER_BY_MAP = {
 }
 
 
+class SQLDecodeError(ValueError):
+    pass
+
+
 class Parse:
 
     def __init__(self, connection, sql, params):
@@ -54,29 +59,32 @@ class Parse:
                 ret_tup.append(None)
         return tuple(ret_tup)
 
-    def param_index(self, x):
-        self.p_index = self.p_index + 1
+    def param_index(self, _):
+        self.p_index += 1
         return '%({})s'.format(self.p_index)
 
     def get_mongo_cur(self):
         logger.debug('\n mongo_cur: {}'.format(self.sql))
-        statmntL = sql_parse(self.sql)
-        if len(statmntL) > 1: assert False
-        sm = statmntL[0]
-        sm_type = sm.get_type()
+        statement = sql_parse(self.sql)
+
+        if len(statement) > 1:
+            raise SQLDecodeError('Sql: {}'.format(self.sql))
+
+        statement = statement[0]
+        sm_type = statement.get_type()
 
         # Some of these commands can be ignored, some need to be implemented.
         if sm_type in ('CREATE', 'ALTER', 'DROP'):
             return None
 
         try:
-            return self.FUNC_MAP[sm_type](self, sm)
+            return self.FUNC_MAP[sm_type](self, statement)
         except KeyError:
-            print('\n Not implemented {} {}'.format(sm_type, sm))
-            raise NotImplementedError
-            # assert False
+            logger.debug('\n Not implemented {} {}'.format(sm_type, statement))
+            raise NotImplementedError('{} command not implemented for SQL {}'.format(sm_type, self.sql))
 
-    def _iter_tok(self, tok):
+    @staticmethod
+    def _iter_tok(tok):
         nextid, nexttok = tok.token_next(0)
         while nextid:
             yield nexttok
@@ -91,7 +99,10 @@ class Parse:
         self.left_tb = sql_ob.field
 
         next_id, next_tok = sm.token_next(next_id)
-        assert next_tok.match(tokens.Keyword, 'SET')
+
+        if not next_tok.match(tokens.Keyword, 'SET'):
+            raise SQLDecodeError('statement:{}'.format(sm))
+
         upd = {}
         next_id, next_tok = sm.token_next(next_id)
         for cmp_ob in SQLObj.token_2_obj(next_tok, self):
@@ -143,14 +154,15 @@ class Parse:
             else:
                 auto_field_id = None
         else:
-            assert False
+            raise SQLDecodeError('statement: {}'.format(sm))
 
         nextid, nexttok = sm.token_next(nextid)
 
         for sql_ob in SQLObj.token_2_obj(nexttok, self):
             insert[sql_ob.field] = self.params.pop(0)
 
-        assert not self.params
+        if self.params:
+            raise SQLDecodeError('unexpected params {}'.format(self.params))
 
         result = db_con[collection].insert_one(insert)
         if not auto_field_id:
@@ -174,6 +186,18 @@ class Parse:
         elif isinstance(next_tok, Identifier) and isinstance(next_tok.tokens[0], Parenthesis):
             self.return_const = int(next_tok.tokens[0].tokens[1].value)
             kwargs['projection'] = {'_id': True}
+        elif isinstance(next_tok, Identifier) and next_tok.tokens[0].token_first().value == 'COUNT':
+            next_id, next_tok = sm.token_next(next_id)
+
+            if not next_tok.match(tokens.Keyword, 'FROM'):
+                raise SQLDecodeError('statement: {}'.format(sm))
+
+            next_id, next_tok = sm.token_next(next_id)
+            if not isinstance(next_tok, Identifier):
+                raise SQLDecodeError('statement: {}'.format(sm))
+
+            return self.connection[next_tok.value.strip('"')].find().count()
+
         else:
             pro = []
             self.pro = pro
@@ -189,14 +213,18 @@ class Parse:
                     kwargs['projection'].update({sql_ob.field: True})
 
         next_id, next_tok = sm.token_next(next_id)
-        assert next_tok.match(tokens.Keyword, 'FROM')
+
+        if not next_tok.match(tokens.Keyword, 'FROM'):
+            raise SQLDecodeError('statement: {}'.format(sm))
 
         next_id, next_tok = sm.token_next(next_id)
         sql_ob = next(SQLObj.token_2_obj(next_tok, self))
         if not collection:
             collection = sql_ob.field
         else:
-            assert collection == sql_ob.field
+            if collection != sql_ob.field:
+                raise SQLDecodeError('statement: {}'.format(sm))
+
         left_tb = sql_ob.field
         self.left_tb = left_tb
 
@@ -221,7 +249,9 @@ class Parse:
                 right_tb = sql_ob.field
                 self.right_tb.append(right_tb)
                 next_id, next_tok = sm.token_next(next_id)
-                assert next_tok.match(tokens.Keyword, 'ON')
+                if not next_tok.match(tokens.Keyword, 'ON'):
+                    raise SQLDecodeError('statement: {}'.format(sm))
+
                 next_id, next_tok = sm.token_next(next_id)
                 join_ob = next(SQLObj.token_2_obj(next_tok, self))
                 if right_tb == join_ob.other_coll:
@@ -251,7 +281,9 @@ class Parse:
                 right_tb = sql_ob.field
                 self.right_tb.append(right_tb)
                 next_id, next_tok = sm.token_next(next_id)
-                assert next_tok.match(tokens.Keyword, 'ON')
+                if not next_tok.match(tokens.Keyword, 'ON'):
+                    raise SQLDecodeError('statement: {}'.format(sm))
+
                 next_id, next_tok = sm.token_next(next_id)
                 join_ob = next(SQLObj.token_2_obj(next_tok, self))
                 if right_tb == join_ob.other_coll:
@@ -281,7 +313,9 @@ class Parse:
             elif next_tok.match(tokens.Keyword, 'ORDER'):
                 kwargs['sort'] = {} if aggr else []
                 next_id, next_tok = sm.token_next(next_id)
-                assert next_tok.match(tokens.Keyword, 'BY')
+                if not next_tok.match(tokens.Keyword, 'BY'):
+                    raise SQLDecodeError('statement: {}'.format(sm))
+
                 next_id, next_tok = sm.token_next(next_id)
                 for order, sql_ob in SQLObj.token_2_obj(next_tok, self):
                     if not aggr:
@@ -293,7 +327,7 @@ class Parse:
                             kwargs['sort']['{}.{}'.format(sql_ob.coll, sql_ob.field)] = ORDER_BY_MAP[order]
 
             else:
-                assert False
+                raise SQLDecodeError('statement: {}'.format(sm))
 
             next_id, next_tok = sm.token_next(next_id)
         if aggr:
@@ -365,10 +399,10 @@ class SQLObj:
             yield parse.params[index]
 
         else:
-            assert False
+            raise SQLDecodeError
 
     def to_mongo(self):
-        assert False
+        raise SQLDecodeError
 
 
 class JoinOb(SQLObj):
@@ -391,7 +425,7 @@ class CmpOb(SQLObj):
         else:
             field = '{}.{}'.format(self.coll, self.field)
 
-        if self.is_not == False:
+        if not self.is_not:
             return {field: {self.operator: self.rhs_obj}}
         else:
             return {field: {'$not': {self.operator: self.rhs_obj}}}
@@ -413,7 +447,10 @@ class Op:
 
             def helper():
                 nonlocal lhs_obj, hanging_obj, next_id, next_tok, hanging_obj_used, kw
-                assert hanging_obj
+
+                if not hanging_obj:
+                    raise SQLDecodeError
+
                 kw['lhs'] = hanging_obj
                 next_id, next_tok = token.token_next(next_id)
                 hanging_obj = {'obj': next_tok}
@@ -472,7 +509,7 @@ class Op:
                 elif isinstance(hanging_obj['obj'], Parenthesis):
                     yield Op.token_2_op(hanging_obj['obj'], parse)
                 else:
-                    assert False
+                    raise SQLDecodeError
 
         def op_precedence(operator_obj):
             nonlocal op_list
@@ -501,7 +538,7 @@ class Op:
         self.rhs['obj'].lhs['obj'] = self.lhs['obj']
 
     def to_mongo(self):
-        assert False
+        raise SQLDecodeError
 
 
 class InOp(Op):
@@ -510,12 +547,16 @@ class InOp(Op):
         self.is_not = False
 
     def evaluate(self):
-        assert self.lhs and self.lhs['obj']
-        assert self.rhs and self.rhs['obj']
+        if not (self.lhs and self.lhs['obj']):
+            raise SQLDecodeError
+
+        if not (self.rhs and self.rhs['obj']):
+            raise SQLDecodeError
+
         if isinstance(self.lhs['obj'], Identifier):
             sql_ob = next(SQLObj.token_2_obj(self.lhs['obj'], self.parse))
         else:
-            assert False
+            raise SQLDecodeError
 
         if sql_ob.coll:
             if sql_ob.coll == self.parse.left_tb:
@@ -525,7 +566,9 @@ class InOp(Op):
         else:
             self.field = sql_ob.field
 
-        assert isinstance(self.rhs['obj'], Parenthesis)
+        if not isinstance(self.rhs['obj'], Parenthesis):
+            raise SQLDecodeError
+
         self._in = [ob for ob in SQLObj.token_2_obj(self.rhs['obj'], self.parse)]
 
         self.lhs['obj'] = self
@@ -544,13 +587,16 @@ class NotOp(Op):
         super(NotOp, self).__init__(*args, **kwargs, op_name='NOT')
 
     def evaluate(self):
-        assert self.rhs and self.rhs['obj']
+        if not (self.rhs and self.rhs['obj']):
+            raise SQLDecodeError
+
         if isinstance(self.rhs['obj'], Parenthesis):
             self.op = self.token_2_op(self.rhs['obj'], self.parse)
         elif isinstance(self.rhs['obj'], Comparison):
             self.op = SQLObj.token_2_obj(self.rhs['obj'], self.parse)
         else:
-            assert False
+            raise SQLDecodeError
+
         self.op.is_not = True
 
     def to_mongo(self):
@@ -564,7 +610,9 @@ class AndOp(Op):
 
     def evaluate(self):
         # assert self.lhs or self.lhs['obj']
-        assert self.rhs and self.rhs['obj']
+        if not (self.rhs and self.rhs['obj']):
+            raise SQLDecodeError
+
         if self.lhs and self.lhs['obj']:
             if isinstance(self.lhs['obj'], AndOp):
                 self._and.extend(self.lhs['obj']._and)
@@ -575,7 +623,7 @@ class AndOp(Op):
             elif isinstance(self.lhs['obj'], Comparison):
                 self._and.append(next(SQLObj.token_2_obj(self.lhs['obj'], self.parse)))
             else:
-                assert False
+                raise SQLDecodeError
 
         if isinstance(self.rhs['obj'], AndOp):
             self._and.extend(self.rhs['obj']._and)
@@ -586,7 +634,7 @@ class AndOp(Op):
         elif isinstance(self.rhs['obj'], Comparison):
             self._and.append(next(SQLObj.token_2_obj(self.rhs['obj'], self.parse)))
         else:
-            assert False
+            raise SQLDecodeError
 
         self.lhs['obj'] = self
         self.rhs['obj'] = self
@@ -611,8 +659,12 @@ class OrOp(Op):
         self._or = []
 
     def evaluate(self):
-        assert self.lhs and self.lhs['obj']
-        assert self.rhs and self.rhs['obj']
+        if not (self.lhs and self.lhs['obj']):
+            raise SQLDecodeError
+
+        if not (self.rhs and self.rhs['obj']):
+            raise SQLDecodeError
+
         if isinstance(self.lhs['obj'], OrOp):
             self._or.extend(self.lhs['obj']._or)
         elif isinstance(self.lhs['obj'], Op):
@@ -622,7 +674,7 @@ class OrOp(Op):
         elif isinstance(self.lhs['obj'], Comparison):
             self._or.append(next(SQLObj.token_2_obj(self.lhs['obj'], self.parse)))
         else:
-            assert False
+            raise SQLDecodeError
 
         if isinstance(self.rhs['obj'], OrOp):
             self._or.extend(self.rhs['obj']._or)
@@ -633,7 +685,7 @@ class OrOp(Op):
         elif isinstance(self.rhs['obj'], Comparison):
             self._or.append(next(SQLObj.token_2_obj(self.rhs['obj'], self.parse)))
         else:
-            assert False
+            raise SQLDecodeError
 
         self.lhs['obj'] = self
         self.rhs['obj'] = self
@@ -660,45 +712,65 @@ class Cursor():
         self.close()
 
     def close(self):
-        if self.mongo_cursor:
+        if isinstance(self.mongo_cursor, (PymongoCursor, PymongoCommandCursor)):
             self.mongo_cursor.close()
         self.mongo_cursor = None
         self.result_ob = None
 
     def __iter__(self):
-        if self.mongo_cursor:
+        if isinstance(self.mongo_cursor, (PymongoCursor, PymongoCommandCursor)):
             yield from self.mongo_cursor
         else:
-            assert False
+            raise RuntimeError('Iteration over a dead cursor')
 
     def __getattr__(self, name):
-        if hasattr(self.result_ob, name):
+        try:
             return getattr(self.result_ob, name)
-        elif hasattr(self.m_cli_connection, name):
+        except AttributeError:
+            pass
+
+        try:
             return getattr(self.m_cli_connection, name)
-        else:
-            assert False
+        except AttributeError:
+            raise
 
     def execute(self, sql, params=None):
         self.result_ob = Parse(self.m_cli_connection, sql, params)
+
         try:
             self.mongo_cursor = self.result_ob.get_mongo_cur()
-            if self.mongo_cursor and self.mongo_cursor.alive \
-                    and hasattr(self.mongo_cursor, 'count'):
+        except Exception as e:
+            logger.debug(e)
+            raise
+
+        else:
+            if (isinstance(self.mongo_cursor, (PymongoCursor, PymongoCommandCursor))
+                    and self.mongo_cursor.alive
+                    and hasattr(self.mongo_cursor, 'count')):
                 self.rowcount = self.mongo_cursor.count()
             else:
                 self.rowcount = 1
 
-        except Exception as e:
-            print(e)
-            assert False
+    def _prefetch(self):
+        if self.mongo_cursor is None:
+            raise RuntimeError('Non existent cursor operation')
 
-    def fetchmany(self, size=1):
-        if not self.mongo_cursor: assert False
+        if not isinstance(self.mongo_cursor, (PymongoCursor, PymongoCommandCursor)):
+            return self.mongo_cursor,
+
         if not self.mongo_cursor.alive:
             return []
-        if not self.result_ob.return_const is None:
-            return [self.result_ob.return_const for i in range(self.mongo_cursor.count(with_limit_and_skip=True))]
+
+        return None
+
+    def fetchmany(self, size=1):
+        ret = self._prefetch()
+        if ret is not None:
+            return ret
+
+        if self.result_ob.return_const is not None:
+            return [self.result_ob.return_const] * self.mongo_cursor.count(with_limit_and_skip=True)
+
         ret = []
         for i, row in enumerate(self.mongo_cursor):
             ret.append(self.result_ob.parse_result(row))
@@ -707,15 +779,17 @@ class Cursor():
         return ret
 
     def fetchone(self):
-        if not self.mongo_cursor: assert False
-        if not self.mongo_cursor.alive:
-            return []
+        ret = self._prefetch()
+        if ret is not None:
+            return ret
+
         if self.result_ob.return_const:
             try:
                 self.mongo_cursor.next()
-                return (self.result_ob.return_const,)
             except StopIteration:
                 return []
+            else:
+                return (self.result_ob.return_const,)
 
         else:
             try:
@@ -725,10 +799,11 @@ class Cursor():
             return res
 
     def fetchall(self):
-        if not self.mongo_cursor: assert False
-        if not self.mongo_cursor.alive:
-            return []
-        if not self.result_ob.return_const is None:
-            return [self.result_ob.return_const for i in range(self.mongo_cursor.count(with_limit_and_skip=True))]
+        ret = self._prefetch()
+        if ret is not None:
+            return ret
+
+        if self.result_ob.return_const is not None:
+            return [self.result_ob.return_const] * self.mongo_cursor.count(with_limit_and_skip=True)
         return [self.result_ob.parse_result(row) for row in self.mongo_cursor]
 
