@@ -183,9 +183,11 @@ class Parse:
         next_id, next_tok = sm.token_next(0)
         if next_tok.value == '*':
             kwargs['projection'] = {}
+
         elif isinstance(next_tok, Identifier) and isinstance(next_tok.tokens[0], Parenthesis):
             self.return_const = int(next_tok.tokens[0].tokens[1].value)
             kwargs['projection'] = {'_id': True}
+
         elif isinstance(next_tok, Identifier) and next_tok.tokens[0].token_first().value == 'COUNT':
             next_id, next_tok = sm.token_next(next_id)
 
@@ -199,8 +201,7 @@ class Parse:
             return self.connection[next_tok.value.strip('"')].find().count()
 
         else:
-            pro = []
-            self.pro = pro
+            self.pro = pro = []
             for sql_ob in SQLObj.token_2_obj(next_tok, self):
                 if not collection:
                     collection = sql_ob.coll
