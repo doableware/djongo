@@ -245,7 +245,7 @@ You can directly *access any [pymongo](https://api.mongodb.com/python/current/) 
  
 Any questions, suggestions for improvements, issues regarding the usage or to contribute to the package, please raise a git-hub issue ticket.
 
-## Contribute
+# Contribute
  
 If you think djongo is useful, **feel free to share it** with the world! Happiness increases by sharing.
  
