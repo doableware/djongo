@@ -6,4 +6,4 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
     #     return sorted(cursor.m_cli_connection.collection_names(False))
 
     def get_table_list(self, cursor):
-        return [TableInfo(c,'t') for c in cursor.m_cli_connection.collection_names(False)]
+        return [TableInfo(c,'t') for c in cursor.mongo_conn.collection_names(False)]

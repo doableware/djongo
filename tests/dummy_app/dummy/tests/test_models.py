@@ -5,9 +5,6 @@ from dummy.models import Dummy
 from django.contrib.auth.models import User
 
 
-root_logger = getLogger()
-root_logger.setLevel(DEBUG)
-root_logger.addHandler(StreamHandler())
 # class Test(models.Model):
 #     test = models.CharField(max_length=10)
 

@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.backends.base.client import BaseDatabaseClient
 from django.db.backends.base.creation import BaseDatabaseCreation
@@ -75,23 +77,19 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     introspection_class = DatabaseIntrospection
     ops_class = DatabaseOperations
 
-    def __init__(self, *args, **kwargs):
-        super(DatabaseWrapper, self).__init__(*args, **kwargs)
-
     def is_usable(self):
         if self.connection is not None:
             return True
         return False
 
     def get_connection_params(self):
-        # TODO: Add other parameters here
-        settings_dict = {}
+        connection_params = {
+            'name': self.settings_dict.get('NAME', 'djongo_test'),
+            'host': self.settings_dict['HOST'] or None,
+            'port': self.settings_dict['PORT'] or None
+        }
 
-        settings_dict['name'] = self.settings_dict.get('NAME', 'djongo_test')
-        settings_dict['host'] = self.settings_dict.get('HOST', 'localhost')
-        settings_dict['port'] = self.settings_dict.get('PORT', 27017)
-
-        return settings_dict
+        return connection_params
 
     def get_new_connection(self, settings_dict):
         """
@@ -99,6 +97,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         other MongoClient parameters.
         """
         name = settings_dict.pop('name')
+        settings_dict['document_class'] = OrderedDict
         return MongoClient(**settings_dict)[name]
 
     def _set_autocommit(self, autocommit):

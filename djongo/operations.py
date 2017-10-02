@@ -28,9 +28,6 @@ class DatabaseOperations(BaseDatabaseOperations):
         return datetime.datetime(1900, 1, 1, value.hour, value.minute, \
                                  value.second, value.microsecond)
 
-    def last_insert_id(self, cursor, table_name, pk_name):
-        return cursor.result_ob.last_row_id
-
     def convert_datefield_value(self, value, expression, connection, context):
         if isinstance(value, datetime.datetime):
             value = value.date()

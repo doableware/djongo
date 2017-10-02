@@ -5,10 +5,10 @@ from djongo.base import DatabaseWrapper
 
 
 class TestDatabaseWrapper(unittest.TestCase):
-    '''Test cases for connection attempts'''
+    """Test cases for connection attempts"""
 
     def test_empty_connection_params(self):
-        '''Check for returned connection params if empty settings dict is provided'''
+        """Check for returned connection params if empty settings dict is provided"""
         settings_dict = {}
         wrapper = DatabaseWrapper(settings_dict)
 

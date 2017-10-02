@@ -37,7 +37,7 @@ DATABASES = {
 # Application definition
 
 INSTALLED_APPS = [
-    'tests.dummy_app.dummy.apps.DummyConfig',
+    'dummy.apps.DummyConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
