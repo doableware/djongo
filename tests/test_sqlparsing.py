@@ -16,7 +16,7 @@ sql = [
 'SELECT "auth_permission"."content_type_id", "auth_permission"."codename" \
 FROM "auth_permission" INNER JOIN "django_content_type" \
     ON ("auth_permission"."content_type_id" = "django_content_type"."id") \
-WHERE "auth_permission"."content_type_id" IN (%s, %s) \
+WHERE "auth_permission"."content_type_id" IN (%(0)s, %(1)s) \
 ORDER BY "django_content_type"."app_label" ASC,\
 "django_content_type"."model" ASC, "auth_permission"."codename" ASC',
 
@@ -80,8 +80,9 @@ class TestParse(TestCase):
 
     def test_parse(self):
         conn = MongoClient()['djongo-test']
-        for s in sql:
+        for i, s in enumerate(sql):
             result = Parse(conn, s, [1, 2, 3, 4, 5]).result()
+            print(i)
             try:
                 doc = result.next()
             except StopIteration:

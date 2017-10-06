@@ -23,9 +23,10 @@ OPERATOR_MAP = {
 
 OPERATOR_PRECEDENCE = {
     'IN': 1,
-    'NOT': 2,
-    'AND': 3,
-    'OR': 4,
+    'NOT IN': 2,
+    'NOT': 3,
+    'AND': 4,
+    'OR': 5,
     'generic': 50
 }
 
@@ -133,9 +134,8 @@ class Parse:
         db_con = self.db
         kw = {}
         next_id, next_tok = sm.token_next(0)
-        sql_ob = next(SQLToken.token_2_obj(next_tok, self.left_tbl, self._params))
-        collection = sql_ob.field
-        self.left_tbl = sql_ob.field
+        sql_token = next(SQLToken.iter_tokens(next_tok))
+        self.left_tbl = collection = sql_token.field
 
         next_id, next_tok = sm.token_next(next_id)
 
@@ -144,15 +144,15 @@ class Parse:
 
         upd = {}
         next_id, next_tok = sm.token_next(next_id)
-        for cmp_ob in SQLToken.token_2_obj(next_tok, left_tbl=self.left_tbl, params=self._params):
-            upd[cmp_ob.field] = cmp_ob.rhs_obj
+        for cmp_ob in SQLToken.iter_tokens(next_tok):
+            upd[cmp_ob.field] = self._params[cmp_ob.param_index]
         kw['update'] = {'$set': upd}
 
         next_id, next_tok = sm.token_next(next_id)
 
         while next_id:
             if isinstance(next_tok, Where):
-                where_op = Op.token_2_op(next_tok, left_tbl=self.left_tbl, params=self._params)
+                where_op = WhereOp(0, next_tok, left_tbl=self.left_tbl, params=self._params)
                 kw['filter'] = where_op.to_mongo()
             next_id, next_tok = sm.token_next(next_id)
 
@@ -164,13 +164,13 @@ class Parse:
         db_con = self.db
         kw = {}
         next_id, next_tok = sm.token_next(2)
-        sql_ob = next(SQLToken.token_2_obj(next_tok, left_tbl=self.left_tbl, params=self._params))
-        collection = sql_ob.field
-        self.left_tbl = sql_ob.field
+        sql_token = next(SQLToken.iter_tokens(next_tok))
+        collection = sql_token.field
+        self.left_tbl = sql_token.field
         next_id, next_tok = sm.token_next(next_id)
         while next_id:
             if isinstance(next_tok, Where):
-                where_op = Op.token_2_op(next_tok, left_tbl=self.left_tbl, params=self._params)
+                where_op = WhereOp(0, next_tok, left_tbl=self.left_tbl, params=self._params)
                 kw['filter'] = where_op.to_mongo()
             next_id, next_tok = sm.token_next(next_id)
 
@@ -200,7 +200,7 @@ class Parse:
 
         nextid, nexttok = sm.token_next(nextid)
 
-        for sql_ob in SQLToken.token_2_obj(nexttok, left_tbl=self.left_tbl, params=self._params):
+        for sql_ob in SQLToken.iter_tokens(nexttok):
             insert[sql_ob.field] = self._params.pop(0)
 
         if self._params:
@@ -229,7 +229,7 @@ class Parse:
             self.proj.return_count = True
 
         else:
-            for sql in SQLToken.token_2_obj(next_tok, self.left_tbl, self._params):
+            for sql in SQLToken.iter_tokens(next_tok):
                 self.proj.coll_fields.append(CollField(sql.coll, sql.field))
 
         next_id, next_tok = sm.token_next(next_id)
@@ -238,7 +238,7 @@ class Parse:
             raise SQLDecodeError('statement: {}'.format(sm))
 
         next_id, next_tok = sm.token_next(next_id)
-        sql = next(SQLToken.token_2_obj(next_tok, self.left_tbl, self._params))
+        sql = next(SQLToken.iter_tokens(next_tok))
 
         self.left_tbl = sql.field
 
@@ -246,7 +246,12 @@ class Parse:
 
         while next_id:
             if isinstance(next_tok, Where):
-                where_op = Op.token_2_op(next_tok, left_tbl=self.left_tbl, params=self._params)
+                where_op = WhereOp(
+                    token_id=0,
+                    token=next_tok,
+                    left_tbl=self.left_tbl,
+                    params=self._params
+                )
                 self.filter = where_op.to_mongo()
 
             elif next_tok.match(tokens.Keyword, 'LIMIT'):
@@ -261,7 +266,7 @@ class Parse:
                     join = OuterJoin()
 
                 next_id, next_tok = sm.token_next(next_id)
-                sql = next(SQLToken.token_2_obj(next_tok, self.left_tbl, self._params))
+                sql = next(SQLToken.iter_tokens(next_tok))
                 right_tb = join.right_table = sql.field
 
                 next_id, next_tok = sm.token_next(next_id)
@@ -269,15 +274,15 @@ class Parse:
                     raise SQLDecodeError('statement: {}'.format(sm))
 
                 next_id, next_tok = sm.token_next(next_id)
-                join_ob = next(SQLToken.token_2_obj(next_tok, self.left_tbl, self._params))
-                if right_tb == join_ob.other_coll:
-                    join.local_field = join_ob.field
-                    join.foreign_field = join_ob.other_field
-                    join.left_table = join_ob.coll
+                join_token = next(SQLToken.iter_tokens(next_tok))
+                if right_tb == join_token.other_coll:
+                    join.local_field = join_token.field
+                    join.foreign_field = join_token.other_field
+                    join.left_table = join_token.coll
                 else:
-                    join.local_field = join_ob.other_field
-                    join.foreign_field = join_ob.field
-                    join.left_table = join_ob.other_coll
+                    join.local_field = join_token.other_field
+                    join.foreign_field = join_token.field
+                    join.left_table = join_token.other_coll
 
                 self.joins.append(join)
 
@@ -287,7 +292,7 @@ class Parse:
                     raise SQLDecodeError('statement: {}'.format(sm))
 
                 next_id, next_tok = sm.token_next(next_id)
-                for order, sql in SQLToken.token_2_obj(next_tok, self.left_tbl, self._params):
+                for order, sql in SQLToken.iter_tokens(next_tok):
                     self.sort.append(
                         SortOrder(CollField(sql.coll, sql.field),
                                   ORDER_BY_MAP[order]))
@@ -475,56 +480,60 @@ class Result:
         if self._cursor:
             self._cursor.close()
 
+
 class SQLToken:
-    def __init__(self, field, coll=None, left_tbl=None):
+    def __init__(self, field, coll=None):
         self.field = field
         self.coll = coll
-        self.left_tbl = left_tbl
 
     @classmethod
-    def token_2_obj(cls, token, left_tbl, params):
+    def iter_tokens(cls, token):
         if isinstance(token, Identifier):
             tok_first = token.token_first()
             if isinstance(tok_first, Identifier):
-                yield token.get_ordering(), cls(tok_first.get_name(), tok_first.get_parent_name(), left_tbl)
+                yield token.get_ordering(), cls(tok_first.get_name(), tok_first.get_parent_name())
             else:
-                yield cls(token.get_name(), token.get_parent_name(), left_tbl)
+                yield cls(token.get_name(), token.get_parent_name())
 
         elif isinstance(token, IdentifierList):
             for iden in token.get_identifiers():
-                yield from SQLToken.token_2_obj(iden, left_tbl, params)
+                yield from SQLToken.iter_tokens(iden)
 
         elif isinstance(token, Comparison):
-            lhs = next(SQLToken.token_2_obj(token.left, left_tbl, params))
+            lhs = next(SQLToken.iter_tokens(token.left))
             if isinstance(token.right, Identifier):
-                rhs = next(SQLToken.token_2_obj(token.right, left_tbl, params))
+                rhs = next(SQLToken.iter_tokens(token.right))
                 yield JoinToken(
                     other_field=rhs.field,
                     other_coll=rhs.coll,
                     field=lhs.field,
-                    coll=lhs.coll,
-                    left_tbl=left_tbl)
+                    coll=lhs.coll)
 
             else:
                 op = OPERATOR_MAP[token.token_next(0)[1].value]
                 index = int(re.match(r'%\(([0-9]+)\)s', token.right.value, flags=re.IGNORECASE).group(1))
-                yield CmpToken(**vars(lhs), operator=op, rhs_obj=params[index])
+                yield EqToken(**vars(lhs), param_index=index)
 
         elif isinstance(token, Parenthesis):
             next_id, next_tok = token.token_next(0)
             while next_tok.value != ')':
-                yield from SQLToken.token_2_obj(next_tok, left_tbl, params)
+                yield from SQLToken.iter_tokens(next_tok)
                 next_id, next_tok = token.token_next(next_id)
 
         elif token.match(tokens.Name.Placeholder, '.*', regex=True):
             index = int(re.match(r'%\(([0-9]+)\)s', token.value, flags=re.IGNORECASE).group(1))
-            yield params[index]
-
+            yield index
         else:
             raise SQLDecodeError
 
     def to_mongo(self):
         raise SQLDecodeError
+
+
+class EqToken(SQLToken):
+    def __init__(self, param_index, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.param_index = param_index
 
 
 class JoinToken(SQLToken):
@@ -534,327 +543,430 @@ class JoinToken(SQLToken):
         self.other_coll = other_coll
 
 
-class CmpToken(SQLToken):
-    def __init__(self, operator, rhs_obj, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.operator = operator
-        self.rhs_obj = rhs_obj
-        self.is_not = False
+class _Op:
+    params: tuple
+    left_tbl: str
 
-    def to_mongo(self):
-        if self.coll == self.left_tbl:
-            field = self.field
-        else:
-            field = '{}.{}'.format(self.coll, self.field)
+    def __init__(
+            self,
+            token_id: int,
+            token: Token,
+            left_tbl: str=None,
+            params: tuple=None,
+            name='generic'):
+        self.lhs: typing.Optional[_Op] = None
+        self.rhs: typing.Optional[_Op] = None
+        self._token_id = token_id
 
-        if not self.is_not:
-            return {field: {self.operator: self.rhs_obj}}
-        else:
-            return {field: {'$not': {self.operator: self.rhs_obj}}}
+        if params is not None:
+            _Op.params = params
+        if left_tbl is not None:
+            _Op.left_tbl = left_tbl
 
+        self.token = token
+        self.is_negated = False
+        self._name = name
+        self.precedence = OPERATOR_PRECEDENCE[name]
 
-class HangingToken:
+    def negate(self):
+        raise NotImplementedError
 
-    def __init__(self, token):
-        self.token: typing.Optional[
-            typing.Union[Token, Op]
-        ] = token
-
-
-class Op:
-    def __init__(self, lhs=None, rhs=None, left_tbl=None, params=None, op_name='generic'):
-        self.lhs = lhs
-        self.rhs = rhs
-        self.params = params
-        self.left_tbl = left_tbl
-        self.is_not = False
-        self._op_name = op_name
-        self.precedence = OPERATOR_PRECEDENCE[op_name]
-
-    @staticmethod
-    def token_2_op(token, left_tbl, params):
-
-        def resolve_token():
-            logger.debug('resolving token: {}'.format(token.value))
-
-            def token_unit_next(tkn, nxt_id):
-                _, nxt_tok = tkn.token_next(nxt_id)
-
-
-            def helper():
-                nonlocal hanging_token, next_id, next_tok, hanging_token_used, kw
-
-                if not hanging_token:
-                    raise SQLDecodeError
-
-                kw['lhs'] = hanging_token
-                next_id, next_tok = token.token_next(next_id)
-                hanging_token = HangingToken(next_tok)
-                kw['rhs'] = hanging_token
-                hanging_token_used = True
-
-            nonlocal params
-            next_id, next_tok = token.token_next(0)
-            hanging_token = HangingToken(None)
-            kw = {
-                'params': params,
-                'left_tbl': left_tbl
-            }
-            hanging_token_used = False
-
-            while next_id:
-                if next_tok.match(tokens.Keyword, 'AND'):
-                    helper()
-                    yield AndOp(**kw)
-
-                elif next_tok.match(tokens.Keyword, 'OR'):
-                    helper()
-                    yield OrOp(**kw)
-
-                elif next_tok.match(tokens.Keyword, 'IN'):
-                    helper()
-                    yield InOp(**kw)
-
-                elif next_tok.match(tokens.Keyword, 'NOT'):
-                    x, next_not = token.token_next(next_id)
-                    if next_not.match(tokens.Keyword, 'IN'):
-                        next_id, next_tok = token.token_next(next_id)
-                        helper()
-                        in_ob = InOp(**kw)
-                        in_ob.is_not = True
-                        yield in_ob
-                    else:
-                        helper()
-                        yield NotOp(**kw)
-
-                elif next_tok.match(tokens.Keyword, '.*', regex=True):
-                    helper()
-                    yield Op(**kw)
-
-                elif next_tok.match(tokens.Punctuation, ')'):
-                    break
-
-                else:
-                    hanging_token = HangingToken(next_tok)
-                    hanging_token_used = False
-                next_id, next_tok = token.token_next(next_id)
-
-            if not hanging_token_used:
-                if isinstance(hanging_token.token, Comparison):
-                    yield AndOp(
-                        lhs=HangingToken(None),
-                        rhs=hanging_token,
-                        params=params,
-                        left_tbl=left_tbl)
-
-                elif isinstance(hanging_token.token, Parenthesis):
-                    yield Op.token_2_op(hanging_token.token, params=params, left_tbl=left_tbl)
-
-                else:
-                    raise SQLDecodeError
-
-        def op_precedence(operator):
-            nonlocal op_list
-            if not op_list:
-                op_list.append(operator)
-                return
-
-            for i in range(len(op_list)):
-                if operator.precedence > op_list[i].precedence:
-                    op_list.insert(i, operator)
-                    break
-            else:
-                op_list.append(operator)
-
-        op_list = []
-        eval_op = None
-        for op in resolve_token():
-            op_precedence(op)
-
-        while op_list:
-            eval_op = op_list.pop(0)
-            eval_op.evaluate()
-        return eval_op
+    # @staticmethod
+    # def token_2_op(token):
+    #
+    #     def resolve_token():
+    #         logger.debug('resolving token: {}'.format(token.value))
+    #
+    #         def token_unit_next(tkn, nxt_id):
+    #             _, nxt_tok = tkn.token_next(nxt_id)
+    #
+    #
+    #         def helper():
+    #             nonlocal hanging_token, next_id, next_tok, hanging_token_used, kw
+    #
+    #             if not hanging_token:
+    #                 raise SQLDecodeError
+    #
+    #             kw['lhs'] = hanging_token
+    #             next_id, next_tok = token.token_next(next_id)
+    #             hanging_token = HangingToken(next_tok)
+    #             kw['rhs'] = hanging_token
+    #             hanging_token_used = True
+    #
+    #         nonlocal params
+    #         next_id, next_tok = token.token_next(0)
+    #         hanging_token = HangingToken(None)
+    #         kw = {
+    #             'params': params,
+    #             'left_tbl': left_tbl
+    #         }
+    #         hanging_token_used = False
+    #
+    #         while next_id:
+    #             if next_tok.match(tokens.Keyword, 'AND'):
+    #                 helper()
+    #                 yield AndOp(**kw)
+    #
+    #             elif next_tok.match(tokens.Keyword, 'OR'):
+    #                 helper()
+    #                 yield OrOp(**kw)
+    #
+    #             elif next_tok.match(tokens.Keyword, 'IN'):
+    #                 helper()
+    #                 yield InOp(**kw)
+    #
+    #             elif next_tok.match(tokens.Keyword, 'NOT'):
+    #                 x, next_not = token.token_next(next_id)
+    #                 if next_not.match(tokens.Keyword, 'IN'):
+    #                     next_id, next_tok = token.token_next(next_id)
+    #                     helper()
+    #                     in_ob = InOp(**kw)
+    #                     in_ob.is_not = True
+    #                     yield in_ob
+    #                 else:
+    #                     helper()
+    #                     yield NotOp(**kw)
+    #
+    #             elif next_tok.match(tokens.Keyword, '.*', regex=True):
+    #                 helper()
+    #                 yield Op()
+    #
+    #             elif next_tok.match(tokens.Punctuation, ')'):
+    #                 break
+    #
+    #             else:
+    #                 hanging_token = HangingToken(next_tok)
+    #                 hanging_token_used = False
+    #             next_id, next_tok = token.token_next(next_id)
+    #
+    #         if not hanging_token_used:
+    #             if isinstance(hanging_token.token, Comparison):
+    #                 yield AndOp(
+    #                     lhs=HangingToken(None),
+    #                     rhs=hanging_token,
+    #                     params=params,
+    #                     left_tbl=left_tbl)
+    #
+    #             elif isinstance(hanging_token.token, Parenthesis):
+    #                 yield Op.token_2_op(hanging_token.token)
+    #
+    #             else:
+    #                 raise SQLDecodeError
+    #
+    #     def op_precedence(operator):
+    #         nonlocal op_list
+    #         if not op_list:
+    #             op_list.append(operator)
+    #             return
+    #
+    #         for i in range(len(op_list)):
+    #             if operator.precedence > op_list[i].precedence:
+    #                 op_list.insert(i, operator)
+    #                 break
+    #         else:
+    #             op_list.append(operator)
+    #
+    #     op_list = []
+    #     eval_op = None
+    #     for op in resolve_token():
+    #         op_precedence(op)
+    #
+    #     while op_list:
+    #         eval_op = op_list.pop(0)
+    #         eval_op.evaluate()
+    #     return eval_op
 
     def evaluate(self):
-        self.lhs.token.rhs.token = self.rhs.token
-        self.rhs.token.lhs.token = self.lhs.token
+        pass
 
     def to_mongo(self):
         raise SQLDecodeError
 
 
-class InOp(Op):
+class _UniaryOp(_Op):
+
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, op_name='IN')
-        self.is_not = False
-        self.field = None
-        self._in = None
+        super().__init__(*args, **kwargs)
+        self.lhs = None
+        self._op = None
 
-    def evaluate(self):
-        if not (self.lhs and self.lhs.token):
-            raise SQLDecodeError
+        next_id, next_tok = self.token.token_next(self._token_id)
+        if isinstance(next_tok, Comparison):
+            self.rhs = CmpOp(0, next_tok)
 
-        if not (self.rhs and self.rhs.token):
-            raise SQLDecodeError
+        elif isinstance(next_tok, Parenthesis):
+            self.rhs = ParenthesisOp(0, next_tok)
 
-        if isinstance(self.lhs.token, Identifier):
-            sql_ob = next(SQLToken.token_2_obj(self.lhs.token, params=self.params, left_tbl=self.left_tbl))
+        elif isinstance(next_tok, Identifier):
+            next_id, next_tok = self.token.token_next(next_id)
+            if next_tok.match(tokens.Keyword, 'IN'):
+                self.rhs = InOp(next_id, self.token)
+
+            elif next_tok.match(tokens.Keyword, 'NOT'):
+                _, next_tok = self.token.token_next(next_id)
+                if next_tok.match(tokens.Keyword, 'IN'):
+                    self.rhs = NotInOp(next_id, self.token)
+                else:
+                    raise SQLDecodeError
         else:
             raise SQLDecodeError
 
-        if sql_ob.coll:
-            if sql_ob.coll == self.left_tbl:
-                self.field = sql_ob.field
+    def evaluate(self):
+        if isinstance(self.rhs, ParenthesisOp):
+            self._op = self.rhs.evaluate()
+        else:
+            self.rhs.evaluate()
+            self._op = self.rhs
+
+    def to_mongo(self):
+        return self._op.to_mongo()
+
+class _InNotInOp(_Op):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        identifier = next(SQLToken.iter_tokens(self.token.token_prev(self._token_id)[1]))
+        if identifier.coll:
+            if identifier.coll == self.left_tbl:
+                self._field = identifier.field
             else:
-                self.field = '{}.{}'.format(sql_ob.coll, sql_ob.field)
+                self._field = '{}.{}'.format(identifier.coll, identifier.field)
         else:
-            self.field = sql_ob.field
+            self._field = identifier.field
 
-        if not isinstance(self.rhs.token, Parenthesis):
+    def _fill_in(self, token):
+        self._in = [self.params[index] for index in SQLToken.iter_tokens(token)]
+
+    def negate(self):
+        raise SQLDecodeError('Negating IN/NOT IN not supported')
+
+
+class NotInOp(_InNotInOp):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(name='NOT IN', *args, **kwargs)
+        idx, tok = self.token.token_next(self._token_id)
+        if not tok.match(tokens.Keyword, 'IN'):
             raise SQLDecodeError
-
-        self._in = [ob for ob in SQLToken.token_2_obj(self.rhs.token, params=self.params, left_tbl=self.left_tbl)]
-
-        self.lhs.token = self
-        self.rhs.token = self
+        self._fill_in(tok.token_next(idx)[1])
 
     def to_mongo(self):
-        if self.is_not is False:
-            op = '$in'
-        else:
-            op = '$nin'
-        return {self.field: {op: self._in}}
+        op = '$nin'
+        return {self._field: {op: self._in}}
 
 
-class NotOp(Op):
+class InOp(_InNotInOp):
+
     def __init__(self, *args, **kwargs):
-        super(NotOp, self).__init__(*args, **kwargs, op_name='NOT')
-        self.op = None
-
-    def evaluate(self):
-        if not (self.rhs and self.rhs.token):
-            raise SQLDecodeError
-
-        if isinstance(self.rhs.token, Parenthesis):
-            self.op = self.token_2_op(self.rhs.token, params=self.params, left_tbl=self.left_tbl)
-        elif isinstance(self.rhs.token, Comparison):
-            self.op = SQLToken.token_2_obj(self.rhs.token, params=self.params, left_tbl=self.left_tbl)
-        else:
-            raise SQLDecodeError
-
-        self.op.is_not = True
+        super().__init__(name='IN', *args, **kwargs)
+        self._fill_in(self.token.token_next(self._token_id)[1])
 
     def to_mongo(self):
-        return self.op.to_mongo()
+        op = '$in'
+        return {self._field: {op: self._in}}
 
 
-class AndOp(Op):
+# TODO: Need to do this
+class NotOp(_UniaryOp):
     def __init__(self, *args, **kwargs):
-        super(AndOp, self).__init__(*args, **kwargs, op_name='AND')
-        self._and = []
+        super().__init__(name='NOT', *args, **kwargs)
+        self.rhs.negate()
+
+    def negate(self):
+        raise SQLDecodeError
+
+
+class _AndOrOp(_Op):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._acc = []
+
+    def negate(self):
+        self.is_negated = True
+
+    def op_type(self):
+        raise NotImplementedError
 
     def evaluate(self):
         # assert self.lhs or self.lhs.token
-        if not (self.rhs and self.rhs.token):
+        if not (self.lhs and self.rhs):
             raise SQLDecodeError
 
-        if self.lhs and self.lhs.token:
-            if isinstance(self.lhs.token, AndOp):
-                self._and.extend(self.lhs.token._and)
-
-            elif isinstance(self.lhs.token, Op):
-                self._and.append(self.lhs.token)
-
-            elif isinstance(self.lhs.token, Parenthesis):
-                self._and.append(self.token_2_op(self.lhs.token, params=self.params, left_tbl=self.left_tbl))
-
-            elif isinstance(self.lhs.token, Comparison):
-                self._and.append(next(SQLToken.token_2_obj(self.lhs.token, params=self.params, left_tbl=self.left_tbl)))
-
+        if isinstance(self.lhs, _AndOrOp):
+            if self.op_type() == self.lhs.op_type():
+                self._acc.extend(self.lhs._acc)
             else:
-                raise SQLDecodeError
+                self._acc.append(self.lhs)
 
-        if isinstance(self.rhs.token, AndOp):
-            self._and.extend(self.rhs.token._and)
+        elif isinstance(self.lhs, ParenthesisOp):
+            op = self.lhs.evaluate()
+            self._acc.append(op)
 
-        elif isinstance(self.rhs.token, Op):
-            self._and.append(self.rhs.token)
+        elif isinstance(self.lhs, _Op):
+            self._acc.append(self.lhs)
 
-        elif isinstance(self.rhs.token, Parenthesis):
-            self._and.append(self.token_2_op(self.rhs.token, params=self.params, left_tbl=self.left_tbl))
-
-        elif isinstance(self.rhs.token, Comparison):
-            self._and.append(next(SQLToken.token_2_obj(self.rhs.token, params=self.params, left_tbl=self.left_tbl)))
-
-        elif isinstance(self.rhs.token, Identifier):
-            self._and.append(self.token_2_op(self.rhs.token, params=self.params, left_tbl=self.left_tbl))
         else:
             raise SQLDecodeError
 
-        self.lhs.token = self
-        self.rhs.token = self
+        if isinstance(self.rhs, _AndOrOp):
+            if self.op_type() == self.rhs.op_type():
+                self._acc.extend(self.rhs._acc)
+            else:
+                self._acc.append(self.rhs)
+
+        elif isinstance(self.rhs, ParenthesisOp):
+            op = self.rhs.evaluate()
+            self._acc.append(op)
+
+        elif isinstance(self.rhs, _Op):
+            self._acc.append(self.rhs)
+
+        else:
+            raise SQLDecodeError
+
+        if self.lhs.lhs is not None:
+            self.lhs.lhs.rhs = self
+        if self.rhs.rhs is not None:
+            self.rhs.rhs.lhs = self
 
     def to_mongo(self):
-        if self.is_not is False:
-            ret_doc = {'$and': []}
-            for itm in self._and:
-                ret_doc['$and'].append(itm.to_mongo())
+        if self.op_type() == AndOp:
+            oper = '$and'
         else:
-            ret_doc = {'$or': []}
-            for itm in self._and:
-                itm.is_not = True
-                ret_doc['$or'].append(itm.to_mongo())
+            oper = '$or'
 
-        return ret_doc
+        docs = [itm.to_mongo() for itm in self._acc]
+        return {oper: docs}
 
 
-class OrOp(Op):
+class AndOp(_AndOrOp):
+
     def __init__(self, *args, **kwargs):
-        super(OrOp, self).__init__(*args, **kwargs, op_name='OR')
-        self._or = []
+        super().__init__(name='AND', *args, **kwargs)
+
+    def op_type(self):
+        if not self.is_negated:
+            return AndOp
+        else:
+            return OrOp
+
+
+class OrOp(_AndOrOp):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(name='OR', *args, **kwargs)
+
+    def op_type(self):
+        if not self.is_negated:
+            return OrOp
+        else:
+            return AndOp
+
+
+class WhereOp(_UniaryOp):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.evaluate()
+
+class ParenthesisOp(_Op):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        def link_op():
+            if prev_op is not None:
+                prev_op.rhs = op
+                op.lhs = prev_op
+
+        token = self.token
+        self._ops: typing.List[_Op] = []
+
+        next_id, next_tok = token.token_next(0)
+        prev_op: _Op = None
+        op: _Op = None
+        while next_id:
+            kw = {'token':token, 'token_id': next_id}
+            if next_tok.match(tokens.Keyword, 'AND'):
+                op = AndOp(**kw)
+                link_op()
+                self._op_precedence(op)
+
+            elif next_tok.match(tokens.Keyword, 'OR'):
+                op = OrOp(**kw)
+                link_op()
+                self._op_precedence(op)
+
+            elif next_tok.match(tokens.Keyword, 'IN'):
+                op = InOp(**kw)
+                link_op()
+                self._op_precedence(op)
+
+            elif next_tok.match(tokens.Keyword, 'NOT'):
+                _, nxt = token.token_next(next_id)
+                if nxt.match(tokens.Keyword, 'IN'):
+                    op = NotInOp(**kw)
+                else:
+                    op = NotOp(**kw)
+                link_op()
+                self._op_precedence(op)
+
+            elif isinstance(next_tok, Comparison):
+                op = CmpOp(0, next_tok)
+                link_op()
+
+            elif next_tok.match(tokens.Punctuation, ')'):
+                break
+
+            next_id, next_tok = token.token_next(next_id)
+            prev_op = op
+
+    def _op_precedence(self, operator: _Op):
+        ops = self._ops
+        if not ops:
+            ops.append(operator)
+            return
+
+        for i in range(len(ops)):
+            if operator.precedence > ops[i].precedence:
+                ops.insert(i, operator)
+                break
+            else:
+                ops.append(operator)
 
     def evaluate(self):
-        if not (self.lhs and self.lhs.token):
-            raise SQLDecodeError
+        op = None
+        while self._ops:
+            op = self._ops.pop(0)
+            op.evaluate()
+        return op
 
-        if not (self.rhs and self.rhs.token):
-            raise SQLDecodeError
 
-        if isinstance(self.lhs.token, OrOp):
-            self._or.extend(self.lhs.token._or)
-        elif isinstance(self.lhs.token, Op):
-            self._or.append(self.lhs.token)
-        elif isinstance(self.lhs.token, Parenthesis):
-            self._or.append(self.token_2_op(self.lhs.token, params=self.params, left_tbl=self.left_tbl))
-        elif isinstance(self.lhs.token, Comparison):
-            self._or.append(next(SQLToken.token_2_obj(self.lhs.token, params=self.params, left_tbl=self.left_tbl)))
-        else:
-            raise SQLDecodeError
+class CmpOp(_Op):
 
-        if isinstance(self.rhs.token, OrOp):
-            self._or.extend(self.rhs.token._or)
-        elif isinstance(self.rhs.token, Op):
-            self._or.append(self.rhs.token)
-        elif isinstance(self.rhs.token, Parenthesis):
-            self._or.append(self.token_2_op(self.rhs.token, params=self.params, left_tbl=self.left_tbl))
-        elif isinstance(self.rhs.token, Comparison):
-            self._or.append(next(SQLToken.token_2_obj(self.rhs.token, params=self.params, left_tbl=self.left_tbl)))
-        else:
-            raise SQLDecodeError
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        self.lhs.token = self
-        self.rhs.token = self
+        self._identifier = next(SQLToken.iter_tokens(self.token.left))
+
+        if isinstance(self.token.right, Identifier):
+            raise SQLDecodeError('Join using WHERE not supported')
+
+        self._operator = OPERATOR_MAP[self.token.token_next(0)[1].value]
+        index = int(re.match(r'%\(([0-9]+)\)s', self.token.right.value, flags=re.IGNORECASE).group(1))
+        self._constant = self.params[index]
+
+    def negate(self):
+        self.is_negated = True
 
     def to_mongo(self):
-        if not self.is_not:
-            oper = '$or'
+        if self._identifier.coll == self.left_tbl:
+            field = self._identifier.field
         else:
-            oper = '$nor'
+            field = '{}.{}'.format(self._identifier.coll, self._identifier.field)
 
-        ret_doc = {oper: []}
-        for itm in self._or:
-            ret_doc[oper].append(itm.to_mongo())
-        return ret_doc
-
-
+        if not self.is_negated:
+            return {field: {self._operator: self._constant}}
+        else:
+            return {field: {'$not': {self._operator: self._constant}}}
