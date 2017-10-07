@@ -11,5 +11,4 @@ djongo\introspection.py
 djongo\models.py
 djongo\operations.py
 djongo\schema.py
-djongo\sql_parse.py
-djongo\untitled-1.py
+djongo\sql2mongo.py
