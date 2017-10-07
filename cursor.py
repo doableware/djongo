@@ -1,7 +1,5 @@
-from pymongo.command_cursor import CommandCursor as PymongoCommandCursor
-from pymongo.cursor import Cursor as PymongoCursor
 from logging import getLogger
-from sql2mongo import Parse
+from .sql2mongo import Parse
 
 logger = getLogger(__name__)
 
@@ -44,18 +42,6 @@ class Cursor:
     def execute(self, sql, params=None):
         self.parse = Parse(self.mongo_conn, sql, params)
         self.result = self.parse.result()
-
-    def _prefetch(self):
-        if self.mongo_cursor is None:
-            raise RuntimeError('Non existent cursor operation')
-
-        if not isinstance(self.mongo_cursor, (PymongoCursor, PymongoCommandCursor)):
-            return self.mongo_cursor,
-
-        if not self.mongo_cursor.alive:
-            return []
-
-        return None
 
     def fetchmany(self, size=1):
         ret = []

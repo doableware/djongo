@@ -5,13 +5,12 @@ from django.db.backends.base.client import BaseDatabaseClient
 from django.db.backends.base.creation import BaseDatabaseCreation
 from django.db.utils import Error
 from .introspection import DatabaseIntrospection
-from pymongo import MongoClient
 
 from .operations import DatabaseOperations
 from .schema import DatabaseSchemaEditor
 from .cursor import Cursor
 from .features import DatabaseFeatures
-from . import database
+from . import database as Database
 
 
 class DatabaseWrapper(BaseDatabaseWrapper):
@@ -69,7 +68,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
 
     vendor = 'djongo'
     SchemaEditorClass = DatabaseSchemaEditor
-    Database = database
+    Database = Database
 
     client_class = BaseDatabaseClient
     creation_class = BaseDatabaseCreation
@@ -98,7 +97,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         """
         name = settings_dict.pop('name')
         settings_dict['document_class'] = OrderedDict
-        return MongoClient(**settings_dict)[name]
+        return Database.connect(name=name, **settings_dict)
 
     def _set_autocommit(self, autocommit):
         pass
