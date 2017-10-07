@@ -1,4 +1,5 @@
 from pymongo.cursor import Cursor as PymongoCursor
+from pymongo.database import Database
 from logging import getLogger
 import re
 import typing
@@ -22,12 +23,12 @@ OPERATOR_MAP = {
 }
 
 OPERATOR_PRECEDENCE = {
-    'IN': 1,
-    'NOT IN': 2,
+    'IN': 5,
+    'NOT IN': 4,
     'NOT': 3,
-    'AND': 4,
-    'OR': 5,
-    'generic': 50
+    'AND': 2,
+    'OR': 1,
+    'generic': 0
 }
 
 ORDER_BY_MAP = {
@@ -48,6 +49,7 @@ class CollField(typing.NamedTuple):
 class SortOrder(typing.NamedTuple):
     coll_field: CollField
     ord: int
+
 
 class Join:
 
@@ -77,7 +79,10 @@ class Projection:
 
 class Parse:
 
-    def __init__(self, connection, sql, params):
+    def __init__(self,
+                 connection: Database,
+                 sql: str,
+                 params: typing.Optional[list]):
         logger.debug('params: {}'.format(params))
 
         self._params = params
@@ -114,7 +119,8 @@ class Parse:
         sm_type = statement.get_type()
 
         # Some of these commands can be ignored, some need to be implemented.
-        if sm_type in ('CREATE', 'ALTER', 'DROP'):
+        if sm_type in ('ALTER', 'DROP'):
+            logger.debug('Not supported {}'.format(statement))
             return None
 
         try:
@@ -123,12 +129,27 @@ class Parse:
             logger.debug('\n Not implemented {} {}'.format(sm_type, statement))
             raise NotImplementedError('{} command not implemented for SQL {}'.format(sm_type, self._sql))
 
-    @staticmethod
-    def _iter_tok(tok):
-        nextid, nexttok = tok.token_next(0)
-        while nextid:
-            yield nexttok
-            nextid, nexttok = tok.token_next(nextid)
+    def _create(self, sm):
+        next_id, next_tok = sm.token_next(0)
+        if next_tok.match(tokens.Keyword, 'TABLE'):
+            next_id, next_tok = sm.token_next(next_id)
+            table = next(SQLToken.iter_tokens(next_tok)).field
+            self.db.create_collection(table)
+            logger.debug('Created table {}'.format(table))
+
+            next_id, next_tok = sm.token_next(next_id)
+            if isinstance(next_tok, Parenthesis):
+                for col in next_tok.value.strip('()').split(','):
+                    if col.find('AUTOINCREMENT') != -1:
+                        field = col[col.find('"')+1: col.rfind('"')]
+                        self.db['__schema__'].insert_one({
+                            'name': table,
+                            'auto': {
+                                'field_name': field,
+                                'seq': 0
+                            }
+                        })
+
 
     def _update(self, sm):
         db_con = self.db
@@ -145,7 +166,11 @@ class Parse:
         upd = {}
         next_id, next_tok = sm.token_next(next_id)
         for cmp_ob in SQLToken.iter_tokens(next_tok):
-            upd[cmp_ob.field] = self._params[cmp_ob.param_index]
+            if cmp_ob.param_index is not None:
+                upd[cmp_ob.field] = self._params[cmp_ob.param_index]
+            else:
+                upd[cmp_ob.field] = None
+
         kw['update'] = {'$set': upd}
 
         next_id, next_tok = sm.token_next(next_id)
@@ -306,7 +331,8 @@ class Parse:
         'SELECT': _find,
         'UPDATE': _update,
         'INSERT': _insert,
-        'DELETE': _delete
+        'DELETE': _delete,
+        'CREATE': _create
     }
 
 
@@ -420,7 +446,7 @@ class Result:
                 query_args['limit'] = p_sql.limit
 
             if p_sql.sort:
-                query_args['sort'] = [(s.coll_field.field , s.ord) for s in p_sql.sort]
+                query_args['sort'] = [(s.coll_field.field, s.ord) for s in p_sql.sort]
 
             return p_sql.db[p_sql.left_tbl].find(**query_args)
 
@@ -510,8 +536,17 @@ class SQLToken:
                     coll=lhs.coll)
 
             else:
-                op = OPERATOR_MAP[token.token_next(0)[1].value]
-                index = int(re.match(r'%\(([0-9]+)\)s', token.right.value, flags=re.IGNORECASE).group(1))
+                if token.token_next(0)[1].value != '=':
+                    raise SQLDecodeError
+
+                match = re.match(r'%\(([0-9]+)\)s', token.right.value, flags=re.IGNORECASE)
+                if match:
+                    index = int(match.group(1))
+                else:
+                    match = re.match(r'NULL', token.right.value, flags=re.IGNORECASE)
+                    if not match:
+                        raise SQLDecodeError
+                    index = None
                 yield EqToken(**vars(lhs), param_index=index)
 
         elif isinstance(token, Parenthesis):
@@ -680,7 +715,7 @@ class _Op:
         pass
 
     def to_mongo(self):
-        raise SQLDecodeError
+        raise NotImplementedError
 
 
 class _UniaryOp(_Op):
@@ -711,6 +746,9 @@ class _UniaryOp(_Op):
         else:
             raise SQLDecodeError
 
+    def negate(self):
+        raise NotImplementedError
+
     def evaluate(self):
         if isinstance(self.rhs, ParenthesisOp):
             self._op = self.rhs.evaluate()
@@ -720,6 +758,7 @@ class _UniaryOp(_Op):
 
     def to_mongo(self):
         return self._op.to_mongo()
+
 
 class _InNotInOp(_Op):
 
@@ -739,6 +778,9 @@ class _InNotInOp(_Op):
 
     def negate(self):
         raise SQLDecodeError('Negating IN/NOT IN not supported')
+
+    def to_mongo(self):
+        raise NotImplementedError
 
 
 class NotInOp(_InNotInOp):
@@ -789,7 +831,6 @@ class _AndOrOp(_Op):
         raise NotImplementedError
 
     def evaluate(self):
-        # assert self.lhs or self.lhs.token
         if not (self.lhs and self.rhs):
             raise SQLDecodeError
 
@@ -870,7 +911,14 @@ class WhereOp(_UniaryOp):
         super().__init__(*args, **kwargs)
         self.evaluate()
 
+    def negate(self):
+        raise NotImplementedError
+
+
 class ParenthesisOp(_Op):
+
+    def to_mongo(self):
+        raise SQLDecodeError
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -887,7 +935,7 @@ class ParenthesisOp(_Op):
         prev_op: _Op = None
         op: _Op = None
         while next_id:
-            kw = {'token':token, 'token_id': next_id}
+            kw = {'token': token, 'token_id': next_id}
             if next_tok.match(tokens.Keyword, 'AND'):
                 op = AndOp(**kw)
                 link_op()
@@ -917,6 +965,10 @@ class ParenthesisOp(_Op):
                 link_op()
 
             elif next_tok.match(tokens.Punctuation, ')'):
+                if op.lhs is None:
+                    if not isinstance(op, CmpOp):
+                        raise SQLDecodeError
+                    self._ops.append(op)
                 break
 
             next_id, next_tok = token.token_next(next_id)
@@ -936,11 +988,18 @@ class ParenthesisOp(_Op):
                 ops.append(operator)
 
     def evaluate(self):
+        if not self._ops:
+            raise SQLDecodeError
+
         op = None
         while self._ops:
             op = self._ops.pop(0)
             op.evaluate()
         return op
+
+    def negate(self):
+        for op in self._ops:
+            op.negate()
 
 
 class CmpOp(_Op):

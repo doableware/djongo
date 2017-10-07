@@ -5,6 +5,10 @@ from pymongo import MongoClient
 from djongo.sql2mongo import Parse
 
 sql = [
+    'UPDATE "auth_user" SET "password" = %s, "last_login" = NULL, "is_superuser" = %s, "username" = %s, "first_name" = %s, "last_name" = %s, "email" = %s, "is_staff" = %s, "is_active" = %s, "date_joined" = %s WHERE "auth_user"."id" = %s',
+
+'CREATE TABLE "django_migrations" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "app" char NOT NULL, "name" char NOT NULL, "applied" datetime NOT NULL)',
+
 'SELECT "django_migrations"."app", "django_migrations"."trial" '
 'FROM  "django_migrations" '
 'WHERE ("django_migrations"."app" <=%s '
@@ -68,7 +72,9 @@ WHERE "django_admin_log"."user_id" = %(0)s ORDER BY "django_admin_log"."action_t
 
 'SELECT "auth_permission"."id" FROM "auth_permission" INNER JOIN "auth_group_permissions" ON ("auth_permission"."id" = "auth_group_permissions"."permission_id") INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_group_permissions"."group_id" = %s ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC',
 
-'SELECT "auth_group_permissions"."permission_id" FROM "auth_group_permissions" WHERE ("auth_group_permissions"."group_id" = %s AND "auth_group_permissions"."permission_id" IN (%s))'
+'SELECT "auth_group_permissions"."permission_id" FROM "auth_group_permissions" WHERE ("auth_group_permissions"."group_id" = %s AND "auth_group_permissions"."permission_id" IN (%s))',
+
+'SELECT (1) AS "a" FROM "auth_group" WHERE ("auth_group"."name" = %(0)s AND NOT ("auth_group"."id" = %(1)s)) LIMIT 1'
 
        ]
 
