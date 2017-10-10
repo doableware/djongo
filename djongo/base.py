@@ -3,11 +3,11 @@ from collections import OrderedDict
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.backends.base.client import BaseDatabaseClient
 from django.db.backends.base.creation import BaseDatabaseCreation
+from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.utils import Error
 from .introspection import DatabaseIntrospection
 
 from .operations import DatabaseOperations
-from .schema import DatabaseSchemaEditor
 from .cursor import Cursor
 from .features import DatabaseFeatures
 from . import database as Database
@@ -67,7 +67,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     }
 
     vendor = 'djongo'
-    SchemaEditorClass = DatabaseSchemaEditor
+    SchemaEditorClass = BaseDatabaseSchemaEditor
     Database = Database
 
     client_class = BaseDatabaseClient

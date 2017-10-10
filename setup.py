@@ -11,15 +11,13 @@ Usage:
 pip install djongo 
 Into settings.py file of your project, add: 
 
-``` 
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
         'NAME': 'your-db-name',
     }
 }
-```
-  
+
     Run manage.py migrate(ONLY the first time to create collections in mongoDB) 
     YOUR ARE SET! HAVE FUN! 
 

@@ -82,9 +82,10 @@ root_logger = getLogger()
 root_logger.setLevel(DEBUG)
 root_logger.addHandler(StreamHandler())
 
+
 class TestParse(TestCase):
 
-    def test_parse(self):
+    def test_with_db(self):
         conn = MongoClient()['djongo-test']
         for i, s in enumerate(sql):
             result = Parse(conn, s, [1, 2, 3, 4, 5]).result()
@@ -93,3 +94,281 @@ class TestParse(TestCase):
                 doc = result.next()
             except StopIteration:
                 pass
+
+    def _mock(self):
+        result = Parse(self.conn, self.sql, self.params).result()
+        doc = next(result)
+
+    def test_where(self):
+        conn = self.conn = mock.MagicMock()
+        find = self.conn.__getitem__().find
+
+        where = 'SELECT "table"."col" FROM "table" WHERE'
+        filt_col1 = '"table"."col1"'
+
+        find_args = {
+            'projection': ['col'],
+            'filter': {}
+        }
+
+        self.sql = f'{where} {filt_col1} = %s'
+        find_args['filter'] = {
+            'col1': {
+                '$eq': 1
+            }
+        }
+        self.params = [1]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} {filt_col1} <= %s'
+        find_args['filter'] = {
+            'col1': {
+                '$lte': 1
+            }
+        }
+        self.params = [1]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} {filt_col1} = NULL'
+        find_args['filter'] = {
+            'col1': {
+                '$eq': None
+            }
+        }
+        self.params = []
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} NOT ({filt_col1} <= %s)'
+        find_args['filter'] = {
+            'col1': {
+                '$not': {
+                    '$lte': 1
+                }
+            }
+        }
+        self.params = [1]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} NOT {filt_col1} <= %s'
+        find_args['filter'] = {
+            'col1': {
+                '$not': {
+                    '$lte': 1
+                }
+            }
+        }
+        self.params = [1]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} NOT {filt_col1} = NULL'
+        find_args['filter'] = {
+            'col1': {
+                '$not': {
+                    '$eq': None
+                }
+            }
+        }
+        self.params = []
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} {filt_col1} IN (%s)'
+        find_args['filter'] = {
+            'col1': {
+                '$in': [1]
+            }
+        }
+        self.params = [1]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        # TODO: This is not the right SQL syntax
+        self.sql = f'{where} {filt_col1} IN (NULL, %s)'
+        find_args['filter'] = {
+            'col1': {
+                '$in': [None, 1]
+            }
+        }
+        self.params = [1]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} {filt_col1} NOT IN (%s)'
+        find_args['filter'] = {
+            'col1': {
+                '$nin': [1]
+            }
+        }
+        self.params = [1]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} {filt_col1} NOT IN (%s, %s)'
+        find_args['filter'] = {
+            'col1': {
+                '$nin': [1, 2]
+            }
+        }
+        self.params = [1, 2]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} ({filt_col1} = %s AND {filt_col1} <= %s)'
+        find_args['filter'] = {
+            '$and': [
+                {
+                    'col1': {
+                        '$eq': 1
+                    }
+                },
+                {
+                    'col1': {
+                        '$lte': 2
+                    }
+                }
+            ]
+        }
+        self.params = [1, 2]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} (NOT ({filt_col1} = %s) AND {filt_col1} <= %s)'
+        find_args['filter'] = {
+            '$and': [
+                {
+                    'col1': {
+                        '$not': {
+                            '$eq': 1
+                        }
+                    }
+                },
+                {
+                    'col1': {
+                        '$lte': 2
+                    }
+                }
+            ]
+        }
+        self.params = [1, 2]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} {filt_col1} <= %s AND NOT ({filt_col1} = %s)'
+        find_args['filter'] = {
+            '$and': [
+                {
+                    'col1': {
+                        '$lte': 2
+                    }
+                },
+                {
+                    'col1': {
+                        '$not': {
+                            '$eq': 1
+                        }
+                    }
+                }
+            ]
+        }
+        self.params = [2, 1]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} NOT ({filt_col1} <= %s AND {filt_col1} = %s)'
+        find_args['filter'] = {
+            '$or': [
+                {
+                    'col1': {
+                        '$not': {
+                            '$lte': 2
+                        }
+                    }
+                },
+                {
+                    'col1': {
+                        '$not': {
+                            '$eq': 1
+                        }
+                    }
+                }
+            ]
+        }
+        self.params = [2, 1]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} NOT ({filt_col1} <= %s OR {filt_col1} = %s)'
+        find_args['filter'] = {
+            '$and': [
+                {
+                    'col1': {
+                        '$not': {
+                            '$lte': 2
+                        }
+                    }
+                },
+                {
+                    'col1': {
+                        '$not': {
+                            '$eq': 1
+                        }
+                    }
+                }
+            ]
+        }
+        self.params = [2, 1]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} NOT ({filt_col1} <= %s OR {filt_col1} = %s) AND {filt_col1} >= %s'
+        find_args['filter'] = {
+            '$and': [
+                {
+                    '$and': [
+                        {
+                            'col1': {
+                                '$not': {
+                                    '$lte': 2
+                                }
+                            }
+                        },
+                        {
+                            'col1': {
+                                '$not': {
+                                    '$eq': 1
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    'col1': {
+                        '$gte': 0
+                    }
+                },
+            ]
+        }
+        self.params = [2, 1, 0]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
