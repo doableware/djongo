@@ -1,7 +1,7 @@
-
+# Django and MongoDB database connector
 Use Mongodb as a backend database for your django project, without changing a single django model!!!
 
-# Usage
+## Usage
 <ol>
 <li> pip install djongo </li>
 <li> Into settings.py file of your project, add: 
@@ -19,12 +19,12 @@ DATABASES = {
    <li> YOUR ARE SET! HAVE FUN! </li>
 </ol>
 
-# Requirements
+## Requirements
 
   1. djongo requires <b>python 3.5 or above</b>.
 
 
-# How it works
+## How it works
 
   djongo is a SQL to mongodb query compiler. It translates a SQL query string into a [mongoDB query document](https://docs.mongodb.com/manual/tutorial/query-documents/). As a result, all Django features, models etc work as is.
   
@@ -37,7 +37,7 @@ DATABASES = {
 </code></pre>
  and others... fully supported.
   
-# Usage with Django
+## Usage with Django
 
 Djongo connector for MongoDB ensures that you:
 
@@ -49,7 +49,7 @@ Djongo connector for MongoDB ensures that you:
  
 For a more detailed discussion on usage with Django check out [Integrating Django with MongoDB](/djongo/integrating-django-with-mongodb/)
     
-# The Embedded Model
+## The Embedded Model
  
 SQL prevents the usage of embedded objects in your models without serialization. <b>Not anymore.</b> With mongoDB as your django backend, embed any other model into your parent model and save it as an [embedded document](https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding) into mongoDB
 
@@ -69,7 +69,7 @@ In case you dont plan on using your embedded model as a standalone model (which 
 
 It is always a good practice to **make embedded models as abstract models** and this is **strongly recommended**.
 
-## EmbeddedModelField
+### EmbeddedModelField
 
 Embed the above model inside the parent model by creating an `EmbeddedModelField`. The `EmbeddedModelField` is similar to other Django Fields (like the `CharField`.)
 
@@ -82,13 +82,13 @@ class EmbeddedModelField(Field):
                  *args, **kwargs):
 ```
 
-### Parameters
+#### Parameters
 
   * `model_container: Type[models.Model]` The child model class type (not instance) that this embedded field will contain.
   * `model_form: Optional[Type[models.forms.ModelForm]]` The child model form class type of the embedded model.
   * `model_form_kwargs: Optional[dict]` The kwargs (if any) that must be passed to the embedded model form while instantiating it.
   
-### Example
+#### Example
 
 ```python
 class BlogContentForm(forms.ModelForm):
@@ -116,7 +116,7 @@ class BlogPost(models.Model):
     objects = models.DjongoManager()
 ```
 
-# Embedded Array
+## Embedded Array
 
 With MongoDB there can be an [array](https://docs.mongodb.com/manual/core/document/#arrays) of embedded documents inside the parent document. You can create an **embed array/list of models inside the parent model** and store it directly into MongoDB.
 
@@ -132,7 +132,7 @@ class BlogContent(models.Model):
         abstract = True
 ```
 
-## ArrayModelField
+### ArrayModelField
 Create an array of the above child model inside the parent model by creating an `ArrayModelField`. The `ArrayModelField` is similar to other Django Fields (like the `CharField`.)
 
 ```python
@@ -144,13 +144,13 @@ class ArrayModelField(Field):
                  *args, **kwargs):
 ```
 
-### Parameters
+#### Parameters
 
   * `model_container: Type[models.Model]` The child model class type (not instance) that this array field will contain.
   * `model_form: Optional[Type[models.forms.ModelForm]]` The child model form class type of the array model. All child models inside the array must be of the same type. Mixing different types of child models inside the embedded array is not supported.
   * `model_form_kwargs: Optional[dict]` The kwargs (if any) that must be passed to the embedded model form while instantiating it.
   
-### Example
+#### Example
 
 ```python
 class BlogContentForm(forms.ModelForm):
@@ -178,7 +178,7 @@ class BlogPost(models.Model):
     objects = models.DjongoManager()
 ```
 
-# Embedded Form
+## Embedded Form
 
 Embed multiple sub-forms, inside the parent form. Directly translate it into an embedded model and `.save()` it into mongoDB. No foreign key lookups necessary!
 
@@ -197,7 +197,7 @@ While creating a Form from a Model [the ModelForm](https://docs.djangoproject.co
 
 Multiple embedded forms get automatically generated when the Model contains an array of embedded models.
 
-# Djongo Manager
+## Djongo Manager
  The Djongo Manager extends the  functionality of the usual [Django Manager](https://docs.djangoproject.com/en/dev/topics/db/managers/). Define your manager as Djongo Manager in the model.
 
  ```python
@@ -214,7 +214,7 @@ post = BlogPost.objects.get(pk=p_key)
 
 Will [get a model object](https://docs.djangoproject.com/en/dev/topics/db/queries/#retrieving-a-single-object-with-get) having primary key `p_key`.
 
-## Direct pymongo access
+### Direct pymongo access
 
 MongoDB has powerful query syntax and `DjongoManager` lets you exploit it fully.
 
@@ -241,11 +241,11 @@ class BlogView(DetailView):
 
 You can directly *access any [pymongo](https://api.mongodb.com/python/current/) command* by prefixing `mongo_` to the command name. Eg. to perform `aggregate` on the BlogPage collection (BlogPage is stored as a table in SQL or a collection in MongoDB) the function name becomes `mongo_aggregate`. To directly insert a document (instead of `.save()` a model) use `mongo_insert_one()`
 
-# Questions
+## Questions
  
 Any questions, suggestions for improvements, issues regarding the usage or to contribute to the package, please raise a git-hub issue ticket.
 
-# Contribute
+## Contribute
  
 If you think djongo is useful, **feel free to share it** with the world! Happiness increases by sharing.
  

@@ -163,7 +163,8 @@ class Parse:
                                 'seq': 0
                             }
                         })
-
+        else:
+            logger.debug('Not supported {}'.format(sm))
 
     def _update(self, sm):
         db_con = self.db
@@ -612,61 +613,6 @@ class _Op:
         self._name = name
         self.precedence = OPERATOR_PRECEDENCE[name]
 
-    # def eval_tokens(self, token):
-    #     def link_op():
-    #         if prev_op is not None:
-    #             prev_op.rhs = op
-    #             op.lhs = prev_op
-    #
-    #     token = self.token
-    #     self._ops: typing.List[_Op] = []
-    #
-    #     next_id, next_tok = token.token_next(0)
-    #     prev_op: _Op = None
-    #     op: _Op = None
-    #     while next_id:
-    #         kw = {'token': token, 'token_id': next_id}
-    #         if next_tok.match(tokens.Keyword, 'AND'):
-    #             op = AndOp(**kw)
-    #             link_op()
-    #             self._op_precedence(op)
-    #
-    #         elif next_tok.match(tokens.Keyword, 'OR'):
-    #             op = OrOp(**kw)
-    #             link_op()
-    #             self._op_precedence(op)
-    #
-    #         elif next_tok.match(tokens.Keyword, 'IN'):
-    #             op = InOp(**kw)
-    #             link_op()
-    #             self._op_precedence(op)
-    #
-    #         elif next_tok.match(tokens.Keyword, 'NOT'):
-    #             _, nxt = token.token_next(next_id)
-    #             if nxt.match(tokens.Keyword, 'IN'):
-    #                 op = NotInOp(**kw)
-    #             else:
-    #                 op = NotOp(**kw)
-    #             link_op()
-    #             self._op_precedence(op)
-    #
-    #         elif isinstance(next_tok, Comparison):
-    #             op = CmpOp(0, next_tok)
-    #             link_op()
-    #
-    #         elif isinstance(next_tok, Parenthesis):
-    #             op = ParenthesisOp(0, next_tok)
-    #
-    #         elif next_tok.match(tokens.Punctuation, ')'):
-    #             if op.lhs is None:
-    #                 if not isinstance(op, CmpOp):
-    #                     raise SQLDecodeError
-    #                 self._ops.append(op)
-    #             break
-    #
-    #         next_id, next_tok = token.token_next(next_id)
-    #         prev_op = op
-
     def negate(self):
         raise NotImplementedError
 
@@ -687,11 +633,7 @@ class _UnaryOp(_Op):
         raise NotImplementedError
 
     def evaluate(self):
-        if isinstance(self.rhs, ParenthesisOp):
-            self._op = self.rhs.evaluate()
-        else:
-            self.rhs.evaluate()
-            self._op = self.rhs
+        self.rhs.evaluate()
 
     def to_mongo(self):
         return self.rhs.to_mongo()
