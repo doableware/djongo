@@ -40,15 +40,17 @@ and others... fully supported.
 
 Djongo connector for MongoDB ensures that you:
 
- * Reuse Django Models
+ * Reuse Django Models/ORM
+ * Work with the original Django variant
  * Future proof your code
- * Stop the immigrations
- * Work on the Real Django
+ * Stop the immigrations 
  * Atomic SQL JOIN operations
  
 For a more detailed discussion on usage with Django check out [Integrating Django with MongoDB](/djongo/integrating-django-with-mongodb/)
-    
-## The Embedded Model
+
+## Utilize MongoBD to its fullest
+   
+### The Embedded Model
  
 SQL prevents the usage of embedded objects in your models without serialization. <b>Not anymore.</b> With mongoDB as your django backend, embed any other model into your parent model and save it as an [embedded document](https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding) into mongoDB
 
@@ -68,7 +70,7 @@ In case you dont plan on using your embedded model as a standalone model (which 
 
 It is always a good practice to **make embedded models as abstract models** and this is **strongly recommended**.
 
-### EmbeddedModelField
+#### EmbeddedModelField
 
 Embed the above model inside the parent model by creating an `EmbeddedModelField`. The `EmbeddedModelField` is similar to other Django Fields (like the `CharField`.)
 
@@ -81,13 +83,13 @@ class EmbeddedModelField(Field):
                  *args, **kwargs):
 ```
 
-#### Parameters
+##### Parameters
 
   * `model_container: Type[models.Model]` The child model class type (not instance) that this embedded field will contain.
   * `model_form: Optional[Type[models.forms.ModelForm]]` The child model form class type of the embedded model.
   * `model_form_kwargs: Optional[dict]` The kwargs (if any) that must be passed to the embedded model form while instantiating it.
   
-#### Example
+##### Example
 
 ```python
 class BlogContentForm(forms.ModelForm):
@@ -115,7 +117,7 @@ class BlogPost(models.Model):
     objects = models.DjongoManager()
 ```
 
-## Embedded Array
+### Embedded Array
 
 With MongoDB there can be an [array](https://docs.mongodb.com/manual/core/document/#arrays) of embedded documents inside the parent document. You can create an **embed array/list of models inside the parent model** and store it directly into MongoDB.
 
@@ -131,7 +133,7 @@ class BlogContent(models.Model):
         abstract = True
 ```
 
-### ArrayModelField
+#### ArrayModelField
 Create an array of the above child model inside the parent model by creating an `ArrayModelField`. The `ArrayModelField` is similar to other Django Fields (like the `CharField`.)
 
 ```python
@@ -143,13 +145,13 @@ class ArrayModelField(Field):
                  *args, **kwargs):
 ```
 
-#### Parameters
+##### Parameters
 
   * `model_container: Type[models.Model]` The child model class type (not instance) that this array field will contain.
   * `model_form: Optional[Type[models.forms.ModelForm]]` The child model form class type of the array model. All child models inside the array must be of the same type. Mixing different types of child models inside the embedded array is not supported.
   * `model_form_kwargs: Optional[dict]` The kwargs (if any) that must be passed to the embedded model form while instantiating it.
   
-#### Example
+##### Example
 
 ```python
 class BlogContentForm(forms.ModelForm):
@@ -177,7 +179,7 @@ class BlogPost(models.Model):
     objects = models.DjongoManager()
 ```
 
-## Embedded Form
+### Embedded Form
 
 Embed multiple sub-forms, inside the parent form. Directly translate it into an embedded model and `.save()` it into mongoDB. No foreign key lookups necessary!
 
@@ -246,9 +248,9 @@ Any questions, suggestions for improvements, issues regarding the usage or to co
 
 ## Contribute
  
-If you think djongo is useful, **feel free to share it** with the world! Happiness increases by sharing.
+If you think djongo is useful, **please share it** with the world! Your endorsements and online reviews will help get more support for this project.
  
-You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](https://nesdis.github.io/djongo/django-mongodb-connector-design-document/) is implemented
+You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](https://nesdis.github.io/djongo/django-mongodb-connector-design-document/) is implemented.
  
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
