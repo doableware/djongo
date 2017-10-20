@@ -2,22 +2,21 @@
 Use Mongodb as a backend database for your django project, without changing a single django model!!!
 
 ## Usage
-<ol>
-<li> pip install djongo </li>
-<li> Into settings.py file of your project, add: 
-<pre><code>  
-DATABASES = {
-    'default': {
-        'ENGINE': 'djongo',
-        'NAME': 'your-db-name',
-    }
-}
 
-</code></pre>
-</li>   
-   <li> Run <code>manage.py migrate</code> (ONLY the first time to create collections in mongoDB) </li>
-   <li> YOUR ARE SET! HAVE FUN! </li>
-</ol>
+1. pip install djongo
+2. Into settings.py file of your project, add:
+
+    ```python
+    DATABASES = {
+        'default': {
+            'ENGINE': 'djongo',
+            'NAME': 'your-db-name',
+        }
+    }
+    ```
+  
+3. Run `manage.py migrate` (ONLY the first time to create collections in mongoDB)
+4. YOUR ARE SET! HAVE FUN!
 
 ## Requirements
 
@@ -26,16 +25,16 @@ DATABASES = {
 
 ## How it works
 
-  djongo is a SQL to mongodb query compiler. It translates a SQL query string into a [mongoDB query document](https://docs.mongodb.com/manual/tutorial/query-documents/). As a result, all Django features, models etc work as is.
+djongo is a SQL to MongoDB query compiler. It translates a SQL query string into a [mongoDB query document](https://docs.mongodb.com/manual/tutorial/query-documents/). As a result, all Django features, models, etc., work as is.
   
-  Django contrib modules: 
-<pre><code>  
+Django contrib modules: 
+
+```python
 'django.contrib.admin',
 'django.contrib.auth',    
 'django.contrib.sessions',
-
-</code></pre>
- and others... fully supported.
+```
+and others... fully supported.
   
 ## Usage with Django
 
