@@ -48,7 +48,7 @@ Djongo connector for MongoDB ensures that you:
  
 For a more detailed discussion on usage with Django check out [Integrating Django with MongoDB](/djongo/integrating-django-with-mongodb/)
 
-## Utilize MongoBD to its fullest
+## Utilize MongoDB to the max
    
 ### The Embedded Model
  
