@@ -1,4 +1,5 @@
 dist/
+medium/
 .idea/
 _site/
 *__pycache__*
