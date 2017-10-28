@@ -15,7 +15,8 @@ class Cursor:
         self.close()
 
     def close(self):
-        self.result.close()
+        if self.result is not None:
+            self.result.close()
 
     def __getattr__(self, name):
         try:
