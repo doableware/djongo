@@ -503,17 +503,20 @@ class Result:
 
         cur = self._cursor
         doc = cur.next()
-        if isinstance(cur, PymongoCursor):
-            doc.pop('_id')
-            return tuple(doc.values())
-        else:
-            ret = []
-            for coll_field in p_sql.proj.coll_fields:
-                if coll_field.coll == p_sql.left_tbl:
+
+        ret = []
+        for coll_field in p_sql.proj.coll_fields:
+            if coll_field.coll == p_sql.left_tbl:
+                try:
                     ret.append(doc[coll_field.field])
-                else:
+                except KeyError:
+                    ret.append(None)
+            else:
+                try:
                     ret.append(doc[coll_field.coll][coll_field.field])
-            return ret
+                except KeyError:
+                    ret.append(None)
+        return ret
 
     __next__ = next
 

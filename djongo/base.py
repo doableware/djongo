@@ -83,21 +83,21 @@ class DatabaseWrapper(BaseDatabaseWrapper):
 
     def get_connection_params(self):
         connection_params = {
-            'name': self.settings_dict.get('NAME', 'djongo_test'),
+            'name': self.settings_dict.get('NAME', 'djongo_test') or 'djongo_test',
             'host': self.settings_dict['HOST'] or None,
             'port': self.settings_dict['PORT'] or None
         }
 
         return connection_params
 
-    def get_new_connection(self, settings_dict):
+    def get_new_connection(self, connection_params):
         """
         This needs to be made more generic to accept
         other MongoClient parameters.
         """
-        name = settings_dict.pop('name')
-        settings_dict['document_class'] = OrderedDict
-        return Database.connect(name=name, **settings_dict)
+        name = connection_params.pop('name')
+        connection_params['document_class'] = OrderedDict
+        return Database.connect(name=name, **connection_params)
 
     def _set_autocommit(self, autocommit):
         pass
