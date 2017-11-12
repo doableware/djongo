@@ -1,0 +1,666 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="1900"
+   height="551.21973"
+   viewBox="0 0 1900 551.21973"
+   id="svg4190"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="banner.svg"
+   inkscape:export-filename="C:\Users\27989\twsent\djongo\bitbucket\djongo\docs\images\banner.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs4192" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1"
+     inkscape:cx="701.04019"
+     inkscape:cy="135.95067"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     fit-margin-right="50"
+     units="px"
+     fit-margin-left="50"
+     fit-margin-top="20"
+     fit-margin-bottom="20"
+     inkscape:window-width="1920"
+     inkscape:window-height="996"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata4195">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-24.647872,-283.05594)">
+    <g
+       id="g5023"
+       transform="matrix(1.9080959,0,0,1.9080959,-112.11919,-643.69623)">
+      <rect
+         y="497.0538"
+         x="112.88407"
+         height="36.186913"
+         width="119.1314"
+         id="rect4136"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f0f0f0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.75478888;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <text
+         transform="scale(0.96984725,1.0310902)"
+         sodipodi:linespacing="125%"
+         id="text4400"
+         y="503.07147"
+         x="138.94543"
+         style="font-style:normal;font-weight:normal;font-size:8.7739439px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           id="tspan4402"
+           y="503.07147"
+           x="138.94543"
+           sodipodi:role="line"><tspan
+             id="tspan4404"
+             style="font-size:13.16091633px"
+             y="503.07147"
+             x="138.94543">Django App</tspan></tspan></text>
+      <g
+         id="g4313"
+         transform="matrix(0.42546929,0,0,0.4523364,5.6916909,459.72331)">
+        <rect
+           style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f0f0f0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:3.1313622;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+           id="rect4136-6"
+           width="169.75186"
+           height="80.868637"
+           x="362.62164"
+           y="183.77907" />
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-weight:normal;font-size:20px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           x="392.60257"
+           y="235.38283"
+           id="text4430"
+           sodipodi:linespacing="125%"><tspan
+             sodipodi:role="line"
+             x="392.60257"
+             y="235.38283"
+             id="tspan4432"><tspan
+               x="392.60257"
+               y="235.38283"
+               style="font-size:30px"
+               id="tspan4434">Contrib</tspan></tspan></text>
+      </g>
+      <g
+         id="g4319"
+         transform="matrix(0.42546929,0,0,0.4523364,5.6916909,459.72331)">
+        <rect
+           style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f0f0f0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+           id="rect4136-2"
+           width="280"
+           height="80"
+           x="251.93918"
+           y="285.89865" />
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-weight:normal;font-size:20px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           x="339.15353"
+           y="337.06808"
+           id="text4424"
+           sodipodi:linespacing="125%"><tspan
+             sodipodi:role="line"
+             x="339.15353"
+             y="337.06808"
+             id="tspan4426"><tspan
+               x="339.15353"
+               y="337.06808"
+               style="font-size:30px"
+               id="tspan4428">Models</tspan></tspan></text>
+      </g>
+      <rect
+         y="635.04163"
+         x="112.88407"
+         height="36.186913"
+         width="119.1314"
+         id="rect4136-2-5"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f0f0f0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.75478888;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <text
+         transform="scale(0.96984725,1.0310902)"
+         sodipodi:linespacing="125%"
+         id="text4418"
+         y="637.0014"
+         x="157.66504"
+         style="font-style:normal;font-weight:normal;font-size:8.7739439px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           id="tspan4420"
+           y="637.0014"
+           x="157.66504"
+           sodipodi:role="line"><tspan
+             id="tspan4422"
+             style="font-size:13.16091633px"
+             y="637.0014"
+             x="157.66504">Query</tspan></tspan></text>
+      <rect
+         y="681.03754"
+         x="112.88407"
+         height="36.186913"
+         width="119.1314"
+         id="rect4136-2-1"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f0f0f0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.75478888;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <text
+         transform="scale(0.96984725,1.0310902)"
+         sodipodi:linespacing="125%"
+         id="text4412"
+         y="682.73499"
+         x="132.73128"
+         style="font-style:normal;font-weight:normal;font-size:8.7739439px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           id="tspan4414"
+           y="682.73499"
+           x="132.73128"
+           sodipodi:role="line"><tspan
+             id="tspan4416"
+             style="font-size:13.16091633px"
+             y="682.73499"
+             x="132.73128">DB connector</tspan></tspan></text>
+      <rect
+         y="727.03351"
+         x="112.88407"
+         height="36.186913"
+         width="119.1314"
+         id="rect4136-2-1-0"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f0f0f0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.75478888;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <text
+         transform="scale(0.96984725,1.0310902)"
+         sodipodi:linespacing="125%"
+         id="text4406"
+         y="727.34406"
+         x="146.07855"
+         style="font-style:normal;font-weight:normal;font-size:8.7739439px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           id="tspan4408"
+           y="727.34406"
+           x="146.07855"
+           sodipodi:role="line"><tspan
+             id="tspan4410"
+             style="font-size:13.16091633px"
+             y="727.34406"
+             x="146.07855">DataBase</tspan></tspan></text>
+      <rect
+         y="543.19208"
+         x="359.41309"
+         height="36.186913"
+         width="119.1314"
+         id="rect4136-9"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f22222;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.75478888;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <text
+         transform="scale(0.96984725,1.0310902)"
+         sodipodi:linespacing="125%"
+         id="text4400-4"
+         y="547.8186"
+         x="393.1391"
+         style="font-style:normal;font-weight:normal;font-size:8.7739439px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           id="tspan4402-6"
+           y="547.8186"
+           x="393.1391"
+           sodipodi:role="line"><tspan
+             id="tspan4404-3"
+             style="font-size:13.16091633px"
+             y="547.8186"
+             x="393.1391">Django App</tspan></tspan></text>
+      <g
+         id="g4226"
+         transform="matrix(0.42546929,0,0,0.4523364,5.6916909,459.72331)">
+        <rect
+           style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f22222;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:3.1313622;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+           id="rect4136-6-2"
+           width="169.75186"
+           height="80.868637"
+           x="942.05017"
+           y="285.56921" />
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-weight:normal;font-size:20px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           x="972.03107"
+           y="337.17297"
+           id="text4430-2"
+           sodipodi:linespacing="125%"><tspan
+             sodipodi:role="line"
+             x="972.03107"
+             y="337.17297"
+             id="tspan4432-8"><tspan
+               x="972.03107"
+               y="337.17297"
+               style="font-size:30px"
+               id="tspan4434-2">Contrib</tspan></tspan></text>
+      </g>
+      <g
+         id="g4247"
+         transform="matrix(0.42546929,0,0,0.4523364,5.6916909,459.72331)">
+        <rect
+           style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#9dff8b;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+           id="rect4136-2-7"
+           width="280"
+           height="80"
+           x="831.36768"
+           y="387.47891" />
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-weight:normal;font-size:20px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           x="918.58203"
+           y="438.64832"
+           id="text4424-1"
+           sodipodi:linespacing="125%"><tspan
+             sodipodi:role="line"
+             x="918.58203"
+             y="438.64832"
+             id="tspan4426-4"><tspan
+               x="918.58203"
+               y="438.64832"
+               style="font-size:30px"
+               id="tspan4428-7">ODM</tspan></tspan></text>
+      </g>
+      <g
+         transform="matrix(0.42546929,0,0,0.4523364,5.6916751,478.44159)"
+         id="g4544">
+        <g
+           id="g4520"
+           transform="translate(0,-204)">
+          <rect
+             y="651.573"
+             x="831.36768"
+             height="80"
+             width="280"
+             id="rect4136-2-1-0-2"
+             style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f0f0f0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+          <text
+             sodipodi:linespacing="125%"
+             id="text4406-5"
+             y="702.25177"
+             x="899.03369"
+             style="font-style:normal;font-weight:normal;font-size:20px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+             xml:space="preserve"><tspan
+               id="tspan4408-4"
+               y="702.25177"
+               x="899.03369"
+               sodipodi:role="line"><tspan
+                 id="tspan4410-9"
+                 style="font-size:30px"
+                 y="702.25177"
+                 x="899.03369">DataBase</tspan></tspan></text>
+        </g>
+      </g>
+      <path
+         style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#f22222;stroke-width:0.43869722;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:3.50957772, 1.75478886;stroke-dashoffset:0;stroke-opacity:1"
+         d="m 344.41042,630.13707 149.13677,0"
+         id="path4224"
+         inkscape:connector-curvature="0" />
+      <path
+         style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.43869716;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:3.5095773, 1.75478865;stroke-dashoffset:0;stroke-opacity:1"
+         d="m 344.41042,676.03809 149.13677,0"
+         id="path4224-2"
+         inkscape:connector-curvature="0" />
+      <path
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.45608768;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:3.64870152, 1.82435076;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+         d="m 247.01816,584.14116 c 0,0 0,0 -21.43991,-3e-5 l 0,0 -106.64698,0 -21.049889,0"
+         id="path4163"
+         inkscape:connector-curvature="0" />
+      <path
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.43869716;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:3.5095773, 1.75478865;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+         d="m 247.01816,722.12896 -19.26808,0 0,0 -109.03345,0 -20.835249,0"
+         id="path4163-4"
+         inkscape:connector-curvature="0" />
+      <g
+         transform="matrix(0.42546929,0,0,0.4523364,5.7734235,466.37266)"
+         id="g4619">
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m 601.3677,357.35991 141.42857,0 -25.63736,-14.80174"
+           id="path4600"
+           inkscape:connector-curvature="0" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m 601.46614,366.72254 141.42857,0 -25.63736,14.80174"
+           id="path4600-5"
+           inkscape:connector-curvature="0" />
+      </g>
+    </g>
+    <g
+       id="g5078"
+       transform="matrix(1.9080959,0,0,1.9080959,-67.787447,-637.03848)">
+      <rect
+         y="499.86807"
+         x="628.6496"
+         height="34.472931"
+         width="120.65525"
+         id="rect4136-35"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f0f0f0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.7236464;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4400-0"
+         y="520.50049"
+         x="650.80115"
+         style="font-style:normal;font-weight:normal;font-size:8.61823273px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           id="tspan4402-8"
+           y="520.50049"
+           x="650.80115"
+           sodipodi:role="line"><tspan
+             id="tspan4404-2"
+             style="font-size:12.92734814px"
+             y="520.50049"
+             x="650.80115">Django App</tspan></tspan></text>
+      <rect
+         y="543.49829"
+         x="676.34399"
+         height="34.847237"
+         width="73.148048"
+         id="rect4136-6-95"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f0f0f0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.34934032;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4430-7"
+         y="565.73499"
+         x="689.26312"
+         style="font-style:normal;font-weight:normal;font-size:8.61823273px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           id="tspan4432-2"
+           y="565.73499"
+           x="689.26312"
+           sodipodi:role="line"><tspan
+             id="tspan4434-8"
+             style="font-size:12.92734814px"
+             y="565.73499"
+             x="689.26312">Contrib</tspan></tspan></text>
+      <rect
+         y="587.50281"
+         x="628.6496"
+         height="34.472931"
+         width="120.65525"
+         id="rect4136-2-4"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f0f0f0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.7236464;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4424-10"
+         y="609.55231"
+         x="666.23126"
+         style="font-style:normal;font-weight:normal;font-size:8.61823273px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           id="tspan4426-46"
+           y="609.55231"
+           x="666.23126"
+           sodipodi:role="line"><tspan
+             id="tspan4428-3"
+             style="font-size:12.92734814px"
+             y="609.55231"
+             x="666.23126">Models</tspan></tspan></text>
+      <rect
+         y="631.32013"
+         x="628.6496"
+         height="34.472931"
+         width="120.65525"
+         id="rect4136-2-5-7"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f0f0f0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.7236464;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4418-4"
+         y="652.05353"
+         x="669.18854"
+         style="font-style:normal;font-weight:normal;font-size:8.61823273px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           id="tspan4420-2"
+           y="652.05353"
+           x="669.18854"
+           sodipodi:role="line"><tspan
+             id="tspan4422-4"
+             style="font-size:12.92734814px"
+             y="652.05353"
+             x="669.18854">Query</tspan></tspan></text>
+      <rect
+         y="675.13745"
+         x="628.6496"
+         height="34.472931"
+         width="120.65525"
+         id="rect4136-2-1-1"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f0f0f0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.7236464;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4412-6"
+         y="696.97552"
+         x="644.69727"
+         style="font-style:normal;font-weight:normal;font-size:8.61823273px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           id="tspan4414-1"
+           y="696.97552"
+           x="644.69727"
+           sodipodi:role="line"><tspan
+             id="tspan4416-8"
+             style="font-size:12.92734814px"
+             y="696.97552"
+             x="644.69727">DB connector</tspan></tspan></text>
+      <rect
+         y="718.95483"
+         x="628.6496"
+         height="34.472931"
+         width="120.65525"
+         id="rect4136-2-1-0-4"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f0f0f0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.7236464;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4406-7"
+         y="739.74823"
+         x="642.63953"
+         style="font-style:normal;font-weight:normal;font-size:8.61823273px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           id="tspan4408-5"
+           y="739.74823"
+           x="642.63953"
+           sodipodi:role="line"><tspan
+             id="tspan4410-1"
+             style="font-size:12.92734814px"
+             y="739.74823"
+             x="642.63953">SQL DataBase</tspan></tspan></text>
+      <g
+         transform="matrix(0.43091161,0,0,0.43091161,520.16888,470.64015)"
+         id="g4619-8">
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m 601.3677,357.35991 141.42857,0 -25.63736,-14.80174"
+           id="path4600-2"
+           inkscape:connector-curvature="0" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m 601.46614,366.72254 141.42857,0 -25.63736,14.80174"
+           id="path4600-5-9"
+           inkscape:connector-curvature="0" />
+      </g>
+      <rect
+         y="499.86807"
+         x="882.14679"
+         height="34.472931"
+         width="120.65525"
+         id="rect4136-3"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f0f0f0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.7236464;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4400-7"
+         y="520.50049"
+         x="904.29834"
+         style="font-style:normal;font-weight:normal;font-size:8.61823273px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           id="tspan4402-3"
+           y="520.50049"
+           x="904.29834"
+           sodipodi:role="line"><tspan
+             id="tspan4404-3-1"
+             style="font-size:12.92734814px"
+             y="520.50049"
+             x="904.29834">Django App</tspan></tspan></text>
+      <rect
+         y="543.49829"
+         x="929.84119"
+         height="34.847237"
+         width="73.148048"
+         id="rect4136-6-9"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f0f0f0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.34934032;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4430-2-3"
+         y="565.73499"
+         x="942.76031"
+         style="font-style:normal;font-weight:normal;font-size:8.61823273px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           id="tspan4432-7"
+           y="565.73499"
+           x="942.76031"
+           sodipodi:role="line"><tspan
+             id="tspan4434-5"
+             style="font-size:12.92734814px"
+             y="565.73499"
+             x="942.76031">Contrib</tspan></tspan></text>
+      <rect
+         y="587.50281"
+         x="882.14679"
+         height="34.472931"
+         width="120.65525"
+         id="rect4136-2-9"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f0f0f0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.7236464;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4424-8"
+         y="609.55225"
+         x="919.72845"
+         style="font-style:normal;font-weight:normal;font-size:8.61823273px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           id="tspan4426-5"
+           y="609.55225"
+           x="919.72845"
+           sodipodi:role="line"><tspan
+             id="tspan4428-6"
+             style="font-size:12.92734814px"
+             y="609.55225"
+             x="919.72845">Models</tspan></tspan></text>
+      <rect
+         y="631.32013"
+         x="882.14679"
+         height="34.472931"
+         width="120.65525"
+         id="rect4136-2-5-1"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f0f0f0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.7236464;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4418-1"
+         y="652.05353"
+         x="922.68573"
+         style="font-style:normal;font-weight:normal;font-size:8.61823273px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           id="tspan4420-0"
+           y="652.05353"
+           x="922.68573"
+           sodipodi:role="line"><tspan
+             id="tspan4422-6"
+             style="font-size:12.92734814px"
+             y="652.05353"
+             x="922.68573">Query</tspan></tspan></text>
+      <rect
+         y="675.13745"
+         x="882.14679"
+         height="34.472931"
+         width="120.65525"
+         id="rect4136-2-1-4"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#9dff8b;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.7236464;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4412-9"
+         y="695.83612"
+         x="888.15491"
+         style="font-style:normal;font-weight:normal;font-size:8.61823273px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           id="tspan4414-4"
+           y="695.83612"
+           x="888.15491"
+           sodipodi:role="line"><tspan
+             id="tspan4416-0"
+             style="font-size:12.92734814px"
+             y="695.83612"
+             x="888.15491">SQL to pymongo</tspan></tspan></text>
+      <rect
+         y="718.95483"
+         x="882.14679"
+         height="34.472931"
+         width="120.65525"
+         id="rect4136-2-1-0-2-5"
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f0f0f0;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.7236464;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4406-4"
+         y="739.55566"
+         x="911.25751"
+         style="font-style:normal;font-weight:normal;font-size:8.61823273px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           id="tspan4408-1"
+           y="739.55566"
+           x="911.25751"
+           sodipodi:role="line"><tspan
+             id="tspan4410-4"
+             style="font-size:12.92734814px"
+             y="739.55566"
+             x="911.25751">MongoDB</tspan></tspan></text>
+      <path
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.43091157;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:3.44729251, 1.72364625;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+         d="m 764.49947,670.46527 -19.51454,0 0,0 -110.42814,0 -21.10176,0"
+         id="path4163-4-3"
+         inkscape:connector-curvature="0" />
+      <path
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.43091157;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:3.44729251, 1.72364625;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+         d="m 764.49947,714.28262 -19.51454,0 0,0 -110.42814,0 -21.10176,0"
+         id="path4163-4-5"
+         inkscape:connector-curvature="0" />
+      <path
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.43091157;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:3.44729251, 1.72364625;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+         d="m 1017.9967,670.46526 -19.51456,0 0,0 -110.42812,0 -21.10177,0"
+         id="path4163-4-6"
+         inkscape:connector-curvature="0" />
+      <path
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.43091157;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:3.44729251, 1.72364625;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+         d="m 1017.9967,714.28261 -19.51456,0 0,0 -110.42812,0 -21.10177,0"
+         id="path4163-4-68"
+         inkscape:connector-curvature="0" />
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:38.16191864px;line-height:125%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="942.74268"
+       y="572.53857"
+       id="text5135"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan5137"
+         x="942.74268"
+         y="572.53857"
+         style="font-weight:bold">VS</tspan></text>
+  </g>
+</svg>

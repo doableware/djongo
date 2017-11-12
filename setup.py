@@ -44,7 +44,7 @@ and others... fully supported.
 
 setup(
     name='djongo',
-    version='1.2.5',
+    version='1.2.6',
     packages=['djongo'],
     url='https://nesdis.github.io/djongo/',
     license='BSD',
