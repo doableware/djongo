@@ -22,7 +22,7 @@ DATABASES = {
 </ol>
 <h2>Requirements:</h2>
 
-  1. djongo requires <b>python 3.5 or above.</b>
+  1. djongo requires <b>python 3.6 or above.</b>
 
 
 <h2>How it works:</h2>
