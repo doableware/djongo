@@ -20,7 +20,7 @@ Use Mongodb as a backend database for your django project, without changing a si
 
 ## Requirements
 
-  1. djongo requires <b>python 3.5 or above</b>.
+  1. djongo requires <b>python 3.6 or above</b>.
 
 
 ## How it works
