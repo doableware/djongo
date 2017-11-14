@@ -15,7 +15,7 @@ Use Mongodb as a backend database for your django project, without changing a si
     }
     ```
   
-3. Run `manage.py migrate` (ONLY the first time to create collections in mongoDB)
+3. Run `manage.py makemigrations` followed by `manage.py migrate` (ONLY the first time to create collections in mongoDB)
 4. YOUR ARE SET! HAVE FUN!
 
 ## Requirements

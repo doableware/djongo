@@ -14,6 +14,10 @@ class Dummy(models.Model):
     test = models.CharField(max_length=10)
     embedded = models.EmbeddedModelField(model_container=Embedded)
 
+class Dummy2(models.Model):
+
+    test = models.CharField(max_length=10)
+    embedded = models.EmbeddedModelField(model_container=Embedded)
 
 class DummyForm(models.forms.ModelForm):
     class Meta:
