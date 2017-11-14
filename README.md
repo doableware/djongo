@@ -13,11 +13,11 @@ DATABASES = {
     'default': {
         'ENGINE': 'djongo',
         'NAME': 'your-db-name',
-    }
+    }`
 }
 ```
 </li>   
-   <li> Run <code>manage.py migrate</code> (ONLY the first time to create collections in mongoDB) </li>
+   <li> Run <code>manage.py makemigrations</code> followed by <code>manage.py migrate</code> (ONLY the first time to create collections in mongoDB) </li>
    <li> YOUR ARE SET! HAVE FUN! </li>
 </ol>
 <h2>Requirements:</h2>

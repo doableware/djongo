@@ -226,6 +226,7 @@ class EmbeddedModelField(Field):
         super().__init__(*args, **kwargs)
         self.model_container = model_container
         self.model_form = model_form
+        self.null = True
 
         if model_form_kwargs is None:
             model_form_kwargs = {}

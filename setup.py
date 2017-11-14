@@ -1,36 +1,43 @@
 from distutils.core import setup
 
 LONG_DESCRIPTION = """
+
 Use Mongodb as a backend database for your django project, without changing a single django model!
 
-Usage::
+Usage
+-----
 
-    pip install djongo
+1. Install djongo::
+
+      pip install djongo
      
-Into settings.py file of your project, add:: 
+2. Into settings.py file of your project, add:: 
 
-    DATABASES = {
-        'default': {
-            'ENGINE': 'djongo',
-            'NAME': 'your-db-name',
-        }
-    }
+      DATABASES = {
+           'default': {
+               'ENGINE': 'djongo',
+               'NAME': 'your-db-name',
+           }
+       }
 
-Run (ONLY the first time to create collections in mongoDB)::
+3. Run (ONLY the first time to create collections in mongoDB)::
     
-    manage.py migrate
+      manage.py makemigrations
+      manage.py migrate
      
 YOUR ARE SET! HAVE FUN! 
 
-Requirements:
+Requirements
+------------
 
-1. djongo requires python 3.5 or above.
+1. Djongo requires python 3.6 or above.
 
 
-How it works:
+How it works
+------------
 
-djongo is a SQL to mongodb query transpiler. It translates a SQL query string into a mongoDB query document. As a result, all Django features, models etc work as is.
-  
+Djongo is a SQL to mongodb query transpiler. It translates a SQL query string into a mongoDB query document. As a result, all Django features, models etc work as is.
+
 Django contrib modules:: 
  
     'django.contrib.admin',
@@ -38,13 +45,17 @@ Django contrib modules::
     'django.contrib.sessions',
 
 and others... fully supported.
+
+Important links
+---------------
  
-`Full Documentation <https://nesdis.github.io/djongo/>`_
+* `Full Documentation <https://nesdis.github.io/djongo/>`_
+* `Source code <https://github.com/nesdis/djongo>`_
 """
 
 setup(
     name='djongo',
-    version='1.2.6',
+    version='1.2.8',
     packages=['djongo'],
     url='https://nesdis.github.io/djongo/',
     license='BSD',
@@ -57,5 +68,5 @@ setup(
         'django>=1.8'
     ],
 	long_description=LONG_DESCRIPTION,
-    python_requires='>=3.5'
+    python_requires='>=3.6'
 )
