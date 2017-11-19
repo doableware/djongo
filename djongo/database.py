@@ -1,7 +1,8 @@
 from pymongo import MongoClient
 
-def connect(name, **kwargs):
-    return MongoClient(**kwargs)[name]
+
+def connect(**kwargs):
+    return MongoClient(**kwargs)
 
 
 class Error(Exception):  # NOQA: StandardError undefined on PY3
