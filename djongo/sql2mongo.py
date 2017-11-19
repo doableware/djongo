@@ -2,6 +2,7 @@ from itertools import chain
 
 from pymongo.cursor import Cursor as PymongoCursor
 from pymongo.database import Database
+from pymongo import MongoClient
 from logging import getLogger
 import re
 import typing
@@ -94,7 +95,8 @@ class Projection:
 class Parse:
 
     def __init__(self,
-                 connection: Database,
+                 client_connection: MongoClient,
+                 db_connection: Database,
                  sql: str,
                  params: typing.Optional[list]):
         logger.debug('params: {}'.format(params))
@@ -102,7 +104,8 @@ class Parse:
         self._params = params
         self._p_index_count = -1
         self._sql = re.sub(r'%s', self._param_index, sql)
-        self.db = connection
+        self.db = db_connection
+        self.cli_con = client_connection
         self.left_tbl: str = None
 
         self.last_row_id = None
@@ -133,7 +136,7 @@ class Parse:
         sm_type = statement.get_type()
 
         # Some of these commands can be ignored, some need to be implemented.
-        if sm_type in ('ALTER', 'DROP'):
+        if sm_type in ('ALTER',):
             logger.debug('Not supported {}'.format(statement))
             return None
 
@@ -163,8 +166,20 @@ class Parse:
                                 'seq': 0
                             }
                         })
+        elif next_tok.match(tokens.Keyword, 'DATABASE'):
+            pass
         else:
             logger.debug('Not supported {}'.format(sm))
+
+    def _drop(self, sm):
+        next_id, next_tok = sm.token_next(0)
+
+        if not next_tok.match(tokens.Keyword, 'DATABASE'):
+            raise SQLDecodeError('statement:{}'.format(sm))
+
+        next_id, next_tok = sm.token_next(next_id)
+        db_name = next_tok.get_name()
+        self.cli_con.drop_database(db_name)
 
     def _update(self, sm):
         db_con = self.db
@@ -347,7 +362,8 @@ class Parse:
         'UPDATE': _update,
         'INSERT': _insert,
         'DELETE': _delete,
-        'CREATE': _create
+        'CREATE': _create,
+        'DROP': _drop,
     }
 
 

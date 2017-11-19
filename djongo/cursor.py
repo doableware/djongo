@@ -6,8 +6,9 @@ logger = getLogger(__name__)
 
 class Cursor:
 
-    def __init__(self, mongo_conn):
-        self.mongo_conn = mongo_conn
+    def __init__(self, client_conn, db_conn):
+        self.db_conn = db_conn
+        self.client_conn = client_conn
         self.result = None
         self.parse = None
 
@@ -25,7 +26,7 @@ class Cursor:
             pass
 
         try:
-            return getattr(self.mongo_conn, name)
+            return getattr(self.db_conn, name)
         except AttributeError:
             raise
 
@@ -41,7 +42,7 @@ class Cursor:
         return self.parse.last_row_id
 
     def execute(self, sql, params=None):
-        self.parse = Parse(self.mongo_conn, sql, params)
+        self.parse = Parse(self.client_conn, self.db_conn, sql, params)
         self.result = self.parse.result()
 
     def fetchmany(self, size=1):

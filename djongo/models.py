@@ -26,7 +26,7 @@ class DjongoManager(Manager):
             if not name.startswith('mongo_'):
                 raise AttributeError
             name = name.strip('mongo_')
-            m_cli = connection.cursor().mongo_conn[self.model._meta.db_table]
+            m_cli = connection.cursor().db_conn[self.model._meta.db_table]
             return getattr(m_cli, name)
 
 

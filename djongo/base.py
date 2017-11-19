@@ -76,6 +76,10 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     introspection_class = DatabaseIntrospection
     ops_class = DatabaseOperations
 
+    def __init__(self, *args, **kwargs):
+        self.client_conn = None
+        super().__init__(*args, **kwargs)
+
     def is_usable(self):
         if self.connection is not None:
             return True
@@ -95,9 +99,14 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         This needs to be made more generic to accept
         other MongoClient parameters.
         """
+
         name = connection_params.pop('name')
         connection_params['document_class'] = OrderedDict
-        return Database.connect(name=name, **connection_params)
+        if self.client_conn is not None:
+            self.client_conn.close()
+
+        self.client_conn = Database.connect(**connection_params)
+        return self.client_conn[name]
 
     def _set_autocommit(self, autocommit):
         pass
@@ -106,7 +115,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         pass
 
     def create_cursor(self, name=None):
-        return Cursor(self.connection)
+        return Cursor(self.client_conn, self.connection)
 
     def _close(self):
         if self.connection:
