@@ -503,6 +503,10 @@ class Result:
 
         cur = self._cursor
         doc = cur.next()
+        if isinstance(cur, PymongoCursor):
+            doc.pop('_id')
+            if len(doc) == len(p_sql.proj.coll_fields):
+                return tuple(doc.values())
 
         ret = []
         for coll_field in p_sql.proj.coll_fields:
