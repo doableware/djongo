@@ -1,35 +1,43 @@
 from djongo import models
+from djongo.models import forms
 
-class Embedded(models.Model):
-    text = models.CharField(max_length=100)
+
+class BlogContent(models.Model):
+    comment = models.CharField(max_length=100)
+    author = models.CharField(max_length=100)
 
     class Meta:
         abstract = True
 
 
-class DummyForm(models.forms.ModelForm):
+class BlogContentForm(forms.ModelForm):
+
     class Meta:
-        model = Embedded
+        model = BlogContent
         fields = (
-            'text',
+            'comment', 'author'
         )
 
 
-class Dummy(models.Model):
-    test = models.CharField(max_length=100)
-    embedded = models.EmbeddedModelField(
-        model_container=Embedded,
-        model_form=DummyForm
+class BlogPost(models.Model):
+    h1 = models.CharField(max_length=100)
+    content = models.EmbeddedModelField(
+        model_container=BlogContent,
+        model_form=BlogContentForm
     )
+
+    objects = models.DjongoManager()
 
 
 class Dummy2(models.Model):
     test = models.CharField(max_length=10)
 
 
-class Dummies(models.Model):
+class MultipleBlogPosts(models.Model):
     h1 = models.CharField(max_length=100)
     content = models.ArrayModelField(
-        model_container=Embedded,
-        model_form=DummyForm
+        model_container=BlogContent,
+        model_form=BlogContentForm
     )
+
+    objects = models.DjongoManager()

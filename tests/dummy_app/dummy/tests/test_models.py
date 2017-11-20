@@ -1,18 +1,18 @@
 from logging import getLogger, StreamHandler, DEBUG
 from django.core import management
 from . import TestCase
-from dummy.models import Dummy, Embedded, Dummies
+from dummy.models import BlogPost, BlogContent, MultipleBlogPosts
 from django.contrib.auth.models import User
 
 
 class TestWithDjango(TestCase):
 
     def test_models(self):
-        embedded = Embedded(text='embedded text')
-        test = Dummy(test='test data', embedded=embedded)
+        content = BlogContent(comment='embedded text', author='embedded')
+        test = BlogPost(h1='test data', content=content)
         test.save()
-        tdel = Dummy.objects.get(test='test data')
-        embedded_array = Dummies(h1='heading', content=[embedded, embedded])
+        tdel = BlogPost.objects.get(h1='test data')
+        embedded_array = MultipleBlogPosts(h1='heading', content=[content, content])
         embedded_array.save()
         tdel.delete()
 
