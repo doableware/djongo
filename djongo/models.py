@@ -145,7 +145,7 @@ class ArrayFormField(forms.Field):
         if form_set.is_valid():
             ret = []
             for itm in form_set.cleaned_data:
-                if itm.get('DELETE', False):
+                if itm.get('DELETE', True):
                     continue
                 itm.pop('DELETE')
                 ret.append(self.mdl_form._meta.model(**itm))
