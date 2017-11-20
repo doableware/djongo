@@ -4,6 +4,9 @@ from django.core.exceptions import ValidationError
 from django.db import connection
 import typing
 
+from django.utils.safestring import mark_safe
+
+
 def make_mdl(mdl, mdl_dict):
     for field_name in mdl_dict:
         field = mdl._meta.get_field(field_name)
@@ -34,8 +37,8 @@ class ArrayModelField(Field):
 
     def __init__(self,
                  model_container: typing.Type[Model],
-                 model_form: typing.Type[forms.ModelForm]=None,
-                 model_form_kwargs_l: dict=None,
+                 model_form: typing.Type[forms.ModelForm] = None,
+                 model_form_kwargs_l: dict = None,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.model_container = model_container
@@ -152,7 +155,16 @@ class ArrayFormField(forms.Field):
             raise ValidationError(form_set.errors + form_set.non_form_errors())
 
     def has_changed(self, initial, data):
-        form_set = self.ArrayFormSet(data, initial=initial, prefix=self.name)
+        form_set_initial = []
+        for init in initial:
+            form_set_initial.append(
+                forms.model_to_dict(
+                    init,
+                    fields=self.mdl_form._meta.fields,
+                    exclude=self.mdl_form._meta.exclude
+                )
+            )
+        form_set = self.ArrayFormSet(data, initial=form_set_initial, prefix=self.name)
         return form_set.has_changed()
 
     def get_bound_field(self, form, field_name):
@@ -189,7 +201,7 @@ class ArrayFormBoundField(forms.BoundField):
             yield form
 
     def __str__(self):
-        return '<table>\n{}\n</table>'.format(str(self.form_set))
+        return mark_safe('<table>\n{}\n</table>'.format(str(self.form_set)))
 
     def __len__(self):
         return len(self.form_set)
@@ -239,7 +251,22 @@ class EmbeddedModelField(Field):
             kwargs['model_form'] = self.model_form
         return name, path, args, kwargs
 
+    def pre_save(self, model_instance, add):
+        value = getattr(model_instance, self.attname)
+
+        ret_val = {}
+        for fld in value._meta.get_fields():
+            if not useful_field(fld):
+                continue
+
+            fld_value = getattr(value, fld.attname)
+            ret_val[fld.attname] = fld.get_db_prep_value(fld_value, None, False)
+        return ret_val
+
     def get_db_prep_value(self, value, connection=None, prepared=False):
+        if isinstance(value, dict):
+            return value
+
         if not isinstance(value, Model):
             raise TypeError('Object must be of type Model')
 
@@ -281,20 +308,20 @@ class EmbeddedFormField(forms.MultiValueField):
         form_fields = []
         mdl_form_field_names = []
         widgets = []
+        model_form_kwargs = mdl_form_kw.copy()
 
         try:
-            mdl_form_kw['prefix'] = '{}-{}'.format(mdl_form_kw['prefix'], name)
+            model_form_kwargs['prefix'] = '{}-{}'.format(model_form_kwargs['prefix'], name)
         except KeyError:
-            mdl_form_kw['prefix'] = name
+            model_form_kwargs['prefix'] = name
 
-        mdl_form = mdl_form(**mdl_form_kw)
-        self.mdl_form = mdl_form
+        self.mdl_form = mdl_form(**model_form_kwargs)
 
         error_messages = {
             'incomplete': 'Enter all required fields.',
         }
 
-        for fld_name, fld in mdl_form.fields.items():
+        for fld_name, fld in self.mdl_form.fields.items():
             if isinstance(fld, (forms.ModelChoiceField, forms.ModelMultipleChoiceField)):
                 continue
             form_fields.append(fld)
@@ -307,7 +334,7 @@ class EmbeddedFormField(forms.MultiValueField):
 
     def compress(self, clean_data_vals):
         mdl_fi = dict(zip(self.mdl_form.fields.keys(), clean_data_vals))
-        return self.mdl_form.model(**mdl_fi)
+        return self.mdl_form._meta.model(**mdl_fi)
 
     def get_bound_field(self, form, field_name):
         if form.prefix:
@@ -337,7 +364,7 @@ class EmbeddedFormWidget(forms.MultiWidget):
         elif isinstance(value, list):
             return value
         elif isinstance(value, Model):
-            return [getattr(f_n, value) for f_n in self.field_names]
+            return [getattr(value, f_n) for f_n in self.field_names]
         else:
             raise forms.ValidationError('Expected model-form')
 

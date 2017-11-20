@@ -14,6 +14,7 @@ class TestWithDjango(TestCase):
         tdel = Dummy.objects.get(test='test data')
         embedded_array = Dummies(h1='heading', content=[embedded, embedded])
         embedded_array.save()
+        tdel.delete()
 
     # def test_admin(self):
     #
