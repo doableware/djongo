@@ -48,7 +48,7 @@ Djongo connector for MongoDB ensures that you:
  
 For a more detailed discussion on usage with Django check out [Integrating Django with MongoDB](/djongo/integrating-django-with-mongodb/)
 
-## Use the Admin GUI to manipulate embedded documents
+## Use the Admin GUI to add 'embedded' documents
 
 <div style="max-width: 95%; margin-left: auto; margin-right: auto">
     <img src="/djongo/images/admin.jpg" alt="Django Admin">
