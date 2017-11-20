@@ -44,7 +44,8 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
 
 <h2>Features:</h2>
 
-  * Stop the immigrations.    
+  * Stop the immigrations.  
+  * Use Django Admin GUI to access MongoDB  
   * Embedded model.
   * Embedded Array.
   * Embedded Form Fields.
