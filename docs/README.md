@@ -88,7 +88,7 @@ class BlogPost(models.Model):
 
 That’s it you are set! Fire up Django Admin on localhost:8000/admin/ and this is what you get:
 
-<div style="max-width: 95%; margin-left: auto; margin-right: auto">
+<div style="max-width: 100%; margin-left: auto; margin-right: auto">
     <img src="/djongo/images/admin.jpg" alt="Django Admin">
 </div>
    
@@ -133,7 +133,7 @@ class MultipleBlogPosts(models.Model):
 ```
 Fire up Django Admin with the new changes and you have:
 
-<div style="max-width: 95%; margin-left: auto; margin-right: auto">
+<div style="max-width: 100%; margin-left: auto; margin-right: auto">
     <img src="/djongo/images/admin-extended.jpg" alt="Django Admin">
 </div>
 
