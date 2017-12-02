@@ -1,8 +1,8 @@
 # Integrating Django with MongoDB
 
-This document is a tutorial on how to integrate MongoDB with Django. It describes the Django ORM internal implementation that is not covered by the [Django documentation](https://docs.djangoproject.com/en/dev/). There are different ways to integrate MongoDB with Django, each with positives and negatives.
+This document is a tutorial on how to integrate MongoDB with Django with focus on Djongo. It describes the Django ORM internal implementation that is not covered by the [Django documentation](https://docs.djangoproject.com/en/dev/). If you have not yet checked out the [introduction to Djongo](https://nesdis.github.io/djongo/), be sure to do so! 
 
-Insights into the Django ORM design will help in understanding ways to integrate MongoDB and Django.     
+There are different ways to integrate MongoDB with Django, each with positives and negatives. Insights into the Django ORM design will help in understanding ways to integrate MongoDB and Django.     
 
 ## Django ORM internals
 
