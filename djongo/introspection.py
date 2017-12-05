@@ -7,3 +7,24 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
 
     def get_table_list(self, cursor):
         return [TableInfo(c,'t') for c in cursor.db_conn.collection_names(False)]
+
+    def get_constraints(self, cursor, table_name):
+        constraint = {}
+
+        indexes = cursor.db_conn[table_name].index_information()
+        for name, info in indexes.items():
+            if name == '_id_':
+                continue
+
+            columns = [field[0] for field in info['key']]
+            orders = ['ASC' if field[1] == 1 else 'DESC' for field in info['key']]
+            constraint[name] = {
+                'columns': columns,
+                'primary_key': name == '__primary_key__',
+                'unique': info.get('unique', False),
+                'index': True,
+                'orders': orders,
+                "foreign_key": False,
+                "check": False,
+            }
+        return constraint
