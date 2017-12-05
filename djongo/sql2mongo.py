@@ -135,16 +135,49 @@ class Parse:
         statement = statement[0]
         sm_type = statement.get_type()
 
-        # Some of these commands can be ignored, some need to be implemented.
-        if sm_type in ('ALTER',):
-            logger.debug('Not supported {}'.format(statement))
-            return None
-
         try:
-            return self.FUNC_MAP[sm_type](self, statement)
+            handler = self.FUNC_MAP[sm_type]
         except KeyError:
             logger.debug('\n Not implemented {} {}'.format(sm_type, statement))
             raise NotImplementedError('{} command not implemented for SQL {}'.format(sm_type, self._sql))
+        else:
+            return handler(self, statement)
+
+    def _alter(self, sm):
+        next_id, next_tok = sm.token_next(0)
+        if next_tok.match(tokens.Keyword, 'TABLE'):
+            next_id, next_tok = sm.token_next(next_id)
+            table = next(SQLToken.iter_tokens(next_tok)).field
+
+            next_id, next_tok = sm.token_next(next_id)
+            if not next_tok.match(tokens.Keyword, 'ADD'):
+                logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
+                return
+
+            next_id, next_tok = sm.token_next(next_id)
+            if not next_tok.match(tokens.Keyword, 'CONSTRAINT'):
+                logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
+                return
+
+            next_id, next_tok = sm.token_next(next_id)
+            if not isinstance(next_tok, Identifier):
+                logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
+                return
+
+            constraint_name = next_tok.get_name()
+
+            next_id, next_tok = sm.token_next(next_id)
+            if not next_tok.match(tokens.Keyword, 'UNIQUE'):
+                logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
+                return
+
+            next_id, next_tok = sm.token_next(next_id)
+            if isinstance(next_tok, Parenthesis):
+                index = [(field.strip(' "'), 1) for field in next_tok.value.strip('()').split(',')]
+                self.db[table].create_index(index, unique=True, name=constraint_name)
+            else:
+                raise NotImplementedError('Alter command not implemented for SQL {}'.format(self._sql))
+
 
     def _create(self, sm):
         next_id, next_tok = sm.token_next(0)
@@ -156,16 +189,37 @@ class Parse:
 
             next_id, next_tok = sm.token_next(next_id)
             if isinstance(next_tok, Parenthesis):
+                filter = {
+                    'name': table
+                }
+                set = {}
+                push = {}
+                update = {}
+
                 for col in next_tok.value.strip('()').split(','):
+                    field = col[col.find('"') + 1: col.rfind('"')]
+
                     if col.find('AUTOINCREMENT') != -1:
-                        field = col[col.find('"')+1: col.rfind('"')]
-                        self.db['__schema__'].insert_one({
-                            'name': table,
-                            'auto': {
-                                'field_name': field,
-                                'seq': 0
-                            }
-                        })
+                        push['auto.field_names'] = field
+                        set['auto.seq'] = 0
+
+                    if col.find('PRIMARY KEY') != -1:
+                        self.db[table].create_index(field, unique=True, name='__primary_key__')
+
+                    if col.find('UNIQUE') != -1:
+                        self.db[table].create_index(field, unique=True)
+
+                if set:
+                    update['$set'] = set
+                if push:
+                    update['$push'] = push
+                if update:
+                    self.db['__schema__'].update_one(
+                        filter=filter,
+                        update=update,
+                        upsert=True
+                    )
+
         elif next_tok.match(tokens.Keyword, 'DATABASE'):
             pass
         else:
@@ -239,15 +293,20 @@ class Parse:
         if isinstance(nexttok, Identifier):
             collection = nexttok.get_name()
             auto = db_con['__schema__'].find_one_and_update(
-                {'name': collection},
+                {
+                    'name': collection,
+                    'auto': {
+                        '$exists': True
+                    }
+                },
                 {'$inc': {'auto.seq': 1}},
                 return_document=ReturnDocument.AFTER
             )
 
             if auto:
-                auto_field_name = auto['auto']['field_name']
                 auto_field_id = auto['auto']['seq']
-                insert[auto_field_name] = auto_field_id
+                for name in auto['auto']['field_names']:
+                    insert[name] = auto_field_id
             else:
                 auto_field_id = None
         else:
@@ -364,6 +423,7 @@ class Parse:
         'DELETE': _delete,
         'CREATE': _create,
         'DROP': _drop,
+        'ALTER': _alter
     }
 
 
