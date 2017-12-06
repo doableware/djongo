@@ -1,14 +1,15 @@
 from logging import getLogger, StreamHandler, DEBUG
 from django.core import management
 from . import TestCase
-from dummy.models import BlogPost, BlogContent, MultipleBlogPosts
+from dummy.models import BlogPost, BlogContent, MultipleBlogPosts, Author
 from django.contrib.auth.models import User
 
 
 class TestWithDjango(TestCase):
 
     def test_models(self):
-        content = BlogContent(comment='embedded text', author='embedded')
+        author = Author(name='nes', email='nes@mail.com')
+        content = BlogContent(comment='embedded text', author=author)
         test = BlogPost(h1='test data', content=content)
         test.save()
         tdel = BlogPost.objects.get(h1='test data')

@@ -28,3 +28,9 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
                 "check": False,
             }
         return constraint
+
+    def get_key_columns(self, cursor, table_name):
+        return []
+
+    def get_indexes(self, cursor, table_name):
+        return self.get_constraints(cursor, table_name)

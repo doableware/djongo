@@ -147,15 +147,23 @@ class Parse:
         next_id, next_tok = sm.token_next(0)
         if next_tok.match(tokens.Keyword, 'TABLE'):
             next_id, next_tok = sm.token_next(next_id)
+            if not next_tok:
+                logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
+                return
+
             table = next(SQLToken.iter_tokens(next_tok)).field
 
             next_id, next_tok = sm.token_next(next_id)
-            if not next_tok.match(tokens.Keyword, 'ADD'):
+            if (not next_tok
+                or not next_tok.match(tokens.Keyword, 'ADD')
+            ):
                 logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
                 return
 
             next_id, next_tok = sm.token_next(next_id)
-            if not next_tok.match(tokens.Keyword, 'CONSTRAINT'):
+            if (not next_tok
+                or not next_tok.match(tokens.Keyword, 'CONSTRAINT')
+            ):
                 logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
                 return
 
