@@ -86,9 +86,10 @@ root_logger.addHandler(StreamHandler())
 class TestParse(TestCase):
 
     def test_with_db(self):
-        conn = MongoClient()['djongo-test']
+        db = MongoClient()
+        conn = db['djongo-test']
         for i, s in enumerate(sql):
-            result = Parse(conn, s, [1, 2, 3, 4, 5]).result()
+            result = Parse(db, conn, s, [1, 2, 3, 4, 5]).result()
             print(i)
             try:
                 doc = result.next()
@@ -96,20 +97,34 @@ class TestParse(TestCase):
                 pass
 
     def _mock(self):
-        result = Parse(self.conn, self.sql, self.params).result()
+        result = Parse(self.db, self.conn, self.sql, self.params).result()
         doc = next(result)
 
     def test_where(self):
+        self.db = mock.MagicMock()
         conn = self.conn = mock.MagicMock()
         find = self.conn.__getitem__().find
 
-        where = 'SELECT "table"."col" FROM "table" WHERE'
         filt_col1 = '"table"."col1"'
-
         find_args = {
             'projection': ['col'],
             'filter': {}
         }
+        # 'SELECT (1) AS "a" FROM "django_session" WHERE "django_session"."session_key" = %(0)s LIMIT 1'
+        where = 'SELECT (1) AS "a" FROM "table" WHERE'
+
+        self.sql = f'{where} {filt_col1} = %s LIMIT 1'
+        find_args = {}
+        self.params = [1]
+        result = Parse(self.db, self.conn, self.sql, self.params).result()
+
+
+
+        #'SELECT COUNT(*) AS "__count" FROM "auth_user"'
+
+        where = 'SELECT "table"."col" FROM "table" WHERE'
+
+
 
         self.sql = f'{where} {filt_col1} = %s'
         find_args['filter'] = {
@@ -224,6 +239,17 @@ class TestParse(TestCase):
             }
         }
         self.params = [1, 2]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} NOT ({filt_col1} IN (%s))'
+        find_args['filter'] = {
+            'col1': {
+                '$nin': [1]
+            }
+        }
+        self.params = [1]
         self._mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
@@ -372,3 +398,6 @@ class TestParse(TestCase):
         self._mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
+
+
+
