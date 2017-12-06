@@ -768,9 +768,11 @@ class NotInOp(_InNotInOp):
         self._fill_in(self.token.token_next(idx)[1])
 
     def to_mongo(self):
-        op = '$nin'
+        op = '$nin' if not self.is_negated else '$in'
         return {self._field: {op: self._in}}
 
+    def negate(self):
+        self.is_negated = True
 
 class InOp(_InNotInOp):
 
@@ -779,8 +781,11 @@ class InOp(_InNotInOp):
         self._fill_in(self.token.token_next(self._token_id)[1])
 
     def to_mongo(self):
-        op = '$in'
+        op = '$in' if not self.is_negated else '$nin'
         return {self._field: {op: self._in}}
+
+    def negate(self):
+        self.is_negated = True
 
 
 # TODO: Need to do this
