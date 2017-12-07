@@ -510,6 +510,25 @@ class Result:
                         }
                     ])
 
+            if p_sql.filter:
+                pipeline.append({
+                    '$match': p_sql.filter
+                })
+
+            if p_sql.distinct:
+                pipeline.extend([
+                    {
+                        '$group': {
+                            '_id': '$'+p_sql.proj.coll_fields[0].field
+                        }
+                    },
+                    {
+                        '$project': {
+                            p_sql.proj.coll_fields[0].field: '$_id'
+                        }
+                    }
+                ])
+
             if p_sql.sort:
                 sort = OrderedDict()
                 for s in p_sql.sort:
@@ -520,11 +539,6 @@ class Result:
 
                 pipeline.append({
                     '$sort': sort
-                })
-
-            if p_sql.filter:
-                pipeline.append({
-                    '$match': p_sql.filter
                 })
 
             if p_sql.limit:
@@ -541,20 +555,6 @@ class Result:
                         proj[fld.coll + '.' + fld.field] = True
 
                 pipeline.append({'$project': proj})
-
-            if p_sql.distinct:
-                pipeline.extend([
-                    {
-                        '$group': {
-                            '_id': '$'+p_sql.proj.coll_fields[0].field
-                        }
-                    },
-                    {
-                        '$project': {
-                            p_sql.proj.coll_fields[0].field: '$_id'
-                        }
-                    }
-                ])
 
             return p_sql.db[p_sql.left_tbl].aggregate(pipeline)
 

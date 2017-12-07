@@ -78,6 +78,7 @@ WHERE "django_admin_log"."user_id" = %(0)s ORDER BY "django_admin_log"."action_t
 
 'SELECT DISTINCT "viewflow_task"."flow_task" FROM "viewflow_task" INNER JOIN "viewflow_process" ON ("viewflow_task"."process_id" = "viewflow_process"."id") WHERE ("viewflow_process"."flow_class" IN (%(0)s, %(1)s, %(2)s) AND "viewflow_task"."owner_id" = %(3)s AND "viewflow_task"."status" = %(4)s) ORDER BY "viewflow_task"."flow_task" ASC'
 
+'SELECT DISTINCT "table1"."col1" FROM "table1" INNER JOIN "table2" ON ("table1"."col2" = "table2"."col1") WHERE ("table2"."flow_class" IN (%(0)s, %(1)s, %(2)s) AND "table1"."col3" = %(3)s AND "table1"."col4" = %(4)s) ORDER BY "table1"."col1" ASC'
        ]
 
 root_logger = getLogger()
@@ -106,6 +107,7 @@ class TestParse(TestCase):
         self.db = mock.MagicMock()
         conn = self.conn = mock.MagicMock()
         find = self.conn.__getitem__().find
+        distinct = find.distinct
         filt_col1 = '"table"."col1"'
 
 
@@ -113,7 +115,7 @@ class TestParse(TestCase):
 
         #'SELECT DISTINCT "table1"."col1" FROM "table1" INNER JOIN "table2" ON ("table1"."col2" = "table2"."col1") WHERE ("table2"."flow_class" IN (%(0)s, %(1)s, %(2)s) AND "table1"."col3" = %(3)s AND "table1"."col4" = %(4)s) ORDER BY "table1"."col1" ASC'
 
-        self.sql = 'SELECT DISTINCT "table1"."col1" FROM "table1" INNER JOIN "table2" ON ("table1"."col2" = "table2"."col1") WHERE ("table2"."flow_class" IN (%(0)s, %(1)s, %(2)s) AND "table1"."col3" = %(3)s AND "table1"."col4" = %(4)s) ORDER BY "table1"."col1" ASC'
+        self.sql = 'SELECT DISTINCT "table1"."col1" FROM "table1" WHERE ("table2"."flow_class" IN (%(0)s, %(1)s, %(2)s) AND "table1"."col3" = %(3)s AND "table1"."col4" = %(4)s) ORDER BY "table1"."col1" ASC'
         self.params = [1,1,1,1,1]
         result = Parse(self.db, self.conn, self.sql, self.params).result()
         try:
