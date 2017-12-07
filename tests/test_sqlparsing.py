@@ -2,6 +2,8 @@ from unittest import TestCase, mock
 
 from logging import getLogger, DEBUG, StreamHandler
 from pymongo import MongoClient
+from pymongo.cursor import Cursor
+
 from djongo.sql2mongo import Parse
 
 sql = [
@@ -107,22 +109,33 @@ class TestParse(TestCase):
         self.db = mock.MagicMock()
         conn = self.conn = mock.MagicMock()
         find = self.conn.__getitem__().find
-        distinct = find.distinct
+        cursor = mock.MagicMock()
+        cursor.__class__ = Cursor
+        cursor.count.return_value =1
+        find.return_value = cursor
+        distinct = cursor.distinct
+        cursor2 = mock.MagicMock()
+        cursor2.__class__ = Cursor
+        distinct.return_value = cursor2
+
         filt_col1 = '"table"."col1"'
 
-
         # Test for special cases of sql syntax first
+        self.sql = 'SELECT DISTINCT "table1"."col1" FROM "table1" WHERE ("table1"."col2" = %s)'
+        self.params = [1]
+        find_args = {
+            'projection': ['col1'],
+            'filter': {
+                'col2': {
+                    '$eq': 1
+                }
+            }
+        }
 
-        #'SELECT DISTINCT "table1"."col1" FROM "table1" INNER JOIN "table2" ON ("table1"."col2" = "table2"."col1") WHERE ("table2"."flow_class" IN (%(0)s, %(1)s, %(2)s) AND "table1"."col3" = %(3)s AND "table1"."col4" = %(4)s) ORDER BY "table1"."col1" ASC'
-
-        self.sql = 'SELECT DISTINCT "table1"."col1" FROM "table1" WHERE ("table2"."flow_class" IN (%(0)s, %(1)s, %(2)s) AND "table1"."col3" = %(3)s AND "table1"."col4" = %(4)s) ORDER BY "table1"."col1" ASC'
-        self.params = [1,1,1,1,1]
-        result = Parse(self.db, self.conn, self.sql, self.params).result()
-        try:
-            next(result)
-        except StopIteration:
-            pass
-
+        self._mock()
+        find.assert_any_call(**find_args)
+        distinct.assert_any_call('col1')
+        conn.reset_mock()
 
         # 'SELECT (1) AS "a" FROM "django_session" WHERE "django_session"."session_key" = %(0)s LIMIT 1'
         where = 'SELECT (1) AS "a" FROM "table" WHERE'
