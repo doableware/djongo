@@ -114,6 +114,8 @@ class Parse:
         self.filter: dict = None
         self.sort: typing.List[SortOrder] = []
         self.limit: int = None
+        self.distinct: bool = False
+
         self.joins: typing.List[typing.Union[InnerJoin, OuterJoin]] = []
 
         self._parse()
@@ -350,6 +352,15 @@ class Parse:
               and next_tok.tokens[0].token_first().value == 'COUNT'):
             self.proj.return_count = True
 
+        elif next_tok.match(tokens.Keyword, 'DISTINCT'):
+            self.distinct = True
+            next_id, next_tok = sm.token_next(next_id)
+            for sql in SQLToken.iter_tokens(next_tok):
+                self.proj.coll_fields.append(CollField(sql.coll, sql.field))
+
+            if len(self.proj.coll_fields) > 1:
+                raise SQLDecodeError('Distinct for more than 1 field not supported yet')
+
         else:
             for sql in SQLToken.iter_tokens(next_tok):
                 self.proj.coll_fields.append(CollField(sql.coll, sql.field))
@@ -531,6 +542,20 @@ class Result:
 
                 pipeline.append({'$project': proj})
 
+            if p_sql.distinct:
+                pipeline.extend([
+                    {
+                        '$group': {
+                            '_id': '$'+p_sql.proj.coll_fields[0].field
+                        }
+                    },
+                    {
+                        '$project': {
+                            p_sql.proj.coll_fields[0].field: '$_id'
+                        }
+                    }
+                ])
+
             return p_sql.db[p_sql.left_tbl].aggregate(pipeline)
 
         else:
@@ -547,7 +572,11 @@ class Result:
             if p_sql.sort:
                 query_args['sort'] = [(s.coll_field.field, s.ord) for s in p_sql.sort]
 
-            return p_sql.db[p_sql.left_tbl].find(**query_args)
+            pym_cur = p_sql.db[p_sql.left_tbl].find(**query_args)
+            if p_sql.distinct:
+                pym_cur = pym_cur.distinct(p_sql.proj.coll_fields[0].field)
+
+            return pym_cur
 
     def count(self):
         if self._count is not None:

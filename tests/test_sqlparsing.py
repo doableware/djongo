@@ -74,7 +74,9 @@ WHERE "django_admin_log"."user_id" = %(0)s ORDER BY "django_admin_log"."action_t
 
 'SELECT "auth_group_permissions"."permission_id" FROM "auth_group_permissions" WHERE ("auth_group_permissions"."group_id" = %s AND "auth_group_permissions"."permission_id" IN (%s))',
 
-'SELECT (1) AS "a" FROM "auth_group" WHERE ("auth_group"."name" = %(0)s AND NOT ("auth_group"."id" = %(1)s)) LIMIT 1'
+'SELECT (1) AS "a" FROM "auth_group" WHERE ("auth_group"."name" = %(0)s AND NOT ("auth_group"."id" = %(1)s)) LIMIT 1',
+
+'SELECT DISTINCT "viewflow_task"."flow_task" FROM "viewflow_task" INNER JOIN "viewflow_process" ON ("viewflow_task"."process_id" = "viewflow_process"."id") WHERE ("viewflow_process"."flow_class" IN (%(0)s, %(1)s, %(2)s) AND "viewflow_task"."owner_id" = %(3)s AND "viewflow_task"."status" = %(4)s) ORDER BY "viewflow_task"."flow_task" ASC'
 
        ]
 
@@ -104,27 +106,64 @@ class TestParse(TestCase):
         self.db = mock.MagicMock()
         conn = self.conn = mock.MagicMock()
         find = self.conn.__getitem__().find
-
         filt_col1 = '"table"."col1"'
-        find_args = {
-            'projection': ['col'],
-            'filter': {}
-        }
+
+
+        # Test for special cases of sql syntax first
+
+        #'SELECT DISTINCT "table1"."col1" FROM "table1" INNER JOIN "table2" ON ("table1"."col2" = "table2"."col1") WHERE ("table2"."flow_class" IN (%(0)s, %(1)s, %(2)s) AND "table1"."col3" = %(3)s AND "table1"."col4" = %(4)s) ORDER BY "table1"."col1" ASC'
+
+        self.sql = 'SELECT DISTINCT "table1"."col1" FROM "table1" INNER JOIN "table2" ON ("table1"."col2" = "table2"."col1") WHERE ("table2"."flow_class" IN (%(0)s, %(1)s, %(2)s) AND "table1"."col3" = %(3)s AND "table1"."col4" = %(4)s) ORDER BY "table1"."col1" ASC'
+        self.params = [1,1,1,1,1]
+        result = Parse(self.db, self.conn, self.sql, self.params).result()
+        try:
+            next(result)
+        except StopIteration:
+            pass
+
+
         # 'SELECT (1) AS "a" FROM "django_session" WHERE "django_session"."session_key" = %(0)s LIMIT 1'
         where = 'SELECT (1) AS "a" FROM "table" WHERE'
 
         self.sql = f'{where} {filt_col1} = %s LIMIT 1'
-        find_args = {}
+        find_args = {
+            'filter': {
+                'col1': {
+                    '$eq': 1
+                }
+            },
+            'limit': 1
+        }
         self.params = [1]
         result = Parse(self.db, self.conn, self.sql, self.params).result()
+        try:
+            next(result)
+        except StopIteration:
+            pass
 
-
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
 
         #'SELECT COUNT(*) AS "__count" FROM "auth_user"'
+        self.sql = 'SELECT COUNT(*) AS "__count" FROM "table"'
+
+        result = Parse(self.db, self.conn, self.sql, self.params).result()
+        try:
+            next(result)
+        except StopIteration:
+            pass
+
+        find.assert_any_call()
+        conn.reset_mock()
+
+        # Testing for different combinations 'where' syntax
+        # from here on
 
         where = 'SELECT "table"."col" FROM "table" WHERE'
-
-
+        find_args = {
+            'projection': ['col'],
+            'filter': {}
+        }
 
         self.sql = f'{where} {filt_col1} = %s'
         find_args['filter'] = {
