@@ -80,7 +80,9 @@ WHERE "django_admin_log"."user_id" = %(0)s ORDER BY "django_admin_log"."action_t
 
 'SELECT DISTINCT "viewflow_task"."flow_task" FROM "viewflow_task" INNER JOIN "viewflow_process" ON ("viewflow_task"."process_id" = "viewflow_process"."id") WHERE ("viewflow_process"."flow_class" IN (%(0)s, %(1)s, %(2)s) AND "viewflow_task"."owner_id" = %(3)s AND "viewflow_task"."status" = %(4)s) ORDER BY "viewflow_task"."flow_task" ASC'
 
-'SELECT DISTINCT "table1"."col1" FROM "table1" INNER JOIN "table2" ON ("table1"."col2" = "table2"."col1") WHERE ("table2"."flow_class" IN (%(0)s, %(1)s, %(2)s) AND "table1"."col3" = %(3)s AND "table1"."col4" = %(4)s) ORDER BY "table1"."col1" ASC'
+'SELECT DISTINCT "table1"."col1" FROM "table1" INNER JOIN "table2" ON ("table1"."col2" = "table2"."col1") WHERE ("table2"."flow_class" IN (%(0)s, %(1)s, %(2)s) AND "table1"."col3" = %(3)s AND "table1"."col4" = %(4)s) ORDER BY "table1"."col1" ASC',
+
+'SELECT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content" FROM "dummy_multipleblogposts" WHERE "dummy_multipleblogposts"."h1" IN (SELECT U0."id" AS Col1 FROM "dummy_blogpost" U0 WHERE U0."h1" IN (%s, %s))'
        ]
 
 root_logger = getLogger()
@@ -90,38 +92,54 @@ root_logger.addHandler(StreamHandler())
 
 class TestParse(TestCase):
 
-    def test_with_db(self):
-        db = MongoClient()
-        conn = db['djongo-test']
-        for i, s in enumerate(sql):
-            result = Parse(db, conn, s, [1, 2, 3, 4, 5]).result()
-            print(i)
-            try:
-                doc = result.next()
-            except StopIteration:
-                pass
+    @classmethod
+    def setUpClass(cls):
+        cls.conn = mock.MagicMock()
+        cls.db = mock.MagicMock()
+        cls.find = cls.conn.__getitem__().find
+        cursor = mock.MagicMock()
+        cursor.__class__ = Cursor
+        cursor.count.return_value =1
+        cls.find.return_value = cursor
+
+        cls.distinct = cursor.distinct
+        cursor2 = mock.MagicMock()
+        cursor2.__class__ = Cursor
+        cls.distinct.return_value = cursor2
 
     def _mock(self):
         result = Parse(self.db, self.conn, self.sql, self.params).result()
         doc = next(result)
 
-    def test_where(self):
-        self.db = mock.MagicMock()
-        conn = self.conn = mock.MagicMock()
-        find = self.conn.__getitem__().find
-        cursor = mock.MagicMock()
-        cursor.__class__ = Cursor
-        cursor.count.return_value =1
-        find.return_value = cursor
-        distinct = cursor.distinct
-        cursor2 = mock.MagicMock()
-        cursor2.__class__ = Cursor
-        distinct.return_value = cursor2
+    def test_statement(self):
+        """
+        'SELECT * FROM table'
+        :return:
+        """
+        'SELECT "t"."c1" AS Col1, "t"."c2", COUNT("t"."c3") AS "c3__count" FROM "table"'
+        'SELECT COUNT(*) AS "__count" FROM "table"'
+        self.sql = 'SELECT "t"."c1" AS Col1, "t"."c2", COUNT("t"."c3") AS "c3__count" FROM "table"'
+        self.params = [1]
+        self._mock()
+        find = self.find
 
-        filt_col1 = '"table"."col1"'
+
+    def test_special(self):
+        """
+        SELECT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content", COUNT("dummy_multipleblogposts"."h1") AS "h1__count", COUNT("dummy_multipleblogposts"."content") AS "content__count" FROM "dummy_multipleblogposts" GROUP BY "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content" LIMIT 21
+
+
+
+        :return:
+        """
+
+
+        conn = self.conn
+        find = self.find
+        distinct = self.distinct
 
         # Test for special cases of sql syntax first
-        self.sql = 'SELECT DISTINCT "table1"."col1" FROM "table1" WHERE ("table1"."col2" = %s)'
+        self.sql = 'SELECT DISTINCT "table1"."col1" FROM "table1" WHERE "table1"."col2" = %s'
         self.params = [1]
         find_args = {
             'projection': ['col1'],
@@ -138,9 +156,7 @@ class TestParse(TestCase):
         conn.reset_mock()
 
         # 'SELECT (1) AS "a" FROM "django_session" WHERE "django_session"."session_key" = %(0)s LIMIT 1'
-        where = 'SELECT (1) AS "a" FROM "table" WHERE'
-
-        self.sql = f'{where} {filt_col1} = %s LIMIT 1'
+        self.sql = 'SELECT (1) AS "a" FROM "table" WHERE "table1"."col2" = %s LIMIT 1'
         find_args = {
             'filter': {
                 'col1': {
@@ -150,11 +166,7 @@ class TestParse(TestCase):
             'limit': 1
         }
         self.params = [1]
-        result = Parse(self.db, self.conn, self.sql, self.params).result()
-        try:
-            next(result)
-        except StopIteration:
-            pass
+        self._mock()
 
         find.assert_any_call(**find_args)
         conn.reset_mock()
@@ -162,14 +174,15 @@ class TestParse(TestCase):
         #'SELECT COUNT(*) AS "__count" FROM "auth_user"'
         self.sql = 'SELECT COUNT(*) AS "__count" FROM "table"'
 
-        result = Parse(self.db, self.conn, self.sql, self.params).result()
-        try:
-            next(result)
-        except StopIteration:
-            pass
-
+        self._mock()
         find.assert_any_call()
         conn.reset_mock()
+
+    def test_in(self):
+        conn = self.conn
+        find = self.find
+
+        filt_col1 = '"table"."col1"'
 
         # Testing for different combinations 'where' syntax
         # from here on
@@ -179,78 +192,6 @@ class TestParse(TestCase):
             'projection': ['col'],
             'filter': {}
         }
-
-        self.sql = f'{where} {filt_col1} = %s'
-        find_args['filter'] = {
-            'col1': {
-                '$eq': 1
-            }
-        }
-        self.params = [1]
-        self._mock()
-        find.assert_any_call(**find_args)
-        conn.reset_mock()
-
-        self.sql = f'{where} {filt_col1} <= %s'
-        find_args['filter'] = {
-            'col1': {
-                '$lte': 1
-            }
-        }
-        self.params = [1]
-        self._mock()
-        find.assert_any_call(**find_args)
-        conn.reset_mock()
-
-        self.sql = f'{where} {filt_col1} = NULL'
-        find_args['filter'] = {
-            'col1': {
-                '$eq': None
-            }
-        }
-        self.params = []
-        self._mock()
-        find.assert_any_call(**find_args)
-        conn.reset_mock()
-
-        self.sql = f'{where} NOT ({filt_col1} <= %s)'
-        find_args['filter'] = {
-            'col1': {
-                '$not': {
-                    '$lte': 1
-                }
-            }
-        }
-        self.params = [1]
-        self._mock()
-        find.assert_any_call(**find_args)
-        conn.reset_mock()
-
-        self.sql = f'{where} NOT {filt_col1} <= %s'
-        find_args['filter'] = {
-            'col1': {
-                '$not': {
-                    '$lte': 1
-                }
-            }
-        }
-        self.params = [1]
-        self._mock()
-        find.assert_any_call(**find_args)
-        conn.reset_mock()
-
-        self.sql = f'{where} NOT {filt_col1} = NULL'
-        find_args['filter'] = {
-            'col1': {
-                '$not': {
-                    '$eq': None
-                }
-            }
-        }
-        self.params = []
-        self._mock()
-        find.assert_any_call(**find_args)
-        conn.reset_mock()
 
         self.sql = f'{where} {filt_col1} IN (%s)'
         find_args['filter'] = {
@@ -307,6 +248,137 @@ class TestParse(TestCase):
         self._mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
+
+        # SELECT "viewflow_process"."id", "viewflow_process"."flow_class", "viewflow_process"."status", "viewflow_process"."created", "viewflow_process"."finished" FROM "viewflow_process" WHERE "viewflow_process"."id" IN (SELECT U0."process_id" AS Col1 FROM "viewflow_task" U0 INNER JOIN "viewflow_process" U1 ON (U0."process_id" = U1."id") WHERE (U1."flow_class" IN (%(0)s, %(1)s, %(2)s) AND U0."owner_id" = %(3)s AND U0."status" = %(4)s)) ORDER BY "viewflow_process"."created" DESC
+        where2 = 'SELECT "table2"."col" FROM "table2" WHERE'
+        self.sql = f'{where} ({filt_col1} IN ({where2} ({filt_col1} IN (%s))))'
+        find_args['filter'] = {
+            'col1': {
+                '$nin': [1]
+            }
+        }
+        self.params = [1]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+    def test_not(self):
+        conn = self.conn
+        find = self.find
+
+        filt_col1 = '"table"."col1"'
+
+        # Testing for different combinations 'where' syntax
+        # from here on
+
+        where = 'SELECT "table"."col" FROM "table" WHERE'
+        find_args = {
+            'projection': ['col'],
+            'filter': {}
+        }
+
+        self.sql = f'{where} NOT ({filt_col1} <= %s)'
+        find_args['filter'] = {
+            'col1': {
+                '$not': {
+                    '$lte': 1
+                }
+            }
+        }
+        self.params = [1]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} NOT {filt_col1} <= %s'
+        find_args['filter'] = {
+            'col1': {
+                '$not': {
+                    '$lte': 1
+                }
+            }
+        }
+        self.params = [1]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} NOT {filt_col1} = NULL'
+        find_args['filter'] = {
+            'col1': {
+                '$not': {
+                    '$eq': None
+                }
+            }
+        }
+        self.params = []
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+
+    def test_basic(self):
+        conn = self.conn
+        find = self.find
+
+        filt_col1 = '"table"."col1"'
+
+        # Testing for different combinations 'where' syntax
+        # from here on
+
+        where = 'SELECT "table"."col" FROM "table" WHERE'
+        find_args = {
+            'projection': ['col'],
+            'filter': {}
+        }
+
+        self.sql = f'{where} {filt_col1} = %s'
+        find_args['filter'] = {
+            'col1': {
+                '$eq': 1
+            }
+        }
+        self.params = [1]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} {filt_col1} <= %s'
+        find_args['filter'] = {
+            'col1': {
+                '$lte': 1
+            }
+        }
+        self.params = [1]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} {filt_col1} = NULL'
+        find_args['filter'] = {
+            'col1': {
+                '$eq': None
+            }
+        }
+        self.params = []
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+    def test_and_or(self):
+        conn = self.conn
+        find = self.find
+
+        filt_col1 = '"table"."col1"'
+
+        # Testing for different combinations 'where' syntax
+        # from here on
+
+        where = 'SELECT "table"."col" FROM "table" WHERE'
+        find_args = {
+            'projection': ['col'],
+            'filter': {}
+        }
 
         self.sql = f'{where} ({filt_col1} = %s AND {filt_col1} <= %s)'
         find_args['filter'] = {
@@ -452,6 +524,5 @@ class TestParse(TestCase):
         self._mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
-
 
 

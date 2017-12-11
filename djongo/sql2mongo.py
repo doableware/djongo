@@ -1,5 +1,6 @@
 from itertools import chain
 
+from dataclasses import dataclass, field
 from pymongo.cursor import Cursor as PymongoCursor
 from pymongo.database import Database
 from pymongo import MongoClient
@@ -11,8 +12,8 @@ from sqlparse import parse as sql_parse
 from sqlparse import tokens
 from sqlparse.sql import (
     IdentifierList, Identifier, Parenthesis,
-    Where, Comparison, Function, Token
-)
+    Where, Comparison, Function, Token,
+    Statement)
 from collections import OrderedDict
 
 logger = getLogger(__name__)
@@ -41,18 +42,37 @@ ORDER_BY_MAP = {
 
 
 class SQLDecodeError(ValueError):
-    pass
+
+    def __init__(self, err_sql=None):
+        self.err_sql = err_sql
+
+@dataclass
+class TableColumnOp:
+    table_name: str
+    column_name: str
+    alias_name: str = None
 
 
-class CollField(typing.NamedTuple):
-    coll: str
-    field: str
+@dataclass
+class CountFunc:
+    table_name: str
+    column_name: str
+    alias_name: str = None
 
+@dataclass
+class CountDistinctFunc:
+    table_name: str
+    column_name: str
+    alias_name: str = None
 
-class SortOrder(typing.NamedTuple):
-    coll_field: CollField
-    ord: int
+@dataclass
+class CountWildcardFunc:
+    alias_name: str = None
 
+class DistinctOp(typing.NamedTuple):
+    table_name: str
+    column_name: str
+    alias_name: str = None
 
 def re_index(value: str):
     match = re.match(r'%\(([0-9]+)\)s', value, flags=re.IGNORECASE)
@@ -66,30 +86,57 @@ def re_index(value: str):
     return index
 
 
-class Join:
 
-    def __init__(self):
-        self.left_table: str = None
-        self.right_table: str = None
-        self.local_field: str = None
-        self.foreign_field: str = None
+@dataclass
+class WhereQuery:
+    nested_op: 'WhereOp' = None
+    op: 'WhereOp' = None
+
+@dataclass
+class JoinQuery:
+    left_table: str = None
+    right_table: str = None
+    left_column: str = None
+    right_column: str = None
 
 
-class InnerJoin(Join):
+class InnerJoinQuery(JoinQuery):
     pass
 
 
-class OuterJoin(Join):
+class OuterJoinQuery(JoinQuery):
     pass
 
 
-class Projection:
+class LimitQuery(typing.NamedTuple):
+    limit: int
 
-    def __init__(self):
-        self.return_const: typing.Any = None
-        self.return_count = False
-        self.no_id = True
-        self.coll_fields: typing.List[CollField] = []
+class OrderQuery(typing.NamedTuple):
+    table_column: TableColumnOp
+    ord: int
+
+@dataclass
+class SelectQuery:
+    statement: Statement
+    params: typing.Optional[list]
+
+    current_id: int = 0
+    current_tok: Token = None
+    saved_step: list = field(default_factory=list)
+
+    left_table: typing.Optional[str] = None
+    simple_query = True
+    alias2op: typing.Dict[str, typing.Any] = field(default_factory=dict)
+
+    selected_ops: typing.List[typing.Any] = field(default_factory=list)
+    where: typing.Optional[WhereQuery] = None
+    joins: typing.Optional[
+        typing.List[
+            typing.Union[InnerJoinQuery, OuterJoinQuery]
+        ]
+    ] = field(default_factory=list)
+    order: typing.List[OrderQuery] = field(default_factory=list)
+    limit: typing.Optional[LimitQuery] = None
 
 
 class Parse:
@@ -102,33 +149,24 @@ class Parse:
         logger.debug('params: {}'.format(params))
 
         self._params = params
-        self._p_index_count = -1
+        self._params_index_count = -1
         self._sql = re.sub(r'%s', self._param_index, sql)
         self.db = db_connection
         self.cli_con = client_connection
-        self.left_tbl: str = None
-
         self.last_row_id = None
 
-        self.proj = Projection()
-        self.filter: dict = None
-        self.sort: typing.List[SortOrder] = []
-        self.limit: int = None
-        self.distinct: bool = False
-
-        self.joins: typing.List[typing.Union[InnerJoin, OuterJoin]] = []
-
+        self._query = SelectQuery(self._sql, self._params)
         self._parse()
 
     def result(self):
         return Result(self)
 
     def _param_index(self, _):
-        self._p_index_count += 1
-        return '%({})s'.format(self._p_index_count)
+        self._params_index_count += 1
+        return '%({})s'.format(self._params_index_count)
 
     def _parse(self):
-        logger.debug('\n mongo_cur: {}'.format(self._sql))
+        logger.debug('\n sql_command: {}'.format(self._sql))
         statement = sql_parse(self._sql)
 
         if len(statement) > 1:
@@ -338,7 +376,15 @@ class Parse:
         logger.debug('insert id {}'.format(result.inserted_id))
         return None
 
-    def _find(self, sm):
+    def _select(self, sm):
+
+        query = SelectQuery(sm, self._params)
+        current_step = SelectStep(query)
+        current_step.run_steps(StartSelectStep(query), StopSelectStep)
+
+        while not isinstance(current_step, StopSelectStep):
+            current_step.parse()
+            current_step = current_step.next_step()
 
         next_id, next_tok = sm.token_next(0)
         if next_tok.value == '*':
@@ -356,14 +402,14 @@ class Parse:
             self.distinct = True
             next_id, next_tok = sm.token_next(next_id)
             for sql in SQLToken.iter_tokens(next_tok):
-                self.proj.coll_fields.append(CollField(sql.coll, sql.field))
+                self.proj.coll_fields.append(TableColumnOp(sql.coll, sql.field))
 
             if len(self.proj.coll_fields) > 1:
                 raise SQLDecodeError('Distinct for more than 1 field not supported yet')
 
         else:
             for sql in SQLToken.iter_tokens(next_tok):
-                self.proj.coll_fields.append(CollField(sql.coll, sql.field))
+                self.proj.coll_fields.append(TableColumnOp(sql.coll, sql.field))
 
         next_id, next_tok = sm.token_next(next_id)
 
@@ -394,9 +440,9 @@ class Parse:
             elif (next_tok.match(tokens.Keyword, 'INNER JOIN')
                   or next_tok.match(tokens.Keyword, 'LEFT OUTER JOIN')):
                 if next_tok.match(tokens.Keyword, 'INNER JOIN'):
-                    join = InnerJoin()
+                    join = InnerJoinQuery()
                 else:
-                    join = OuterJoin()
+                    join = OuterJoinQuery()
 
                 next_id, next_tok = sm.token_next(next_id)
                 sql = next(SQLToken.iter_tokens(next_tok))
@@ -409,12 +455,12 @@ class Parse:
                 next_id, next_tok = sm.token_next(next_id)
                 join_token = next(SQLToken.iter_tokens(next_tok))
                 if right_tb == join_token.other_coll:
-                    join.local_field = join_token.field
-                    join.foreign_field = join_token.other_field
+                    join.left_column = join_token.field
+                    join.right_column = join_token.other_field
                     join.left_table = join_token.coll
                 else:
-                    join.local_field = join_token.other_field
-                    join.foreign_field = join_token.field
+                    join.left_column = join_token.other_field
+                    join.right_column = join_token.field
                     join.left_table = join_token.other_coll
 
                 self.joins.append(join)
@@ -427,8 +473,8 @@ class Parse:
                 next_id, next_tok = sm.token_next(next_id)
                 for order, sql in SQLToken.iter_tokens(next_tok):
                     self.sort.append(
-                        SortOrder(CollField(sql.coll, sql.field),
-                                  ORDER_BY_MAP[order]))
+                        OrderQuery(TableColumnOp(sql.coll, sql.field),
+                                   ORDER_BY_MAP[order]))
 
             else:
                 raise SQLDecodeError('statement: {}'.format(sm))
@@ -436,7 +482,7 @@ class Parse:
             next_id, next_tok = sm.token_next(next_id)
 
     FUNC_MAP = {
-        'SELECT': _find,
+        'SELECT': _select,
         'UPDATE': _update,
         'INSERT': _insert,
         'DELETE': _delete,
@@ -444,6 +490,306 @@ class Parse:
         'DROP': _drop,
         'ALTER': _alter
     }
+
+
+class Step:
+    token_to_step_map = None
+    keyword_to_step_map = None
+
+    def __init__(self, query: SelectQuery):
+        self._query = query
+
+    @staticmethod
+    def run_steps(start_step, stop_step_class):
+        current_step = start_step
+
+        while not isinstance(current_step, stop_step_class):
+            current_step.parse()
+            current_step = current_step.next_step()
+
+    def save_step(self):
+        q = self._query
+        q.saved_step.append((
+            q.current_id,
+            q.current_tok,
+            q.statement))
+        q.statement: Token = q.current_tok
+        q.current_tok = q.statement[0]
+        q.current_id = 0
+
+    def restore_step(self):
+        q = self._query
+        (q.current_id,
+         q.current_tok,
+         q.statement) = q.saved_step.pop()
+
+    def token_to_step(self, token: Token):
+        q = self._query
+        try:
+            return self.token_to_step_map[type(token)](q)
+        except KeyError:
+            raise SQLDecodeError(f'Not Implemented: {q.statement}')
+
+    def keyword_to_step(self):
+        q = self._query
+        current_tok = q.current_tok
+        found_step = None
+        for keyword, step in self.keyword_to_step_map:
+            if current_tok.match(tokens.Keyword, keyword):
+                found_step = step
+                break
+        else:
+            raise SQLDecodeError(f'Not Implemented: {q.statement}')
+        return found_step(q)
+
+    def advance(self, by=1):
+        q = self._query
+        for _ in range(by):
+            q.current_id, q.current_tok = q.statement.token_next(q.current_id)
+
+    def parse(self):
+        raise NotImplementedError
+
+    def next_step(self):
+        raise NotImplementedError
+
+
+class IdentifierStep(Step):
+
+    def parse(self):
+        self.run_steps(StartIdentifierStep(self._query), StopIdentifierStep)
+
+    def next_step(self):
+        return StopColumnSelectStep(self._query)
+
+class StartIdentifierStep(Step):
+
+    def parse(self):
+        q = self._query
+        if isinstance(q.current_tok, Function):
+            if q.current_tok[0].value == 'COUNT':
+                self.save_step()
+                self.run_steps(CountStep(q), StopIdentifierStep)
+                self.restore_step()
+        else:
+            # Normal identifier
+            sql_tok = SQLLToken(q.statement)
+            q.selected_ops.append(TableColumnOp(sql_tok.table, sql_tok.column))
+
+        alias = q.statement.get_alias()
+        op = q.selected_ops[-1]
+        op.alias_name = alias
+        q.alias2op[alias] = op
+
+    def next_step(self):
+        return StopIdentifierStep(self._query)
+        self.advance()
+        q = self._query
+        if q.current_tok is None:
+            return StopIdentifierStep(q)
+        # An alias exists
+        return AliasIdentifierStep(q)
+
+
+class AliasIdentifierStep(Step):
+
+    def parse(self):
+        q = self._query
+        if not q.current_tok.match(tokens.Keyword, 'AS'):
+            raise SQLDecodeError
+        self.advance()
+        alias = q.statement.get_alias()
+        op = q.selected_ops[-1]
+        op.alias_name = alias
+        q.alias2op[alias] = op
+
+    def next_step(self):
+        return StopIdentifierStep(self._query)
+
+class StopIdentifierStep(Step):
+    pass
+
+class CountStep(Step):
+
+    def parse(self):
+        self.run_steps(StartCountStep(self._query), StopCountStep)
+
+    def next_step(self):
+        return StopIdentifierStep(self._query)
+
+class StartCountStep(CountStep):
+    def parse(self):
+        q = self._query
+        self.advance()
+        if not isinstance(q.current_tok, Parenthesis):
+            raise SQLDecodeError
+
+        self.save_step()
+        self.advance()
+
+        if q.current_tok.match(tokens.Wildcard, '*'):
+            op = CountWildcardFunc()
+
+        elif isinstance(q.current_tok, Identifier):
+            sql_tok = SQLLToken(q.current_tok)
+            op = CountFunc(sql_tok.table, sql_tok.column)
+        elif q.current_tok.match(tokens.Keyword, 'DISTINCT'):
+            q.simple_query = False
+            pass
+        self.advance(2)
+        q.selected_ops.append(op)
+
+        if q.current_tok is not None:
+            raise SQLDecodeError
+        self.restore_step()
+
+    def next_step(self):
+        return StopCountStep(self._query)
+
+class StopCountStep(CountStep):
+    pass
+
+class SelectStep(Step):
+    pass
+
+
+class StartSelectStep(SelectStep):
+
+    def parse(self):
+        q = self._query
+        q.current_id, q.current_tok = q.statement.token_next(0)
+
+    def next_step(self):
+        return ColumnSelectStep(self._query)
+
+
+class StopSelectStep(SelectStep):
+    pass
+
+class ColumnSelectStep(SelectStep):
+
+    def parse(self):
+        q = self._query
+        self.save_step()
+        self.run_steps(StartColumnSelectStep(q), StopColumnSelectStep)
+        self.restore_step()
+
+    def next_step(self):
+        q = self._query
+        self.advance()
+        if not q.current_tok.match(tokens.Keyword, 'FROM'):
+            raise SQLDecodeError
+
+        return FromSelectStep(q)
+
+class StartColumnSelectStep(ColumnSelectStep):
+    token_to_step_map = None
+
+    def __init__(self, q):
+        super().__init__(q)
+
+        if StartColumnSelectStep.token_to_step_map is None:
+            StartColumnSelectStep.token_to_step_map = {
+                Token: TokenColumnSelectStep,
+                Identifier: IdentifierStep,
+                IdentifierList: IdentifierListColumnSelectStep
+            }
+
+    def parse(self):
+        q = self._query
+
+        if isinstance(q.statement, Parenthesis):
+            q.statement = q.statement[0]
+            q.current_id = 0
+            q.current_tok = q.statement[0]
+
+    def next_step(self):
+        return self.token_to_step(self._query.statement)
+
+class StopColumnSelectStep(ColumnSelectStep):
+    pass
+
+class TokenColumnSelectStep(ColumnSelectStep):
+
+    def parse(self):
+        q = self._query
+        if q.current_tok.match(tokens.Keyword, 'COUNT'):
+            self.save_step()
+            self.run_steps(StartCountStep(self._query), StopCountStep)
+            self.restore_step()
+        elif q.current_tok.match(tokens.Keyword, 'DISTINCT'):
+            q.selected_ops
+            self.advance()
+
+    def next_step(self):
+        StopColumnSelectStep(self._query)
+
+class IdentifierColumnSelectStep(ColumnSelectStep):
+
+    def parse(self):
+        pass
+
+
+class IdentifierListColumnSelectStep(ColumnSelectStep):
+
+    def parse(self):
+        self.run_steps(StartIdentifierListColumnSelectStep(self._query), StopIdentifierListColumnSelectStep)
+
+    def next_step(self):
+        return StopColumnSelectStep(self._query)
+
+class StartIdentifierListColumnSelectStep(IdentifierListColumnSelectStep):
+
+    def parse(self):
+        self.save_step()
+        self.run_steps(IdentifierStep(self._query), StopColumnSelectStep)
+        self.restore_step()
+
+    def next_step(self):
+        self.advance(2)
+        if self._query.current_tok is None:
+            return StopIdentifierListColumnSelectStep(self._query)
+        return StartIdentifierListColumnSelectStep(self._query)
+
+class StopIdentifierListColumnSelectStep(IdentifierListColumnSelectStep):
+    pass
+
+
+class FromSelectStep(SelectStep):
+    pass
+
+
+class JoinSelectStep(SelectStep):
+    pass
+
+class GroupbySelectStep(SelectStep):
+    pass
+
+class HavingSelectStep(SelectStep):
+    pass
+
+class WhereSelectStep(SelectStep):
+    pass
+
+class LimitSelectStep(SelectStep):
+    pass
+
+class SortSelectStep(SelectStep):
+    pass
+
+class SkipSelectStep(SelectStep):
+    pass
+
+
+
+
+class Projection:
+
+    def __init__(self):
+        self.return_const: typing.Any = None
+        self.return_count = False
+        self.no_id = True
+        self.coll_fields: typing.List[TableColumnOp] = []
 
 
 class Result:
@@ -462,9 +808,9 @@ class Result:
             pipeline = []
             for i, join in enumerate(p_sql.joins):
                 if join.left_table == p_sql.left_tbl:
-                    local_field = join.local_field
+                    local_field = join.local_column
                 else:
-                    local_field = '{}.{}'.format(join.left_table, join.local_field)
+                    local_field = '{}.{}'.format(join.left_table, join.local_column)
 
                 lookup = {
                     '$lookup': {
@@ -475,14 +821,14 @@ class Result:
                     }
                 }
 
-                if isinstance(join, InnerJoin):
+                if isinstance(join, InnerJoinQuery):
                     if i == 0:
                         if join.left_table != p_sql.left_tbl:
                             raise SQLDecodeError
 
                         pipeline.append({
                             '$match': {
-                                join.local_field: {
+                                join.left_column: {
                                     '$ne': None,
                                     '$exists': True
                                 }
@@ -641,6 +987,61 @@ class Result:
         if self._cursor:
             self._cursor.close()
 
+
+class SQLLToken:
+
+    def __init__(self, token: Token):
+        self._token = token
+
+    @property
+    def table(self):
+        if not isinstance(self._token, Identifier):
+            raise SQLDecodeError
+
+        return self._token.get_parent_name()
+
+    @property
+    def column(self):
+        if not isinstance(self._token, Identifier):
+            raise SQLDecodeError
+
+        return self._token.get_real_name()
+
+    @property
+    def left_table(self):
+        if not isinstance(self._token, Comparison):
+            raise SQLDecodeError
+
+        lhs = SQLLToken(self._token.left)
+        return lhs.table
+
+    @property
+    def left_column(self):
+        if not isinstance(self._token, Comparison):
+            raise SQLDecodeError
+
+        lhs = SQLLToken(self._token.left)
+        return lhs.column
+
+    @property
+    def right_table(self):
+        if not isinstance(self._token, Comparison):
+            raise SQLDecodeError
+
+        rhs = SQLLToken(self._token.right)
+        return rhs.table
+
+    @property
+    def right_column(self):
+        if not isinstance(self._token, Comparison):
+            raise SQLDecodeError
+
+        rhs = SQLLToken(self._token.right)
+        return rhs.column
+
+    def __iter__(self):
+        if not isinstance(self._token, IdentifierList):
+            raise SQLDecodeError
 
 class SQLToken:
     def __init__(self, field, coll=None):
