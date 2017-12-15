@@ -19,7 +19,7 @@ With username and password
 DATABASES = {
  'default': {
     'ENGINE': 'djongo',
-    'NAME': 'your-db-name'),
+    'NAME': 'your-db-name',
     'HOST': 'host-name ot ip address',
     'PORT': port-number,
     'USER': 'db-username',
