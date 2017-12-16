@@ -228,7 +228,7 @@ class WhereConverter(Converter):
             query=self.query,
             token_id=0,
             token=tok,
-            left_tbl=self.query.left_table,
+            left_table=self.query.left_table,
             params=self.query.params
         )
         self.end_id = self.begin_id
@@ -678,13 +678,16 @@ class DeleteQuery(Query):
         db_con = self._result_ref.db
         sm = self.statement
         kw = {}
-        next_id, next_tok = sm.token_next(2)
-        sql_token = SQLToken(next_tok)
+
+        tok_id, tok = sm.token_next(2)
+        sql_token = SQLToken(tok)
         collection = sql_token.table
+
         self.left_table = sql_token.table
-        next_id, next_tok = sm.token_next(next_id)
-        if next_id and isinstance(next_tok, Where):
-            where = WhereConverter(self, next_id)
+
+        tok_id, tok = sm.token_next(tok_id)
+        if tok_id and isinstance(tok, Where):
+            where = WhereConverter(self, tok_id)
             kw.update(where.to_mongo())
 
         self.result = db_con[collection].delete_many(**kw)
@@ -760,56 +763,56 @@ class Result:
                 raise e
 
     def _alter(self, sm):
-        next_id, next_tok = sm.token_next(0)
-        if next_tok.match(tokens.Keyword, 'TABLE'):
-            next_id, next_tok = sm.token_next(next_id)
-            if not next_tok:
+        tok_id, tok = sm.token_next(0)
+        if tok.match(tokens.Keyword, 'TABLE'):
+            tok_id, tok = sm.token_next(tok_id)
+            if not tok:
                 logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
                 return
 
-            table = SQLToken(next_tok).table
+            table = SQLToken(tok).table
 
-            next_id, next_tok = sm.token_next(next_id)
-            if (not next_tok
-                    or not next_tok.match(tokens.Keyword, 'ADD')):
+            tok_id, tok = sm.token_next(tok_id)
+            if (not tok
+                    or not tok.match(tokens.Keyword, 'ADD')):
                 logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
                 return
 
-            next_id, next_tok = sm.token_next(next_id)
-            if (not next_tok
-                    or not next_tok.match(tokens.Keyword, 'CONSTRAINT')):
+            tok_id, tok = sm.token_next(tok_id)
+            if (not tok
+                    or not tok.match(tokens.Keyword, 'CONSTRAINT')):
                 logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
                 return
 
-            next_id, next_tok = sm.token_next(next_id)
-            if not isinstance(next_tok, Identifier):
+            tok_id, tok = sm.token_next(tok_id)
+            if not isinstance(tok, Identifier):
                 logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
                 return
 
-            constraint_name = next_tok.get_name()
+            constraint_name = tok.get_name()
 
-            next_id, next_tok = sm.token_next(next_id)
-            if not next_tok.match(tokens.Keyword, 'UNIQUE'):
+            tok_id, tok = sm.token_next(tok_id)
+            if not tok.match(tokens.Keyword, 'UNIQUE'):
                 logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
                 return
 
-            next_id, next_tok = sm.token_next(next_id)
-            if isinstance(next_tok, Parenthesis):
-                index = [(field.strip(' "'), 1) for field in next_tok.value.strip('()').split(',')]
+            tok_id, tok = sm.token_next(tok_id)
+            if isinstance(tok, Parenthesis):
+                index = [(field.strip(' "'), 1) for field in tok.value.strip('()').split(',')]
                 self.db[table].create_index(index, unique=True, name=constraint_name)
             else:
                 raise NotImplementedError('Alter command not implemented for SQL {}'.format(self._sql))
 
     def _create(self, sm):
-        next_id, next_tok = sm.token_next(0)
-        if next_tok.match(tokens.Keyword, 'TABLE'):
-            next_id, next_tok = sm.token_next(next_id)
-            table = SQLToken(next_tok).table
+        tok_id, tok = sm.token_next(0)
+        if tok.match(tokens.Keyword, 'TABLE'):
+            tok_id, tok = sm.token_next(tok_id)
+            table = SQLToken(tok).table
             self.db.create_collection(table)
             logger.debug('Created table {}'.format(table))
 
-            next_id, next_tok = sm.token_next(next_id)
-            if isinstance(next_tok, Parenthesis):
+            tok_id, tok = sm.token_next(tok_id)
+            if isinstance(tok, Parenthesis):
                 _filter = {
                     'name': table
                 }
@@ -817,7 +820,7 @@ class Result:
                 push = {}
                 update = {}
 
-                for col in next_tok.value.strip('()').split(','):
+                for col in tok.value.strip('()').split(','):
                     field = col[col.find('"') + 1: col.rfind('"')]
 
                     if col.find('AUTOINCREMENT') != -1:
@@ -841,19 +844,19 @@ class Result:
                         upsert=True
                     )
 
-        elif next_tok.match(tokens.Keyword, 'DATABASE'):
+        elif tok.match(tokens.Keyword, 'DATABASE'):
             pass
         else:
             logger.debug('Not supported {}'.format(sm))
 
     def _drop(self, sm):
-        next_id, next_tok = sm.token_next(0)
+        tok_id, tok = sm.token_next(0)
 
-        if not next_tok.match(tokens.Keyword, 'DATABASE'):
+        if not tok.match(tokens.Keyword, 'DATABASE'):
             raise SQLDecodeError('statement:{}'.format(sm))
 
-        next_id, next_tok = sm.token_next(next_id)
-        db_name = next_tok.get_name()
+        tok_id, tok = sm.token_next(tok_id)
+        db_name = tok.get_name()
         self.cli_con.drop_database(db_name)
 
     def _update(self, sm):
@@ -1017,13 +1020,13 @@ class SQLToken:
 
 class _Op:
     params: tuple
-    left_tbl: str
+    left_table: str
 
     def __init__(
             self,
             token_id: int,
             token: Token,
-            left_tbl: str = None,
+            left_table: str = None,
             params: tuple = None,
             name='generic'):
         self.lhs: typing.Optional[_Op] = None
@@ -1032,8 +1035,8 @@ class _Op:
 
         if params is not None:
             _Op.params = params
-        if left_tbl is not None:
-            _Op.left_tbl = left_tbl
+        if left_table is not None:
+            _Op.left_table = left_table
 
         self.token = token
         self.is_negated = False
@@ -1068,17 +1071,22 @@ class _UnaryOp(_Op):
 
 class _InNotInOp(_Op):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, query, *args, **kwargs):
         super().__init__(*args, **kwargs)
         identifier = SQLToken(self.token.token_prev(self._token_id)[1])
 
-        if identifier.table == self.left_tbl:
+        if identifier.table == self.left_table:
             self._field = identifier.column
         else:
             self._field = '{}.{}'.format(identifier.table, identifier.column)
 
     def _fill_in(self, token):
         self._in = []
+
+        # Check for nested
+        if token[1].ttype == tokens.DML:
+            self.
+
         for index in SQLToken(token):
             if index is not None:
                 self._in.append(self.params[index])
@@ -1264,59 +1272,59 @@ class ParenthesisOp(_Op):
         self._cmp_ops: typing.List[_Op] = []
         self._op = None
 
-        next_id, next_tok = token.token_next(0)
+        tok_id, tok = token.token_next(0)
         prev_op: _Op = None
         op: _Op = None
-        while next_id:
-            kw = {'token': token, 'token_id': next_id}
-            if next_tok.match(tokens.Keyword, 'AND'):
+        while tok_id:
+            kw = {'token': token, 'token_id': tok_id}
+            if tok.match(tokens.Keyword, 'AND'):
                 op = AndOp(**kw)
                 link_op()
                 self._op_precedence(op)
 
-            elif next_tok.match(tokens.Keyword, 'OR'):
+            elif tok.match(tokens.Keyword, 'OR'):
                 op = OrOp(**kw)
                 link_op()
                 self._op_precedence(op)
 
-            elif next_tok.match(tokens.Keyword, 'IN'):
+            elif tok.match(tokens.Keyword, 'IN'):
                 op = InOp(**kw)
                 link_op()
                 self._op_precedence(op)
 
-            elif next_tok.match(tokens.Keyword, 'NOT'):
-                _, nxt = token.token_next(next_id)
+            elif tok.match(tokens.Keyword, 'NOT'):
+                _, nxt = token.token_next(tok_id)
                 if nxt.match(tokens.Keyword, 'IN'):
                     op = NotInOp(**kw)
-                    next_id, next_tok = token.token_next(next_id)
+                    tok_id, tok = token.token_next(tok_id)
                 else:
                     op = NotOp(**kw)
                 link_op()
                 self._op_precedence(op)
 
-            elif isinstance(next_tok, Comparison):
-                op = CmpOp(0, next_tok)
+            elif isinstance(tok, Comparison):
+                op = CmpOp(0, tok)
                 self._cmp_ops.append(op)
                 link_op()
 
-            elif isinstance(next_tok, Parenthesis):
-                if next_tok[1].match(tokens.Name.Placeholder, '.*', regex=True):
+            elif isinstance(tok, Parenthesis):
+                if tok[1].match(tokens.Name.Placeholder, '.*', regex=True):
                     pass
-                elif next_tok[1].match(tokens.Keyword, 'Null'):
+                elif tok[1].match(tokens.Keyword, 'Null'):
                     pass
-                elif isinstance(next_tok[1], IdentifierList):
+                elif isinstance(tok[1], IdentifierList):
                     pass
                 else:
-                    op = ParenthesisOp(0, next_tok)
+                    op = ParenthesisOp(0, tok)
                     link_op()
 
-            elif next_tok.match(tokens.Punctuation, ')'):
+            elif tok.match(tokens.Punctuation, ')'):
                 if op.lhs is None:
                     if isinstance(op, CmpOp):
                         self._ops.append(op)
                 break
 
-            next_id, next_tok = token.token_next(next_id)
+            tok_id, tok = token.token_next(tok_id)
             prev_op = op
 
     def _op_precedence(self, operator: _Op):
@@ -1369,7 +1377,7 @@ class CmpOp(_Op):
         self.is_negated = True
 
     def to_mongo(self):
-        if self._identifier.table == self.left_tbl:
+        if self._identifier.table == self.left_table:
             field = self._identifier.column
         else:
             field = '{}.{}'.format(self._identifier.table, self._identifier.column)
