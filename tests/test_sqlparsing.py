@@ -197,6 +197,20 @@ class TestParse(TestCase):
             'filter': {}
         }
 
+        # SELECT "viewflow_process"."id", "viewflow_process"."flow_class", "viewflow_process"."status", "viewflow_process"."created", "viewflow_process"."finished" FROM "viewflow_process" WHERE "viewflow_process"."id" IN (SELECT U0."process_id" AS Col1 FROM "viewflow_task" U0 INNER JOIN "viewflow_process" U1 ON (U0."process_id" = U1."id") WHERE (U1."flow_class" IN (%(0)s, %(1)s, %(2)s) AND U0."owner_id" = %(3)s AND U0."status" = %(4)s)) ORDER BY "viewflow_process"."created" DESC
+        where2 = 'SELECT "table2"."col" AS Col1 FROM "table2" U0 WHERE ("U0"."Col2" IN (%s, %s))'
+        self.sql = f'{where} ({filt_col1} IN ({where2}))'
+        find_args['filter'] = {
+            'col1': {
+                '$nin': [1]
+            }
+        }
+        self.params = [1, 1]
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+
         self.sql = f'{where} {filt_col1} IN (%s)'
         find_args['filter'] = {
             'col1': {
@@ -264,18 +278,7 @@ class TestParse(TestCase):
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
-        # SELECT "viewflow_process"."id", "viewflow_process"."flow_class", "viewflow_process"."status", "viewflow_process"."created", "viewflow_process"."finished" FROM "viewflow_process" WHERE "viewflow_process"."id" IN (SELECT U0."process_id" AS Col1 FROM "viewflow_task" U0 INNER JOIN "viewflow_process" U1 ON (U0."process_id" = U1."id") WHERE (U1."flow_class" IN (%(0)s, %(1)s, %(2)s) AND U0."owner_id" = %(3)s AND U0."status" = %(4)s)) ORDER BY "viewflow_process"."created" DESC
-        where2 = 'SELECT "table2"."col" AS Col1 FROM "table2" U0 WHERE U0.Col2 IN (%s, %s)'
-        self.sql = f'{where} ({filt_col1} IN ({where2}))'
-        find_args['filter'] = {
-            'col1': {
-                '$nin': [1]
-            }
-        }
-        self.params = [1]
-        self._mock()
-        find.assert_any_call(**find_args)
-        conn.reset_mock()
+
 
     def test_not(self):
         conn = self.conn

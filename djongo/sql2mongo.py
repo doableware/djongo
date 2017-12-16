@@ -172,7 +172,7 @@ class ColumnSelectConverter(Converter):
 
         elif tok.match(tokens.Keyword, 'DISTINCT'):
             tok_id, tok = self.query.statement.token_next(self.begin_id)
-            self.query.distinct = SQLToken(tok)
+            self.query.distinct = SQLToken(tok, self.query.alias2op)
 
         else:
             raise SQLDecodeError
@@ -189,7 +189,10 @@ class ColumnSelectConverter(Converter):
                 self.return_count = True
 
         else:
-            self.sql_tokens.append(SQLToken(tok))
+            sql = SQLToken(tok, self.query.alias2op)
+            self.sql_tokens.append(sql)
+            if sql.alias:
+                self.query.alias2op[sql.alias] = sql
 
     def to_mongo(self):
         doc = [selected.column for selected in self.sql_tokens]
@@ -214,7 +217,10 @@ class FromConverter(Converter):
     def parse(self):
         sm = self.query.statement
         self.end_id, tok = sm.token_next(self.begin_id)
-        self.query.left_table = SQLToken(tok).table
+        sql = SQLToken(tok, self.query.alias2op)
+        self.query.left_table = sql.table
+        if sql.alias:
+            self.query.alias2op[sql.alias] = sql
 
 
 class WhereConverter(Converter):
@@ -225,10 +231,9 @@ class WhereConverter(Converter):
         sm = self.query.statement
         tok = sm[self.begin_id]
         self.op = WhereOp(
-            query=self.query,
             token_id=0,
             token=tok,
-            left_table=self.query.left_table,
+            query=self.query,
             params=self.query.params
         )
         self.end_id = self.begin_id
@@ -254,7 +259,7 @@ class JoinConverter(Converter):
     def parse(self):
         sm = self.query.statement
         tok_id, tok = sm.token_next(self.begin_id)
-        sql = SQLToken(tok)
+        sql = SQLToken(tok, self.query.alias2op)
         right_table = self.right_table = sql.table
 
         tok_id, tok = sm.token_next(tok_id)
@@ -265,7 +270,7 @@ class JoinConverter(Converter):
         if isinstance(tok, Parenthesis):
             tok = tok[1]
 
-        sql = SQLToken(tok)
+        sql = SQLToken(tok, self.query.alias2op)
         if right_table == sql.right_table:
             self.left_table = sql.left_table
             self.left_column = sql.left_column
@@ -367,11 +372,11 @@ class OrderConverter(Converter):
 
         tok_id, tok = sm.token_next(tok_id)
         if isinstance(tok, Identifier):
-            self.columns.append((SQLToken(tok[0]), SQLToken(tok)))
+            self.columns.append((SQLToken(tok[0], self.query.alias2op), SQLToken(tok, self.query.alias2op)))
 
         elif isinstance(tok, IdentifierList):
             for _id in tok.get_identifiers():
-                self.columns.append((SQLToken(_id[0]), SQLToken(_id)))
+                self.columns.append((SQLToken(_id[0], self.query.alias2op), SQLToken(_id, self.query.alias2op)))
 
         self.end_id = tok_id
 
@@ -390,11 +395,11 @@ class SetConverter(Converter):
         tok_id, tok = self.query.statement.token_next(self.begin_id)
 
         if isinstance(tok, Comparison):
-            self.sql_tokens.append(SQLToken(tok))
+            self.sql_tokens.append(SQLToken(tok, self.query.alias2op))
 
         elif isinstance(tok, IdentifierList):
             for atok in tok.get_identifiers():
-                self.sql_tokens.append((SQLToken(atok)))
+                self.sql_tokens.append((SQLToken(atok, self.query.alias2op)))
 
         else:
             raise SQLDecodeError
@@ -514,7 +519,7 @@ class SelectQuery(Query):
 
     def _get_cursor(self):
         if self.nested_query:
-            self.nested_query_result = list(self.nested_query)
+            self.nested_query_result = [res[0] for res in iter(self.nested_query)]
 
         if self.joins:
             pipeline = []
@@ -654,7 +659,7 @@ class InsertQuery(Query):
         nextid, nexttok = sm.token_next(nextid)
 
         for aid in nexttok[1].get_identifiers():
-            sql = SQLToken(aid)
+            sql = SQLToken(aid, None)
             insert[sql.column] = self.params.pop(0)
 
         if self.params:
@@ -680,7 +685,7 @@ class DeleteQuery(Query):
         kw = {}
 
         tok_id, tok = sm.token_next(2)
-        sql_token = SQLToken(tok)
+        sql_token = SQLToken(tok, None)
         collection = sql_token.table
 
         self.left_table = sql_token.table
@@ -770,7 +775,7 @@ class Result:
                 logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
                 return
 
-            table = SQLToken(tok).table
+            table = SQLToken(tok, None).table
 
             tok_id, tok = sm.token_next(tok_id)
             if (not tok
@@ -807,7 +812,7 @@ class Result:
         tok_id, tok = sm.token_next(0)
         if tok.match(tokens.Keyword, 'TABLE'):
             tok_id, tok = sm.token_next(tok_id)
-            table = SQLToken(tok).table
+            table = SQLToken(tok, None).table
             self.db.create_collection(table)
             logger.debug('Created table {}'.format(table))
 
@@ -893,8 +898,9 @@ class Projection:
 
 class SQLToken:
 
-    def __init__(self, token: Token):
+    def __init__(self, token: Token, alias2op=None):
         self._token = token
+        self.alias2op: typing.Dict[str, SQLToken] = alias2op
 
     @property
     def table(self):
@@ -905,10 +911,15 @@ class SQLToken:
         if name is None:
             name = self._token.get_real_name()
         else:
+            if name in self.alias2op:
+                return self.alias2op[name].table
             return name
 
         if name is None:
             raise SQLDecodeError
+
+        if name in self.alias2op:
+            return self.alias2op[name].table
         return name
 
     @property
@@ -944,7 +955,7 @@ class SQLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        lhs = SQLToken(self._token.left)
+        lhs = SQLToken(self._token.left, self.alias2op)
         return lhs.table
 
     @property
@@ -952,7 +963,7 @@ class SQLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        lhs = SQLToken(self._token.left)
+        lhs = SQLToken(self._token.left, self.alias2op)
         return lhs.column
 
     @property
@@ -960,7 +971,7 @@ class SQLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        rhs = SQLToken(self._token.right)
+        rhs = SQLToken(self._token.right, self.alias2op)
         return rhs.table
 
     @property
@@ -968,7 +979,7 @@ class SQLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        rhs = SQLToken(self._token.right)
+        rhs = SQLToken(self._token.right, self.alias2op)
         return rhs.column
 
     @property
@@ -976,7 +987,7 @@ class SQLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        lhs = SQLToken(self._token.left)
+        lhs = SQLToken(self._token.left, self.alias2op)
         return lhs.column
 
     @property
@@ -1020,13 +1031,12 @@ class SQLToken:
 
 class _Op:
     params: tuple
-    left_table: str
 
     def __init__(
             self,
             token_id: int,
             token: Token,
-            left_table: str = None,
+            query: SelectQuery,
             params: tuple = None,
             name='generic'):
         self.lhs: typing.Optional[_Op] = None
@@ -1035,8 +1045,8 @@ class _Op:
 
         if params is not None:
             _Op.params = params
-        if left_table is not None:
-            _Op.left_table = left_table
+        self.query = query
+        self.left_table = query.left_table
 
         self.token = token
         self.is_negated = False
@@ -1071,9 +1081,9 @@ class _UnaryOp(_Op):
 
 class _InNotInOp(_Op):
 
-    def __init__(self, query, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        identifier = SQLToken(self.token.token_prev(self._token_id)[1])
+        identifier = SQLToken(self.token.token_prev(self._token_id)[1], self.query.alias2op)
 
         if identifier.table == self.left_table:
             self._field = identifier.column
@@ -1085,9 +1095,14 @@ class _InNotInOp(_Op):
 
         # Check for nested
         if token[1].ttype == tokens.DML:
-            self.
+            self.query.nested_query = SelectQuery(
+                self.query._result_ref,
+                sqlparse(token.value[1:-1])[0],
+                self.params
+            )
+            return
 
-        for index in SQLToken(token):
+        for index in SQLToken(token, self.query.alias2op):
             if index is not None:
                 self._in.append(self.params[index])
             else:
@@ -1111,7 +1126,10 @@ class NotInOp(_InNotInOp):
 
     def to_mongo(self):
         op = '$nin' if not self.is_negated else '$in'
-        return {self._field: {op: self._in}}
+        if self.query.nested_query_result is not None:
+            return {self._field: {op: self.query.nested_query_result}}
+        else:
+            return {self._field: {op: self._in}}
 
     def negate(self):
         self.is_negated = True
@@ -1125,7 +1143,10 @@ class InOp(_InNotInOp):
 
     def to_mongo(self):
         op = '$in' if not self.is_negated else '$nin'
-        return {self._field: {op: self._in}}
+        if self.query.nested_query_result is not None:
+            return {self._field: {op: self.query.nested_query_result}}
+        else:
+            return {self._field: {op: self._in}}
 
     def negate(self):
         self.is_negated = True
@@ -1236,16 +1257,15 @@ class OrOp(_AndOrOp):
 
 class WhereOp(_Op):
 
-    def __init__(self, query, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         if not isinstance(self.token[2], Parenthesis):
-            op = ParenthesisOp(0, sqlparse('(' + self.token.value[6:] + ')')[0][0])
+            op = ParenthesisOp(0, sqlparse('(' + self.token.value[6:] + ')')[0][0], self.query)
         else:
-            op = ParenthesisOp(0, self.token[2])
+            op = ParenthesisOp(0, self.token[2], self.query)
         op.evaluate()
         self._op = op
-        self.query = query
 
     def negate(self):
         raise NotImplementedError
@@ -1276,7 +1296,7 @@ class ParenthesisOp(_Op):
         prev_op: _Op = None
         op: _Op = None
         while tok_id:
-            kw = {'token': token, 'token_id': tok_id}
+            kw = {'token': token, 'token_id': tok_id, 'query': self.query}
             if tok.match(tokens.Keyword, 'AND'):
                 op = AndOp(**kw)
                 link_op()
@@ -1303,19 +1323,19 @@ class ParenthesisOp(_Op):
                 self._op_precedence(op)
 
             elif isinstance(tok, Comparison):
-                op = CmpOp(0, tok)
+                op = CmpOp(0, tok, self.query)
                 self._cmp_ops.append(op)
                 link_op()
 
             elif isinstance(tok, Parenthesis):
-                if tok[1].match(tokens.Name.Placeholder, '.*', regex=True):
-                    pass
-                elif tok[1].match(tokens.Keyword, 'Null'):
-                    pass
-                elif isinstance(tok[1], IdentifierList):
+                if (tok[1].match(tokens.Name.Placeholder, '.*', regex=True)
+                    or tok[1].match(tokens.Keyword, 'Null')
+                    or isinstance(tok[1], IdentifierList)
+                    or tok[1].ttype == tokens.DML
+                ):
                     pass
                 else:
-                    op = ParenthesisOp(0, tok)
+                    op = ParenthesisOp(0, tok, self.query)
                     link_op()
 
             elif tok.match(tokens.Punctuation, ')'):
@@ -1363,7 +1383,7 @@ class CmpOp(_Op):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._identifier = SQLToken(self.token.left)
+        self._identifier = SQLToken(self.token.left, self.query.alias2op)
 
         if isinstance(self.token.right, Identifier):
             raise SQLDecodeError('Join using WHERE not supported')
