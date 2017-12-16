@@ -220,6 +220,17 @@ class TestParse(TestCase):
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
+        self.sql = f'{where} {filt_col1} IN (NULL)'
+        find_args['filter'] = {
+            'col1': {
+                '$in': [None]
+            }
+        }
+        self.params = []
+        self._mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
         self.sql = f'{where} {filt_col1} NOT IN (%s)'
         find_args['filter'] = {
             'col1': {

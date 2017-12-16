@@ -1,6 +1,6 @@
 from itertools import chain
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pymongo.cursor import Cursor as BasicCursor
 from pymongo.command_cursor import CommandCursor
 from pymongo.database import Database
@@ -112,6 +112,9 @@ class Query:
         self.statement = statement
         self._result_ref = result_ref
         self.params = params
+
+        self.left_table: typing.Optional[str] = None
+
         self._cursor = None
         self.parse()
 
@@ -152,7 +155,7 @@ class ColumnSelectConverter(Converter):
         self.distinct = False
         self.num_columns = 0
 
-        self.sql_tokens: typing.List[SQLLToken] = []
+        self.sql_tokens: typing.List[SQLToken] = []
         super().__init__(query, begin_id)
 
     def parse(self):
@@ -169,7 +172,7 @@ class ColumnSelectConverter(Converter):
 
         elif tok.match(tokens.Keyword, 'DISTINCT'):
             tok_id, tok = self.query.statement.token_next(self.begin_id)
-            self.query.distinct = SQLLToken(tok)
+            self.query.distinct = SQLToken(tok)
 
         else:
             raise SQLDecodeError
@@ -186,7 +189,7 @@ class ColumnSelectConverter(Converter):
                 self.return_count = True
 
         else:
-            self.sql_tokens.append(SQLLToken(tok))
+            self.sql_tokens.append(SQLToken(tok))
 
     def to_mongo(self):
         doc = [selected.column for selected in self.sql_tokens]
@@ -211,7 +214,7 @@ class FromConverter(Converter):
     def parse(self):
         sm = self.query.statement
         self.end_id, tok = sm.token_next(self.begin_id)
-        self.query.left_table = SQLLToken(tok).table
+        self.query.left_table = SQLToken(tok).table
 
 
 class WhereConverter(Converter):
@@ -251,7 +254,7 @@ class JoinConverter(Converter):
     def parse(self):
         sm = self.query.statement
         tok_id, tok = sm.token_next(self.begin_id)
-        sql = SQLLToken(tok)
+        sql = SQLToken(tok)
         right_table = self.right_table = sql.table
 
         tok_id, tok = sm.token_next(tok_id)
@@ -262,7 +265,7 @@ class JoinConverter(Converter):
         if isinstance(tok, Parenthesis):
             tok = tok[1]
 
-        sql = SQLLToken(tok)
+        sql = SQLToken(tok)
         if right_table == sql.right_table:
             self.left_table = sql.left_table
             self.left_column = sql.left_column
@@ -353,7 +356,7 @@ class AggLimitConverter(LimitConverter):
 
 class OrderConverter(Converter):
     def __init__(self, *args):
-        self.columns: typing.List[typing.Tuple[SQLLToken, SQLLToken]] = []
+        self.columns: typing.List[typing.Tuple[SQLToken, SQLToken]] = []
         super().__init__(*args)
 
     def parse(self):
@@ -364,11 +367,11 @@ class OrderConverter(Converter):
 
         tok_id, tok = sm.token_next(tok_id)
         if isinstance(tok, Identifier):
-            self.columns.append((SQLLToken(tok[0]), SQLLToken(tok)))
+            self.columns.append((SQLToken(tok[0]), SQLToken(tok)))
 
         elif isinstance(tok, IdentifierList):
             for _id in tok.get_identifiers():
-                self.columns.append((SQLLToken(_id[0]), SQLLToken(_id)))
+                self.columns.append((SQLToken(_id[0]), SQLToken(_id)))
 
         self.end_id = tok_id
 
@@ -380,18 +383,18 @@ class OrderConverter(Converter):
 class SetConverter(Converter):
 
     def __init__(self, *args):
-        self.sql_tokens: typing.List[SQLLToken] = []
+        self.sql_tokens: typing.List[SQLToken] = []
         super().__init__(*args)
 
     def parse(self):
         tok_id, tok = self.query.statement.token_next(self.begin_id)
 
         if isinstance(tok, Comparison):
-            self.sql_tokens.append(SQLLToken(tok))
+            self.sql_tokens.append(SQLToken(tok))
 
         elif isinstance(tok, IdentifierList):
             for atok in tok.get_identifiers():
-                self.sql_tokens.append((SQLLToken(atok)))
+                self.sql_tokens.append((SQLToken(atok)))
 
         else:
             raise SQLDecodeError
@@ -405,6 +408,7 @@ class SetConverter(Converter):
                     sql.lhs_column: self.query.params[sql.rhs_indexes] for sql in self.sql_tokens}
             }
         }
+
 
 class AggOrderConverter(OrderConverter):
 
@@ -422,7 +426,6 @@ class AggOrderConverter(OrderConverter):
 class SelectQuery(Query):
     def __init__(self, *args):
 
-        self.left_table: typing.Optional[str] = None
         self.nested_query: 'SelectQuery' = None
         self.nested_query_result: list = None
         self.alias2op: typing.Dict[str, typing.Any] = {}
@@ -434,7 +437,7 @@ class SelectQuery(Query):
         ]] = []
         self.order: OrderConverter = None
         self.limit: typing.Optional[LimitConverter] = None
-        self.distinct: SQLLToken = None
+        self.distinct: SQLToken = None
 
         self._returned_count = 0
         self._cursor: typing.Union[BasicCursor, CommandCursor] = None
@@ -574,11 +577,11 @@ class SelectQuery(Query):
 
         return ret
 
+
 class UpdateQuery(Query):
-    
+
     def __init__(self, *args):
-        self.left_table = None
-        self.selected_table: ColumnSelectConverter =  None
+        self.selected_table: ColumnSelectConverter = None
         self.set_columns: SetConverter = None
         self.where: WhereConverter = None
         self.result = None
@@ -615,6 +618,81 @@ class UpdateQuery(Query):
         kwargs.update(self.set_columns.to_mongo())
         self.result = db[self.left_table].update_many(**kwargs)
         logger.debug(f'update_many: {self.result.modified_count}, matched: {self.result.matched_count}')
+
+
+class InsertQuery(Query):
+
+    def parse(self):
+        db = self._result_ref.db
+        sm = self.statement
+        insert = {}
+
+        nextid, nexttok = sm.token_next(2)
+        if isinstance(nexttok, Identifier):
+            collection = nexttok.get_name()
+            self.left_table = collection
+            auto = db['__schema__'].find_one_and_update(
+                {
+                    'name': collection,
+                    'auto': {
+                        '$exists': True
+                    }
+                },
+                {'$inc': {'auto.seq': 1}},
+                return_document=ReturnDocument.AFTER
+            )
+
+            if auto:
+                auto_field_id = auto['auto']['seq']
+                for name in auto['auto']['field_names']:
+                    insert[name] = auto_field_id
+            else:
+                auto_field_id = None
+        else:
+            raise SQLDecodeError
+
+        nextid, nexttok = sm.token_next(nextid)
+
+        for aid in nexttok[1].get_identifiers():
+            sql = SQLToken(aid)
+            insert[sql.column] = self.params.pop(0)
+
+        if self.params:
+            raise SQLDecodeError
+
+        result = db[collection].insert_one(insert)
+        if not auto_field_id:
+            auto_field_id = str(result.inserted_id)
+
+        self._result_ref.last_row_id = auto_field_id
+        logger.debug('insert id {}'.format(result.inserted_id))
+
+
+class DeleteQuery(Query):
+
+    def __init__(self, *args):
+        self.result = None
+        super().__init__(*args)
+
+    def parse(self):
+        db_con = self._result_ref.db
+        sm = self.statement
+        kw = {}
+        next_id, next_tok = sm.token_next(2)
+        sql_token = SQLToken(next_tok)
+        collection = sql_token.table
+        self.left_table = sql_token.table
+        next_id, next_tok = sm.token_next(next_id)
+        if next_id and isinstance(next_tok, Where):
+            where = WhereConverter(self, next_id)
+            kw.update(where.to_mongo())
+
+        self.result = db_con[collection].delete_many(**kw)
+        logger.debug('delete_many: {}'.format(self.result.deleted_count))
+
+    def count(self):
+        return self.result.deleted_count
+
 
 class Result:
 
@@ -654,9 +732,6 @@ class Result:
     def __iter__(self):
         yield from iter(self._query)
 
-    def result(self):
-        return Result2(self)
-
     def _param_index(self, _):
         self._params_index_count += 1
         return '%({})s'.format(self._params_index_count)
@@ -692,19 +767,17 @@ class Result:
                 logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
                 return
 
-            table = next(SQLToken.iter_tokens(next_tok)).field
+            table = SQLToken(next_tok).table
 
             next_id, next_tok = sm.token_next(next_id)
             if (not next_tok
-                    or not next_tok.match(tokens.Keyword, 'ADD')
-            ):
+                    or not next_tok.match(tokens.Keyword, 'ADD')):
                 logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
                 return
 
             next_id, next_tok = sm.token_next(next_id)
             if (not next_tok
-                    or not next_tok.match(tokens.Keyword, 'CONSTRAINT')
-            ):
+                    or not next_tok.match(tokens.Keyword, 'CONSTRAINT')):
                 logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
                 return
 
@@ -731,16 +804,16 @@ class Result:
         next_id, next_tok = sm.token_next(0)
         if next_tok.match(tokens.Keyword, 'TABLE'):
             next_id, next_tok = sm.token_next(next_id)
-            table = next(SQLToken.iter_tokens(next_tok)).field
+            table = SQLToken(next_tok).table
             self.db.create_collection(table)
             logger.debug('Created table {}'.format(table))
 
             next_id, next_tok = sm.token_next(next_id)
             if isinstance(next_tok, Parenthesis):
-                filter = {
+                _filter = {
                     'name': table
                 }
-                set = {}
+                _set = {}
                 push = {}
                 update = {}
 
@@ -749,7 +822,7 @@ class Result:
 
                     if col.find('AUTOINCREMENT') != -1:
                         push['auto.field_names'] = field
-                        set['auto.seq'] = 0
+                        _set['auto.seq'] = 0
 
                     if col.find('PRIMARY KEY') != -1:
                         self.db[table].create_index(field, unique=True, name='__primary_key__')
@@ -757,13 +830,13 @@ class Result:
                     if col.find('UNIQUE') != -1:
                         self.db[table].create_index(field, unique=True)
 
-                if set:
-                    update['$set'] = set
+                if _set:
+                    update['$set'] = _set
                 if push:
                     update['$push'] = push
                 if update:
                     self.db['__schema__'].update_one(
-                        filter=filter,
+                        filter=_filter,
                         update=update,
                         upsert=True
                     )
@@ -785,101 +858,14 @@ class Result:
 
     def _update(self, sm):
         self._query = UpdateQuery(self, sm, self._params)
-        return
-        db_con = self.db
-        kw = {}
-        next_id, next_tok = sm.token_next(0)
-        sql_token = next(SQLToken.iter_tokens(next_tok))
-        self.left_tbl = collection = sql_token.field
-
-        next_id, next_tok = sm.token_next(next_id)
-
-        if not next_tok.match(tokens.Keyword, 'SET'):
-            raise SQLDecodeError('statement:{}'.format(sm))
-
-        upd = {}
-        next_id, next_tok = sm.token_next(next_id)
-        for cmp_ob in SQLToken.iter_tokens(next_tok):
-            if cmp_ob.param_index is not None:
-                upd[cmp_ob.field] = self._params[cmp_ob.param_index]
-            else:
-                upd[cmp_ob.field] = None
-
-        kw['update'] = {'$set': upd}
-
-        next_id, next_tok = sm.token_next(next_id)
-
-        while next_id:
-            if isinstance(next_tok, Where):
-                where_op = WhereOp(0, next_tok, left_tbl=self.left_tbl, params=self._params)
-                kw['filter'] = where_op.to_mongo()
-            next_id, next_tok = sm.token_next(next_id)
-
-        result = db_con[collection].update_many(**kw)
-        logger.debug('update_many:{} matched:{}'.format(result.modified_count, result.matched_count))
-        return None
 
     def _delete(self, sm):
-        db_con = self.db
-        kw = {}
-        next_id, next_tok = sm.token_next(2)
-        sql_token = next(SQLToken.iter_tokens(next_tok))
-        collection = sql_token.field
-        self.left_tbl = sql_token.field
-        next_id, next_tok = sm.token_next(next_id)
-        while next_id:
-            if isinstance(next_tok, Where):
-                where_op = WhereOp(0, next_tok, left_tbl=self.left_tbl, params=self._params)
-                kw['filter'] = where_op.to_mongo()
-            next_id, next_tok = sm.token_next(next_id)
-
-        result = db_con[collection].delete_many(**kw)
-        logger.debug('delete_many: {}'.format(result.deleted_count))
+        self._query = DeleteQuery(self, sm, self._params)
 
     def _insert(self, sm):
-        db_con = self.db
-        insert = {}
-        nextid, nexttok = sm.token_next(2)
-        if isinstance(nexttok, Identifier):
-            collection = nexttok.get_name()
-            auto = db_con['__schema__'].find_one_and_update(
-                {
-                    'name': collection,
-                    'auto': {
-                        '$exists': True
-                    }
-                },
-                {'$inc': {'auto.seq': 1}},
-                return_document=ReturnDocument.AFTER
-            )
-
-            if auto:
-                auto_field_id = auto['auto']['seq']
-                for name in auto['auto']['field_names']:
-                    insert[name] = auto_field_id
-            else:
-                auto_field_id = None
-        else:
-            raise SQLDecodeError('statement: {}'.format(sm))
-
-        nextid, nexttok = sm.token_next(nextid)
-
-        for sql_ob in SQLToken.iter_tokens(nexttok):
-            insert[sql_ob.field] = self._params.pop(0)
-
-        if self._params:
-            raise SQLDecodeError('unexpected params {}'.format(self._params))
-
-        result = db_con[collection].insert_one(insert)
-        if not auto_field_id:
-            auto_field_id = str(result.inserted_id)
-
-        self.last_row_id = auto_field_id
-        logger.debug('insert id {}'.format(result.inserted_id))
-        return None
+        self._query = InsertQuery(self, sm, self._params)
 
     def _select(self, sm):
-
         self._query = SelectQuery(self, sm, self._params)
 
     FUNC_MAP = {
@@ -902,203 +888,7 @@ class Projection:
         self.coll_fields: typing.List[TableColumnOp] = []
 
 
-class Result2:
-
-    def __init__(self, parsed_sql: Result):
-        self.parsed_sql = parsed_sql
-        self._cursor = None
-        self._returned_count = 0
-        self._count_returned = False
-        self._count: int = None
-
-    def _get_cursor(self):
-        p_sql = self.parsed_sql
-        if p_sql.joins:
-            # Do aggregation lookup
-            pipeline = []
-            for i, join in enumerate(p_sql.joins):
-                if join.left_table == p_sql.left_tbl:
-                    local_field = join.local_column
-                else:
-                    local_field = '{}.{}'.format(join.left_table, join.local_column)
-
-                lookup = {
-                    '$lookup': {
-                        'from': join.right_table,
-                        'localField': local_field,
-                        'foreignField': join.foreign_field,
-                        'as': join.right_table
-                    }
-                }
-
-                if isinstance(join, InnerJoinQuery):
-                    if i == 0:
-                        if join.left_table != p_sql.left_tbl:
-                            raise SQLDecodeError
-
-                        pipeline.append({
-                            '$match': {
-                                join.left_column: {
-                                    '$ne': None,
-                                    '$exists': True
-                                }
-                            }
-                        })
-
-                    pipeline.extend([
-                        lookup,
-                        {
-                            '$unwind': '$' + join.right_table
-                        }
-                    ])
-                else:
-                    if i == 0:
-                        if join.left_table != p_sql.left_tbl:
-                            raise SQLDecodeError
-
-                    pipeline.extend([
-                        lookup,
-                        {
-                            '$unwind': {
-                                'path': '$' + join.right_table,
-                                'preserveNullAndEmptyArrays': True
-                            }
-                        }
-                    ])
-
-            if p_sql.filter:
-                pipeline.append({
-                    '$match': p_sql.filter
-                })
-
-            if p_sql.distinct:
-                pipeline.extend([
-                    {
-                        '$group': {
-                            '_id': '$' + p_sql.proj.coll_fields[0].field
-                        }
-                    },
-                    {
-                        '$project': {
-                            p_sql.proj.coll_fields[0].field: '$_id'
-                        }
-                    }
-                ])
-
-            if p_sql.sort:
-                sort = OrderedDict()
-                for s in p_sql.sort:
-                    if s.coll_field.coll == p_sql.left_tbl:
-                        sort[s.coll_field.field] = s.ord
-                    else:
-                        sort[s.coll_field.coll + '.' + s.coll_field.field] = s.ord
-
-                pipeline.append({
-                    '$sort': sort
-                })
-
-            if p_sql.limit:
-                pipeline.append({
-                    '$limit': p_sql.limit
-                })
-
-            if p_sql.proj.coll_fields:
-                proj = {}
-                for fld in p_sql.proj.coll_fields:
-                    if fld.coll == p_sql.left_tbl:
-                        proj[fld.field] = True
-                    else:
-                        proj[fld.coll + '.' + fld.field] = True
-
-                pipeline.append({'$project': proj})
-
-            return p_sql.db[p_sql.left_tbl].aggregate(pipeline)
-
-        else:
-            query_args = {}
-            if p_sql.proj.coll_fields:
-                query_args['projection'] = [f.field for f in p_sql.proj.coll_fields]
-
-            if p_sql.filter:
-                query_args['filter'] = p_sql.filter
-
-            if p_sql.limit is not None:
-                query_args['limit'] = p_sql.limit
-
-            if p_sql.sort:
-                query_args['sort'] = [(s.coll_field.field, s.ord) for s in p_sql.sort]
-
-            pym_cur = p_sql.db[p_sql.left_tbl].find(**query_args)
-            if p_sql.distinct:
-                pym_cur = pym_cur.distinct(p_sql.proj.coll_fields[0].field)
-
-            return pym_cur
-
-    def count(self):
-        if self._count is not None:
-            return self._count
-
-        if self._cursor is None:
-            self._cursor = self._get_cursor()
-
-        if isinstance(self._cursor, BasicCursor):
-            self._count = self._cursor.count()
-        else:
-            self._count = len(list(self._cursor))
-
-        return self._count
-
-    def __iter__(self):
-        yield from self._q
-
-    def next(self):
-        p_sql = self.parsed_sql
-        if p_sql.proj.return_const is not None:
-            if self._returned_count < self.count():
-                self._returned_count += 1
-                return p_sql.proj.return_const,
-            else:
-                raise StopIteration
-
-        if p_sql.proj.return_count:
-            if not self._count_returned:
-                self._count_returned = True
-                return self.count(),
-            else:
-                raise StopIteration
-
-        if self._cursor is None:
-            self._cursor = self._get_cursor()
-
-        cur = self._cursor
-        doc = cur.next()
-        if isinstance(cur, BasicCursor):
-            doc.pop('_id')
-            if len(doc) == len(p_sql.proj.coll_fields):
-                return tuple(doc.values())
-
-        ret = []
-        for coll_field in p_sql.proj.coll_fields:
-            if coll_field.coll == p_sql.left_tbl:
-                try:
-                    ret.append(doc[coll_field.field])
-                except KeyError:
-                    ret.append(None)
-            else:
-                try:
-                    ret.append(doc[coll_field.coll][coll_field.field])
-                except KeyError:
-                    ret.append(None)
-        return ret
-
-    __next__ = next
-
-    def close(self):
-        if self._cursor:
-            self._cursor.close()
-
-
-class SQLLToken:
+class SQLToken:
 
     def __init__(self, token: Token):
         self._token = token
@@ -1140,18 +930,18 @@ class SQLLToken:
         if not isinstance(self._token, Identifier):
             raise SQLDecodeError
 
-        ord = self._token.get_ordering()
-        if ord is None:
+        _ord = self._token.get_ordering()
+        if _ord is None:
             raise SQLDecodeError
 
-        return ORDER_BY_MAP[ord]
+        return ORDER_BY_MAP[_ord]
 
     @property
     def left_table(self):
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        lhs = SQLLToken(self._token.left)
+        lhs = SQLToken(self._token.left)
         return lhs.table
 
     @property
@@ -1159,7 +949,7 @@ class SQLLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        lhs = SQLLToken(self._token.left)
+        lhs = SQLToken(self._token.left)
         return lhs.column
 
     @property
@@ -1167,7 +957,7 @@ class SQLLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        rhs = SQLLToken(self._token.right)
+        rhs = SQLToken(self._token.right)
         return rhs.table
 
     @property
@@ -1175,7 +965,7 @@ class SQLLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        rhs = SQLLToken(self._token.right)
+        rhs = SQLToken(self._token.right)
         return rhs.column
 
     @property
@@ -1183,7 +973,7 @@ class SQLLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        lhs = SQLLToken(self._token.left)
+        lhs = SQLToken(self._token.left)
         return lhs.column
 
     @property
@@ -1191,76 +981,38 @@ class SQLLToken:
         if not self._token.right.ttype == tokens.Name.Placeholder:
             raise SQLDecodeError
 
-        index = int(re.match(r'%\(([0-9]+)\)s', self._token.right.value, flags=re.IGNORECASE).group(1))
-
+        index = self.placeholder_index(self._token.right)
         return index
 
+    @staticmethod
+    def placeholder_index(token):
+        return int(re.match(r'%\(([0-9]+)\)s', token.value, flags=re.IGNORECASE).group(1))
 
+    def __iter__(self):
+        if not isinstance(self._token, Parenthesis):
+            raise SQLDecodeError
+        tok = self._token[1:-1][0]
+        if tok.ttype == tokens.Name.Placeholder:
+            yield self.placeholder_index(tok)
+            return
 
-class SQLToken:
-    def __init__(self, field, coll=None):
-        self.field = field
-        self.coll = coll
+        elif tok.match(tokens.Keyword, 'NULL'):
+            yield None
+            return
 
-    @classmethod
-    def iter_tokens(cls, token):
-        if isinstance(token, Identifier):
-            tok_first = token.token_first()
-            if isinstance(tok_first, Identifier):
-                yield token.get_ordering(), cls(tok_first.get_name(), tok_first.get_parent_name())
-            else:
-                yield cls(token.get_name(), token.get_parent_name())
+        elif isinstance(tok, IdentifierList):
+            for aid in tok.get_identifiers():
+                if aid.ttype == tokens.Name.Placeholder:
+                    yield self.placeholder_index(aid)
 
-        elif isinstance(token, IdentifierList):
-            for iden in token.get_identifiers():
-                yield from SQLToken.iter_tokens(iden)
+                elif aid.match(tokens.Keyword, 'NULL'):
+                    yield None
 
-        elif isinstance(token, Comparison):
-            lhs = next(SQLToken.iter_tokens(token.left))
-            if isinstance(token.right, Identifier):
-                rhs = next(SQLToken.iter_tokens(token.right))
-                yield JoinToken(
-                    other_field=rhs.field,
-                    other_coll=rhs.coll,
-                    field=lhs.field,
-                    coll=lhs.coll)
-
-            else:
-                if token.token_next(0)[1].value != '=':
+                else:
                     raise SQLDecodeError
 
-                yield EqToken(**vars(lhs), param_index=re_index(token.right.value))
-
-        elif isinstance(token, Parenthesis):
-            next_id, next_tok = token.token_next(0)
-            while next_tok.value != ')':
-                yield from SQLToken.iter_tokens(next_tok)
-                next_id, next_tok = token.token_next(next_id)
-
-        elif token.match(tokens.Name.Placeholder, '.*', regex=True):
-            index = int(re.match(r'%\(([0-9]+)\)s', token.value, flags=re.IGNORECASE).group(1))
-            yield index
-
-        elif token.match(tokens.Keyword, 'NULL'):
-            yield None
         else:
             raise SQLDecodeError
-
-    def to_mongo(self):
-        raise SQLDecodeError
-
-
-class EqToken(SQLToken):
-    def __init__(self, param_index, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.param_index = param_index
-
-
-class JoinToken(SQLToken):
-    def __init__(self, other_field, other_coll, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.other_field = other_field
-        self.other_coll = other_coll
 
 
 class _Op:
@@ -1318,18 +1070,16 @@ class _InNotInOp(_Op):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        identifier = next(SQLToken.iter_tokens(self.token.token_prev(self._token_id)[1]))
-        if identifier.coll:
-            if identifier.coll == self.left_tbl:
-                self._field = identifier.field
-            else:
-                self._field = '{}.{}'.format(identifier.coll, identifier.field)
+        identifier = SQLToken(self.token.token_prev(self._token_id)[1])
+
+        if identifier.table == self.left_tbl:
+            self._field = identifier.column
         else:
-            self._field = identifier.field
+            self._field = '{}.{}'.format(identifier.table, identifier.column)
 
     def _fill_in(self, token):
         self._in = []
-        for index in SQLToken.iter_tokens(token):
+        for index in SQLToken(token):
             if index is not None:
                 self._in.append(self.params[index])
             else:
@@ -1605,7 +1355,7 @@ class CmpOp(_Op):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._identifier = next(SQLToken.iter_tokens(self.token.left))
+        self._identifier = SQLToken(self.token.left)
 
         if isinstance(self.token.right, Identifier):
             raise SQLDecodeError('Join using WHERE not supported')
@@ -1619,10 +1369,10 @@ class CmpOp(_Op):
         self.is_negated = True
 
     def to_mongo(self):
-        if self._identifier.coll == self.left_tbl:
-            field = self._identifier.field
+        if self._identifier.table == self.left_tbl:
+            field = self._identifier.column
         else:
-            field = '{}.{}'.format(self._identifier.coll, self._identifier.field)
+            field = '{}.{}'.format(self._identifier.table, self._identifier.column)
 
         if not self.is_negated:
             return {field: {self._operator: self._constant}}
