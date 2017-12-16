@@ -1,5 +1,5 @@
 from logging import getLogger
-from .sql2mongo import Parse
+from .sql2mongo import Result
 
 logger = getLogger(__name__)
 
@@ -10,7 +10,6 @@ class Cursor:
         self.db_conn = db_conn
         self.client_conn = client_conn
         self.result = None
-        self.parse = None
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
@@ -39,11 +38,10 @@ class Cursor:
 
     @property
     def lastrowid(self):
-        return self.parse.last_row_id
+        return self.result.last_row_id
 
     def execute(self, sql, params=None):
-        self.parse = Parse(self.client_conn, self.db_conn, sql, params)
-        self.result = self.parse.result()
+        self.result = Result(self.client_conn, self.db_conn, sql, params)
 
     def fetchmany(self, size=1):
         ret = []
