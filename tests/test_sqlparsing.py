@@ -4,7 +4,7 @@ from logging import getLogger, DEBUG, StreamHandler
 from pymongo import MongoClient
 from pymongo.cursor import Cursor
 
-from djongo.sql2mongo import Parse
+from djongo.sql2mongo import Result
 
 sql = [
     'UPDATE "auth_user" SET "password" = %s, "last_login" = NULL, "is_superuser" = %s, "username" = %s, "first_name" = %s, "last_name" = %s, "email" = %s, "is_staff" = %s, "is_active" = %s, "date_joined" = %s WHERE "auth_user"."id" = %s',
@@ -99,6 +99,7 @@ class TestParse(TestCase):
         cls.find = cls.conn.__getitem__().find
         cursor = mock.MagicMock()
         cursor.__class__ = Cursor
+        cursor.__iter__.return_value = [{'col1': 1},{'col1': 2}]
         cursor.count.return_value =1
         cls.find.return_value = cursor
 
@@ -108,8 +109,10 @@ class TestParse(TestCase):
         cls.distinct.return_value = cursor2
 
     def _mock(self):
-        result = Parse(self.db, self.conn, self.sql, self.params).result()
+        result = Result(self.db, self.conn, self.sql, self.params)
         doc = next(result)
+        doc = next(result)
+
 
     def test_statement(self):
         """
@@ -118,8 +121,9 @@ class TestParse(TestCase):
         """
         'SELECT "t"."c1" AS Col1, "t"."c2", COUNT("t"."c3") AS "c3__count" FROM "table"'
         'SELECT COUNT(*) AS "__count" FROM "table"'
-        self.sql = 'SELECT "t"."c1" AS Col1, "t"."c2", COUNT("t"."c3") AS "c3__count" FROM "table"'
-        self.params = [1]
+        'SELECT (1) AS "a" FROM "table" WHERE "table1"."col2" = %s LIMIT 1'
+        self.sql = 'UPDATE "table" SET "col" = %s WHERE "table"."col1" = %s'
+        self.params = [1, 2]
         self._mock()
         find = self.find
 

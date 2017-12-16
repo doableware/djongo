@@ -1,14 +1,15 @@
 from itertools import chain
 
 from dataclasses import dataclass, field
-from pymongo.cursor import Cursor as PymongoCursor
+from pymongo.cursor import Cursor as BasicCursor
+from pymongo.command_cursor import CommandCursor
 from pymongo.database import Database
 from pymongo import MongoClient
 from logging import getLogger
 import re
 import typing
 from pymongo import ReturnDocument, ASCENDING, DESCENDING
-from sqlparse import parse as sql_parse
+from sqlparse import parse as sqlparse
 from sqlparse import tokens
 from sqlparse.sql import (
     IdentifierList, Identifier, Parenthesis,
@@ -46,6 +47,7 @@ class SQLDecodeError(ValueError):
     def __init__(self, err_sql=None):
         self.err_sql = err_sql
 
+
 @dataclass
 class TableColumnOp:
     table_name: str
@@ -59,20 +61,33 @@ class CountFunc:
     column_name: str
     alias_name: str = None
 
+
 @dataclass
 class CountDistinctFunc:
     table_name: str
     column_name: str
     alias_name: str = None
 
+
 @dataclass
 class CountWildcardFunc:
     alias_name: str = None
+
 
 class DistinctOp(typing.NamedTuple):
     table_name: str
     column_name: str
     alias_name: str = None
+
+
+def parse(
+        client_conn: MongoClient,
+        db_conn: Database,
+        sql: str,
+        params: list
+):
+    return Result(client_conn, db_conn, sql, params)
+
 
 def re_index(value: str):
     match = re.match(r'%\(([0-9]+)\)s', value, flags=re.IGNORECASE)
@@ -86,60 +101,522 @@ def re_index(value: str):
     return index
 
 
+class Query:
+    def __init__(
+            self,
+            result_ref: 'Result',
+            statement: Statement,
+            params: list
 
-@dataclass
-class WhereQuery:
+    ):
+        self.statement = statement
+        self._result_ref = result_ref
+        self.params = params
+        self._cursor = None
+        self.parse()
+
+    def __iter__(self):
+        return
+        yield
+
+    def parse(self):
+        raise NotImplementedError
+
+    def count(self):
+        raise NotImplementedError
+
+
+class Converter:
+    def __init__(
+            self,
+            query: typing.Union['SelectQuery', Query],
+            begin_id: int
+    ):
+        self.query = query
+        self.begin_id = begin_id
+        self.end_id = None
+        self.parse()
+
+    def parse(self):
+        raise NotImplementedError
+
+    def to_mongo(self):
+        raise NotImplementedError
+
+
+class ColumnSelectConverter(Converter):
+    def __init__(self, query, begin_id):
+        self.select_all = False
+        self.return_const = None
+        self.return_count = False
+        self.distinct = False
+        self.num_columns = 0
+
+        self.sql_tokens: typing.List[SQLLToken] = []
+        super().__init__(query, begin_id)
+
+    def parse(self):
+        tok_id, tok = self.query.statement.token_next(self.begin_id)
+        if tok.value == '*':
+            self.select_all = True
+
+        elif isinstance(tok, Identifier):
+            self._identifier(tok)
+
+        elif isinstance(tok, IdentifierList):
+            for atok in tok.get_identifiers():
+                self._identifier(atok)
+
+        elif tok.match(tokens.Keyword, 'DISTINCT'):
+            tok_id, tok = self.query.statement.token_next(self.begin_id)
+            self.query.distinct = SQLLToken(tok)
+
+        else:
+            raise SQLDecodeError
+
+        self.end_id = tok_id
+
+    def _identifier(self, tok):
+        if isinstance(tok[0], Parenthesis):
+            self.return_const = int(tok[0][1].value)
+            return
+
+        elif isinstance(tok[0], Function):
+            if tok[0][0].value == 'COUNT':
+                self.return_count = True
+
+        else:
+            self.sql_tokens.append(SQLLToken(tok))
+
+    def to_mongo(self):
+        doc = [selected.column for selected in self.sql_tokens]
+        return {'projection': doc}
+
+
+class AggColumnSelectConverter(ColumnSelectConverter):
+
+    def to_mongo(self):
+        project = {}
+        for selected in self.sql_tokens:
+            if selected.table == self.query.left_table:
+                project[selected.column] = True
+            else:
+                project[selected.table + '.' + selected.column] = True
+
+        return {'$project': project}
+
+
+class FromConverter(Converter):
+
+    def parse(self):
+        sm = self.query.statement
+        self.end_id, tok = sm.token_next(self.begin_id)
+        self.query.left_table = SQLLToken(tok).table
+
+
+class WhereConverter(Converter):
     nested_op: 'WhereOp' = None
     op: 'WhereOp' = None
 
-@dataclass
-class JoinQuery:
-    left_table: str = None
-    right_table: str = None
-    left_column: str = None
-    right_column: str = None
+    def parse(self):
+        sm = self.query.statement
+        tok = sm[self.begin_id]
+        self.op = WhereOp(
+            query=self.query,
+            token_id=0,
+            token=tok,
+            left_tbl=self.query.left_table,
+            params=self.query.params
+        )
+        self.end_id = self.begin_id
+
+    def to_mongo(self):
+        return {'filter': self.op.to_mongo()}
 
 
-class InnerJoinQuery(JoinQuery):
-    pass
+class AggWhereConverter(WhereConverter):
+
+    def to_mongo(self):
+        return {'$match': self.op.to_mongo()}
 
 
-class OuterJoinQuery(JoinQuery):
-    pass
+class JoinConverter(Converter):
+    def __init__(self, *args):
+        self.left_table: str = None
+        self.right_table: str = None
+        self.left_column: str = None
+        self.right_column: str = None
+        super().__init__(*args)
+
+    def parse(self):
+        sm = self.query.statement
+        tok_id, tok = sm.token_next(self.begin_id)
+        sql = SQLLToken(tok)
+        right_table = self.right_table = sql.table
+
+        tok_id, tok = sm.token_next(tok_id)
+        if not tok.match(tokens.Keyword, 'ON'):
+            raise SQLDecodeError
+
+        tok_id, tok = sm.token_next(tok_id)
+        if isinstance(tok, Parenthesis):
+            tok = tok[1]
+
+        sql = SQLLToken(tok)
+        if right_table == sql.right_table:
+            self.left_table = sql.left_table
+            self.left_column = sql.left_column
+            self.right_column = sql.right_column
+        else:
+            self.left_table = sql.right_table
+            self.left_column = sql.right_column
+            self.right_column = sql.left_column
+
+        self.end_id = tok_id
+
+    def _lookup(self):
+        if self.left_table == self.query.left_table:
+            local_field = self.left_column
+        else:
+            local_field = f'{self.left_table}.{self.left_column}'
+
+        lookup = {
+            '$lookup': {
+                'from': self.right_table,
+                'localField': local_field,
+                'foreignField': self.right_column,
+                'as': self.right_table
+            }
+        }
+
+        return lookup
 
 
-class LimitQuery(typing.NamedTuple):
-    limit: int
+class InnerJoinConverter(JoinConverter):
 
-class OrderQuery(typing.NamedTuple):
-    table_column: TableColumnOp
-    ord: int
-
-@dataclass
-class SelectQuery:
-    statement: Statement
-    params: typing.Optional[list]
-
-    current_id: int = 0
-    current_tok: Token = None
-    saved_step: list = field(default_factory=list)
-
-    left_table: typing.Optional[str] = None
-    simple_query = True
-    alias2op: typing.Dict[str, typing.Any] = field(default_factory=dict)
-
-    selected_ops: typing.List[typing.Any] = field(default_factory=list)
-    where: typing.Optional[WhereQuery] = None
-    joins: typing.Optional[
-        typing.List[
-            typing.Union[InnerJoinQuery, OuterJoinQuery]
+    def to_mongo(self):
+        lookup = self._lookup()
+        pipeline = [
+            {
+                '$match': {
+                    self.left_column: {
+                        '$ne': None,
+                        '$exists': True
+                    }
+                }
+            },
+            lookup,
+            {
+                '$unwind': '$' + self.right_table
+            }
         ]
-    ] = field(default_factory=list)
-    order: typing.List[OrderQuery] = field(default_factory=list)
-    limit: typing.Optional[LimitQuery] = None
+
+        return pipeline
 
 
-class Parse:
+class OuterJoinConverter(JoinConverter):
+
+    def to_mongo(self):
+        lookup = self._lookup()
+        pipeline = [
+            lookup,
+            {
+                '$unwind': {
+                    'path': '$' + self.right_table,
+                    'preserveNullAndEmptyArrays': True
+                }
+            }
+        ]
+
+        return pipeline
+
+
+class LimitConverter(Converter):
+    def __init__(self, *args):
+        self.limit: int = None
+        super().__init__(*args)
+
+    def parse(self):
+        sm = self.query.statement
+        self.end_id, tok = sm.token_next(self.begin_id)
+        self.limit = int(tok.value)
+
+    def to_mongo(self):
+        return {'limit': self.limit}
+
+
+class AggLimitConverter(LimitConverter):
+
+    def to_mongo(self):
+        return {'$limit': self.limit}
+
+
+class OrderConverter(Converter):
+    def __init__(self, *args):
+        self.columns: typing.List[typing.Tuple[SQLLToken, SQLLToken]] = []
+        super().__init__(*args)
+
+    def parse(self):
+        sm = self.query.statement
+        tok_id, tok = sm.token_next(self.begin_id)
+        if not tok.match(tokens.Keyword, 'BY'):
+            raise SQLDecodeError
+
+        tok_id, tok = sm.token_next(tok_id)
+        if isinstance(tok, Identifier):
+            self.columns.append((SQLLToken(tok[0]), SQLLToken(tok)))
+
+        elif isinstance(tok, IdentifierList):
+            for _id in tok.get_identifiers():
+                self.columns.append((SQLLToken(_id[0]), SQLLToken(_id)))
+
+        self.end_id = tok_id
+
+    def to_mongo(self):
+        sort = [(tok.table, tok_ord.order) for tok, tok_ord in self.columns]
+        return {'sort': sort}
+
+
+class SetConverter(Converter):
+
+    def __init__(self, *args):
+        self.sql_tokens: typing.List[SQLLToken] = []
+        super().__init__(*args)
+
+    def parse(self):
+        tok_id, tok = self.query.statement.token_next(self.begin_id)
+
+        if isinstance(tok, Comparison):
+            self.sql_tokens.append(SQLLToken(tok))
+
+        elif isinstance(tok, IdentifierList):
+            for atok in tok.get_identifiers():
+                self.sql_tokens.append((SQLLToken(atok)))
+
+        else:
+            raise SQLDecodeError
+
+        self.end_id = tok_id
+
+    def to_mongo(self):
+        return {
+            'update': {
+                '$set': {
+                    sql.lhs_column: self.query.params[sql.rhs_indexes] for sql in self.sql_tokens}
+            }
+        }
+
+class AggOrderConverter(OrderConverter):
+
+    def to_mongo(self):
+        sort = OrderedDict()
+        for tok, tok_ord in self.columns:
+            if tok.table == self.query.left_table:
+                sort[tok.column] = tok_ord.order
+            else:
+                sort[tok.table + '.' + tok.column] = tok_ord.order
+
+        return {'$sort': sort}
+
+
+class SelectQuery(Query):
+    def __init__(self, *args):
+
+        self.left_table: typing.Optional[str] = None
+        self.nested_query: 'SelectQuery' = None
+        self.nested_query_result: list = None
+        self.alias2op: typing.Dict[str, typing.Any] = {}
+
+        self.selected_columns: ColumnSelectConverter = None
+        self.where: typing.Optional[WhereConverter] = None
+        self.joins: typing.Optional[typing.List[
+            typing.Union[InnerJoinConverter, OuterJoinConverter]
+        ]] = []
+        self.order: OrderConverter = None
+        self.limit: typing.Optional[LimitConverter] = None
+        self.distinct: SQLLToken = None
+
+        self._returned_count = 0
+        self._cursor: typing.Union[BasicCursor, CommandCursor] = None
+        super().__init__(*args)
+
+    def parse(self):
+        tok_id = 0
+        tok = self.statement[0]
+
+        while tok_id is not None:
+            if tok.match(tokens.DML, 'SELECT'):
+                c = self.selected_columns = ColumnSelectConverter(self, tok_id)
+
+            elif tok.match(tokens.Keyword, 'FROM'):
+                c = FromConverter(self, tok_id)
+
+            elif tok.match(tokens.Keyword, 'LIMIT'):
+                c = self.limit = LimitConverter(self, tok_id)
+
+            elif tok.match(tokens.Keyword, 'ORDER'):
+                c = self.order = OrderConverter(self, tok_id)
+
+            elif tok.match(tokens.Keyword, 'INNER JOIN'):
+                c = InnerJoinConverter(self, tok_id)
+                self.joins.append(c)
+
+            elif tok.match(tokens.Keyword, 'LEFT OUTER JOIN'):
+                c = OuterJoinConverter(self, tok_id)
+                self.joins.append(c)
+
+            elif isinstance(tok, Where):
+                c = self.where = WhereConverter(self, tok_id)
+
+            else:
+                raise SQLDecodeError
+
+            tok_id, tok = self.statement.token_next(c.end_id)
+
+    def __iter__(self):
+        if self.selected_columns.return_const is not None:
+            for _ in range(self.count()):
+                yield self.selected_columns.return_const,
+            return
+
+        elif self.selected_columns.return_count:
+            yield self.count(),
+            return
+
+        else:
+            if self._cursor is None:
+                self._cursor = self._get_cursor()
+
+            cur = self._cursor
+            for doc in cur:
+                if isinstance(cur, BasicCursor):
+                    doc.pop('_id', None)
+                    if len(doc) == len(self.selected_columns.sql_tokens):
+                        yield tuple(doc.values())
+                    else:
+                        yield self._align_results(doc)
+                else:
+                    yield self._align_results(doc)
+            return
+
+    def count(self):
+
+        if self._cursor is None:
+            self._cursor = self._get_cursor()
+
+        if isinstance(self._cursor, BasicCursor):
+            return self._cursor.count()
+        else:
+            return len(list(self._cursor))
+
+    def _get_cursor(self):
+        if self.nested_query:
+            self.nested_query_result = list(self.nested_query)
+
+        if self.joins:
+            pipeline = []
+            for join in self.joins:
+                pipeline.extend(join.to_mongo())
+
+            if self.where:
+                self.where.__class__ = AggWhereConverter
+                pipeline.append(self.where.to_mongo())
+
+            if self.order:
+                self.order.__class__ = AggOrderConverter
+                pipeline.append(self.order.to_mongo())
+
+            if self.limit:
+                self.limit.__class__ = AggLimitConverter
+                pipeline.append(self.limit.to_mongo())
+
+            if self.selected_columns:
+                self.selected_columns.__class__ = AggColumnSelectConverter
+                pipeline.append(self.selected_columns.to_mongo())
+
+            cur = self._result_ref.db[self.left_table].aggregate(pipeline)
+            return cur
+
+        else:
+            kwargs = {}
+            if self.where:
+                kwargs.update(self.where.to_mongo())
+
+            if self.selected_columns:
+                kwargs.update(self.selected_columns.to_mongo())
+
+            if self.limit:
+                kwargs.update(self.limit.to_mongo())
+
+            if self.order:
+                kwargs.update(self.order.to_mongo())
+
+            cur = self._result_ref.db[self.left_table].find(**kwargs)
+
+            if self.distinct:
+                cur = cur.distinct(self.distinct.column)
+
+            return cur
+
+    def _align_results(self, doc):
+        ret = []
+        for selected in self.selected_columns.sql_tokens:
+            if selected.table == self.left_table:
+                try:
+                    ret.append(doc[selected.column])
+                except KeyError:
+                    ret.append(None)  # This is a silent failure
+            else:
+                try:
+                    ret.append(doc[selected.table][selected.column])
+                except KeyError:
+                    ret.append(None)  # This is a silent failure.
+
+        return ret
+
+class UpdateQuery(Query):
+    
+    def __init__(self, *args):
+        self.left_table = None
+        self.selected_table: ColumnSelectConverter =  None
+        self.set_columns: SetConverter = None
+        self.where: WhereConverter = None
+        self.result = None
+        super().__init__(*args)
+
+    def count(self):
+        return self.result.modified_count
+
+    def parse(self):
+        db = self._result_ref.db
+        tok_id = 0
+        tok: Token = self.statement[0]
+
+        while tok_id is not None:
+            if tok.match(tokens.DML, 'UPDATE'):
+                c = ColumnSelectConverter(self, tok_id)
+                self.left_table = c.sql_tokens[0].table
+
+            elif tok.match(tokens.Keyword, 'SET'):
+                c = self.set_columns = SetConverter(self, tok_id)
+
+            elif isinstance(tok, Where):
+                c = self.where = WhereConverter(self, tok_id)
+
+            else:
+                raise SQLDecodeError
+
+            tok_id, tok = self.statement.token_next(c.end_id)
+
+        kwargs = {}
+        if self.where:
+            kwargs.update(self.where.to_mongo())
+
+        kwargs.update(self.set_columns.to_mongo())
+        self.result = db[self.left_table].update_many(**kwargs)
+        logger.debug(f'update_many: {self.result.modified_count}, matched: {self.result.matched_count}')
+
+class Result:
 
     def __init__(self,
                  client_connection: MongoClient,
@@ -149,28 +626,47 @@ class Parse:
         logger.debug('params: {}'.format(params))
 
         self._params = params
-        self._params_index_count = -1
-        self._sql = re.sub(r'%s', self._param_index, sql)
         self.db = db_connection
         self.cli_con = client_connection
+        self._params_index_count = -1
+        self._sql = re.sub(r'%s', self._param_index, sql)
         self.last_row_id = None
+        self._result_generator = None
 
-        self._query = SelectQuery(self._sql, self._params)
-        self._parse()
+        self._query = None
+        self.parse()
+
+    def count(self):
+        return self._query.count()
+
+    def close(self):
+        if self._query and self._query._cursor:
+            self._query._cursor.close()
+
+    def __next__(self):
+        if self._result_generator is None:
+            self._result_generator = iter(self)
+
+        return next(self._result_generator)
+
+    next = __next__
+
+    def __iter__(self):
+        yield from iter(self._query)
 
     def result(self):
-        return Result(self)
+        return Result2(self)
 
     def _param_index(self, _):
         self._params_index_count += 1
         return '%({})s'.format(self._params_index_count)
 
-    def _parse(self):
-        logger.debug('\n sql_command: {}'.format(self._sql))
-        statement = sql_parse(self._sql)
+    def parse(self):
+        logger.debug(f'\n sql_command: {self._sql}')
+        statement = sqlparse(self._sql)
 
         if len(statement) > 1:
-            raise SQLDecodeError('Sql: {}'.format(self._sql))
+            raise SQLDecodeError(self._sql)
 
         statement = statement[0]
         sm_type = statement.get_type()
@@ -179,9 +675,14 @@ class Parse:
             handler = self.FUNC_MAP[sm_type]
         except KeyError:
             logger.debug('\n Not implemented {} {}'.format(sm_type, statement))
-            raise NotImplementedError('{} command not implemented for SQL {}'.format(sm_type, self._sql))
+            raise NotImplementedError(f'{sm_type} command not implemented for SQL {self._sql}')
+
         else:
-            return handler(self, statement)
+            try:
+                return handler(self, statement)
+            except SQLDecodeError as e:
+                e.err_sql = self._sql
+                raise e
 
     def _alter(self, sm):
         next_id, next_tok = sm.token_next(0)
@@ -195,14 +696,14 @@ class Parse:
 
             next_id, next_tok = sm.token_next(next_id)
             if (not next_tok
-                or not next_tok.match(tokens.Keyword, 'ADD')
+                    or not next_tok.match(tokens.Keyword, 'ADD')
             ):
                 logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
                 return
 
             next_id, next_tok = sm.token_next(next_id)
             if (not next_tok
-                or not next_tok.match(tokens.Keyword, 'CONSTRAINT')
+                    or not next_tok.match(tokens.Keyword, 'CONSTRAINT')
             ):
                 logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
                 return
@@ -225,7 +726,6 @@ class Parse:
                 self.db[table].create_index(index, unique=True, name=constraint_name)
             else:
                 raise NotImplementedError('Alter command not implemented for SQL {}'.format(self._sql))
-
 
     def _create(self, sm):
         next_id, next_tok = sm.token_next(0)
@@ -284,6 +784,8 @@ class Parse:
         self.cli_con.drop_database(db_name)
 
     def _update(self, sm):
+        self._query = UpdateQuery(self, sm, self._params)
+        return
         db_con = self.db
         kw = {}
         next_id, next_tok = sm.token_next(0)
@@ -378,108 +880,7 @@ class Parse:
 
     def _select(self, sm):
 
-        query = SelectQuery(sm, self._params)
-        current_step = SelectStep(query)
-        current_step.run_steps(StartSelectStep(query), StopSelectStep)
-
-        while not isinstance(current_step, StopSelectStep):
-            current_step.parse()
-            current_step = current_step.next_step()
-
-        next_id, next_tok = sm.token_next(0)
-        if next_tok.value == '*':
-            self.proj.no_id = True
-
-        elif isinstance(next_tok, Identifier) and isinstance(next_tok.tokens[0], Parenthesis):
-            self.proj.return_const = int(next_tok.tokens[0].tokens[1].value)
-
-        elif (isinstance(next_tok, Identifier)
-              and isinstance(next_tok.tokens[0], Function)
-              and next_tok.tokens[0].token_first().value == 'COUNT'):
-            self.proj.return_count = True
-
-        elif next_tok.match(tokens.Keyword, 'DISTINCT'):
-            self.distinct = True
-            next_id, next_tok = sm.token_next(next_id)
-            for sql in SQLToken.iter_tokens(next_tok):
-                self.proj.coll_fields.append(TableColumnOp(sql.coll, sql.field))
-
-            if len(self.proj.coll_fields) > 1:
-                raise SQLDecodeError('Distinct for more than 1 field not supported yet')
-
-        else:
-            for sql in SQLToken.iter_tokens(next_tok):
-                self.proj.coll_fields.append(TableColumnOp(sql.coll, sql.field))
-
-        next_id, next_tok = sm.token_next(next_id)
-
-        if not next_tok.match(tokens.Keyword, 'FROM'):
-            raise SQLDecodeError('statement: {}'.format(sm))
-
-        next_id, next_tok = sm.token_next(next_id)
-        sql = next(SQLToken.iter_tokens(next_tok))
-
-        self.left_tbl = sql.field
-
-        next_id, next_tok = sm.token_next(next_id)
-
-        while next_id:
-            if isinstance(next_tok, Where):
-                where_op = WhereOp(
-                    token_id=0,
-                    token=next_tok,
-                    left_tbl=self.left_tbl,
-                    params=self._params
-                )
-                self.filter = where_op.to_mongo()
-
-            elif next_tok.match(tokens.Keyword, 'LIMIT'):
-                next_id, next_tok = sm.token_next(next_id)
-                self.limit = int(next_tok.value)
-
-            elif (next_tok.match(tokens.Keyword, 'INNER JOIN')
-                  or next_tok.match(tokens.Keyword, 'LEFT OUTER JOIN')):
-                if next_tok.match(tokens.Keyword, 'INNER JOIN'):
-                    join = InnerJoinQuery()
-                else:
-                    join = OuterJoinQuery()
-
-                next_id, next_tok = sm.token_next(next_id)
-                sql = next(SQLToken.iter_tokens(next_tok))
-                right_tb = join.right_table = sql.field
-
-                next_id, next_tok = sm.token_next(next_id)
-                if not next_tok.match(tokens.Keyword, 'ON'):
-                    raise SQLDecodeError('statement: {}'.format(sm))
-
-                next_id, next_tok = sm.token_next(next_id)
-                join_token = next(SQLToken.iter_tokens(next_tok))
-                if right_tb == join_token.other_coll:
-                    join.left_column = join_token.field
-                    join.right_column = join_token.other_field
-                    join.left_table = join_token.coll
-                else:
-                    join.left_column = join_token.other_field
-                    join.right_column = join_token.field
-                    join.left_table = join_token.other_coll
-
-                self.joins.append(join)
-
-            elif next_tok.match(tokens.Keyword, 'ORDER'):
-                next_id, next_tok = sm.token_next(next_id)
-                if not next_tok.match(tokens.Keyword, 'BY'):
-                    raise SQLDecodeError('statement: {}'.format(sm))
-
-                next_id, next_tok = sm.token_next(next_id)
-                for order, sql in SQLToken.iter_tokens(next_tok):
-                    self.sort.append(
-                        OrderQuery(TableColumnOp(sql.coll, sql.field),
-                                   ORDER_BY_MAP[order]))
-
-            else:
-                raise SQLDecodeError('statement: {}'.format(sm))
-
-            next_id, next_tok = sm.token_next(next_id)
+        self._query = SelectQuery(self, sm, self._params)
 
     FUNC_MAP = {
         'SELECT': _select,
@@ -492,297 +893,6 @@ class Parse:
     }
 
 
-class Step:
-    token_to_step_map = None
-    keyword_to_step_map = None
-
-    def __init__(self, query: SelectQuery):
-        self._query = query
-
-    @staticmethod
-    def run_steps(start_step, stop_step_class):
-        current_step = start_step
-
-        while not isinstance(current_step, stop_step_class):
-            current_step.parse()
-            current_step = current_step.next_step()
-
-    def save_step(self):
-        q = self._query
-        q.saved_step.append((
-            q.current_id,
-            q.current_tok,
-            q.statement))
-        q.statement: Token = q.current_tok
-        q.current_tok = q.statement[0]
-        q.current_id = 0
-
-    def restore_step(self):
-        q = self._query
-        (q.current_id,
-         q.current_tok,
-         q.statement) = q.saved_step.pop()
-
-    def token_to_step(self, token: Token):
-        q = self._query
-        try:
-            return self.token_to_step_map[type(token)](q)
-        except KeyError:
-            raise SQLDecodeError(f'Not Implemented: {q.statement}')
-
-    def keyword_to_step(self):
-        q = self._query
-        current_tok = q.current_tok
-        found_step = None
-        for keyword, step in self.keyword_to_step_map:
-            if current_tok.match(tokens.Keyword, keyword):
-                found_step = step
-                break
-        else:
-            raise SQLDecodeError(f'Not Implemented: {q.statement}')
-        return found_step(q)
-
-    def advance(self, by=1):
-        q = self._query
-        for _ in range(by):
-            q.current_id, q.current_tok = q.statement.token_next(q.current_id)
-
-    def parse(self):
-        raise NotImplementedError
-
-    def next_step(self):
-        raise NotImplementedError
-
-
-class IdentifierStep(Step):
-
-    def parse(self):
-        self.run_steps(StartIdentifierStep(self._query), StopIdentifierStep)
-
-    def next_step(self):
-        return StopColumnSelectStep(self._query)
-
-class StartIdentifierStep(Step):
-
-    def parse(self):
-        q = self._query
-        if isinstance(q.current_tok, Function):
-            if q.current_tok[0].value == 'COUNT':
-                self.save_step()
-                self.run_steps(CountStep(q), StopIdentifierStep)
-                self.restore_step()
-        else:
-            # Normal identifier
-            sql_tok = SQLLToken(q.statement)
-            q.selected_ops.append(TableColumnOp(sql_tok.table, sql_tok.column))
-
-        alias = q.statement.get_alias()
-        op = q.selected_ops[-1]
-        op.alias_name = alias
-        q.alias2op[alias] = op
-
-    def next_step(self):
-        return StopIdentifierStep(self._query)
-        self.advance()
-        q = self._query
-        if q.current_tok is None:
-            return StopIdentifierStep(q)
-        # An alias exists
-        return AliasIdentifierStep(q)
-
-
-class AliasIdentifierStep(Step):
-
-    def parse(self):
-        q = self._query
-        if not q.current_tok.match(tokens.Keyword, 'AS'):
-            raise SQLDecodeError
-        self.advance()
-        alias = q.statement.get_alias()
-        op = q.selected_ops[-1]
-        op.alias_name = alias
-        q.alias2op[alias] = op
-
-    def next_step(self):
-        return StopIdentifierStep(self._query)
-
-class StopIdentifierStep(Step):
-    pass
-
-class CountStep(Step):
-
-    def parse(self):
-        self.run_steps(StartCountStep(self._query), StopCountStep)
-
-    def next_step(self):
-        return StopIdentifierStep(self._query)
-
-class StartCountStep(CountStep):
-    def parse(self):
-        q = self._query
-        self.advance()
-        if not isinstance(q.current_tok, Parenthesis):
-            raise SQLDecodeError
-
-        self.save_step()
-        self.advance()
-
-        if q.current_tok.match(tokens.Wildcard, '*'):
-            op = CountWildcardFunc()
-
-        elif isinstance(q.current_tok, Identifier):
-            sql_tok = SQLLToken(q.current_tok)
-            op = CountFunc(sql_tok.table, sql_tok.column)
-        elif q.current_tok.match(tokens.Keyword, 'DISTINCT'):
-            q.simple_query = False
-            pass
-        self.advance(2)
-        q.selected_ops.append(op)
-
-        if q.current_tok is not None:
-            raise SQLDecodeError
-        self.restore_step()
-
-    def next_step(self):
-        return StopCountStep(self._query)
-
-class StopCountStep(CountStep):
-    pass
-
-class SelectStep(Step):
-    pass
-
-
-class StartSelectStep(SelectStep):
-
-    def parse(self):
-        q = self._query
-        q.current_id, q.current_tok = q.statement.token_next(0)
-
-    def next_step(self):
-        return ColumnSelectStep(self._query)
-
-
-class StopSelectStep(SelectStep):
-    pass
-
-class ColumnSelectStep(SelectStep):
-
-    def parse(self):
-        q = self._query
-        self.save_step()
-        self.run_steps(StartColumnSelectStep(q), StopColumnSelectStep)
-        self.restore_step()
-
-    def next_step(self):
-        q = self._query
-        self.advance()
-        if not q.current_tok.match(tokens.Keyword, 'FROM'):
-            raise SQLDecodeError
-
-        return FromSelectStep(q)
-
-class StartColumnSelectStep(ColumnSelectStep):
-    token_to_step_map = None
-
-    def __init__(self, q):
-        super().__init__(q)
-
-        if StartColumnSelectStep.token_to_step_map is None:
-            StartColumnSelectStep.token_to_step_map = {
-                Token: TokenColumnSelectStep,
-                Identifier: IdentifierStep,
-                IdentifierList: IdentifierListColumnSelectStep
-            }
-
-    def parse(self):
-        q = self._query
-
-        if isinstance(q.statement, Parenthesis):
-            q.statement = q.statement[0]
-            q.current_id = 0
-            q.current_tok = q.statement[0]
-
-    def next_step(self):
-        return self.token_to_step(self._query.statement)
-
-class StopColumnSelectStep(ColumnSelectStep):
-    pass
-
-class TokenColumnSelectStep(ColumnSelectStep):
-
-    def parse(self):
-        q = self._query
-        if q.current_tok.match(tokens.Keyword, 'COUNT'):
-            self.save_step()
-            self.run_steps(StartCountStep(self._query), StopCountStep)
-            self.restore_step()
-        elif q.current_tok.match(tokens.Keyword, 'DISTINCT'):
-            q.selected_ops
-            self.advance()
-
-    def next_step(self):
-        StopColumnSelectStep(self._query)
-
-class IdentifierColumnSelectStep(ColumnSelectStep):
-
-    def parse(self):
-        pass
-
-
-class IdentifierListColumnSelectStep(ColumnSelectStep):
-
-    def parse(self):
-        self.run_steps(StartIdentifierListColumnSelectStep(self._query), StopIdentifierListColumnSelectStep)
-
-    def next_step(self):
-        return StopColumnSelectStep(self._query)
-
-class StartIdentifierListColumnSelectStep(IdentifierListColumnSelectStep):
-
-    def parse(self):
-        self.save_step()
-        self.run_steps(IdentifierStep(self._query), StopColumnSelectStep)
-        self.restore_step()
-
-    def next_step(self):
-        self.advance(2)
-        if self._query.current_tok is None:
-            return StopIdentifierListColumnSelectStep(self._query)
-        return StartIdentifierListColumnSelectStep(self._query)
-
-class StopIdentifierListColumnSelectStep(IdentifierListColumnSelectStep):
-    pass
-
-
-class FromSelectStep(SelectStep):
-    pass
-
-
-class JoinSelectStep(SelectStep):
-    pass
-
-class GroupbySelectStep(SelectStep):
-    pass
-
-class HavingSelectStep(SelectStep):
-    pass
-
-class WhereSelectStep(SelectStep):
-    pass
-
-class LimitSelectStep(SelectStep):
-    pass
-
-class SortSelectStep(SelectStep):
-    pass
-
-class SkipSelectStep(SelectStep):
-    pass
-
-
-
-
 class Projection:
 
     def __init__(self):
@@ -792,17 +902,17 @@ class Projection:
         self.coll_fields: typing.List[TableColumnOp] = []
 
 
-class Result:
+class Result2:
 
-    def __init__(self, parsed_sql: Parse):
-        self._parsed_sql = parsed_sql
+    def __init__(self, parsed_sql: Result):
+        self.parsed_sql = parsed_sql
         self._cursor = None
         self._returned_count = 0
         self._count_returned = False
         self._count: int = None
 
     def _get_cursor(self):
-        p_sql = self._parsed_sql
+        p_sql = self.parsed_sql
         if p_sql.joins:
             # Do aggregation lookup
             pipeline = []
@@ -838,7 +948,7 @@ class Result:
                     pipeline.extend([
                         lookup,
                         {
-                            '$unwind': '$'+join.right_table
+                            '$unwind': '$' + join.right_table
                         }
                     ])
                 else:
@@ -850,7 +960,7 @@ class Result:
                         lookup,
                         {
                             '$unwind': {
-                                'path': '$'+join.right_table,
+                                'path': '$' + join.right_table,
                                 'preserveNullAndEmptyArrays': True
                             }
                         }
@@ -865,7 +975,7 @@ class Result:
                 pipeline.extend([
                     {
                         '$group': {
-                            '_id': '$'+p_sql.proj.coll_fields[0].field
+                            '_id': '$' + p_sql.proj.coll_fields[0].field
                         }
                     },
                     {
@@ -931,7 +1041,7 @@ class Result:
         if self._cursor is None:
             self._cursor = self._get_cursor()
 
-        if isinstance(self._cursor, PymongoCursor):
+        if isinstance(self._cursor, BasicCursor):
             self._count = self._cursor.count()
         else:
             self._count = len(list(self._cursor))
@@ -939,10 +1049,10 @@ class Result:
         return self._count
 
     def __iter__(self):
-        return self
+        yield from self._q
 
     def next(self):
-        p_sql = self._parsed_sql
+        p_sql = self.parsed_sql
         if p_sql.proj.return_const is not None:
             if self._returned_count < self.count():
                 self._returned_count += 1
@@ -962,7 +1072,7 @@ class Result:
 
         cur = self._cursor
         doc = cur.next()
-        if isinstance(cur, PymongoCursor):
+        if isinstance(cur, BasicCursor):
             doc.pop('_id')
             if len(doc) == len(p_sql.proj.coll_fields):
                 return tuple(doc.values())
@@ -998,14 +1108,43 @@ class SQLLToken:
         if not isinstance(self._token, Identifier):
             raise SQLDecodeError
 
-        return self._token.get_parent_name()
+        name = self._token.get_parent_name()
+        if name is None:
+            name = self._token.get_real_name()
+        else:
+            return name
+
+        if name is None:
+            raise SQLDecodeError
+        return name
 
     @property
     def column(self):
         if not isinstance(self._token, Identifier):
             raise SQLDecodeError
 
-        return self._token.get_real_name()
+        name = self._token.get_real_name()
+        if name is None:
+            raise SQLDecodeError
+        return name
+
+    @property
+    def alias(self):
+        if not isinstance(self._token, Identifier):
+            raise SQLDecodeError
+
+        return self._token.get_alias()
+
+    @property
+    def order(self):
+        if not isinstance(self._token, Identifier):
+            raise SQLDecodeError
+
+        ord = self._token.get_ordering()
+        if ord is None:
+            raise SQLDecodeError
+
+        return ORDER_BY_MAP[ord]
 
     @property
     def left_table(self):
@@ -1039,9 +1178,24 @@ class SQLLToken:
         rhs = SQLLToken(self._token.right)
         return rhs.column
 
-    def __iter__(self):
-        if not isinstance(self._token, IdentifierList):
+    @property
+    def lhs_column(self):
+        if not isinstance(self._token, Comparison):
             raise SQLDecodeError
+
+        lhs = SQLLToken(self._token.left)
+        return lhs.column
+
+    @property
+    def rhs_indexes(self):
+        if not self._token.right.ttype == tokens.Name.Placeholder:
+            raise SQLDecodeError
+
+        index = int(re.match(r'%\(([0-9]+)\)s', self._token.right.value, flags=re.IGNORECASE).group(1))
+
+        return index
+
+
 
 class SQLToken:
     def __init__(self, field, coll=None):
@@ -1117,8 +1271,8 @@ class _Op:
             self,
             token_id: int,
             token: Token,
-            left_tbl: str=None,
-            params: tuple=None,
+            left_tbl: str = None,
+            params: tuple = None,
             name='generic'):
         self.lhs: typing.Optional[_Op] = None
         self.rhs: typing.Optional[_Op] = None
@@ -1203,6 +1357,7 @@ class NotInOp(_InNotInOp):
 
     def negate(self):
         self.is_negated = True
+
 
 class InOp(_InNotInOp):
 
@@ -1323,14 +1478,16 @@ class OrOp(_AndOrOp):
 
 class WhereOp(_Op):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, query, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         if not isinstance(self.token[2], Parenthesis):
-            op = ParenthesisOp(0, sql_parse('('+self.token.value[6:]+')')[0][0])
+            op = ParenthesisOp(0, sqlparse('(' + self.token.value[6:] + ')')[0][0])
         else:
             op = ParenthesisOp(0, self.token[2])
         op.evaluate()
         self._op = op
+        self.query = query
 
     def negate(self):
         raise NotImplementedError
