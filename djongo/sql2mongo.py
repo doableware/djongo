@@ -910,7 +910,7 @@ class SQLToken:
         if name is None:
             raise SQLDecodeError
 
-        if name in self.alias2op:
+        if self.alias2op and name in self.alias2op:
             return self.alias2op[name].table
         return name
 

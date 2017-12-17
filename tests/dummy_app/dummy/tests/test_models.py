@@ -1,5 +1,3 @@
-from logging import getLogger, StreamHandler, DEBUG
-from django.core import management
 from django.db.models import Count
 
 from . import TestCase
