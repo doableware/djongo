@@ -152,7 +152,6 @@ class ColumnSelectConverter(Converter):
         self.select_all = False
         self.return_const = None
         self.return_count = False
-        self.distinct = False
         self.num_columns = 0
 
         self.sql_tokens: typing.List[SQLToken] = []
@@ -171,7 +170,7 @@ class ColumnSelectConverter(Converter):
                 self._identifier(atok)
 
         elif tok.match(tokens.Keyword, 'DISTINCT'):
-            tok_id, tok = self.query.statement.token_next(self.begin_id)
+            tok_id, tok = self.query.statement.token_next(tok_id)
             self.query.distinct = SQLToken(tok, self.query.alias2op)
 
         else:
@@ -195,6 +194,8 @@ class ColumnSelectConverter(Converter):
                 self.query.alias2op[sql.alias] = sql
 
     def to_mongo(self):
+        if self.query.distinct:
+            return {'projection': [self.query.distinct.column]}
         doc = [selected.column for selected in self.sql_tokens]
         return {'projection': doc}
 
@@ -885,15 +886,6 @@ class Result:
         'DROP': _drop,
         'ALTER': _alter
     }
-
-
-class Projection:
-
-    def __init__(self):
-        self.return_const: typing.Any = None
-        self.return_count = False
-        self.no_id = True
-        self.coll_fields: typing.List[TableColumnOp] = []
 
 
 class SQLToken:
