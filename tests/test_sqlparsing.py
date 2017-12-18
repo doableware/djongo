@@ -6,6 +6,20 @@ from pymongo.cursor import Cursor
 
 from djongo.sql2mongo import Result
 
+'Django SQL:'
+
+'SELECT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content", COUNT("dummy_multipleblogposts"."h1") AS "h1__count", COUNT("dummy_multipleblogposts"."content") AS "content__count" FROM "dummy_multipleblogposts" GROUP BY "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content"'
+
+'sql_command: SELECT DISTINCT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content" FROM "dummy_multipleblogposts" LIMIT 21'
+
+'SELECT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content" FROM "dummy_multipleblogposts" WHERE "dummy_multipleblogposts"."h1" LIKE %(0)s LIMIT 21'
+
+'SELECT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content" FROM "dummy_multipleblogposts" WHERE "dummy_multipleblogposts"."h1" LIKE BINARY %(0)s LIMIT 21'
+
+'SELECT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content" FROM "dummy_multipleblogposts" WHERE "dummy_multipleblogposts"."h1" REGEXP BINARY %(0)s LIMIT 21'
+
+'Migration SQL:'
+
 sql = [
     'UPDATE "auth_user" SET "password" = %s, "last_login" = NULL, "is_superuser" = %s, "username" = %s, "first_name" = %s, "last_name" = %s, "email" = %s, "is_staff" = %s, "is_active" = %s, "date_joined" = %s WHERE "auth_user"."id" = %s',
 

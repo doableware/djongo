@@ -765,7 +765,7 @@ class Result:
             try:
                 return handler(self, statement)
             except SQLDecodeError as e:
-                e.err_sql = self._sql
+                print(f'Failed sql: {self._sql}')
                 raise e
 
     def _alter(self, sm):
@@ -1071,7 +1071,7 @@ class _UnaryOp(_Op):
         return self.rhs.to_mongo()
 
 
-class _InNotInOp(_Op):
+class _InNotInLikeOp(_Op):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1107,7 +1107,7 @@ class _InNotInOp(_Op):
         raise NotImplementedError
 
 
-class NotInOp(_InNotInOp):
+class NotInOp(_InNotInLikeOp):
 
     def __init__(self, *args, **kwargs):
         super().__init__(name='NOT IN', *args, **kwargs)
@@ -1127,7 +1127,7 @@ class NotInOp(_InNotInOp):
         self.is_negated = True
 
 
-class InOp(_InNotInOp):
+class InOp(_InNotInLikeOp):
 
     def __init__(self, *args, **kwargs):
         super().__init__(name='IN', *args, **kwargs)
@@ -1143,6 +1143,14 @@ class InOp(_InNotInOp):
     def negate(self):
         self.is_negated = True
 
+
+class LikeOp(_InNotInLikeOp):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(name='LIKE', *args, **kwargs)
+
+    def _make_regex(self):
+        pass
 
 # TODO: Need to do this
 class NotOp(_UnaryOp):
@@ -1314,6 +1322,11 @@ class ParenthesisOp(_Op):
                 link_op()
                 self._op_precedence(op)
 
+            elif tok.match(tokens.Keyword, 'LIKE'):
+                op = LikeOp(**kw)
+                link_op()
+                self._op_precedence(op)
+
             elif isinstance(tok, Comparison):
                 op = CmpOp(0, tok, self.query)
                 self._cmp_ops.append(op)
@@ -1398,3 +1411,4 @@ class CmpOp(_Op):
             return {field: {self._operator: self._constant}}
         else:
             return {field: {'$not': {self._operator: self._constant}}}
+
