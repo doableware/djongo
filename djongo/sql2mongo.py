@@ -112,6 +112,7 @@ class Query:
         self.statement = statement
         self._result_ref = result_ref
         self.params = params
+        self.alias2op: typing.Dict[str, typing.Any] = {}
 
         self.left_table: typing.Optional[str] = None
 
@@ -434,7 +435,6 @@ class SelectQuery(Query):
 
         self.nested_query: 'SelectQuery' = None
         self.nested_query_result: list = None
-        self.alias2op: typing.Dict[str, typing.Any] = {}
 
         self.selected_columns: ColumnSelectConverter = None
         self.where: typing.Optional[WhereConverter] = None
