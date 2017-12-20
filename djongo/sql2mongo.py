@@ -740,7 +740,16 @@ class Result:
     next = __next__
 
     def __iter__(self):
-        yield from iter(self._query)
+        try:
+            yield from iter(self._query)
+        except SQLDecodeError as e:
+            print(self._sql)
+            e.err_sql = self._sql
+            raise e
+        except OperationFailure as e:
+            print(self._sql)
+            print(e.details)
+            raise e
 
     def _param_index(self, _):
         self._params_index_count += 1
