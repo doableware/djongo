@@ -9,6 +9,7 @@ from logging import getLogger
 import re
 import typing
 from pymongo import ReturnDocument, ASCENDING, DESCENDING
+from pymongo.errors import OperationFailure
 from sqlparse import parse as sqlparse
 from sqlparse import tokens
 from sqlparse.sql import (
@@ -765,7 +766,12 @@ class Result:
             try:
                 return handler(self, statement)
             except SQLDecodeError as e:
+                print(self._sql)
                 e.err_sql = self._sql
+                raise e
+            except OperationFailure as e:
+                print(self._sql)
+                print(e.details)
                 raise e
 
     def _alter(self, sm):
