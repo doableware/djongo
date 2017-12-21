@@ -15,20 +15,6 @@ DATABASES = {
         'NAME': 'your-db-name',
     }`
 }
-With username and password
-DATABASES = {
- 'default': {
-    'ENGINE': 'djongo',
-    'NAME': 'your-db-name',
-    'HOST': 'host-name ot ip address',
-    'PORT': port-number,
-    'USER': 'db-username',
-    'PASSWORD': 'password',
-    'AUTH_SOURCE': 'db-name',
-    'AUTH_MECHANISM': 'SCRAM-SHA-1',
-     
- }`
-}
 ```
 </li>   
    <li> Run <code>manage.py makemigrations</code> followed by <code>manage.py migrate</code> (ONLY the first time to create collections in mongoDB) </li>
