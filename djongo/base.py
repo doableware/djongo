@@ -89,7 +89,11 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         connection_params = {
             'name': self.settings_dict.get('NAME', 'djongo_test') or 'djongo_test',
             'host': self.settings_dict['HOST'] or None,
-            'port': self.settings_dict['PORT'] or None
+            'port': self.settings_dict['PORT'] or None,
+            'username': self.settings_dict['USER'] or None,
+            'password': self.settings_dict['PASSWORD'] or None,
+            'authSource': self.settings_dict['AUTH_SOURCE'] or None,
+            'authMechanism': self.settings_dict['AUTH_MECHANISM'] or None,
         }
 
         return connection_params
