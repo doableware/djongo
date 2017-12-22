@@ -86,17 +86,29 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         return False
 
     def get_connection_params(self):
-        connection_params = {
-            'name': self.settings_dict.get('NAME', 'djongo_test') or 'djongo_test',
-            'host': self.settings_dict['HOST'] or None,
-            'port': self.settings_dict['PORT'] or None,
-            'username': self.settings_dict['USER'] or None,
-            'password': self.settings_dict['PASSWORD'] or None,
-            'authSource': self.settings_dict['AUTH_SOURCE'] or None,
-            'authMechanism': self.settings_dict['AUTH_MECHANISM'] or None,
+        valid_settings = {
+            'NAME': 'name',
+            'HOST': 'host',
+            'PORT': 'port',
+            'USER': 'username',
+            'PASSWORD': 'password',
+            'AUTH_SOURCE': 'authSource',
+            'AUTH_MECHANISM': 'authMechanism'
         }
+        connection_params = {
+            'name': 'djongo_test'
+        }
+        for setting_name, kwarg in valid_settings.items():
+            try:
+                setting = self.settings_dict[setting_name]
+            except KeyError:
+                continue
+
+            if setting:
+                connection_params[kwarg] = setting
 
         return connection_params
+
 
     def get_new_connection(self, connection_params):
         """
