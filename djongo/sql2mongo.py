@@ -743,11 +743,10 @@ class Result:
         try:
             yield from iter(self._query)
         except SQLDecodeError as e:
-            print(self._sql)
-            e.err_sql = self._sql
+            print(f'FAILED SQL: {self._sql}')
             raise e
         except OperationFailure as e:
-            print(self._sql)
+            print(f'FAILED SQL: {self._sql}')
             print(e.details)
             raise e
 
@@ -775,11 +774,10 @@ class Result:
             try:
                 return handler(self, statement)
             except SQLDecodeError as e:
-                print(self._sql)
-                e.err_sql = self._sql
+                print(f'FAILED SQL: {self._sql}')
                 raise e
             except OperationFailure as e:
-                print(self._sql)
+                print(f'FAILED SQL: {self._sql}')
                 print(e.details)
                 raise e
 
