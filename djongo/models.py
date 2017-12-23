@@ -37,12 +37,12 @@ class ArrayModelField(Field):
 
     def __init__(self,
                  model_container: typing.Type[Model],
-                 model_form: typing.Type[forms.ModelForm] = None,
+                 model_form_class: typing.Type[forms.ModelForm] = None,
                  model_form_kwargs_l: dict = None,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.model_container = model_container
-        self.model_form = model_form
+        self.model_form_class = model_form_class
 
         if model_form_kwargs_l is None:
             model_form_kwargs_l = {}
@@ -52,8 +52,8 @@ class ArrayModelField(Field):
         name, path, args, kwargs = super().deconstruct()
         kwargs['model_container'] = self.model_container
 
-        if self.model_form is not None:
-            kwargs['model_form'] = self.model_form
+        if self.model_form_class is not None:
+            kwargs['model_form_class'] = self.model_form_class
 
         if self.model_form_kwargs_l:
             kwargs['model_form_kwargs_l'] = self.model_form_kwargs_l
@@ -102,7 +102,7 @@ class ArrayModelField(Field):
     def formfield(self, **kwargs):
         defaults = {
             'form_class': ArrayFormField,
-            'mdl_form': self.model_form,
+            'model_form_class': self.model_form_class,
             'name': self.attname,
             'mdl_form_kw_l': self.model_form_kwargs_l
 
@@ -123,17 +123,17 @@ class ArrayModelField(Field):
 
 
 class ArrayFormField(forms.Field):
-    def __init__(self, name, mdl_form, mdl_form_kw_l, *args, **kwargs):
+    def __init__(self, name, model_form_class, mdl_form_kw_l, *args, **kwargs):
         self.name = name
-        self.mdl_form = mdl_form
+        self.model_form_class = model_form_class
         self.mdl_form_kw_l = mdl_form_kw_l
 
-        widget = ArrayFormWidget(mdl_form._meta.fields[0])
+        widget = ArrayFormWidget(model_form_class._meta.fields[0])
         error_messages = {
             'incomplete': 'Enter all required fields.',
         }
 
-        self.ArrayFormSet = forms.formset_factory(self.mdl_form, can_delete=True)
+        self.ArrayFormSet = forms.formset_factory(self.model_form_class, can_delete=True)
         super().__init__(error_messages=error_messages,
                          widget=widget, *args, **kwargs)
 
@@ -148,7 +148,7 @@ class ArrayFormField(forms.Field):
                 if itm.get('DELETE', True):
                     continue
                 itm.pop('DELETE')
-                ret.append(self.mdl_form._meta.model(**itm))
+                ret.append(self.model_form_class._meta.model(**itm))
             return ret
 
         else:
@@ -160,8 +160,8 @@ class ArrayFormField(forms.Field):
             form_set_initial.append(
                 forms.model_to_dict(
                     init,
-                    fields=self.mdl_form._meta.fields,
-                    exclude=self.mdl_form._meta.exclude
+                    fields=self.model_form_class._meta.fields,
+                    exclude=self.model_form_class._meta.exclude
                 )
             )
         form_set = self.ArrayFormSet(data, initial=form_set_initial, prefix=self.name)
@@ -174,7 +174,7 @@ class ArrayFormField(forms.Field):
 class ArrayFormBoundField(forms.BoundField):
     def __init__(self, form, field, name):
         super().__init__(form, field, name)
-        ArrayFormSet = forms.formset_factory(field.mdl_form, can_delete=True)
+        ArrayFormSet = forms.formset_factory(field.model_form_class, can_delete=True)
 
         data = self.data if form.is_bound else None
         initial = []
@@ -184,8 +184,8 @@ class ArrayFormBoundField(forms.BoundField):
                     initial.append(
                         forms.model_to_dict(
                             ini,
-                            fields=field.mdl_form._meta.fields,
-                            exclude=field.mdl_form._meta.exclude
+                            fields=field.model_form_class._meta.fields,
+                            exclude=field.model_form_class._meta.exclude
                         ))
 
         self.form_set = ArrayFormSet(data, initial=initial,
@@ -232,12 +232,12 @@ class ArrayFormWidget(forms.Widget):
 class EmbeddedModelField(Field):
     def __init__(self,
                  model_container: typing.Type[Model],
-                 model_form: typing.Type[forms.ModelForm]=None,
+                 model_form_class: typing.Type[forms.ModelForm]=None,
                  model_form_kwargs: dict=None,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.model_container = model_container
-        self.model_form = model_form
+        self.model_form_class = model_form_class
         self.null = True
         self.instance = None
 
@@ -248,8 +248,8 @@ class EmbeddedModelField(Field):
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
         kwargs['model_container'] = self.model_container
-        if self.model_form is not None:
-            kwargs['model_form'] = self.model_form
+        if self.model_form_class is not None:
+            kwargs['model_form_class'] = self.model_form_class
         return name, path, args, kwargs
 
     def pre_save(self, model_instance, add):
@@ -292,15 +292,12 @@ class EmbeddedModelField(Field):
         return self.instance
 
     def formfield(self, **kwargs):
-        if not self.model_form:
+        if not self.model_form_class:
             raise ValidationError('Implementing model form class needed to create field')
-
-        if self.instance is not None:
-            self.model_form_kwargs['instance'] = self.instance
 
         defaults = {
             'form_class': EmbeddedFormField,
-            'model_form': self.model_form,
+            'model_form_class': self.model_form_class,
             'model_form_kw': self.model_form_kwargs,
             'name': self.attname
         }
@@ -310,7 +307,7 @@ class EmbeddedModelField(Field):
 
 
 class EmbeddedFormField(forms.MultiValueField):
-    def __init__(self, name, model_form, model_form_kw, *args, **kwargs):
+    def __init__(self, name, model_form_class, model_form_kw, *args, **kwargs):
         form_fields = []
         mdl_form_field_names = []
         widgets = []
@@ -325,12 +322,14 @@ class EmbeddedFormField(forms.MultiValueField):
         if initial:
             model_form_kwargs['initial'] = initial
 
-        self.model_form = model_form(**model_form_kwargs)
+        self.model_form_class = model_form_class
+        self.model_form_kwargs = model_form_kwargs
 
         error_messages = {
             'incomplete': 'Enter all required fields.',
         }
 
+        self.model_form = model_form_class(**model_form_kwargs)
         for field_name, field in self.model_form.fields.items():
             if isinstance(field, (forms.ModelChoiceField, forms.ModelMultipleChoiceField)):
                 continue
@@ -353,14 +352,16 @@ class EmbeddedFormField(forms.MultiValueField):
 
 
 class EmbeddedFormBoundField(forms.BoundField):
-    def __getitem__(self, name):
-        return self.field.model_form[name]
-
-    def __getattr__(self, name):
-        return getattr(self.field.model_form, name)
+    # def __getitem__(self, name):
+    #     return self.field.model_form[name]
+    #
+    # def __getattr__(self, name):
+    #     return getattr(self.field.model_form, name)
 
     def __str__(self):
-        return self.field.model_form.as_table()
+        instance = self.value()
+        model_form = self.field.model_form_class(instance=instance, **self.field.model_form_kwargs)
+        return model_form.as_table()
 
 
 class EmbeddedFormWidget(forms.MultiWidget):
