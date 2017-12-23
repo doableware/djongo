@@ -22,7 +22,15 @@ DATABASES = {
 </ol>
 <h2>Requirements:</h2>
 
-  1. djongo requires <b>python 3.6 or above.</b>
+  1. Python 3.6 or higher.
+  2. MongoDB 3.4 or higher.
+  3. If your models use nested queries or sub querysets like:
+  
+      ```python
+      inner_qs = Blog.objects.filter(name__contains='Ch').values('name')
+      entries = Entry.objects.filter(blog__name__in=inner_qs)
+      ```
+     MongoDB 3.6 or higher is required.
 
 
 <h2>How it works:</h2>
