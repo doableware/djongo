@@ -82,7 +82,7 @@ class BlogPost(models.Model):
     h1 = models.CharField(max_length=100)
     content = models.EmbeddedModelField(
         model_container=BlogContent,
-        model_form=BlogContentForm
+        model_form_class=BlogContentForm
     )   
 ```
 
@@ -115,7 +115,7 @@ class BlogContent(models.Model):
     comment = models.CharField(max_length=100)
     author = models.EmbeddedModelField(
         model_container=Author,
-        model_form=AuthorForm
+        model_form_class=AuthorForm
     )
     class Meta:
         abstract = True
@@ -128,7 +128,7 @@ class MultipleBlogPosts(models.Model):
     h1 = models.CharField(max_length=100)
     content = models.ArrayModelField(
         model_container=BlogContent,
-        model_form=BlogContentForm
+        model_form_class=BlogContentForm
     )
 ```
 Fire up Django Admin with the new changes and you have:
@@ -199,7 +199,7 @@ class BlogPost(models.Model):
     h1 = models.CharField(max_length=100)
     content = models.EmbeddedModelField(
         model_container=BlogContent,
-        model_form=BlogContentForm
+        model_form_class=BlogContentForm
     )
     
     objects = models.DjongoManager()
@@ -261,7 +261,7 @@ class BlogPost(models.Model):
     h1 = models.CharField(max_length=100)
     content = models.ArrayModelField(
         model_container=BlogContent,
-        model_form=BlogContentForm
+        model_form_class=BlogContentForm
     )
     
     objects = models.DjongoManager()

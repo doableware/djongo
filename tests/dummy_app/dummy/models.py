@@ -22,7 +22,7 @@ class BlogContent(models.Model):
     comment = models.CharField(max_length=100)
     author = models.EmbeddedModelField(
         model_container=Author,
-        model_form=AuthorForm
+        model_form_class=AuthorForm
     )
     class Meta:
         abstract = True
@@ -48,7 +48,7 @@ class BlogPost(models.Model):
     h1 = models.CharField(max_length=100)
     content = models.EmbeddedModelField(
         model_container=BlogContentSimple,
-        model_form=BlogContentForm
+        model_form_class=BlogContentForm
     )
 
     objects = models.DjongoManager()
@@ -62,7 +62,7 @@ class MultipleBlogPosts(models.Model):
     h1 = models.CharField(max_length=100)
     content = models.ArrayModelField(
         model_container=BlogContentSimple,
-        model_form=BlogContentForm
+        model_form_class=BlogContentForm
     )
 
     objects = models.DjongoManager()

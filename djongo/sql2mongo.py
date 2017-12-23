@@ -113,7 +113,10 @@ class Query:
         self.statement = statement
         self._result_ref = result_ref
         self.params = params
+
         self.alias2op: typing.Dict[str, typing.Any] = {}
+        self.nested_query: 'SelectQuery' = None
+        self.nested_query_result: list = None
 
         self.left_table: typing.Optional[str] = None
 
@@ -433,9 +436,6 @@ class AggOrderConverter(OrderConverter):
 
 class SelectQuery(Query):
     def __init__(self, *args):
-
-        self.nested_query: 'SelectQuery' = None
-        self.nested_query_result: list = None
 
         self.selected_columns: ColumnSelectConverter = None
         self.where: typing.Optional[WhereConverter] = None
