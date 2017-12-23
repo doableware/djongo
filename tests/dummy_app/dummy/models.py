@@ -28,10 +28,17 @@ class BlogContent(models.Model):
         abstract = True
 
 
+class BlogContentSimple(models.Model):
+    comment = models.CharField(max_length=100)
+    author = models.CharField(max_length=100)
+    class Meta:
+        abstract = True
+
+
 class BlogContentForm(forms.ModelForm):
 
     class Meta:
-        model = BlogContent
+        model = BlogContentSimple
         fields = (
             'comment', 'author'
         )
@@ -40,7 +47,7 @@ class BlogContentForm(forms.ModelForm):
 class BlogPost(models.Model):
     h1 = models.CharField(max_length=100)
     content = models.EmbeddedModelField(
-        model_container=BlogContent,
+        model_container=BlogContentSimple,
         model_form=BlogContentForm
     )
 
@@ -54,7 +61,7 @@ class Dummy2(models.Model):
 class MultipleBlogPosts(models.Model):
     h1 = models.CharField(max_length=100)
     content = models.ArrayModelField(
-        model_container=BlogContent,
+        model_container=BlogContentSimple,
         model_form=BlogContentForm
     )
 
