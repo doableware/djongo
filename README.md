@@ -62,7 +62,7 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
 
  <h2>Questions</h2>
  
-   Any questions, suggestions for improvements or issues regarding the usage. Please raise a git-hub issue ticket.
+   Suggestions for improvements or issues, please raise a git-hub issue ticket. For questions and clarifications regarding usage, please put it up on stackoverflow instead. 
    
  ## Contribute
  
