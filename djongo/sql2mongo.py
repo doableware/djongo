@@ -499,9 +499,9 @@ class SelectQuery(Query):
 
             cur = self._cursor
             for doc in cur:
-                if isinstance(cur, BasicCursor):
-                    doc.pop('_id', None)
-                    if len(doc) == len(self.selected_columns.sql_tokens):
+                if isinstance(cur, BasicCursor):                    
+                    if len(doc) - 1 == len(self.selected_columns.sql_tokens):
+                        doc.pop('_id')
                         yield tuple(doc.values())
                     else:
                         yield self._align_results(doc)
