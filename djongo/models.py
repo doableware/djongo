@@ -361,7 +361,8 @@ class EmbeddedFormBoundField(forms.BoundField):
     def __str__(self):
         instance = self.value()
         model_form = self.field.model_form_class(instance=instance, **self.field.model_form_kwargs)
-        return model_form.as_table()
+
+        return mark_safe(f'<table>\n{ model_form.as_table() }\n</table>')
 
 
 class EmbeddedFormWidget(forms.MultiWidget):
