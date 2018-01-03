@@ -4,6 +4,23 @@ This document is a tutorial on how to integrate MongoDB with Django with focus o
 
 There are different ways to integrate MongoDB with Django, each with positives and negatives. Insights into the Django ORM design will help in understanding ways to integrate MongoDB and Django.     
 
+The following options are supported in `settings.py`:
+
+```python
+    DATABASES = {
+        'default': {
+            'ENGINE': 'djongo',
+            'NAME': 'your-db-name',
+            'HOST': 'host-name or ip address',
+            'PORT': port_number,
+            'USER': 'db-username',
+            'PASSWORD': 'password',
+            'AUTH_SOURCE': 'db-name',
+            'AUTH_MECHANISM': 'SCRAM-SHA-1',
+        }
+    }
+```
+    
 ## Django ORM internals
 
 The Django ORM can be broadly thought of as multiple Abstraction Layers stacked on top of each other.
