@@ -362,6 +362,6 @@ Phone:
 
 </code></pre>
 
-While creating a Form from a Model [the ModelForm](https://docs.djangoproject.com/en/dev/topics/forms/modelforms/) the embedded form **gets automatically generated** if the Model contains an embedded model inside it.
+While creating a Form from [the ModelForm](https://docs.djangoproject.com/en/dev/topics/forms/modelforms/), the embedded forms **get automatically generated** if the Model contains an embedded model inside it.
 
 Multiple embedded forms get automatically generated when the Model contains an array of embedded models.
