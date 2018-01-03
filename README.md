@@ -17,7 +17,7 @@ DATABASES = {
 }
 ```
 </li>   
-   <li> Run <code>manage.py makemigrations</code> followed by <code>manage.py migrate</code> (ONLY the first time to create collections in mongoDB) </li>
+   <li> Run <code>manage.py makemigrations &ltapp_name&gt </code> followed by <code>manage.py migrate</code> (ONLY the first time to create collections in mongoDB) </li>
    <li> YOUR ARE SET! HAVE FUN! </li>
 </ol>
 <h2>Requirements:</h2>
@@ -62,7 +62,7 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
 
  <h2>Questions</h2>
  
-   Any questions, suggestions for improvements or issues regarding the usage. Please raise a git-hub issue ticket.
+   Suggestions for improvements or issues, please raise a git-hub issue ticket. For questions and clarifications regarding usage, please put it up on stackoverflow instead. 
    
  ## Contribute
  
