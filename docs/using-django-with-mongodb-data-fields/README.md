@@ -52,8 +52,8 @@ admin.site.register(Entry)
 ## Data Model
 
 The `Entry` model defined in the documentation consists of 3 parts:
-* 1-to-Many Relationship: ‘A `Blog` is made up of multiple `Entry` s’ and ‘each `Entry` is associated with just *one* `Blog`.’ The same entry can’t appear in two Blogs and this defines the 1-to-Many relationship.
-* Many-to-Many Relationship: ‘An `Entry` can have *multiple* `Author` s’ and ‘an `Author` can make multiple `Entry` s’. This defines the many-to-many relationship for our data model.
+* 1-to-Many Relationship: ‘A `Blog` is made up of multiple `Entry`s’ and ‘each `Entry` is associated with just *one* `Blog`’. The same entry can’t appear in two Blogs and this defines the 1-to-Many relationship.
+* Many-to-Many Relationship: ‘An `Entry` can have *multiple* `Author`s’ and ‘an `Author` can make multiple `Entry`s’. This defines the many-to-many relationship for our data model.
 * Normal data columns
 
 **An interesting point of note** is that the `Blog` model consists of just 2 fields. Most of the data is stored in the `Entry` model.
@@ -202,7 +202,7 @@ Only the `Entry` and `Author` model are registered. I click on *Entrys Add* and 
 The `Name` and `Tagline` fields are neatly nested within Blog. `Pub date` `Mod date` `N pingbanks` and `Rating` are neatly nested within Meta data.
 
 <div style="max-width: 100%; margin-left: auto; margin-right: auto">
-    <img src="/djongo/images/embedded-nested.jpg" alt="Django Admin">
+    <img src="/djongo/images/embedded-nested.png" alt="Django Admin">
 </div>
 
 
