@@ -138,6 +138,7 @@ class TestParse(TestCase):
         'SELECT (1) AS "a" FROM "table" WHERE "table1"."col2" = %s LIMIT 1'
         self.sql = 'UPDATE "table" SET "col" = %s WHERE "table"."col1" = %s'
         self.params = [1, 2]
+        self.it
         self._mock()
         find = self.find
 

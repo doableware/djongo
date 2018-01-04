@@ -9,6 +9,7 @@ from logging import getLogger
 import re
 import typing
 from pymongo import ReturnDocument, ASCENDING, DESCENDING
+from pymongo.errors import OperationFailure
 from sqlparse import parse as sqlparse
 from sqlparse import tokens
 from sqlparse.sql import (
@@ -112,6 +113,10 @@ class Query:
         self.statement = statement
         self._result_ref = result_ref
         self.params = params
+
+        self.alias2op: typing.Dict[str, typing.Any] = {}
+        self.nested_query: 'SelectQuery' = None
+        self.nested_query_result: list = None
 
         self.left_table: typing.Optional[str] = None
 
@@ -432,10 +437,6 @@ class AggOrderConverter(OrderConverter):
 class SelectQuery(Query):
     def __init__(self, *args):
 
-        self.nested_query: 'SelectQuery' = None
-        self.nested_query_result: list = None
-        self.alias2op: typing.Dict[str, typing.Any] = {}
-
         self.selected_columns: ColumnSelectConverter = None
         self.where: typing.Optional[WhereConverter] = None
         self.joins: typing.Optional[typing.List[
@@ -499,8 +500,8 @@ class SelectQuery(Query):
             cur = self._cursor
             for doc in cur:
                 if isinstance(cur, BasicCursor):
-                    doc.pop('_id', None)
-                    if len(doc) == len(self.selected_columns.sql_tokens):
+                    if len(doc) - 1 == len(self.selected_columns.sql_tokens):
+                        doc.pop('_id')
                         yield tuple(doc.values())
                     else:
                         yield self._align_results(doc)
@@ -739,7 +740,15 @@ class Result:
     next = __next__
 
     def __iter__(self):
-        yield from iter(self._query)
+        try:
+            yield from iter(self._query)
+        except SQLDecodeError as e:
+            print(f'FAILED SQL: {self._sql}')
+            raise e
+        except OperationFailure as e:
+            print(f'FAILED SQL: {self._sql}')
+            print(e.details)
+            raise e
 
     def _param_index(self, _):
         self._params_index_count += 1
@@ -765,7 +774,11 @@ class Result:
             try:
                 return handler(self, statement)
             except SQLDecodeError as e:
-                print(f'Failed sql: {self._sql}')
+                print(f'FAILED SQL: {self._sql}')
+                raise e
+            except OperationFailure as e:
+                print(f'FAILED SQL: {self._sql}')
+                print(e.details)
                 raise e
 
     def _alter(self, sm):
