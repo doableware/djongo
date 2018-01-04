@@ -302,6 +302,7 @@ class BlogContent(models.Model):
 ```
 
 #### ArrayModelField
+
 Create an array of the above child model inside the parent model by creating an `ArrayModelField`. The `ArrayModelField` is similar to other Django Fields (like the `CharField`.)
 
 ```python
