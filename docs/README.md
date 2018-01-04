@@ -4,28 +4,36 @@ Use MongoDB as a backend database for your Django project, without changing the 
 ## Usage
 
 1. pip install djongo
-2. Into settings.py file of your project, add:
+2. Into `settings.py` file of your project, add:
 
-    ```python
-    DATABASES = {
-        'default': {
-            'ENGINE': 'djongo',
-            'NAME': 'your-db-name',
-        }
-    }
-    ```
+      ```python
+      DATABASES = {
+          'default': {
+              'ENGINE': 'djongo',
+              'NAME': 'your-db-name',
+          }
+      }
+      ```
   
-3. Run `manage.py makemigrations` followed by `manage.py migrate` (ONLY the first time to create collections in mongoDB)
+3. Run `manage.py makemigrations <app_name>` followed by `manage.py migrate` (ONLY the first time to create collections in MongoDB)
 4. YOUR ARE SET! HAVE FUN!
 
 ## Requirements
 
-  1. djongo requires <b>python 3.6 or above</b>.
+1. Python 3.6 or higher.
+2. MongoDB 3.4 or higher.
+3. If your models use nested queries or sub querysets like:
+  
+      ```python
+      inner_qs = Blog.objects.filter(name__contains='Ch').values('name')
+      entries = Entry.objects.filter(blog__name__in=inner_qs)
+      ```
+     MongoDB 3.6 or higher is required.
 
 
 ## How it works
 
-djongo is a SQL to MongoDB query compiler. It translates a SQL query string into a [mongoDB query document](https://docs.mongodb.com/manual/tutorial/query-documents/). As a result, all Django features, models, etc., work as is.
+Djongo is a SQL to MongoDB query compiler. It translates a SQL query string into a [MongoDB query document](https://docs.mongodb.com/manual/tutorial/query-documents/). As a result, all Django features, models, etc., work as is.
   
 Django contrib modules: 
 
