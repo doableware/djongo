@@ -212,7 +212,7 @@ When a user queries for a blog named ‘Beatles Blog’ the query for filtering 
 entries = Entry.objects.filter(blog={'name': 'Beatles Blog'})
 ```
 
-This query will return all entries having an embedded blog with the name ‘Beatles Blog’. The query will hit the database **just once** and there are no JOINs involved. **It’s super fast.**
+This query will return all entries having an embedded blog with the name ‘Beatles Blog’. **The query will hit the database just once and there are no JOINs involved. It’s super fast.**
 
 
 
@@ -365,3 +365,14 @@ Phone:
 While creating a Form from [the ModelForm](https://docs.djangoproject.com/en/dev/topics/forms/modelforms/), the embedded forms **get automatically generated** if the Model contains an embedded model inside it.
 
 Multiple embedded forms get automatically generated when the Model contains an array of embedded models.
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-75159067-1', 'auto');
+  ga('send', 'pageview');
+
+</script>

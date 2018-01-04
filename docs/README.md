@@ -137,7 +137,7 @@ Fire up Django Admin with the new changes and you have:
     <img src="/djongo/images/admin-extended.jpg" alt="Django Admin">
 </div>
 
-Refer to [Using Django with MongoDB data fields](/djongo/using-django-with-mongodb-data-fields/) for the detailed reference.
+Refer to [Using Django with MongoDB data fields](/djongo/using-django-with-mongodb-data-fields/) for more details.
 
 ## Djongo Manager
  The Djongo Manager extends the  functionality of the usual [Django Manager](https://docs.djangoproject.com/en/dev/topics/db/managers/). Define your manager as Djongo Manager in the model.
