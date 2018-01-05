@@ -55,7 +55,7 @@ Important links
 
 setup(
     name='djongo',
-    version='1.2.10',
+    version='1.2.11',
     packages=['djongo'],
     url='https://nesdis.github.io/djongo/',
     license='BSD',
@@ -65,7 +65,8 @@ setup(
     install_requires=[
         'sqlparse>=0.2.3',
         'pymongo>=3.2.0',
-        'django>=1.8'
+        'django>=1.8',
+        'dataclasses>=0.1'
     ],
 	long_description=LONG_DESCRIPTION,
     python_requires='>=3.6'

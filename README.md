@@ -17,12 +17,20 @@ DATABASES = {
 }
 ```
 </li>   
-   <li> Run <code>manage.py makemigrations</code> followed by <code>manage.py migrate</code> (ONLY the first time to create collections in mongoDB) </li>
+   <li> Run <code>manage.py makemigrations &ltapp_name&gt </code> followed by <code>manage.py migrate</code> (ONLY the first time to create collections in mongoDB) </li>
    <li> YOUR ARE SET! HAVE FUN! </li>
 </ol>
 <h2>Requirements:</h2>
 
-  1. djongo requires <b>python 3.6 or above.</b>
+  1. Python 3.6 or higher.
+  2. MongoDB 3.4 or higher.
+  3. If your models use nested queries or sub querysets like:
+  
+      ```python
+      inner_qs = Blog.objects.filter(name__contains='Ch').values('name')
+      entries = Entry.objects.filter(blog__name__in=inner_qs)
+      ```
+     MongoDB 3.6 or higher is required.
 
 
 <h2>How it works:</h2>
@@ -45,8 +53,8 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
 <h2>Features:</h2>
 
   * Stop the immigrations.  
-  * Use Django Admin GUI to access MongoDB  
-  * Embedded model.
+  * Use Django Admin GUI to access MongoDB.  
+  * Embedded Model.
   * Embedded Array.
   * Embedded Form Fields.
   
@@ -54,7 +62,7 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
 
  <h2>Questions</h2>
  
-   Any questions, suggestions for improvements or issues regarding the usage. Please raise a git-hub issue ticket.
+   Suggestions for improvements or issues, please raise a git-hub issue ticket. For questions and clarifications regarding usage, please put it up on stackoverflow instead. 
    
  ## Contribute
  

@@ -1,5 +1,5 @@
-from logging import getLogger, StreamHandler, DEBUG
-from django.core import management
+from django.db.models import Count
+
 from . import TestCase
 from dummy.models import BlogPost, BlogContent, MultipleBlogPosts, Author
 from django.contrib.auth.models import User
@@ -16,6 +16,11 @@ class TestWithDjango(TestCase):
         embedded_array = MultipleBlogPosts(h1='heading', content=[content, content])
         embedded_array.save()
         tdel.delete()
+
+    def test_query(self):
+        inner_qs = BlogPost.objects.filter(h1__in=['a', 'b'])
+        qs = MultipleBlogPosts.objects.annotate(Count('h1'), Count('content'))
+        o = list(qs)
 
     # def test_admin(self):
     #
