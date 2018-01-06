@@ -71,7 +71,7 @@ class BlogContent(models.Model):
         abstract = True
 ```
 
-To access the model using Django Admin you will need a Form definition for the above model. Define it as shown below:
+To access the model using Django Admin you will need a Form definition for the above model. Define it as below:
 
 ```python
 class BlogContentForm(forms.ModelForm):
@@ -83,7 +83,7 @@ class BlogContentForm(forms.ModelForm):
         )
 ```
 
-Now ‘embed’ your `BlogContent` inside a `BlogPost` using the `EmbeddedModelField` as below:
+Now ‘embed’ your `BlogContent` inside a `BlogPost` using the `EmbeddedModelField`:
 
 ```python
 class BlogPost(models.Model):
