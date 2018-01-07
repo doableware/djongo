@@ -95,7 +95,9 @@ class DatabaseWrapper(BaseDatabaseWrapper):
             'AUTH_SOURCE': 'authSource',
             'AUTH_MECHANISM': 'authMechanism'
         }
-
+        connection_params = {
+            'name': 'djongo_test'
+        }
         for setting_name, kwarg in valid_settings.items():
             try:
                 setting = self.settings_dict[setting_name]
