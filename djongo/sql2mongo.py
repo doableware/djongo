@@ -387,7 +387,7 @@ class OrderConverter(Converter):
         self.end_id = tok_id
 
     def to_mongo(self):
-        sort = [(tok.table, tok_ord.order) for tok, tok_ord in self.columns]
+        sort = [(tok.column, tok_ord.order) for tok, tok_ord in self.columns]
         return {'sort': sort}
 
 
