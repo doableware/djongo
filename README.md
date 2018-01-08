@@ -1,8 +1,10 @@
 <h1>djongo</h1>
-<h2>Driver for allowing Django to use MongoDB as the database backend</h2>
 
 <a href="https://opensource.org/licenses/BSD-3-Clause"><img src="https://img.shields.io/badge/License-BSD%203--Clause-blue.svg" alt="BSD3" height="180"></a>
 <a href="https://badge.fury.io/py/djongo"><img src="https://badge.fury.io/py/djongo.svg" alt="PyPI version" height="18"></a>
+
+<h2>Driver for allowing Django to use MongoDB as the database backend</h2>
+
 
 Use MongoDB as a backend database for your Django project, without changing the Django ORM. Use the Django Admin GUI to add and modify documents in MongoDB. 
 
