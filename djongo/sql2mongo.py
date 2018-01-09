@@ -29,6 +29,7 @@ OPERATOR_MAP = {
 }
 
 OPERATOR_PRECEDENCE = {
+    'LIKE': 6,
     'IN': 5,
     'NOT IN': 4,
     'NOT': 3,
@@ -1161,9 +1162,26 @@ class LikeOp(_InNotInLikeOp):
 
     def __init__(self, *args, **kwargs):
         super().__init__(name='LIKE', *args, **kwargs)
+        self._regex = None
+        self._make_regex(self.token.token_next(self._token_id)[1])
 
-    def _make_regex(self):
-        pass
+    def _make_regex(self, token):
+        index = SQLToken.placeholder_index(token)
+
+        to_match =  self.params[index]
+        if not isinstance(to_match, str):
+            raise SQLDecodeError
+
+        to_match = to_match.replace('%', '.*')
+        self._regex = '/^'+ to_match + '$/'
+
+    def to_mongo(self):
+        return {self._field: {'$regex': self._regex}}
+
+class iLikeOp(LikeOp):
+    def _make_regex(self, token):
+        super()._make_regex(token)
+        self._regex = self._regex + 'i'
 
 # TODO: Need to do this
 class NotOp(_UnaryOp):
@@ -1337,6 +1355,11 @@ class ParenthesisOp(_Op):
 
             elif tok.match(tokens.Keyword, 'LIKE'):
                 op = LikeOp(**kw)
+                link_op()
+                self._op_precedence(op)
+
+            elif tok.match(tokens.Keyword, 'iLIKE'):
+                op = iLikeOp(**kw)
                 link_op()
                 self._op_precedence(op)
 
