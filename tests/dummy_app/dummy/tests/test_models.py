@@ -13,6 +13,9 @@ class TestWithDjango(TestCase):
         test = BlogPost(h1='test data', content=content)
         test.save()
         tdel = BlogPost.objects.get(h1='test data')
+        inner_qs = BlogPost.objects.filter(h1__contains='test')
+        o = list(inner_qs)
+
         embedded_array = MultipleBlogPosts(h1='heading', content=[content, content])
         embedded_array.save()
         tdel.delete()

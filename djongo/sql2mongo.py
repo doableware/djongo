@@ -1173,15 +1173,18 @@ class LikeOp(_InNotInLikeOp):
             raise SQLDecodeError
 
         to_match = to_match.replace('%', '.*')
-        self._regex = '/^'+ to_match + '$/'
+        self._regex = '^'+ to_match + '$'
 
     def to_mongo(self):
         return {self._field: {'$regex': self._regex}}
 
 class iLikeOp(LikeOp):
-    def _make_regex(self, token):
-        super()._make_regex(token)
-        self._regex = self._regex + 'i'
+    def to_mongo(self):
+        return {self._field: {
+            '$regex': self._regex,
+            '$options': 'i'
+        }}
+
 
 # TODO: Need to do this
 class NotOp(_UnaryOp):
