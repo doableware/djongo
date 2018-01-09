@@ -18,7 +18,8 @@ class TestWithDjango(TestCase):
         tdel.delete()
 
     def test_query(self):
-        inner_qs = BlogPost.objects.filter(h1__in=['a', 'b'])
+        inner_qs = BlogPost.objects.filter(h1__contains='a')
+        o = list(inner_qs)
         qs = MultipleBlogPosts.objects.annotate(Count('h1'), Count('content'))
         o = list(qs)
 
