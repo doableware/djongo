@@ -53,7 +53,7 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
 
 ## Contributing
 
-See the [CONTRIBUTING](https://github.com/nesdis/djongo/blob/master/CONTRIBUTING) guide for more informations.
+See the [CONTRIBUTING.md](https://github.com/nesdis/djongo/blob/master/CONTRIBUTING.md) guide for more informations.
 
 ## Top Star Contributors
 
