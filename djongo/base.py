@@ -51,19 +51,19 @@ class DatabaseWrapper(BaseDatabaseWrapper):
 
     operators = {
         'exact': '= %s',
-        'iexact': 'LIKE %s',
-        'contains': 'LIKE BINARY %s',
-        'icontains': 'LIKE %s',
+        'iexact': 'iLIKE %.*s',
+        'contains': 'LIKE %s',
+        'icontains': 'iLIKE %s',
         'regex': 'REGEXP BINARY %s',
         'iregex': 'REGEXP %s',
         'gt': '> %s',
         'gte': '>= %s',
         'lt': '< %s',
         'lte': '<= %s',
-        'startswith': 'LIKE BINARY %s',
-        'endswith': 'LIKE BINARY %s',
-        'istartswith': 'LIKE %s',
-        'iendswith': 'LIKE %s',
+        'startswith': 'LIKE %s',
+        'endswith': 'LIKE %s',
+        'istartswith': 'iLIKE %s',
+        'iendswith': 'iLIKE %s',
     }
 
     vendor = 'djongo'
