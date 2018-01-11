@@ -1,5 +1,10 @@
 <h1>djongo</h1>
+
+<a href="https://opensource.org/licenses/BSD-3-Clause"><img src="https://img.shields.io/badge/License-BSD%203--Clause-blue.svg" alt="BSD3" height="18"></a>
+<a href="https://badge.fury.io/py/djongo"><img src="https://badge.fury.io/py/djongo.svg" alt="PyPI version" height="18"></a>
+
 <h2>Driver for allowing Django to use MongoDB as the database backend</h2>
+
 
 Use MongoDB as a backend database for your Django project, without changing the Django ORM. Use the Django Admin GUI to add and modify documents in MongoDB. 
 
@@ -46,6 +51,17 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
 </code></pre>
  and others... fully supported.
 
+ ## Contribute
+ 
+ If you think djongo is useful, **please share it** with the world! Your endorsements and online reviews will help get more support for this project.
+  
+ You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](https://nesdis.github.io/djongo/django-mongodb-connector-design-document/) is implemented.
+ 
+ Add a star, show some love :) 
+ 
+See the [CONTRIBUTING.md](https://github.com/nesdis/djongo/blob/master/CONTRIBUTING.md) guide for more informations.
+
+
 ## Top Star Contributors
 
 [Rudolfce](https://github.com/rudolfce)
@@ -64,10 +80,3 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
  
    Suggestions for improvements or issues, please raise a git-hub issue ticket. For questions and clarifications regarding usage, please put it up on stackoverflow instead. 
    
- ## Contribute
- 
- If you think djongo is useful, **please share it** with the world! Your endorsements and online reviews will help get more support for this project.
-  
- You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](https://nesdis.github.io/djongo/django-mongodb-connector-design-document/) is implemented.
- 
- Add a star, show some love :)
