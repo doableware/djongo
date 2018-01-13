@@ -1,3 +1,8 @@
+"""
+Module with constants and mappings to build MongoDB queries from
+SQL constructors.
+"""
+
 from itertools import chain
 
 from dataclasses import dataclass
@@ -1450,4 +1455,3 @@ class CmpOp(_Op):
             return {field: {self._operator: self._constant}}
         else:
             return {field: {'$not': {self._operator: self._constant}}}
-

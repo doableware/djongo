@@ -1,3 +1,7 @@
+"""
+The standard way of using djongo is to import models.py
+in place of Django's standard models module.
+"""
 from django.db.models import *
 from django import forms
 from django.core.exceptions import ValidationError
@@ -8,6 +12,9 @@ from django.utils.safestring import mark_safe
 
 
 def make_mdl(model, model_dict):
+    """
+    Builds an instance of model from the model_dict.
+    """
     for field_name in model_dict:
         field = model._meta.get_field(field_name)
         model_dict[field_name] = field.to_python(model_dict[field_name])
@@ -21,6 +28,13 @@ def useful_field(field):
 
 
 class DjongoManager(Manager):
+    """
+    This modified manager allows to issue Mongo functions by prefixing
+    them with 'mongo_'.
+
+    This module allows methods to be passed by directly to the Mongo
+    engine.
+    """
     def __getattr__(self, name):
         try:
             return super().__getattr__(name)
@@ -34,7 +48,41 @@ class DjongoManager(Manager):
 
 
 class ArrayModelField(Field):
+    """
+    Implements an array of objects inside the document.
 
+    The allowed object type is defined on model declaration. The
+    declared instance will accept a python list of instances of the
+    given model as its contents.
+
+    The model of the container must be declared as abstract, thus should
+    not be treated as a collection of its own.
+
+    Example:
+
+    class Author(models.Model):
+        name = models.CharField(max_length=100)
+        email = models.CharField(max_length=100)
+
+        class Meta:
+            abstract = True
+
+
+    class AuthorForm(forms.ModelForm):
+        class Meta:
+            model = Author
+            fields = (
+                'name', 'email'
+            )
+
+    class MultipleBlogPosts(models.Model):
+        h1 = models.CharField(max_length=100)
+        content = models.ArrayModelField(
+            model_container=BlogContent,
+            model_form_class=BlogContentForm
+        )
+
+    """
     def __init__(self,
                  model_container: typing.Type[Model],
                  model_form_class: typing.Type[forms.ModelForm] = None,
@@ -85,6 +133,10 @@ class ArrayModelField(Field):
         return self.to_python(value)
 
     def to_python(self, value):
+        """
+        Overrides standard to_python method from django models to allow
+        correct translation of Mongo array to a python list.
+        """
         if value is None:
             return value
 
@@ -100,6 +152,9 @@ class ArrayModelField(Field):
         return ret
 
     def formfield(self, **kwargs):
+        """
+        Returns the formfield for the array.
+        """
         defaults = {
             'form_class': ArrayFormField,
             'model_form_class': self.model_form_class,
@@ -230,6 +285,35 @@ class ArrayFormWidget(forms.Widget):
 
 
 class EmbeddedModelField(Field):
+    """
+    Allows for the inclusion of an instance of an abstract model as
+    a field inside a document.
+
+    Example:
+
+    class Author(models.Model):
+        name = models.CharField(max_length=100)
+        email = models.CharField(max_length=100)
+
+        class Meta:
+            abstract = True
+
+
+    class AuthorForm(forms.ModelForm):
+        class Meta:
+            model = Author
+            fields = (
+                'name', 'email'
+            )
+
+    class MultipleBlogPosts(models.Model):
+        h1 = models.CharField(max_length=100)
+        content = models.ArrayModelField(
+            model_container=BlogContent,
+            model_form_class=BlogContentForm
+        )
+
+    """
     def __init__(self,
                  model_container: typing.Type[Model],
                  model_form_class: typing.Type[forms.ModelForm]=None,
@@ -284,6 +368,10 @@ class EmbeddedModelField(Field):
         return self.to_python(value)
 
     def to_python(self, value):
+        """
+        Overrides Django's default to_python to allow correct
+        translation to instance.
+        """
         if value is None or isinstance(value, self.model_container):
             return value
         assert isinstance(value, dict)
