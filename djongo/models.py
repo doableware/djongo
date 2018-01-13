@@ -32,8 +32,7 @@ class DjongoManager(Manager):
     This modified manager allows to issue Mongo functions by prefixing
     them with 'mongo_'.
 
-    This module allows methods to be passed by directly to the Mongo
-    engine.
+    This module allows methods to be passed by directly to pymongo.
     """
     def __getattr__(self, name):
         try:
