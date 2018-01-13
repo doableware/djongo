@@ -1,7 +1,23 @@
-## Todos
+## Todo:
+
+### Write test cases for djongo
+
+**Intent**
+
+Write test cases that generate all possible queries by the Django ORM. Ensure Djongo is able to support all queries created using by the ORM.
+
+**Difficulty**
+
+Easy
+
+**Requirements**
+
+1. A good knowledge of the Django Query set API. 
+2. Basic knowledge to create test-db on MongoDB.
 
 
-## Enhancement requests
+
+## Enhancement requests:
 
 ### Integers shouldn't play the role of escape hatch. But this is too useful a tool to abandon.
 **Contributed by: @techdragon**
