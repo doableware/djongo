@@ -8,7 +8,7 @@
 
 Use MongoDB as a backend database for your Django project, without changing the Django ORM. Use the Django Admin GUI to add and modify documents in MongoDB. 
 
-<h2>Usage:</h2>
+## Usage:
 <ol>
 <li> pip install djongo </li>
 <li> Into settings.py file of your project, add: 
@@ -25,7 +25,8 @@ DATABASES = {
    <li> Run <code>manage.py makemigrations &ltapp_name&gt </code> followed by <code>manage.py migrate</code> (ONLY the first time to create collections in mongoDB) </li>
    <li> YOUR ARE SET! HAVE FUN! </li>
 </ol>
-<h2>Requirements:</h2>
+
+## Requirements:
 
   1. Python 3.6 or higher.
   2. MongoDB 3.4 or higher.
@@ -38,7 +39,7 @@ DATABASES = {
      MongoDB 3.6 or higher is required.
 
 
-<h2>How it works:</h2>
+## How it works
 
 djongo is a SQL to mongodb query compiler. It translates a SQL query string into a mongoDB query document. As a result, all Django features, models etc work as is.
   
@@ -51,7 +52,7 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
 </code></pre>
  and others... fully supported.
 
-<h2>Features:</h2>
+## Features
 
   * Stop the immigrations.  
   * Use Django Admin GUI to access MongoDB.  
@@ -73,8 +74,7 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
 
 [Rudolfce](https://github.com/rudolfce)
 
-
- <h2>Questions</h2>
+## Questions
  
    Suggestions for improvements or issues, please raise a git-hub issue ticket. For questions and clarifications regarding usage, please put it up on stackoverflow instead. 
    
