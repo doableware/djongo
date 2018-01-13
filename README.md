@@ -51,21 +51,6 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
 </code></pre>
  and others... fully supported.
 
- ## Contribute
- 
- If you think djongo is useful, **please share it** with the world! Your endorsements and online reviews will help get more support for this project.
-  
- You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](https://nesdis.github.io/djongo/django-mongodb-connector-design-document/) is implemented.
- 
- Add a star, show some love :) 
- 
-See the [CONTRIBUTING.md](https://github.com/nesdis/djongo/blob/master/CONTRIBUTING.md) guide for more informations.
-
-
-## Top Star Contributors
-
-[Rudolfce](https://github.com/rudolfce)
-
 <h2>Features:</h2>
 
   * Stop the immigrations.  
@@ -75,6 +60,19 @@ See the [CONTRIBUTING.md](https://github.com/nesdis/djongo/blob/master/CONTRIBUT
   * Embedded Form Fields.
   
   Read the [full documentation](https://nesdis.github.io/djongo/)
+  
+## Contribute
+ 
+ If you think djongo is useful, **please share it** with the world! Your endorsements and online reviews will help get more support for this project.
+  
+ The [roadmap](https://nesdis.github.io/djongo/roadmap/) document contains a list of features that must be implemented in future versions of Djongo. You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](https://nesdis.github.io/djongo/django-mongodb-connector-design-document/) is implemented.
+ 
+ Add a star, show some love :) 
+ 
+## Top Star Contributors
+
+[Rudolfce](https://github.com/rudolfce)
+
 
  <h2>Questions</h2>
  

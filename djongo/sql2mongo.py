@@ -176,8 +176,8 @@ class ColumnSelectConverter(Converter):
                 self._identifier(atok)
 
         elif tok.match(tokens.Keyword, 'DISTINCT'):
-            tok_id, tok = self.query.statement.token_next(tok_id)
-            self.query.distinct = SQLToken(tok, self.query.alias2op)
+            self.query.distinct = DistinctConverter(self.query, tok_id)
+            tok_id = self.query.distinct.end_id
 
         else:
             raise SQLDecodeError
@@ -210,11 +210,24 @@ class AggColumnSelectConverter(ColumnSelectConverter):
 
     def to_mongo(self):
         project = {}
-        for selected in self.sql_tokens:
-            if selected.table == self.query.left_table:
-                project[selected.column] = True
-            else:
-                project[selected.table + '.' + selected.column] = True
+        if self.return_const is not None:
+            project['const'] = {'$literal': self.return_const}
+
+        elif self.return_count:
+            return {'$count': 'count'}
+
+        elif self.query.distinct:
+            return {
+                '$group': {
+                    '_id': self.query.distinct.column
+                }
+            }
+        else:
+            for selected in self.sql_tokens:
+                if selected.table == self.query.left_table:
+                    project[selected.column] = True
+                else:
+                    project[selected.table + '.' + selected.column] = True
 
         return {'$project': project}
 
@@ -435,6 +448,40 @@ class AggOrderConverter(OrderConverter):
         return {'$sort': sort}
 
 
+class DistinctConverter(Converter):
+    def __init__(self, *args):
+        self.column: SQLToken = None
+        super().__init__(*args)
+
+    def parse(self):
+        sm = self.query.statement
+        tok_id, tok = sm.token_next(self.begin_id)
+        if not isinstance(tok, Identifier):
+            raise SQLDecodeError
+
+        self.column = SQLToken(tok, self.query.alias2op)
+        self.end_id = tok_id
+
+    def to_mongo(self):
+        if self.query.left_table == self.column.table:
+            _id = self.column.column
+        else:
+            _id = self.column.table+'.'+self.column.column
+
+        return [
+            {
+                '$group': {
+                    '_id': _id
+                }
+            },
+            {
+                '$project': {
+                    _id: '$_id'
+                }
+            }
+        ]
+
+
 class SelectQuery(Query):
     def __init__(self, *args):
 
@@ -445,9 +492,8 @@ class SelectQuery(Query):
         ]] = []
         self.order: OrderConverter = None
         self.limit: typing.Optional[LimitConverter] = None
-        self.distinct: SQLToken = None
+        self.distinct: DistinctConverter = None
 
-        self._returned_count = 0
         self._cursor: typing.Union[BasicCursor, CommandCursor] = None
         super().__init__(*args)
 
@@ -485,30 +531,37 @@ class SelectQuery(Query):
             tok_id, tok = self.statement.token_next(c.end_id)
 
     def __iter__(self):
+
+        if self._cursor is None:
+            self._cursor = self._get_cursor()
+
+        cursor = self._cursor
         if self.selected_columns.return_const is not None:
-            for _ in range(self.count()):
-                yield self.selected_columns.return_const,
+            if not cursor.alive:
+                yield []
+                return
+            for doc in cursor:
+                yield (doc['const'],)
             return
 
         elif self.selected_columns.return_count:
-            yield self.count(),
+            if not cursor.alive:
+                yield (0,)
+                return
+            for doc in cursor:
+                yield (doc['count'],)
             return
 
-        else:
-            if self._cursor is None:
-                self._cursor = self._get_cursor()
-
-            cur = self._cursor
-            for doc in cur:
-                if isinstance(cur, BasicCursor):
-                    if len(doc) - 1 == len(self.selected_columns.sql_tokens):
-                        doc.pop('_id')
-                        yield tuple(doc.values())
-                    else:
-                        yield self._align_results(doc)
+        for doc in cursor:
+            if isinstance(cursor, BasicCursor):
+                if len(doc) - 1 == len(self.selected_columns.sql_tokens):
+                    doc.pop('_id')
+                    yield tuple(doc.values())
                 else:
                     yield self._align_results(doc)
-            return
+            else:
+                yield self._align_results(doc)
+        return
 
     def count(self):
 
@@ -520,33 +573,45 @@ class SelectQuery(Query):
         else:
             return len(list(self._cursor))
 
+    def _needs_aggregation(self):
+        return (
+            self.nested_query
+            or self.joins
+            or self.distinct
+            or self.selected_columns.return_const
+            or self.selected_columns.return_count
+        )
+
+    def _make_pipeline(self):
+        pipeline = []
+        for join in self.joins:
+            pipeline.extend(join.to_mongo())
+
+        if self.where:
+            self.where.__class__ = AggWhereConverter
+            pipeline.append(self.where.to_mongo())
+
+        if self.distinct:
+            pipeline.extend(self.distinct.to_mongo())
+
+        if self.order:
+            self.order.__class__ = AggOrderConverter
+            pipeline.append(self.order.to_mongo())
+
+        if self.limit:
+            self.limit.__class__ = AggLimitConverter
+            pipeline.append(self.limit.to_mongo())
+
+        if not self.distinct and self.selected_columns:
+            self.selected_columns.__class__ = AggColumnSelectConverter
+            pipeline.append(self.selected_columns.to_mongo())
+
+        return pipeline
+
     def _get_cursor(self):
-        if self.nested_query:
-            self.nested_query_result = [res[0] for res in iter(self.nested_query)]
-
-        if self.joins:
-            pipeline = []
-            for join in self.joins:
-                pipeline.extend(join.to_mongo())
-
-            if self.where:
-                self.where.__class__ = AggWhereConverter
-                pipeline.append(self.where.to_mongo())
-
-            if self.order:
-                self.order.__class__ = AggOrderConverter
-                pipeline.append(self.order.to_mongo())
-
-            if self.limit:
-                self.limit.__class__ = AggLimitConverter
-                pipeline.append(self.limit.to_mongo())
-
-            if self.selected_columns:
-                self.selected_columns.__class__ = AggColumnSelectConverter
-                pipeline.append(self.selected_columns.to_mongo())
-
+        if self._needs_aggregation():
+            pipeline = self._make_pipeline()
             cur = self._result_ref.db[self.left_table].aggregate(pipeline)
-            return cur
 
         else:
             kwargs = {}
@@ -564,13 +629,18 @@ class SelectQuery(Query):
 
             cur = self._result_ref.db[self.left_table].find(**kwargs)
 
-            if self.distinct:
-                cur = cur.distinct(self.distinct.column)
-
-            return cur
+        return cur
 
     def _align_results(self, doc):
         ret = []
+        if self.distinct:
+            if self.distinct.column.table == self.left_table:
+                ret.append(doc[self.distinct.column.column])
+            else:
+                ret.append(doc[self.distinct.column.table][self.distinct.column.column])
+
+            return ret
+
         for selected in self.selected_columns.sql_tokens:
             if selected.table == self.left_table:
                 try:

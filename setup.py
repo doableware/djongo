@@ -55,7 +55,7 @@ Important links
 
 setup(
     name='djongo',
-    version='1.2.13',
+    version='1.2.14',
     packages=['djongo'],
     url='https://nesdis.github.io/djongo/',
     license='BSD',
