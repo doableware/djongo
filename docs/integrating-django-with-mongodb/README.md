@@ -2,7 +2,7 @@
 
 This document is a tutorial on how to integrate MongoDB with Django with focus on Djongo. It describes the Django ORM internal implementation that is not covered by the [Django documentation](https://docs.djangoproject.com/en/dev/). If you have not yet checked out the [introduction to Djongo](https://nesdis.github.io/djongo/), be sure to do so! 
 
-There are different ways to integrate MongoDB with Django, each with positives and negatives. Insights into the Django ORM design will help in understanding ways to integrate MongoDB and Django.     
+There are different ways to integrate MongoDB with Django, each with positives and negatives. Insights into the Django ORM design will help understand ways to integrate MongoDB and Django.     
 
 The following options are supported in `settings.py`:
 
@@ -36,7 +36,7 @@ Your Django App and [Contrib](https://docs.djangoproject.com/en/dev/ref/contrib/
 
 ### Query Layer
 
-The Query Layer converts Models functionality into Django SQL query strings that are similar to sqllite syntax. 
+The Query Layer converts Models functionality into Django SQL query strings that are similar to Sqllite query syntax. 
 
 ### DB connector
 
@@ -51,7 +51,7 @@ The Database only accepts SQL query string specific to its type.
 
 ### From ORM to ODM
 
-Object Document Mapping(ODM) is the Object Relational Mapping(ORM) for non-relational document oriented databases (like MongoDB). In an ODM, python objects (or group of them) are stored as documents instead of tables. Implementing an ODM for Django would entail rewriting several Django modules.
+Object Document Mapping (ODM) is the Object Relational Mapping (ORM) for non-relational document oriented databases (like MongoDB). In an ODM, python objects (or group of them) are stored as documents instead of tables. Implementing an ODM for Django would entail rewriting several Django modules.
 
 <div style="max-width: 400px; margin-left: auto; margin-right: auto">
     <img src="/djongo/images/orm2odm.svg" alt="Abstraction Layers">

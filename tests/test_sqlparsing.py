@@ -1,8 +1,11 @@
+import typing
+from collections import OrderedDict
 from unittest import TestCase, mock
 
 from logging import getLogger, DEBUG, StreamHandler
 from pymongo import MongoClient
 from pymongo.cursor import Cursor
+from pymongo.command_cursor import CommandCursor
 
 from djongo.sql2mongo import Result
 
@@ -112,20 +115,138 @@ class TestParse(TestCase):
     def setUpClass(cls):
         cls.conn = mock.MagicMock()
         cls.db = mock.MagicMock()
+
         cls.find = cls.conn.__getitem__().find
-        cls.cursor = cursor = mock.MagicMock()
+        cursor = mock.MagicMock()
         cursor.__class__ = Cursor
         cls.iter = cursor.__iter__
         cls.find.return_value = cursor
 
-        cls.distinct = cursor.distinct
-        cursor2 = mock.MagicMock()
-        cursor2.__class__ = Cursor
-        cls.distinct.return_value = cursor2
+        cls.aggregate = cls.conn.__getitem__().aggregate
+        cursor = mock.MagicMock()
+        cursor.__class__ = CommandCursor
+        cls.agg_iter = cursor.__iter__
+        cls.aggregate.return_value = cursor
 
-    def _mock(self):
+        cls.params_none = mock.MagicMock()
+        cls.params: typing.Union[mock.MagicMock, list] = None
+
+
+    def find_mock(self):
         result = Result(self.db, self.conn, self.sql, self.params)
         return list(result)
+
+    def aggregate_mock(self, pipeline, iter_return_value=None, ans=None):
+        if iter_return_value:
+            self.agg_iter.return_value = iter_return_value
+
+        result = list(Result(self.db, self.conn, self.sql, self.params))
+        self.aggregate.assert_any_call(pipeline)
+        if self.params == self.params_none:
+            self.params.assert_not_called()
+        if ans:
+            self.assertEqual(result, ans)
+
+        self.conn.reset_mock()
+
+    def test_distinct(self):
+        return_value = [{'col1': 'a'}, {'col1': 'b'}]
+        ans = [['a'],['b']]
+
+        self.sql = 'SELECT DISTINCT "table1"."col1" FROM "table1" WHERE "table1"."col2" = %s'
+        self.params = [1]
+        pipeline = [
+            {
+                '$match': {
+                    'col2': {
+                        '$eq': 1
+                    }
+                }
+            },
+            {
+                '$group': {
+                    '_id': 'col1'
+                }
+            },
+            {
+                '$project': {
+                    'col1': '$_id'
+                }
+            }
+        ]
+
+        self.aggregate_mock(pipeline, return_value, ans)
+
+        self.sql = 'SELECT DISTINCT "table1"."col1" FROM "table1" INNER JOIN "table2" ON ("table1"."id" = "table2"."id") WHERE ("table2"."col1" IN (%s, %s, %s)) ORDER BY "table1"."col1" ASC'
+        self.params = [1,2,3]
+
+        pipeline =[
+            {
+                '$match': {
+                    'id': {
+                        '$ne': None,
+                        '$exists': True
+                    }
+                }
+            },
+            {
+                '$lookup': {
+                    'from': 'table2',
+                    'localField': 'id',
+                    'foreignField': 'id',
+                    'as': 'table2'
+                }
+            },
+            {
+                '$unwind': '$table2'
+            },
+            {
+                '$match': {
+                    'table2.col1': {
+                        '$in': [1,2,3]
+                    }
+                }
+            },
+            {
+                '$group': {
+                    '_id': 'col1'
+                }
+            },
+            {
+                '$project': {
+                    'col1': '$_id'
+                }
+            },
+            {
+                '$sort': OrderedDict([('col1', 1)])
+            },
+        ]
+
+        self.aggregate_mock(pipeline, return_value, ans)
+
+
+
+    def test_count(self):
+        conn = self.conn
+        agg = self.aggregate
+        iter = self.iter
+
+        self.sql = 'SELECT COUNT(*) AS "__count" FROM "table"'
+        agg_args = [{
+            '$count': '__count'
+        }]
+        iter.return_value = [{'__count': 1}]
+        ans = self.find_mock()
+        agg.assert_any_call(agg_args)
+        self.assertEqual(ans,[(1,)])
+        conn.reset_mock()
+
+        self.sql = 'SELECT "t"."c1" AS Col1, "t"."c2", COUNT("t"."c3") AS "c3__count" FROM "table"'
+        'SELECT COUNT(*) AS "__count" FROM "table"'
+        'SELECT (1) AS "a" FROM "table" WHERE "table1"."col2" = %s LIMIT 1'
+
+    def test_update(self):
+        pass
 
 
     def test_statement(self):
@@ -139,7 +260,7 @@ class TestParse(TestCase):
         self.sql = 'UPDATE "table" SET "col" = %s WHERE "table"."col1" = %s'
         self.params = [1, 2]
         self.it
-        self._mock()
+        self.find_mock()
         find = self.find
 
 
@@ -169,7 +290,7 @@ class TestParse(TestCase):
             }
         }
 
-        self._mock()
+        self.find_mock()
         find.assert_any_call(**find_args)
         distinct.assert_any_call('col1')
         conn.reset_mock()
@@ -186,7 +307,7 @@ class TestParse(TestCase):
             'projection': []
         }
         self.params = [1]
-        ret = self._mock()
+        ret = self.find_mock()
         self.assertEqual(ret, [(1,)])
         find.assert_any_call(**find_args)
         conn.reset_mock()
@@ -194,7 +315,7 @@ class TestParse(TestCase):
         #'SELECT COUNT(*) AS "__count" FROM "auth_user"'
         self.sql = 'SELECT COUNT(*) AS "__count" FROM "table"'
 
-        self._mock()
+        self.find_mock()
         find.assert_any_call()
         conn.reset_mock()
 
@@ -226,9 +347,9 @@ class TestParse(TestCase):
         }
         self.params = [1]
         iter.return_value = [{'col1': 1, 'col2': 2}, {'col1': 3, 'col2': 4}]
-        ans = self._mock()
+        ans = self.find_mock()
         find.assert_any_call(**find_args)
-        self.assertEquals(ans, [(1,2), (3,4)])
+        self.assertEqual(ans, [(1,2), (3,4)])
         conn.reset_mock()
 
         # TODO: This is not the right SQL syntax
@@ -240,7 +361,7 @@ class TestParse(TestCase):
         }
         self.params = [1]
         iter.return_value = [{'col1': 1, 'col2': 2}, {'col1': 3, 'col2': 4}]
-        self._mock()
+        self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -251,7 +372,7 @@ class TestParse(TestCase):
             }
         }
         self.params = []
-        self._mock()
+        self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -262,7 +383,7 @@ class TestParse(TestCase):
             }
         }
         self.params = [1]
-        self._mock()
+        self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -273,7 +394,7 @@ class TestParse(TestCase):
             }
         }
         self.params = [1, 2]
-        self._mock()
+        self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -284,7 +405,7 @@ class TestParse(TestCase):
             }
         }
         self.params = [1]
-        self._mock()
+        self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -310,7 +431,7 @@ class TestParse(TestCase):
 
         self.params = [1, 2]
         iter.return_value = [{'col1': 3},{'col1': 4},{'col1': 5}]
-        self._mock()
+        self.find_mock()
         self.assertEqual(find.call_args_list, calls)
         conn.reset_mock()
 
@@ -338,7 +459,7 @@ class TestParse(TestCase):
             }
         }
         self.params = [1]
-        self._mock()
+        self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -351,7 +472,7 @@ class TestParse(TestCase):
             }
         }
         self.params = [1]
-        self._mock()
+        self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -364,7 +485,7 @@ class TestParse(TestCase):
             }
         }
         self.params = []
-        self._mock()
+        self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -391,7 +512,7 @@ class TestParse(TestCase):
             }
         }
         self.params = [1]
-        self._mock()
+        self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -402,7 +523,7 @@ class TestParse(TestCase):
             }
         }
         self.params = [1]
-        self._mock()
+        self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -413,7 +534,7 @@ class TestParse(TestCase):
             }
         }
         self.params = []
-        self._mock()
+        self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -448,7 +569,7 @@ class TestParse(TestCase):
             ]
         }
         self.params = [1, 2]
-        self._mock()
+        self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -470,7 +591,7 @@ class TestParse(TestCase):
             ]
         }
         self.params = [1, 2]
-        self._mock()
+        self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -492,7 +613,7 @@ class TestParse(TestCase):
             ]
         }
         self.params = [2, 1]
-        self._mock()
+        self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -516,7 +637,7 @@ class TestParse(TestCase):
             ]
         }
         self.params = [2, 1]
-        self._mock()
+        self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -540,7 +661,7 @@ class TestParse(TestCase):
             ]
         }
         self.params = [2, 1]
-        self._mock()
+        self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -573,7 +694,7 @@ class TestParse(TestCase):
             ]
         }
         self.params = [2, 1, 0]
-        self._mock()
+        self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
