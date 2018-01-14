@@ -30,7 +30,7 @@ class TestWithDjango(TestCase):
         qs = BlogPost.objects.filter(h1__contains='a').exists()
         qs = BlogPost.objects.filter(h1__contains='hell').count()
 
-        qs = BlogPost.objects.filter(h1__contains='a').distinct()
+        qs = BlogPost.objects.filter(h1__contains='hell').distinct()
         o = list(qs)
         qs = MultipleBlogPosts.objects.annotate(Count('h1'), Count('content'))
         o = list(qs)

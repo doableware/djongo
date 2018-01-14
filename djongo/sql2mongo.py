@@ -106,18 +106,17 @@ def re_index(value: str):
 class Query:
     def __init__(
             self,
-            result_ref: 'Result',
+            db_ref: Database,
             statement: Statement,
             params: list
 
     ):
         self.statement = statement
-        self._result_ref = result_ref
+        self.db_ref = db_ref
         self.params = params
 
         self.alias2op: typing.Dict[str, typing.Any] = {}
-        self.nested_query: 'SelectQuery' = None
-        self.nested_query_result: list = None
+        self.nested_query: NestedInQuery = None
 
         self.left_table: typing.Optional[str] = None
 
@@ -200,8 +199,6 @@ class ColumnSelectConverter(Converter):
                 self.query.alias2op[sql.alias] = sql
 
     def to_mongo(self):
-        if self.query.distinct:
-            return {'projection': [self.query.distinct.column]}
         doc = [selected.column for selected in self.sql_tokens]
         return {'projection': doc}
 
@@ -216,12 +213,6 @@ class AggColumnSelectConverter(ColumnSelectConverter):
         elif self.return_count:
             return {'$count': 'count'}
 
-        elif self.query.distinct:
-            return {
-                '$group': {
-                    '_id': self.query.distinct.column
-                }
-            }
         else:
             for selected in self.sql_tokens:
                 if selected.table == self.query.left_table:
@@ -448,25 +439,20 @@ class AggOrderConverter(OrderConverter):
         return {'$sort': sort}
 
 
-class DistinctConverter(Converter):
+class DistinctConverter(ColumnSelectConverter):
     def __init__(self, *args):
-        self.column: SQLToken = None
         super().__init__(*args)
 
-    def parse(self):
-        sm = self.query.statement
-        tok_id, tok = sm.token_next(self.begin_id)
-        if not isinstance(tok, Identifier):
-            raise SQLDecodeError
-
-        self.column = SQLToken(tok, self.query.alias2op)
-        self.end_id = tok_id
-
     def to_mongo(self):
-        if self.query.left_table == self.column.table:
-            _id = self.column.column
-        else:
-            _id = self.column.table+'.'+self.column.column
+        _id = {}
+        for selected in self.sql_tokens:
+            if selected.table == self.query.left_table:
+                _id[selected.column] = '$'+selected.column
+            else:
+                try:
+                    _id[selected.table][selected.column] = '$'+selected.table+'.'+selected.column
+                except KeyError:
+                    _id[selected.table] = {selected.column: '$'+selected.table+'.'+selected.column}
 
         return [
             {
@@ -475,11 +461,50 @@ class DistinctConverter(Converter):
                 }
             },
             {
-                '$project': {
-                    _id: '$_id'
+                '$replaceRoot': {
+                    'newRoot': '$_id'
                 }
             }
         ]
+
+
+class NestedInQuery(Converter):
+
+    def __init__(self, token, *args):
+        self._token = token
+        self._in_query: SelectQuery = None
+        super().__init__(*args)
+
+    def parse(self):
+        self._in_query = SelectQuery(
+            self.query.db_ref,
+            sqlparse(self._token.value[1:-1])[0],
+            self.query.params
+        )
+
+    def to_mongo(self):
+        pipeline = [
+            {
+                '$lookup': {
+                    'from': self._in_query.left_table,
+                    'pipeline': self._in_query._make_pipeline(),
+                    'as': '_nested_in'
+                }
+            },
+            {
+                '$addFields': {
+                    '_nested_in': {
+                        '$map': {
+                            'input': '$_nested_in',
+                            'as': 'lookup_result',
+                            'in': '$$lookup_result.' + self._in_query.selected_columns.sql_tokens[0].column
+                        }
+                    }
+                }
+            }
+        ]
+        return pipeline
+
 
 
 class SelectQuery(Query):
@@ -587,6 +612,9 @@ class SelectQuery(Query):
         for join in self.joins:
             pipeline.extend(join.to_mongo())
 
+        if self.nested_query:
+            pipeline.extend(self.nested_query.to_mongo())
+
         if self.where:
             self.where.__class__ = AggWhereConverter
             pipeline.append(self.where.to_mongo())
@@ -611,7 +639,7 @@ class SelectQuery(Query):
     def _get_cursor(self):
         if self._needs_aggregation():
             pipeline = self._make_pipeline()
-            cur = self._result_ref.db[self.left_table].aggregate(pipeline)
+            cur = self.db_ref[self.left_table].aggregate(pipeline)
 
         else:
             kwargs = {}
@@ -627,21 +655,18 @@ class SelectQuery(Query):
             if self.order:
                 kwargs.update(self.order.to_mongo())
 
-            cur = self._result_ref.db[self.left_table].find(**kwargs)
+            cur = self.db_ref[self.left_table].find(**kwargs)
 
         return cur
 
     def _align_results(self, doc):
         ret = []
         if self.distinct:
-            if self.distinct.column.table == self.left_table:
-                ret.append(doc[self.distinct.column.column])
-            else:
-                ret.append(doc[self.distinct.column.table][self.distinct.column.column])
+            sql_tokens = self.distinct.sql_tokens
+        else:
+            sql_tokens = self.selected_columns.sql_tokens
 
-            return ret
-
-        for selected in self.selected_columns.sql_tokens:
+        for selected in sql_tokens:
             if selected.table == self.left_table:
                 try:
                     ret.append(doc[selected.column])
@@ -669,7 +694,7 @@ class UpdateQuery(Query):
         return self.result.modified_count
 
     def parse(self):
-        db = self._result_ref.db
+        db = self.db_ref
         tok_id = 0
         tok: Token = self.statement[0]
 
@@ -700,8 +725,12 @@ class UpdateQuery(Query):
 
 class InsertQuery(Query):
 
+    def __init__(self, result_ref: 'Result', *args):
+        self._result_ref = result_ref
+        super().__init__(*args)
+
     def parse(self):
-        db = self._result_ref.db
+        db = self.db_ref
         sm = self.statement
         insert = {}
 
@@ -753,7 +782,7 @@ class DeleteQuery(Query):
         super().__init__(*args)
 
     def parse(self):
-        db_con = self._result_ref.db
+        db_con = self.db_ref
         sm = self.statement
         kw = {}
 
@@ -950,16 +979,16 @@ class Result:
         self.cli_con.drop_database(db_name)
 
     def _update(self, sm):
-        self._query = UpdateQuery(self, sm, self._params)
+        self._query = UpdateQuery(self.db, sm, self._params)
 
     def _delete(self, sm):
-        self._query = DeleteQuery(self, sm, self._params)
+        self._query = DeleteQuery(self.db, sm, self._params)
 
     def _insert(self, sm):
-        self._query = InsertQuery(self, sm, self._params)
+        self._query = InsertQuery(self, self.db, sm, self._params)
 
     def _select(self, sm):
-        self._query = SelectQuery(self, sm, self._params)
+        self._query = SelectQuery(self.db, sm, self._params)
 
     FUNC_MAP = {
         'SELECT': _select,
@@ -1166,16 +1195,21 @@ class _InNotInLikeOp(_Op):
         else:
             self._field = '{}.{}'.format(identifier.table, identifier.column)
 
+    def negate(self):
+        raise SQLDecodeError('Negating IN/NOT IN not supported')
+
+    def to_mongo(self):
+        raise NotImplementedError
+
+
+class _InNotInOp(_InNotInLikeOp):
+
     def _fill_in(self, token):
         self._in = []
 
         # Check for nested
         if token[1].ttype == tokens.DML:
-            self.query.nested_query = SelectQuery(
-                self.query._result_ref,
-                sqlparse(token.value[1:-1])[0],
-                self.params
-            )
+            self.query.nested_query = NestedInQuery(token, self.query, 0)
             return
 
         for index in SQLToken(token, self.query.alias2op):
@@ -1190,8 +1224,19 @@ class _InNotInLikeOp(_Op):
     def to_mongo(self):
         raise NotImplementedError
 
+    def _to_mongo(self, op):
+        if self.query.nested_query is not None:
+            return {
+                '$expr': {
+                    op: ['$' + self._field, '$_nested_in']
+                }
+            }
 
-class NotInOp(_InNotInLikeOp):
+        else:
+            return {self._field: {op: self._in}}
+
+
+class NotInOp(_InNotInOp):
 
     def __init__(self, *args, **kwargs):
         super().__init__(name='NOT IN', *args, **kwargs)
@@ -1202,16 +1247,13 @@ class NotInOp(_InNotInLikeOp):
 
     def to_mongo(self):
         op = '$nin' if not self.is_negated else '$in'
-        if self.query.nested_query_result is not None:
-            return {self._field: {op: self.query.nested_query_result}}
-        else:
-            return {self._field: {op: self._in}}
+        return self._to_mongo(op)
 
     def negate(self):
         self.is_negated = True
 
 
-class InOp(_InNotInLikeOp):
+class InOp(_InNotInOp):
 
     def __init__(self, *args, **kwargs):
         super().__init__(name='IN', *args, **kwargs)
@@ -1219,10 +1261,7 @@ class InOp(_InNotInLikeOp):
 
     def to_mongo(self):
         op = '$in' if not self.is_negated else '$nin'
-        if self.query.nested_query_result is not None:
-            return {self._field: {op: self.query.nested_query_result}}
-        else:
-            return {self._field: {op: self._in}}
+        return self._to_mongo(op)
 
     def negate(self):
         self.is_negated = True
