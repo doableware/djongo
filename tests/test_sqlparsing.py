@@ -165,12 +165,12 @@ class TestParse(TestCase):
             },
             {
                 '$group': {
-                    '_id': 'col1'
+                    '_id': {'col1': '$col1'}
                 }
             },
             {
-                '$project': {
-                    'col1': '$_id'
+                '$replaceRoot': {
+                    'newRoot': '$_id'
                 }
             }
         ]
@@ -209,12 +209,12 @@ class TestParse(TestCase):
             },
             {
                 '$group': {
-                    '_id': 'col1'
+                    '_id': {'col1': '$col1'}
                 }
             },
             {
-                '$project': {
-                    'col1': '$_id'
+                '$replaceRoot': {
+                    'newRoot': '$_id'
                 }
             },
             {
@@ -346,7 +346,7 @@ class TestParse(TestCase):
             }
         }
         self.params = [1]
-        iter.return_value = [{'col1': 1, 'col2': 2}, {'col1': 3, 'col2': 4}]
+        iter.return_value = [{'_id': 'x', 'col1': 1, 'col2': 2}, {'_id': 'x', 'col1': 3, 'col2': 4}]
         ans = self.find_mock()
         find.assert_any_call(**find_args)
         self.assertEqual(ans, [(1,2), (3,4)])
@@ -360,7 +360,7 @@ class TestParse(TestCase):
             }
         }
         self.params = [1]
-        iter.return_value = [{'col1': 1, 'col2': 2}, {'col1': 3, 'col2': 4}]
+        iter.return_value = [{'_id': 'x', 'col1': 1, 'col2': 2}, {'_id': 'x', 'col1': 3, 'col2': 4}]
         self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
