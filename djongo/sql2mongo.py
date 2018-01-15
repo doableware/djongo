@@ -948,7 +948,13 @@ class Result:
                     field = col[col.find('"') + 1: col.rfind('"')]
 
                     if col.find('AUTOINCREMENT') != -1:
-                        push['auto.field_names'] = field
+                        try:
+                            push['auto.field_names']['$each'].append(field)
+                        except KeyError:
+                            push['auto.field_names'] = {
+                                '$each': [field]
+                            }
+
                         _set['auto.seq'] = 0
 
                     if col.find('PRIMARY KEY') != -1:

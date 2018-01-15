@@ -26,10 +26,12 @@ As there is no concept of AUTOINCREMENT fields in MongoDB, internally Djongo cre
 
 ```python
 { 
-    "_id" : ObjectId("59a25278a1b5e33724f9d9f0"), 
+    "_id" : ObjectId("5a5c3c87becdd9fe2fb255a9"), 
     "name" : "django_migrations", 
     "auto" : {
-        "field_name" : "id", 
+        "field_names" : [
+            "id"
+        ], 
         "seq" : NumberInt(14)
     }
 }
