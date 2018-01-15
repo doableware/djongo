@@ -925,6 +925,11 @@ class Result:
     def _create(self, sm):
         tok_id, tok = sm.token_next(0)
         if tok.match(tokens.Keyword, 'TABLE'):
+            if '__schema__' not in self.db.collection_names(include_system_collections=False):
+                self.db.create_collection('__schema__')
+                self.db['__schema__'].create_index('name')
+                self.db['__schema__'].create_index('auto')
+
             tok_id, tok = sm.token_next(tok_id)
             table = SQLToken(tok, None).table
             self.db.create_collection(table)
