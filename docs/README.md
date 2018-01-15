@@ -51,7 +51,6 @@ Djongo connector for MongoDB ensures that you:
  * Reuse Django Models/ORM
  * Work with the original Django variant
  * Future proof your code
- * Stop the immigrations 
  * Atomic SQL JOIN operations
  
 Refer to [Integrating Django with MongoDB](/djongo/integrating-django-with-mongodb/) for the detailed reference.
@@ -144,6 +143,14 @@ Fire up Django Admin with the new changes and you have:
 <div style="max-width: 100%; margin-left: auto; margin-right: auto">
     <img src="/djongo/images/admin-extended.jpg" alt="Django Admin">
 </div>
+
+### Querying Embedded fields
+
+In the above example to query all BlogPost with content made by authors whose name startswith 'Paul'  use the following query:
+
+```python
+entries = BlogPost.objects.filter(content__startswith={'author': 'Paul'})
+```
 
 Refer to [Using Django with MongoDB data fields](/djongo/using-django-with-mongodb-data-fields/) for more details.
 
