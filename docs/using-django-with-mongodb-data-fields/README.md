@@ -246,7 +246,7 @@ Embed the above model inside the parent model by creating an `EmbeddedModelField
 class EmbeddedModelField(Field):
     def __init__(self,
                  model_container: typing.Type[Model],
-                 model_form: typing.Optional[Type[forms.ModelForm]]=None,
+                 model_form_class: typing.Optional[Type[forms.ModelForm]]=None,
                  model_form_kwargs: typing.Optional[dict]=None,
                  *args, **kwargs):
 ```
@@ -254,7 +254,7 @@ class EmbeddedModelField(Field):
 ##### Parameters
 
   * `model_container: Type[models.Model]` The child model class type (not instance) that this embedded field will contain.
-  * `model_form: Optional[Type[models.forms.ModelForm]]` The child model form class type of the embedded model.
+  * `model_form_class: Optional[Type[models.forms.ModelForm]]` The child model form class type of the embedded model.
   * `model_form_kwargs: Optional[dict]` The kwargs (if any) that must be passed to the embedded model form while instantiating it.
   
 ##### Example
@@ -309,7 +309,7 @@ Create an array of the above child model inside the parent model by creating an 
 class ArrayModelField(Field):
     def __init__(self,
                  model_container: typing.Type[Model],
-                 model_form: typing.Type[forms.ModelForm]=None,
+                 model_form_class: typing.Type[forms.ModelForm]=None,
                  model_form_kwargs_l: dict=None,
                  *args, **kwargs):
 ```
@@ -317,7 +317,7 @@ class ArrayModelField(Field):
 ##### Parameters
 
   * `model_container: Type[models.Model]` The child model class type (not instance) that this array field will contain.
-  * `model_form: Optional[Type[models.forms.ModelForm]]` The child model form class type of the array model. All child models inside the array must be of the same type. Mixing different types of child models inside the embedded array is not supported.
+  * `model_form_class: Optional[Type[models.forms.ModelForm]]` The child model form class type of the array model. All child models inside the array must be of the same type. Mixing different types of child models inside the embedded array is not supported.
   * `model_form_kwargs: Optional[dict]` The kwargs (if any) that must be passed to the embedded model form while instantiating it.
   
 ##### Example
@@ -350,22 +350,33 @@ class BlogPost(models.Model):
 
 ### Embedded Form
 
-Embed multiple sub-forms, inside the parent form. Directly translate it into an embedded model and `.save()` it into mongoDB. No foreign key lookups necessary!
-
-<pre><code>
-Name:
-Address:
-    No:
-    Street:
-Phone:
-    Landline:
-    Mobile:
-
-</code></pre>
-
 While creating a Form from [the ModelForm](https://docs.djangoproject.com/en/dev/topics/forms/modelforms/), the embedded forms **get automatically generated** if the Model contains an embedded model inside it.
 
 Multiple embedded forms get automatically generated when the Model contains an array of embedded models.
+
+### QuerySet API
+
+**All queries supported by the Django ORM are also supported with Djongo.**
+
+#### Querying Embedded fields
+
+In the above example to query all BlogPost with content made by authors whose name startswith 'Paul'  use the following query:
+
+```python
+entries = BlogPost.objects.filter(content__startswith={'author': 'Paul'})
+```
+
+Internally Djongo converts this query (for BlogPost collection) to the form:
+
+```python
+filter = {
+    'content.author': {
+        '$regex': '^Paul.*$'
+    }
+}
+```
+
+#### Querying Embedded Array fields
 
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

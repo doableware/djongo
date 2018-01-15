@@ -874,12 +874,12 @@ class Result:
             try:
                 return handler(self, statement)
             except SQLDecodeError as e:
-                print(f'FAILED SQL: {self._sql}')
-                raise e
+                exe = SQLDecodeError(f'FAILED SQL: {self._sql}')
+                raise exe from e
+
             except OperationFailure as e:
-                print(f'FAILED SQL: {self._sql}')
-                print(e.details)
-                raise e
+                exe = SQLDecodeError(f'FAILED SQL: {self._sql}' f'Pymongo error: {e.details}')
+                raise exe from e
 
     def _alter(self, sm):
         tok_id, tok = sm.token_next(0)
