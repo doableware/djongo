@@ -197,9 +197,9 @@ Any questions, suggestions for improvements, issues regarding the usage or to co
 
 ## Contribute
  
-If you think djongo is useful, **please share it** with the world! Your endorsements and online reviews will help get more support for this project.
- 
-You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](https://nesdis.github.io/djongo/django-mongodb-connector-design-document/) is implemented.
+ If you think djongo is useful, **please share it** with the world! Your endorsements and online reviews will help get more support for this project.
+  
+ The [roadmap](https://nesdis.github.io/djongo/roadmap/) document contains a list of features that must be implemented in future versions of Djongo. You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](https://nesdis.github.io/djongo/django-mongodb-connector-design-document/) is implemented.
  
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

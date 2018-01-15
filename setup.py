@@ -69,5 +69,12 @@ setup(
         'dataclasses>=0.1'
     ],
 	long_description=LONG_DESCRIPTION,
-    python_requires='>=3.6'
+    python_requires='>=3.6',
+    keywords='Django MongoDB driver connector',
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: BSD License',
+        'Programming Language :: Python :: 3.6',
+    ]
 )
