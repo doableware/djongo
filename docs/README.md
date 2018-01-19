@@ -1,4 +1,4 @@
-# Django and MongoDB database connector
+# Django and MongoDB connector
 Use MongoDB as a backend database for your Django project, without changing the Django ORM. Use the Django Admin app to add and modify documents in MongoDB. 
 
 ## Usage
