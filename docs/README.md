@@ -1,4 +1,4 @@
-# Django and MongoDB database connector
+# Django and MongoDB connector
 Use MongoDB as a backend database for your Django project, without changing the Django ORM. Use the Django Admin app to add and modify documents in MongoDB. 
 
 ## Usage
@@ -97,51 +97,6 @@ That’s it you are set! Fire up Django Admin on localhost:8000/admin/ and this 
 
 <div style="max-width: 100%; margin-left: auto; margin-right: auto">
     <img src="/djongo/images/admin.jpg" alt="Django Admin">
-</div>
-   
-Next, assume you want to ‘extend’ the author field to contain more than just the name. You need both a name and email. Simply make the author field an ‘embedded’ field instead of a ‘char’ field:
-
-```python
-class Author(models.Model):
-    name = models.CharField(max_length=100)
-    email = models.CharField(max_length=100)
-
-    class Meta:
-        abstract = True
-
-
-class AuthorForm(forms.ModelForm):
-
-    class Meta:
-        model = Author
-        fields = (
-            'name', 'email'
-        )
-
-class BlogContent(models.Model):
-    comment = models.CharField(max_length=100)
-    author = models.EmbeddedModelField(
-        model_container=Author,
-        model_form_class=AuthorForm
-    )
-    class Meta:
-        abstract = True
-```   
-
-If a blog post has multiple content from multiple authors, define a new model:
-
-```python
-class MultipleBlogPosts(models.Model):
-    h1 = models.CharField(max_length=100)
-    content = models.ArrayModelField(
-        model_container=BlogContent,
-        model_form_class=BlogContentForm
-    )
-```
-Fire up Django Admin with the new changes and you have:
-
-<div style="max-width: 100%; margin-left: auto; margin-right: auto">
-    <img src="/djongo/images/admin-extended.jpg" alt="Django Admin">
 </div>
 
 ### Querying Embedded fields
