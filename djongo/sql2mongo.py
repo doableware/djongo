@@ -842,13 +842,14 @@ class Result:
     def __iter__(self):
         try:
             yield from iter(self._query)
-        except SQLDecodeError as e:
-            print(f'FAILED SQL: {self._sql}')
-            raise e
+
         except OperationFailure as e:
-            print(f'FAILED SQL: {self._sql}')
-            print(e.details)
-            raise e
+            exe = SQLDecodeError(f'FAILED SQL: {self._sql}' f'Pymongo error: {e.details}')
+            raise exe from e
+
+        except Exception as e:
+            exe = SQLDecodeError(f'FAILED SQL: {self._sql}')
+            raise exe from e
 
     def _param_index(self, _):
         self._params_index_count += 1
@@ -873,12 +874,13 @@ class Result:
         else:
             try:
                 return handler(self, statement)
-            except SQLDecodeError as e:
-                exe = SQLDecodeError(f'FAILED SQL: {self._sql}')
-                raise exe from e
 
             except OperationFailure as e:
                 exe = SQLDecodeError(f'FAILED SQL: {self._sql}' f'Pymongo error: {e.details}')
+                raise exe from e
+
+            except Exception as e:
+                exe = SQLDecodeError(f'FAILED SQL: {self._sql}')
                 raise exe from e
 
     def _alter(self, sm):
@@ -927,7 +929,7 @@ class Result:
         if tok.match(tokens.Keyword, 'TABLE'):
             if '__schema__' not in self.db.collection_names(include_system_collections=False):
                 self.db.create_collection('__schema__')
-                self.db['__schema__'].create_index('name')
+                self.db['__schema__'].create_index('name', unique=True)
                 self.db['__schema__'].create_index('auto')
 
             tok_id, tok = sm.token_next(tok_id)
