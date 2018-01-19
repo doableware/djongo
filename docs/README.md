@@ -171,7 +171,7 @@ post = BlogPost.objects.get(pk=p_key)
 
 Will [get a model object](https://docs.djangoproject.com/en/dev/topics/db/queries/#retrieving-a-single-object-with-get) having primary key `p_key`.
 
-### Direct pymongo access
+### Tunnel directly to Pymongo 
 
 MongoDB has powerful query syntax and `DjongoManager` lets you exploit it fully.
 
