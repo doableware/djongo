@@ -272,6 +272,8 @@ class JoinConverter(Converter):
         tok_id, tok = sm.token_next(self.begin_id)
         sql = SQLToken(tok, self.query.alias2op)
         right_table = self.right_table = sql.table
+        if sql.alias:
+            self.query.alias2op[sql.alias] = sql
 
         tok_id, tok = sm.token_next(tok_id)
         if not tok.match(tokens.Keyword, 'ON'):

@@ -354,10 +354,6 @@ class TestParse(TestCase):
         iter = self.iter
 
         t1c1 = '"table1"."col1"'
-        t1c2 = '"table1"."col2"'
-        t2c1 = '"table2"."col1"'
-        t2c2 = '"table2"."col2"'
-
 
         # Testing for different combinations 'where' syntax
         # from here on
@@ -438,31 +434,141 @@ class TestParse(TestCase):
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
+    def test_nested_in(self):
+
+        t1c1 = '"table1"."col1"'
+        t1c2 = '"table1"."col2"'
+        t2c1 = '"table2"."col1"'
+        t2c2 = '"table2"."col2"'
+        return_value = [{'col1': 'a1', 'col2': 'a2'}, {'col1': 'b1', 'col2': 'b2'}]
+        ans = [['a1', 'a2'],['b1', 'b2']]
+
         self.sql = f'SELECT {t1c1}, {t1c2} FROM "table1" WHERE ({t1c1} IN (SELECT {t2c1} FROM "table2" U0 WHERE (U0."col2" IN (%s, %s))))'
-        find_args1 = {
-            'projection': ['col1'],
-            'filter': {
-                'col2': {
-                    '$in': [1, 2]
+        self.params = [1,2]
+        inner_pipeline = [
+            {
+                '$match': {
+                    'col2': {
+                        '$in': [1,2]
+                    }
+                }
+            },
+            {
+                '$project': {
+                    'col1': True
+                }
+            },
+
+        ]
+        pipeline = [
+            {
+                '$lookup': {
+                    'from': 'table2',
+                    'pipeline': inner_pipeline,
+                    'as': '_nested_in'
+                }
+            },
+            {
+                '$addFields': {
+                    '_nested_in': {
+                        '$map': {
+                            'input': '$_nested_in',
+                            'as': 'lookup_result',
+                            'in': '$$lookup_result.col1'
+                        }
+                    }
+                }
+            },
+            {
+                '$match': {
+                    '$expr': {
+                        '$in': ['$col1', '$_nested_in']
+                    }
+                }
+            },
+            {
+                '$project': {
+                    'col1': True,
+                    'col2': True
+                }
+            },
+        ]
+        self.aggregate_mock(pipeline, return_value, ans)
+
+        'SELECT "viewflow_process"."id", "viewflow_process"."flow_class", "viewflow_process"."status", "viewflow_process"."created", "viewflow_process"."finished" FROM "viewflow_process" WHERE "viewflow_process"."id" IN (SELECT U0."process_id" AS Col1 FROM "viewflow_task" U0 INNER JOIN "viewflow_process" U1 ON (U0."process_id" = U1."id") WHERE (U1."flow_class" IN (%(0)s, %(1)s, %(2)s) AND U0."owner_id" = %(3)s AND U0."status" = %(4)s)) ORDER BY "viewflow_process"."created" DESC'
+
+        self.sql = f'SELECT {t1c1}, {t1c2} FROM "table1" WHERE {t1c1} IN (SELECT U0."col1" AS Col1 FROM "table2" U0 INNER JOIN "table1" U1 ON (U0."col1" = U1."col1") WHERE (U1."col2" IN (%s, %s))) ORDER BY {t1c2} DESC'
+        self.params = [1,2]
+        inner_pipeline = [
+            {
+                '$match': {
+                    'col1': {
+                        '$ne': None,
+                        '$exists': True
+                    }
+                }
+            },
+            {
+                '$lookup': {
+                    'from': 'table1',
+                    'localField': 'col1',
+                    'foreignField': 'col1',
+                    'as': 'table1'
+                }
+            },
+            {
+                '$unwind': '$table1'
+            },
+            {
+                '$match': {
+                    'table1.col2': {
+                        '$in': [1,2]
+                    }
+                }
+            },
+            {
+                '$project': {
+                    'col1': True
                 }
             }
-        }
-
-        find_args2 = {
-            'projection': ['col1', 'col2'],
-            'filter': {
-                'col1': {
-                    '$in': [3,4,5]
+        ]
+        pipeline = [
+            {
+                '$lookup': {
+                    'from': 'table2',
+                    'pipeline': inner_pipeline,
+                    'as': '_nested_in'
                 }
-            }
-        }
-        calls = [mock.call(**find_args1), mock.call(**find_args2)]
+            },
+            {
+                '$addFields': {
+                    '_nested_in': {
+                        '$map': {
+                            'input': '$_nested_in',
+                            'as': 'lookup_result',
+                            'in': '$$lookup_result.col1'
+                        }
+                    }
+                }
+            },
+            {
+                '$match': {
+                    '$expr': {
+                        '$in': ['$col1', '$_nested_in']
+                    }
+                }
+            },
+            {'$sort': OrderedDict([('col2', -1)])},
+            {
+                '$project': {
+                    'col1': True,
+                    'col2': True
+                }
+            },
+        ]
+        self.aggregate_mock(pipeline, return_value, ans)
 
-        self.params = [1, 2]
-        iter.return_value = [{'col1': 3},{'col1': 4},{'col1': 5}]
-        self.find_mock()
-        self.assertEqual(find.call_args_list, calls)
-        conn.reset_mock()
+
 
     def test_not(self):
         conn = self.conn
