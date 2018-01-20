@@ -760,8 +760,12 @@ class InsertQuery(Query):
 
         nextid, nexttok = sm.token_next(nextid)
 
-        for aid in nexttok[1].get_identifiers():
-            sql = SQLToken(aid, None)
+        if isinstance(nexttok[1], IdentifierList):
+            for an_id in nexttok[1].get_identifiers():
+                sql = SQLToken(an_id, None)
+                insert[sql.column] = self.params.pop(0)
+        else:
+            sql = SQLToken(nexttok[1], None)
             insert[sql.column] = self.params.pop(0)
 
         if self.params:

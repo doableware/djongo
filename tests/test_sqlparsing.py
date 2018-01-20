@@ -224,8 +224,6 @@ class TestParse(TestCase):
 
         self.aggregate_mock(pipeline, return_value, ans)
 
-
-
     def test_count(self):
         conn = self.conn
         agg = self.aggregate
@@ -246,7 +244,38 @@ class TestParse(TestCase):
         'SELECT (1) AS "a" FROM "table" WHERE "table1"."col2" = %s LIMIT 1'
 
     def test_update(self):
-        pass
+        um = self.conn.__getitem__.return_value.update_many
+
+        sql = 'UPDATE "table" SET "col" = %s WHERE "table"."col" = %s'
+        params = [1,2]
+        result = Result(self.db, self.conn, sql, params)
+        um.assert_any_call(filter={'col': {'$eq': 2}}, update={'$set': {'col': 1}})
+        self.conn.reset_mock()
+
+        sql = 'UPDATE "table" SET "col1" = %s WHERE "table"."col2" = %s'
+        params = [1,2]
+        result = Result(self.db, self.conn, sql, params)
+        um.assert_any_call(filter={'col2': {'$eq': 2}}, update={'$set': {'col1': 1}})
+        self.conn.reset_mock()
+
+        sql = 'UPDATE "table" SET "col1" = %s, "col2" = %s WHERE "table"."col2" = %s'
+        params = [1, 2, 3]
+        result = Result(self.db, self.conn, sql, params)
+        um.assert_any_call(filter={'col2': {'$eq': 3}}, update={'$set': {'col1': 1, 'col2': 2}})
+        self.conn.reset_mock()
+
+    def test_insert(self):
+        io = self.conn.__getitem__.return_value.insert_one
+
+        sql = 'INSERT INTO "table" ("col1", "col2") VALUES (%s, %s)'
+        params = [1, 2]
+        result = Result(self.db, self.conn, sql, params)
+        io.assert_any_call({'col1':1, 'col2': 2})
+
+        sql = 'INSERT INTO "table" ("col") VALUES (%s)'
+        params = [1]
+        result = Result(self.db, self.conn, sql, params)
+        io.assert_any_call({'col':1})
 
 
     def test_statement(self):
