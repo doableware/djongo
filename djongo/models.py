@@ -19,6 +19,11 @@ def useful_field(field):
     return field.concrete and not (field.is_relation
                                    or isinstance(field, (AutoField, BigAutoField)))
 
+class ModelSubterfuge:
+
+    def __init__(self, embedded_model):
+        self.subterfuge = embedded_model
+
 
 class DjongoManager(Manager):
     def __getattr__(self, name):
@@ -254,19 +259,15 @@ class EmbeddedModelField(Field):
 
     def pre_save(self, model_instance, add):
         value = getattr(model_instance, self.attname)
-
-        ret_val = {}
-        for fld in value._meta.get_fields():
-            if not useful_field(fld):
-                continue
-
-            fld_value = getattr(value, fld.attname)
-            ret_val[fld.attname] = fld.get_db_prep_value(fld_value, None, False)
-        return ret_val
+        subterfuge = ModelSubterfuge(value)
+        setattr(model_instance, self.attname, subterfuge)
+        return subterfuge
 
     def get_db_prep_value(self, value, connection=None, prepared=False):
         if isinstance(value, dict):
             return value
+        if isinstance(value, ModelSubterfuge):
+            value = value.subterfuge
 
         if not isinstance(value, Model):
             raise TypeError('Object must be of type Model')
@@ -349,6 +350,11 @@ class EmbeddedFormField(forms.MultiValueField):
         if form.prefix:
             self.model_form.prefix = '{}-{}'.format(form.prefix, self.model_form.prefix)
         return EmbeddedFormBoundField(form, self, field_name)
+
+    def bound_data(self, data, initial):
+        if self.disabled:
+            return initial
+        return self.compress(data)
 
 
 class EmbeddedFormBoundField(forms.BoundField):
