@@ -31,9 +31,10 @@ class TestWithDjango(TestCase):
 
 
     def test_join(self):
-        bqs = Blog.objects.filter(name='b1')
-        bqs.entry_set.filter(headline__startswith='h')
-        eqs = Entry.objects.filter(blog__in=bqs)
+        eqs = Entry.objects.filter(blog__name='b1').values('id')
+        bqs = Blog.objects.filter(id__in=eqs).values('name')
+        self.assertEquals(list(bqs), [{'name': 'b1'}, {'name': 'b2'}])
+        print('done')
 
     def test_models(self):
         tdel = BlogPost.objects.get(h1='test data')

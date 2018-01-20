@@ -680,7 +680,7 @@ class SelectQuery(Query):
                 except KeyError:
                     ret.append(None)  # This is a silent failure.
 
-        return ret
+        return tuple(ret)
 
 
 class UpdateQuery(Query):
