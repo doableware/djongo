@@ -1,3 +1,6 @@
+"""
+MongoDB database backend for Django
+"""
 from collections import OrderedDict
 
 from django.db.backends.base.base import BaseDatabaseWrapper
@@ -14,7 +17,12 @@ from . import database as Database
 
 
 class DatabaseWrapper(BaseDatabaseWrapper):
+    """
+    DatabaseWrapper for MongoDB using SQL replacements.
+    """
 
+    # This dictionary will map Django model field types to appropriate data
+    # types to be used in the database.
     data_types = {
         'AutoField': 'integer',
         'BigAutoField': 'integer',
@@ -86,6 +94,12 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         return False
 
     def get_connection_params(self):
+        """
+        Default method to acquire database connection parameters.
+
+        Sets connection parameters to match settings.py, and sets
+        default values to blank fields.
+        """
         valid_settings = {
             'NAME': 'name',
             'HOST': 'host',
@@ -112,12 +126,21 @@ class DatabaseWrapper(BaseDatabaseWrapper):
 
     def get_new_connection(self, connection_params):
         """
-        This needs to be made more generic to accept
+        Receives a dictionary connection_params to setup
+        a connection to the database.
+
+        Dictionary correct setup is made through the
+        get_connection_params method.
+
+        TODO: This needs to be made more generic to accept
         other MongoClient parameters.
         """
 
         name = connection_params.pop('name')
         connection_params['document_class'] = OrderedDict
+        # To prevent leaving unclosed connections behind,
+        # client_conn must be closed before a new connection
+        # is created.
         if self.client_conn is not None:
             self.client_conn.close()
 
@@ -125,15 +148,27 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         return self.client_conn[name]
 
     def _set_autocommit(self, autocommit):
+        """
+        Default method must be overridden, eventhough not used.
+
+        TODO: For future reference, setting two phase commits and rollbacks
+        might require populating this method.
+        """
         pass
 
     def init_connection_state(self):
         pass
 
     def create_cursor(self, name=None):
+        """
+        Returns an active connection cursor to the database.
+        """
         return Cursor(self.client_conn, self.connection)
 
     def _close(self):
+        """
+        Closes the client connection to the database.
+        """
         if self.connection:
             with self.wrap_database_errors:
                 self.connection.client.close()
@@ -142,4 +177,9 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         raise Error
 
     def _commit(self):
+        """
+        Commit routine
+
+        TODO: two phase commits are not supported yet.
+        """
         pass
