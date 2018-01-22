@@ -230,21 +230,66 @@ class TestParse(TestCase):
         iter = self.iter
 
         self.sql = 'SELECT COUNT(*) AS "__count" FROM "table"'
-        agg_args = [{
-            '$count': '__count'
+        pipeline = [{
+            '$count': '_count'
         }]
-        iter.return_value = [{'__count': 1}]
-        ans = self.find_mock()
-        agg.assert_any_call(agg_args)
-        self.assertEqual(ans,[(1,)])
-        conn.reset_mock()
+        return_value = [{'_count': 1}]
+        ans = [(1,)]
+        self.aggregate_mock(pipeline, return_value, ans)
 
-        self.sql = 'SELECT "t"."c1" AS Col1, "t"."c2", COUNT("t"."c3") AS "c3__count" FROM "table"'
-        'SELECT COUNT(*) AS "__count" FROM "table"'
-        'SELECT (1) AS "a" FROM "table" WHERE "table1"."col2" = %s LIMIT 1'
+        self.sql = 'SELECT (1) AS "a" FROM "table1" WHERE "table1"."col2" = %s LIMIT 1'
+        self.params = [2]
+        pipeline = [
+            {
+                '$match': {
+                    'col2': {
+                        '$eq': 2
+                    }
+                }
+            },
+            {
+                '$limit': 1
+            },
+            {
+                '$project': {
+                    '_const': {
+                        '$literal': 1
+                    }
+                }
+            },
+
+        ]
+        return_value = [{'_const': 1}]
+        ans = [(1,)]
+        self.aggregate_mock(pipeline, return_value, ans)
+
+        self.sql = 'SELECT (1) AS "a" FROM "table1" LIMIT 1'
+        self.params = [2]
+        pipeline = [
+            {
+                '$limit': 1
+            },
+            {
+                '$project': {
+                    '_const': {
+                        '$literal': 1
+                    }
+                }
+            },
+
+        ]
+        return_value = [{'_const': 1}]
+        ans = [(1,)]
+        self.aggregate_mock(pipeline, return_value, ans)
 
     def test_update(self):
         um = self.conn.__getitem__.return_value.update_many
+
+        sql = 'UPDATE "table" SET "col1" = %s, "col2" = NULL WHERE "table"."col2" = %s'
+        params = [1, 2]
+        result = Result(self.db, self.conn, sql, params)
+        um.assert_any_call(filter={'col2': {'$eq': 2}}, update={'$set': {'col1': 1, 'col2': None}})
+        self.conn.reset_mock()
 
         sql = 'UPDATE "table" SET "col" = %s WHERE "table"."col" = %s'
         params = [1,2]
@@ -272,6 +317,11 @@ class TestParse(TestCase):
         result = Result(self.db, self.conn, sql, params)
         io.assert_any_call({'col1':1, 'col2': 2})
 
+        sql = 'INSERT INTO "table" ("col1", "col2") VALUES (%s, NULL)'
+        params = [1]
+        result = Result(self.db, self.conn, sql, params)
+        io.assert_any_call({'col1':1, 'col2': 2})
+
         sql = 'INSERT INTO "table" ("col") VALUES (%s)'
         params = [1]
         result = Result(self.db, self.conn, sql, params)
@@ -284,14 +334,43 @@ class TestParse(TestCase):
         :return:
         """
         'SELECT "t"."c1" AS Col1, "t"."c2", COUNT("t"."c3") AS "c3__count" FROM "table"'
-        'SELECT COUNT(*) AS "__count" FROM "table"'
-        'SELECT (1) AS "a" FROM "table" WHERE "table1"."col2" = %s LIMIT 1'
+
         self.sql = 'UPDATE "table" SET "col" = %s WHERE "table"."col1" = %s'
         self.params = [1, 2]
         self.it
         self.find_mock()
         find = self.find
 
+    def test_groupby(self):
+        t1c1 = '"table1"."col1"'
+        t1c2 = '"table1"."col2"'
+        t1c3 = '"table1"."col3"'
+        t2c2 = '"table2"."col2"'
+
+        self.sql = f'SELECT {t1c1}, {t1c2}, COUNT({t1c1}) AS "c1__count", COUNT({t1c3}) AS "c3__count" FROM "table1" GROUP BY {t1c1}, {t1c2}, {t1c3}'
+        pipeline = [
+            {
+                '$group': {
+                    '_id': {
+                        'col1': '$col1',
+                        'col2': '$col2',
+                        'col3': '$col3'
+                    },
+                    'c1__count': {
+                        '$sum': 1
+                    },
+                    'c3_count': {
+                        '$sum': 1
+                    }
+                }
+            },
+            {
+                '$addFields': {
+                    'col1': '$_id.col1',
+                    'col2': '$_id.col2'
+                }
+            }
+        ]
 
     def test_special(self):
         """
@@ -302,27 +381,6 @@ class TestParse(TestCase):
         :return:
         """
 
-
-        conn = self.conn
-        find = self.find
-        distinct = self.distinct
-
-        # Test for special cases of sql syntax first
-        self.sql = 'SELECT DISTINCT "table1"."col1" FROM "table1" WHERE "table1"."col2" = %s'
-        self.params = [1]
-        find_args = {
-            'projection': ['col1'],
-            'filter': {
-                'col2': {
-                    '$eq': 1
-                }
-            }
-        }
-
-        self.find_mock()
-        find.assert_any_call(**find_args)
-        distinct.assert_any_call('col1')
-        conn.reset_mock()
 
         # 'SELECT (1) AS "a" FROM "django_session" WHERE "django_session"."session_key" = %(0)s LIMIT 1'
         self.sql = 'SELECT (1) AS "a" FROM "table1" WHERE "table1"."col2" = %s LIMIT 1'
@@ -341,12 +399,7 @@ class TestParse(TestCase):
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
-        #'SELECT COUNT(*) AS "__count" FROM "auth_user"'
-        self.sql = 'SELECT COUNT(*) AS "__count" FROM "table"'
 
-        self.find_mock()
-        find.assert_any_call()
-        conn.reset_mock()
 
     def test_in(self):
         conn = self.conn

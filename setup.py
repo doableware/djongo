@@ -55,7 +55,7 @@ Important links
 
 setup(
     name='djongo',
-    version='1.2.16',
+    version=__import__('djongo').__version__,
     packages=['djongo'],
     url='https://nesdis.github.io/djongo/',
     license='BSD',
