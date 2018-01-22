@@ -56,13 +56,6 @@ class SQLDecodeError(ValueError):
 
 
 @dataclass
-class TableColumnOp:
-    table_name: str
-    column_name: str
-    alias_name: str = None
-
-
-@dataclass
 class CountFunc:
     table_name: str
     column_name: str
@@ -80,11 +73,6 @@ class CountDistinctFunc:
 class CountWildcardFunc:
     alias_name: str = None
 
-
-class DistinctOp(typing.NamedTuple):
-    table_name: str
-    column_name: str
-    alias_name: str = None
 
 
 def parse(
@@ -121,7 +109,7 @@ class Query:
         self.params = params
 
         self.alias2op: typing.Dict[str, typing.Any] = {}
-        self.nested_query: NestedInQuery = None
+        self.nested_query: NestedInQueryConverter = None
 
         self.left_table: typing.Optional[str] = None
 
@@ -213,10 +201,10 @@ class AggColumnSelectConverter(ColumnSelectConverter):
     def to_mongo(self):
         project = {}
         if self.return_const is not None:
-            project['const'] = {'$literal': self.return_const}
+            project['_const'] = {'$literal': self.return_const}
 
         elif self.return_count:
-            return {'$count': 'count'}
+            return {'$count': '_count'}
 
         else:
             for selected in self.sql_tokens:
@@ -428,7 +416,7 @@ class SetConverter(Converter):
         return {
             'update': {
                 '$set': {
-                    sql.lhs_column: self.query.params[sql.rhs_indexes] for sql in self.sql_tokens}
+                    sql.lhs_column: self.query.params[sql.rhs_indexes] if sql.rhs_indexes is not None else None for sql in self.sql_tokens}
             }
         }
 
@@ -475,7 +463,7 @@ class DistinctConverter(ColumnSelectConverter):
         ]
 
 
-class NestedInQuery(Converter):
+class NestedInQueryConverter(Converter):
 
     def __init__(self, token, *args):
         self._token = token
@@ -513,10 +501,29 @@ class NestedInQuery(Converter):
         return pipeline
 
 
+class GroupbyConverter(Converter):
+
+    def __init__(self, *args):
+        self.sql_tokens = []
+        super().__init__(*args)
+
+    def parse(self):
+        tok_id, tok = self.query.statement.token_next(self.begin_id)
+        if isinstance(tok, Identifier):
+            self.sql_tokens.append(SQLToken(tok, self.query.alias2op))
+        else:
+            for atok in tok.get_identifiers():
+                self.sql_tokens.append(SQLToken(atok, self.query.alias2op))
+
+        self.end_id = tok_id
+
+    def to_mongo(self):
+        pass
+
 
 class SelectQuery(Query):
-    def __init__(self, *args):
 
+    def __init__(self, *args):
         self.selected_columns: ColumnSelectConverter = None
         self.where: typing.Optional[WhereConverter] = None
         self.joins: typing.Optional[typing.List[
@@ -525,6 +532,7 @@ class SelectQuery(Query):
         self.order: OrderConverter = None
         self.limit: typing.Optional[LimitConverter] = None
         self.distinct: DistinctConverter = None
+        self.groupby: GroupbyConverter = None
 
         self._cursor: typing.Union[BasicCursor, CommandCursor] = None
         super().__init__(*args)
@@ -554,6 +562,9 @@ class SelectQuery(Query):
                 c = OuterJoinConverter(self, tok_id)
                 self.joins.append(c)
 
+            elif tok.match(tokens.Keyword, 'GROUP BY'):
+                c = self.groupby = GroupbyConverter(self, tok_id)
+
             elif isinstance(tok, Where):
                 c = self.where = WhereConverter(self, tok_id)
 
@@ -573,7 +584,7 @@ class SelectQuery(Query):
                 yield []
                 return
             for doc in cursor:
-                yield (doc['const'],)
+                yield (doc['_const'],)
             return
 
         elif self.selected_columns.return_count:
@@ -581,7 +592,7 @@ class SelectQuery(Query):
                 yield (0,)
                 return
             for doc in cursor:
-                yield (doc['count'],)
+                yield (doc['_count'],)
             return
 
         for doc in cursor:
@@ -855,11 +866,20 @@ class Result:
             yield from iter(self._query)
 
         except OperationFailure as e:
-            exe = SQLDecodeError(f'FAILED SQL: {self._sql}' f'Pymongo error: {e.details}')
+            import djongo
+            exe = SQLDecodeError(
+                f'FAILED SQL: {self._sql}' 
+                f'Pymongo error: {e.details}'
+                f'Version: {djongo.__version__}'
+            )
             raise exe from e
 
         except Exception as e:
-            exe = SQLDecodeError(f'FAILED SQL: {self._sql}')
+            import djongo
+            exe = SQLDecodeError(
+                f'FAILED SQL: {self._sql}'
+                f'Version: {djongo.__version__}'
+            )
             raise exe from e
 
     def _param_index(self, _):
@@ -887,11 +907,20 @@ class Result:
                 return handler(self, statement)
 
             except OperationFailure as e:
-                exe = SQLDecodeError(f'FAILED SQL: {self._sql}' f'Pymongo error: {e.details}')
+                import djongo
+                exe = SQLDecodeError(
+                    f'FAILED SQL: {self._sql}'
+                    f'Pymongo error: {e.details}'
+                    f'Version: {djongo.__version__}'
+                )
                 raise exe from e
 
             except Exception as e:
-                exe = SQLDecodeError(f'FAILED SQL: {self._sql}')
+                import djongo
+                exe = SQLDecodeError(
+                    f'FAILED SQL: {self._sql}'
+                    f'Version: {djongo.__version__}'
+                )
                 raise exe from e
 
     def _alter(self, sm):
@@ -1122,6 +1151,8 @@ class SQLToken:
     @property
     def rhs_indexes(self):
         if not self._token.right.ttype == tokens.Name.Placeholder:
+            if self._token.right.match(tokens.Keyword, 'NULL'):
+                return None
             raise SQLDecodeError
 
         index = self.placeholder_index(self._token.right)
@@ -1233,7 +1264,7 @@ class _InNotInOp(_InNotInLikeOp):
 
         # Check for nested
         if token[1].ttype == tokens.DML:
-            self.query.nested_query = NestedInQuery(token, self.query, 0)
+            self.query.nested_query = NestedInQueryConverter(token, self.query, 0)
             return
 
         for index in SQLToken(token, self.query.alias2op):
