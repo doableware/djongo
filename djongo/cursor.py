@@ -1,5 +1,5 @@
 from logging import getLogger
-from .sql2mongo import Result
+from sql2mongo.query import Result
 
 logger = getLogger(__name__)
 

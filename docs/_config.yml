@@ -1,3 +1,4 @@
-theme: jekyll-theme-cayman
+remote-theme: "minimal-mistakes-jekyll"
+repository: "nesdis/djongo"
 title: Django and MongoDB connector
 description: Djongo is specifically meant to be used with the original Django ORM and MongoDB
