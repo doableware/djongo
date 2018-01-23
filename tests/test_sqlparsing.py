@@ -3,11 +3,10 @@ from collections import OrderedDict
 from unittest import TestCase, mock
 
 from logging import getLogger, DEBUG, StreamHandler
-from pymongo import MongoClient
 from pymongo.cursor import Cursor
 from pymongo.command_cursor import CommandCursor
 
-from djongo.sql2mongo import Result
+from sql2mongo.query import Result
 
 'Django SQL:'
 
@@ -494,7 +493,7 @@ class TestParse(TestCase):
         t2c1 = '"table2"."col1"'
         t2c2 = '"table2"."col2"'
         return_value = [{'col1': 'a1', 'col2': 'a2'}, {'col1': 'b1', 'col2': 'b2'}]
-        ans = [['a1', 'a2'],['b1', 'b2']]
+        ans = [('a1', 'a2'),('b1', 'b2')]
 
         self.sql = f'SELECT {t1c1}, {t1c2} FROM "table1" WHERE ({t1c1} IN (SELECT {t2c1} FROM "table2" U0 WHERE (U0."col2" IN (%s, %s))))'
         self.params = [1,2]
