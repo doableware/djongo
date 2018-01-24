@@ -1,0 +1,24 @@
+# main links
+main:
+   - title: "Home"
+     url: /
+  # - title: "About"
+  #   url: https://mmistakes.github.io/minimal-mistakes/about/
+  # - title: "Sample Posts"
+  #   url: /year-archive/
+  # - title: "Sample Collections"
+  #   url: /collection-archive/
+  # - title: "Sitemap"
+  #   url: /sitemap/
+
+docs:
+  - title: "Get started"
+    url: /
+  - title: "Integrating Django with MongoDB"
+    url: /integrating-django-with-mongodb
+  - title: "Using Django with MongoDB data fields"
+    url: /using-django-with-mongodb-data-fields
+  - title: "Djongo Design documentation"
+    url: /django-mongodb-connector-design-document
+  - title: "Roadmap"
+    url: /roadmap

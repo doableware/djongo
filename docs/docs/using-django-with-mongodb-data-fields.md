@@ -1,4 +1,8 @@
-# Using Django with MongoDB data fields
+---
+title: Using Django with MongoDB data fields
+permalink: /using-django-with-mongodb-data-fields/
+---
+
 
 Django Admin is a powerful tool for managing data used in your app. If you are using MongoDB as your backend, Django Admin can be directly used to create NoSQL ‘embedded models’ using Djongo to boost your performance.
 
@@ -189,20 +193,20 @@ admin.site.register(Entry)
 The number of fields in `Entry` model is reduce to 6. I fire up Django Admin to check what is up!
 
 <div style="max-width: 100%; margin-left: auto; margin-right: auto">
-    <img src="/djongo/images/embedded-admin.png" alt="Django Admin">
+    <img src="/djongo/assets/images/embedded-admin.png" alt="Django Admin">
 </div>
 
 
 Only the `Entry` and `Author` model are registered. I click on *Entrys Add* and get:
 
 <div style="max-width: 100%; margin-left: auto; margin-right: auto">
-    <img src="/djongo/images/embedded-addentry.png" alt="Django Admin">
+    <img src="/djongo/assets/images/embedded-addentry.png" alt="Django Admin">
 </div>
 
 The `Name` and `Tagline` fields are neatly nested within Blog. `Pub date` `Mod date` `N pingbanks` and `Rating` are neatly nested within Meta data.
 
 <div style="max-width: 100%; margin-left: auto; margin-right: auto">
-    <img src="/djongo/images/embedded-nested.png" alt="Django Admin">
+    <img src="/djongo/assets/images/embedded-nested.png" alt="Django Admin">
 </div>
 
 
