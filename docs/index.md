@@ -1,4 +1,9 @@
-# Django and MongoDB connector
+---
+title: Django and MongoDB connector
+permalink: "/"
+---
+
+
 Use MongoDB as a backend database for your Django project, without changing the Django ORM. Use the Django Admin app to add and modify documents in MongoDB. 
 
 ## Usage
@@ -95,9 +100,9 @@ class BlogPost(models.Model):
 
 That’s it you are set! Fire up Django Admin on localhost:8000/admin/ and this is what you get:
 
-<div style="max-width: 100%; margin-left: auto; margin-right: auto">
-    <img src="/djongo/images/admin.jpg" alt="Django Admin">
-</div>
+
+![Django Admin](/djongo/assets/images/admin.jpg)
+
 
 ### Querying Embedded fields
 

@@ -1,4 +1,8 @@
-# Integrating Django with MongoDB
+---
+title: Integrating Django with MongoDB
+permalink: /integrating-django-with-mongodb/
+---
+
 
 This document is a tutorial on how to integrate MongoDB with Django with focus on Djongo. It describes the Django ORM internal implementation that is not covered by the [Django documentation](https://docs.djangoproject.com/en/dev/). If you have not yet checked out the [introduction to Djongo](https://nesdis.github.io/djongo/), be sure to do so! 
 
@@ -65,7 +69,7 @@ You can manually create the `__schema__` collection in your existing DB and add 
 The Django ORM can be broadly thought of as multiple Abstraction Layers stacked on top of each other.
 
 <div style="max-width: 150px; margin-left: auto; margin-right: auto">
-    <img src="/djongo/images/layers.svg" alt="Abstraction Layers">
+    <img src="/djongo/assets/images/layers.svg" alt="Abstraction Layers">
 </div>
 
 
@@ -93,7 +97,7 @@ The Database only accepts SQL query string specific to its type.
 Object Document Mapping (ODM) is the Object Relational Mapping (ORM) for non-relational document oriented databases (like MongoDB). In an ODM, python objects (or group of them) are stored as documents instead of tables. Implementing an ODM for Django would entail rewriting several Django modules.
 
 <div style="max-width: 400px; margin-left: auto; margin-right: auto">
-    <img src="/djongo/images/orm2odm.svg" alt="Abstraction Layers">
+    <img src="/djongo/assets/images/orm2odm.svg" alt="Abstraction Layers">
 </div>
 
 #### Django-nonrel
@@ -109,7 +113,7 @@ Object Document Mapping (ODM) is the Object Relational Mapping (ORM) for non-rel
 A different approach is to translate Django SQL query syntax into pymongo commands.
 
  <div style="max-width: 400px; margin-left: auto; margin-right: auto">
-    <img src="/djongo/images/sql2mongodb.svg" alt="Abstraction Layers">
+    <img src="/djongo/assets/images/sql2mongodb.svg" alt="Abstraction Layers">
 </div>
 
 This has several advantages
