@@ -7,7 +7,7 @@ minimal_mistakes_skin    : "default" # "air", "aqua", "contrast", "dark", "dirt"
 # Site Settings
 locale                   : "en-US"
 title                    : "Djongo"
-title_separator          : "|"
+title_separator          : "-"
 name                     : "Nesdis"
 description              : "Djongo is specifically meant to be used with the original Django ORM and MongoDB"
 url                      : "https://nesdis.github.io"

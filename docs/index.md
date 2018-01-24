@@ -33,7 +33,7 @@ Use MongoDB as a backend database for your Django project, without changing the 
       inner_qs = Blog.objects.filter(name__contains='Ch').values('name')
       entries = Entry.objects.filter(blog__name__in=inner_qs)
       ```
-     MongoDB 3.6 or higher is required.
+   MongoDB 3.6 or higher is required.
 
 
 ## How it works
@@ -60,7 +60,7 @@ Djongo connector for MongoDB ensures that you:
  
 Refer to [Integrating Django with MongoDB](/djongo/integrating-django-with-mongodb/) for the detailed reference.
 
-## Use the Admin GUI to add embedded documents
+## Use the Admin app to add documents
 
 Let’s say you want to create a blogging platform using Django with MongoDB as your backend.
 In your Blog `app/models.py` file define the `BlogContent` model:
