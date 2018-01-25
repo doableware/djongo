@@ -12,7 +12,7 @@ punchline:
 feature_row:
   - image_path: /assets/images/feature-admin-mongo.jpg
     alt: "Admin MongoDB"
-    title: "Use Django admin to access MongoDB"
+    title: "Use Django Admin to access MongoDB"
     excerpt: "Use the Django Admin app to insert, modify and delete documents in MongoDB."
   
   - image_path: /assets/images/djongo-symbol.jpg

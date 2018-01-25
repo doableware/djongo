@@ -2,6 +2,8 @@
 main:
    - title: "Get Started"
      url: /get-started/
+   - title: "API Reference"
+     url: /api-reference/
   # - title: "About"
   #   url: https://mmistakes.github.io/minimal-mistakes/about/
   # - title: "Sample Posts"
@@ -15,10 +17,12 @@ docs:
   - title: "Get started"
     url: /get-started/
   - title: "Integrating Django with MongoDB"
-    url: /integrating-django-with-mongodb
+    url: /integrating-django-with-mongodb/
   - title: "Using Django with MongoDB data fields"
-    url: /using-django-with-mongodb-data-fields
+    url: /using-django-with-mongodb-data-fields/
   - title: "Djongo Design documentation"
-    url: /django-mongodb-connector-design-document
+    url: /django-mongodb-connector-design-document/
   - title: "Roadmap"
-    url: /roadmap
+    url: /roadmap/
+  - title: "API Reference"
+    url: /api-reference/

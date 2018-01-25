@@ -40,7 +40,7 @@ As there is no concept of AUTOINCREMENT fields in MongoDB, internally Djongo cre
     }
 }
 ```
-Every collection in the DB that has a autoincrement field has an entry in the schema collection. Running `manage.py migrate` automatically creates these entries. There are 3 ways to use Djongo with an existing DB
+Every collection in the DB that has an autoincrement field has an entry in the schema collection. Running `manage.py migrate` automatically creates these entries. There are 3 ways to use Djongo with an existing DB
 
 ### Zero risk
 
