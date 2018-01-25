@@ -13,7 +13,7 @@ main:
 
 docs:
   - title: "Get started"
-    url: /
+    url: /get-started/
   - title: "Integrating Django with MongoDB"
     url: /integrating-django-with-mongodb
   - title: "Using Django with MongoDB data fields"
