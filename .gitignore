@@ -9,8 +9,9 @@ docs/_includes
 docs/_layouts
 docs/_sass
 docs/_site
-docs/assets/css
 docs/assets/js
 
 Gemfile.lock
 minimal-mistakes
+
+!/docs/_includes/footer.html
