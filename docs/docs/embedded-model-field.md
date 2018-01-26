@@ -32,51 +32,52 @@ Argument | Type | Description
 ### Example
 
 ```python
-class BlogContentForm(forms.ModelForm):
+from djongo import models
+from djongo.models import forms
+
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.TextField()
+
     class Meta:
-        model = BlogContent
+        abstract = True
+
+class BlogForm(forms.ModelForm):
+    class Meta:
+        model = Blog
         fields = (
             'comment', 'author'
         )
 
 
-class BlogContent(models.Model):
-    comment = models.CharField(max_length=100)
-    author = models.CharField(max_length=100)
-    class Meta:
-        abstract = True
-        
-
-class BlogPost(models.Model):
-    h1 = models.CharField(max_length=100)
-    content = models.EmbeddedModelField(
-        model_container=BlogContent,
-        model_form_class=BlogContentForm
+class Entry(models.Model):
+    blog = models.EmbeddedModelField(
+        model_container=Blog,
+        model_form_class=BlogForm
     )
     
+    headline = models.CharField(max_length=255)    
     objects = models.DjongoManager()
 ```
 
 ## Embedded Form
 
-While creating a Form from [the ModelForm](https://docs.djangoproject.com/en/dev/topics/forms/modelforms/), the embedded forms **get automatically generated** if the Model contains an embedded model inside it.
-
-Multiple embedded forms get automatically generated when the Model contains an array of embedded models.
+While creating a Form from [the ModelForm](https://docs.djangoproject.com/en/dev/topics/forms/modelforms/), the embedded forms **get automatically generated** if the Model contains an embedded model inside it. Multiple embedded forms get automatically generated when the Model contains an array of embedded models.
 
 ## Querying Embedded fields
 
-In the above example to query all BlogPost with content made by authors whose name startswith 'Paul'  use the following query:
+In the above example to query all BlogPost with content made by authors whose name startswith *Beatles*  use the following query:
 
 ```python
-entries = BlogPost.objects.filter(content__startswith={'author': 'Paul'})
+entries = Entry.objects.filter(blog__startswith={'name': 'Beatles'})
 ```
 
 Internally Djongo converts this query (for BlogPost collection) to the form:
 
 ```python
 filter = {
-    'content.author': {
-        '$regex': '^Paul.*$'
+    'blog.name': {
+        '$regex': '^Beatles.*$'
     }
 }
 ```

@@ -32,26 +32,47 @@ Argument | Type | Description
 ### Example
 
 ```python
-class BlogContentForm(forms.ModelForm):
+from djongo import models
+from djongo.models import forms
+
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.TextField()
+
     class Meta:
-        model = BlogContent
+        abstract = True
+
+class BlogForm(forms.ModelForm):
+    class Meta:
+        model = Blog
         fields = (
             'comment', 'author'
         )
 
-
-class BlogContent(models.Model):
-    comment = models.CharField(max_length=100)
-    author = models.CharField(max_length=100)
+class Author(models.Model):
+    name = models.CharField(max_length=200)
+    email = models.EmailField()
+    
     class Meta:
         abstract = True
+
+class AuthorForm(forms.ModelForm):
+    class Meta:
+        model = Blog
+        fields = (
+            'name', 'email'
+        )
         
-        
-class BlogPost(models.Model):
-    h1 = models.CharField(max_length=100)
-    content = models.ArrayModelField(
-        model_container=BlogContent,
-        model_form_class=BlogContentForm
+class Entry(models.Model):
+    blog = models.EmbeddedModelField(
+        model_container=Blog,
+        model_form_class=BlogForm
+    )
+    
+    headline = models.CharField(max_length=255)    
+    authors = models.ArrayModelField(
+        model_container=Author,
+        model_form_class=AuthorForm
     )
     
     objects = models.DjongoManager()
