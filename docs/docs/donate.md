@@ -4,7 +4,7 @@ permalink: /donate/
 toc: false
 ---
 
-If you feel Djongo is useful you can contribute to its success by donating to the developers working on it.
+If you feel Djongo is useful you can contribute to its success by donating to the developers working on it. At the time of payment checkout, **you don't need to** provide accurate personal information as it is not required. In the additional payment description box, do ensure to mention the issue or feature you want prioritized.   
 
 <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
     <input type="hidden" name="cmd" value="_s-xclick">
