@@ -2,26 +2,22 @@
 main:
    - title: "Get Started"
      url: /get-started/
-   - title: "API Reference"
-     url: /api-reference/
-  # - title: "About"
-  #   url: https://mmistakes.github.io/minimal-mistakes/about/
-  # - title: "Sample Posts"
-  #   url: /year-archive/
-  # - title: "Sample Collections"
-  #   url: /collection-archive/
-  # - title: "Sitemap"
-  #   url: /sitemap/
+   - title: "Get The Source"
+     url: https://github.com/nesdis/djongo/
+   - title: "Donate"
+     url: /donate/
 
 docs:
   - title: "Get started"
     url: /get-started/
-  - title: "How To"
+
+  - title: "Tutorial"
     children:
       - title: "Migrate existing MongoDB data"
         url: /integrating-django-with-mongodb/
       - title: "Using Django with MongoDB data fields"
         url: /using-django-with-mongodb-data-fields/
+
   - title: "API Reference"
     children:
       - title: "Database configuration"
@@ -30,11 +26,12 @@ docs:
         url: /embedded-model-field/
       - title: "Array Model Field"
         url: /array-model-field/
+
   - title: "Other resources"
     children:
       - title: "Django ORM internals"
         url: /django-orm-internals/
-      - title: "Djongo Design documentation"
+      - title: "Djongo design documentation"
         url: /django-mongodb-connector-design-document/
       - title: "Roadmap"
         url: /roadmap/
