@@ -118,10 +118,10 @@ That’s it you are set! Fire up Django Admin on localhost:8000/admin/ and this 
 
 ### Querying Embedded fields
 
-In the above example to query all Entries with Blogs which have names that start with 'Paul', use the following query:
+In the above example to query all Entries with Blogs which have names that start with *Beatles*, use the following query:
 
 ```python
-entries = Entry.objects.filter(blog__startswith={'name': 'Paul'})
+entries = Entry.objects.filter(blog__startswith={'name': 'Beatles'})
 ```
 
 Refer to [Using Django with MongoDB data fields](/djongo/using-django-with-mongodb-data-fields/) for more details.
