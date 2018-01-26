@@ -8,7 +8,7 @@ Django Admin is a powerful tool for managing data used in your app. If you are u
 
 The Django admin application can use your models to automatically build a site area that you can use to create, view, update, and delete records. This can save you a lot of time during development, making it very easy to test your models and get a feel for whether you have the right data. Most of you already know about Django Admin, but to explain how it is used with Djongo, I will start with a simple example.
 
-First we define our basic models. In this article, I will use the same models used in the official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/). The documentation talks about 3 models that interact with each other: **Blog, Author and Entry**. Some of the fields from the models have been omitted to make the example clearer.
+First we define our basic models. In all tutorials, I will use the same models used in the official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/). The documentation talks about 3 models that interact with each other: **Blog, Author and Entry**. Some fields from the original models have been omitted to make the example clearer.
 
 ```python
 from djongo import models
@@ -73,7 +73,7 @@ Next, to retrieve all entries related to the Beatles blog, follow it up with:
 entries = Entry.objects.filter(blog_id=blog.id)
 ```
 
-While it is alright to obtain entries in this fashion, you end up **making 2 trips** to the database. If you are using a SQL based backend this is not the most efficient way. The number of trips can be reduced to one. Django makes the query more efficient:
+While it's ok to obtain entries in this fashion, you end up **making 2 trips** to the database. If you are using a SQL based backend this is not the most efficient way. The number of trips can be reduced to one. Django makes the query more efficient:
 
 ```python
 entries = Entry.objects.filter(blog__name='Beatles Blog')
@@ -106,7 +106,7 @@ I have inserted the `Blog` fields into the `Entry` model. With this new data mod
 entries = Entry.objects.filter(blog_name='Beatles Blog')
 ```
 
-There are no JOINs generated with this and queries will be much faster. I know what you are thinking though, aren't we duplicating data? Yes we are, but only if the backend database doesn’t use data compression.
+There are no JOINs generated with this and queries will be much faster. I know what you are thinking though, aren't we duplicating data? Yes we are, but only if the backend database doesn't use data compression.
 
 OK, so use compression to mitigate data duplication but take a look at our Entry model, it has 10 columns and is getting unmanageable.
 
@@ -191,24 +191,21 @@ admin.site.register(Entry)
 ```
 
 The number of fields in `Entry` model is reduce to 6. I fire up Django Admin to check what is up!
+ 
+![Django Admin](/djongo/assets/images/embedded-admin.png)
 
+<!--
 <div style="max-width: 100%; margin-left: auto; margin-right: auto">
     <img src="/djongo/assets/images/embedded-admin.png" alt="Django Admin">
 </div>
-
+-->
 
 Only the `Entry` and `Author` model are registered. I click on *Entrys Add* and get:
 
-<div style="max-width: 100%; margin-left: auto; margin-right: auto">
-    <img src="/djongo/assets/images/embedded-addentry.png" alt="Django Admin">
-</div>
+![Django Admin](/djongo/assets/images/embedded-nested.png)
 
-The `Name` and `Tagline` fields are neatly nested within Blog. `Pub date` `Mod date` `N pingbanks` and `Rating` are neatly nested within Meta data.
 
-<div style="max-width: 100%; margin-left: auto; margin-right: auto">
-    <img src="/djongo/assets/images/embedded-nested.png" alt="Django Admin">
-</div>
-
+> The `Name` and `Tagline` fields are neatly nested within Blog. `Pub date` `Mod date` `N pingbanks` and `Rating` are neatly nested within Meta data.
 
 When a user queries for a blog named ‘Beatles Blog’ the query for filtering an embedded model now changes to:
 

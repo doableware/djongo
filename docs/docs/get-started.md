@@ -63,14 +63,16 @@ Refer to [Integrating Django with MongoDB](/djongo/integrating-django-with-mongo
 ## Use the Admin app to add documents
 
 Let’s say you want to create a blogging platform using Django with MongoDB as your backend.
-In your Blog `app/models.py` file define the `BlogContent` model:
+In your Blog `app/models.py` file define the `Blog` model:
 
 ```python
 from djongo import models
 from djongo.models import forms
-class BlogContent(models.Model):
-    comment = models.CharField(max_length=100)
-    author = models.CharField(max_length=100)
+
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.TextField()
+
     class Meta:
         abstract = True
 ```
@@ -78,38 +80,48 @@ class BlogContent(models.Model):
 To access the model using Django Admin you will need a Form definition for the above model. Define it as below:
 
 ```python
-class BlogContentForm(forms.ModelForm):
+class BlogForm(forms.ModelForm):
 
     class Meta:
-        model = BlogContent
+        model = Blog
         fields = (
-            'comment', 'author'
+            'name', 'tagline'
         )
 ```
 
-Now ‘embed’ your `BlogContent` inside a `BlogPost` using the `EmbeddedModelField`:
+Now ‘embed’ your `Blog` inside a `Entry` using the `EmbeddedModelField`:
 
 ```python
-class BlogPost(models.Model):
-    h1 = models.CharField(max_length=100)
-    content = models.EmbeddedModelField(
-        model_container=BlogContent,
-        model_form_class=BlogContentForm
-    )   
+class Entry(models.Model):
+    blog = models.EmbeddedModelField(
+        model_container=Blog,
+        model_form_class=BlogForm
+    )
+    
+    headline = models.CharField(max_length=255)
+```
+
+Register your `Entry` in `admin.py`:
+
+```python
+from django.contrib import admin
+from .models import Entry
+
+admin.site.register(Entry)
 ```
 
 That’s it you are set! Fire up Django Admin on localhost:8000/admin/ and this is what you get:
 
 
-![Django Admin](/djongo/assets/images/admin.jpg)
+![Django Admin](/djongo/assets/images/admin.png)
 
 
 ### Querying Embedded fields
 
-In the above example to query all BlogPost with content made by authors whose name startswith 'Paul'  use the following query:
+In the above example to query all Entries with Blogs which have names that start with 'Paul', use the following query:
 
 ```python
-entries = BlogPost.objects.filter(content__startswith={'author': 'Paul'})
+entries = Entry.objects.filter(blog__startswith={'name': 'Paul'})
 ```
 
 Refer to [Using Django with MongoDB data fields](/djongo/using-django-with-mongodb-data-fields/) for more details.
@@ -118,15 +130,20 @@ Refer to [Using Django with MongoDB data fields](/djongo/using-django-with-mongo
  The Djongo Manager extends the  functionality of the usual [Django Manager](https://docs.djangoproject.com/en/dev/topics/db/managers/). Define your manager as Djongo Manager in the model.
 
  ```python
-class BlogPost(models.Model):
-    h1 = models.CharField(max_length=100)
+class Entry(models.Model):
+    blog = models.EmbeddedModelField(
+        model_container=Blog,
+        model_form_class=BlogForm
+    )
+    headline = models.CharField(max_length=255)
+    
     objects = models.DjongoManager()
 ```
 
 Use it like the usual Django manager:
 
 ```python
-post = BlogPost.objects.get(pk=p_key)
+post = Entry.objects.get(pk=p_key)
 ```
 
 Will [get a model object](https://docs.djangoproject.com/en/dev/topics/db/queries/#retrieving-a-single-object-with-get) having primary key `p_key`.
@@ -136,20 +153,15 @@ Will [get a model object](https://docs.djangoproject.com/en/dev/topics/db/querie
 MongoDB has powerful query syntax and `DjongoManager` lets you exploit it fully.
 
 ```python
-class BlogView(DetailView):
+class EntryView(DetailView):
 
     def get_object(self, queryset=None):
-        index = [i for i in BlogPost.objects.mongo_aggregate([
+        index = [i for i in Entry.objects.mongo_aggregate([
             {
                 '$match': {
-                    'title': self.kwargs['path']
+                    'headline': self.kwargs['path']
                 }
             },
-            {
-                '$project': {
-                    '_id': 0,
-                }
-            }
         ])]
 
         return index
@@ -164,8 +176,9 @@ Any questions, suggestions for improvements, issues regarding the usage or to co
 
 ## Contribute
  
- If you think djongo is useful, **please share it** with the world! Your endorsements and online reviews will help get more support for this project.
+If you think djongo is useful, **please share it** with the world! Your endorsements and online reviews will help get more support for this project.
   
- The [roadmap](https://nesdis.github.io/djongo/roadmap/) document contains a list of features that must be implemented in future versions of Djongo. You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](https://nesdis.github.io/djongo/django-mongodb-connector-design-document/) is implemented.
+The [roadmap](/djongo/roadmap/) document contains a list of features that must be implemented in future versions of Djongo. You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](/djongo/django-mongodb-connector-design-document/) is implemented.
  
+You can contribute to the continued development and success of Djongo by [making a donation].(/djongo/donate/)
 
