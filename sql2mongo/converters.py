@@ -4,10 +4,10 @@ from collections import OrderedDict
 from sqlparse import tokens, parse as sqlparse
 from sqlparse.sql import Identifier, IdentifierList, Parenthesis, Function, Comparison
 
-from sql2mongo import query
+from . import query
 
-from sql2mongo.operators import WhereOp
-from sql2mongo import SQLDecodeError, SQLToken
+from .operators import WhereOp
+from . import SQLDecodeError, SQLToken
 
 
 class Converter:
