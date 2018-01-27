@@ -20,8 +20,8 @@ from sqlparse.sql import (
     Where, Token,
     Statement)
 
-from sql2mongo import SQLDecodeError, SQLToken
-from sql2mongo.converters import (
+from . import SQLDecodeError, SQLToken
+from .converters import (
     ColumnSelectConverter, AggColumnSelectConverter, FromConverter, WhereConverter,
     AggWhereConverter, InnerJoinConverter, OuterJoinConverter, LimitConverter, AggLimitConverter, OrderConverter,
     SetConverter, AggOrderConverter, DistinctConverter, NestedInQueryConverter, GroupbyConverter)

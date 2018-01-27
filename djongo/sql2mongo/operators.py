@@ -5,8 +5,8 @@ from itertools import chain
 from sqlparse import tokens, parse as sqlparse
 from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier
 
-from sql2mongo import SQLDecodeError, SQLToken
-from sql2mongo import query
+from . import SQLDecodeError, SQLToken
+from . import query
 
 def re_index(value: str):
     match = re.match(r'%\(([0-9]+)\)s', value, flags=re.IGNORECASE)
