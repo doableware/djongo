@@ -43,19 +43,19 @@ class EAuthor(models.Model):
         return self.name
 
 class EEntry(models.Model):
-    blog = models.EmbeddedModelField(
-        model_container=EBlog,
-        model_form_class=BlogForm
-    )
-    meta_data = models.EmbeddedModelField(
-        model_container=MetaData,
-        model_form_class=MetaDataForm
-    )
+    # blog = models.EmbeddedModelField(
+    #     model_container=EBlog,
+    #     model_form_class=BlogForm
+    # )
+    # meta_data = models.EmbeddedModelField(
+    #     model_container=MetaData,
+    #     model_form_class=MetaDataForm
+    # )
 
     headline = models.CharField(max_length=255)
     body_text = models.TextField()
 
-    authors = models.ManyToManyField(EAuthor)
+    # authors = models.ManyToManyField(EAuthor)
     n_comments = models.IntegerField()
 
     def __str__(self):

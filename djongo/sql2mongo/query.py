@@ -277,7 +277,7 @@ class UpdateQuery(Query):
         super().__init__(*args)
 
     def count(self):
-        return self.result.modified_count
+        return self.result.matched_count
 
     def parse(self):
         db = self.db_ref
