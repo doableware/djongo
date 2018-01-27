@@ -11,4 +11,3 @@ djongo\introspection.py
 djongo\models.py
 djongo\operations.py
 djongo\schema.py
-djongo\sql2mongo.py

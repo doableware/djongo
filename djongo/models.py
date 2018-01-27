@@ -342,6 +342,9 @@ class EmbeddedModelField(Field):
 
     def pre_save(self, model_instance, add):
         value = getattr(model_instance, self.attname)
+        if isinstance(value, ModelSubterfuge):
+            return value
+
         subterfuge = ModelSubterfuge(value)
         setattr(model_instance, self.attname, subterfuge)
         return subterfuge
