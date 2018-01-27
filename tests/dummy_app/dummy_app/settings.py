@@ -29,7 +29,7 @@ ALLOWED_HOSTS = ['localhost']
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.djongo',
+        'ENGINE': 'djongo',
         # 'ENGINE': 'django.db.backends.sqlite3',
         'NAME': 'djongo-test',
         'USER': 'user',
