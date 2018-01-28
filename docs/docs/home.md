@@ -10,7 +10,7 @@ header:
 
 punchline:
   - excerpt: Use MongoDB as the backend for your Django project, without changing the Django ORM.
-  
+
 feature_row:
   - image_path: /assets/images/feature-admin-mongo.jpg
     alt: "Admin MongoDB"
