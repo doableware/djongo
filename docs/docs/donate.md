@@ -4,11 +4,11 @@ permalink: /donate/
 toc: false
 ---
 
-**Thank you** for donating. You belong to the **top 1% of the world** community responsible for fostering open source innovation! We gratefully appreciate your contribution. 
+**Thank you** for donating. You belong to the **top 1% of the world** community responsible for fostering open source innovation! We gratefully accept your contribution. 
 
 
 * At the time of payment checkout, **you don't need to** provide accurate personal information as we don't store it.
-* In the additional payment description box, do ensure to mention the issue or feature you want prioritized.   
+* In the additional payment description box, do ensure to mention the issue or feature you want prioritized.    
 
 <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
     <input type="hidden" name="cmd" value="_s-xclick">
