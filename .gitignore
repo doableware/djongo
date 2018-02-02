@@ -15,3 +15,4 @@ Gemfile.lock
 minimal-mistakes
 
 !/docs/_includes/footer.html
+!/docs/_includes/masthead.html
