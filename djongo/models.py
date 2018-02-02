@@ -251,7 +251,7 @@ class ArrayFormBoundField(forms.BoundField):
                                      prefix=name)
 
     def __getitem__(self, idx):
-        if not isinstance(idx, int):
+        if not isinstance(idx, (int, slice)):
             raise TypeError
         return self.form_set[idx]
 

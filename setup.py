@@ -56,7 +56,7 @@ Important links
 setup(
     name='djongo',
     version=__import__('djongo').__version__,
-    packages=['djongo'],
+    packages=['djongo', 'djongo.sql2mongo'],
     url='https://nesdis.github.io/djongo/',
     license='BSD',
     author='nesdis',

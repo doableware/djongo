@@ -12,6 +12,11 @@ class SQLDecodeError(ValueError):
         self.err_sql = err_sql
 
 
+class MigrationError(Exception):
+
+    def __init__(self, field):
+        self.field = field
+
 class SQLToken:
 
     def __init__(self, token: Token, alias2op=None):
