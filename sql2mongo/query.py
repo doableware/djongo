@@ -20,7 +20,7 @@ from sqlparse.sql import (
     Where, Token,
     Statement)
 
-from . import SQLDecodeError, SQLToken
+from . import SQLDecodeError, SQLToken, MigrationError
 from .converters import (
     ColumnSelectConverter, AggColumnSelectConverter, FromConverter, WhereConverter,
     AggWhereConverter, InnerJoinConverter, OuterJoinConverter, LimitConverter, AggLimitConverter, OrderConverter,
@@ -257,12 +257,12 @@ class SelectQuery(Query):
                 try:
                     ret.append(doc[selected.column])
                 except KeyError:
-                    ret.append(None)  # This is a silent failure
+                    raise MigrationError(selected.column)
             else:
                 try:
                     ret.append(doc[selected.table][selected.column])
                 except KeyError:
-                    ret.append(None)  # This is a silent failure.
+                    raise MigrationError(selected.column)
 
         return tuple(ret)
 
