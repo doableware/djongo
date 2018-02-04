@@ -46,6 +46,9 @@ class ArrayAuthor(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        abstract = True
+
 
 class AuthorForm(forms.ModelForm):
 
