@@ -1,7 +1,7 @@
 from django.db.models import Count
 
 from . import TestCase
-from dummy.basic_models import Blog, Entry, Author
+from dummy.basic_reference_models import ReferenceEntry, ReferenceAuthor
 from django.contrib.auth.models import User
 
 
