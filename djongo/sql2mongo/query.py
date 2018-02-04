@@ -344,18 +344,22 @@ class InsertQuery(Query):
         else:
             raise SQLDecodeError
 
+        nextid, coltok = sm.token_next(nextid)
         nextid, nexttok = sm.token_next(nextid)
-
-        if isinstance(nexttok[1], IdentifierList):
-            for an_id in nexttok[1].get_identifiers():
-                sql = SQLToken(an_id, None)
-                insert[sql.column] = self.params.pop(0)
-        else:
-            sql = SQLToken(nexttok[1], None)
-            insert[sql.column] = self.params.pop(0)
-
-        if self.params:
+        if not nexttok.match(tokens.Keyword, 'VALUES'):
             raise SQLDecodeError
+
+        nextid, placeholder = sm.token_next(nextid)
+
+
+        if isinstance(coltok[1], IdentifierList):
+            for an_id, i in zip(coltok[1].get_identifiers(), SQLToken(placeholder)):
+                sql = SQLToken(an_id, None)
+                insert[sql.column] = self.params[i] if i is not None else None
+        else:
+            sql = SQLToken(coltok[1], None)
+            i = next(iter(SQLToken(placeholder)))
+            insert[sql.column] = self.params[i] if i is not None else None
 
         result = db[collection].insert_one(insert)
         if not auto_field_id:
