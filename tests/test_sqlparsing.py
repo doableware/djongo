@@ -6,7 +6,7 @@ from logging import getLogger, DEBUG, StreamHandler
 from pymongo.cursor import Cursor
 from pymongo.command_cursor import CommandCursor
 
-from sql2mongo.query import Result
+from djongo.sql2mongo.query import Result
 
 'Django SQL:'
 
@@ -548,9 +548,11 @@ class TestParse(TestCase):
         self.aggregate_mock(pipeline, return_value, ans)
 
         'SELECT "viewflow_process"."id", "viewflow_process"."flow_class", "viewflow_process"."status", "viewflow_process"."created", "viewflow_process"."finished" FROM "viewflow_process" WHERE "viewflow_process"."id" IN (SELECT U0."process_id" AS Col1 FROM "viewflow_task" U0 INNER JOIN "viewflow_process" U1 ON (U0."process_id" = U1."id") WHERE (U1."flow_class" IN (%(0)s, %(1)s, %(2)s) AND U0."owner_id" = %(3)s AND U0."status" = %(4)s)) ORDER BY "viewflow_process"."created" DESC'
+        'SELECT "viewflow_process"."id", "viewflow_process"."flow_class", "viewflow_process"."status", "viewflow_process"."created", "viewflow_process"."finished" FROM "viewflow_process" WHERE "viewflow_process"."id" IN (SELECT U0."process_id" AS Col1 FROM "viewflow_task" U0 INNER JOIN "viewflow_process" U1 ON (U0."process_id" = U1."id") WHERE (U1."flow_class" IN (%(0)s, %(1)s, %(2)s) AND U0."owner_id" = %(3)s AND U0."status" = %(4)s)) ORDER BY "viewflow_process"."created" DESC'
 
         self.sql = f'SELECT {t1c1}, {t1c2} FROM "table1" WHERE {t1c1} IN (SELECT U0."col1" AS Col1 FROM "table2" U0 INNER JOIN "table1" U1 ON (U0."col1" = U1."col1") WHERE (U1."col2" IN (%s, %s))) ORDER BY {t1c2} DESC'
-        self.params = [1,2]
+        self.sql = 'SELECT "viewflow_process"."id", "viewflow_process"."flow_class", "viewflow_process"."status", "viewflow_process"."created", "viewflow_process"."finished" FROM "viewflow_process" WHERE "viewflow_process"."id" IN (SELECT U0."process_id" AS Col1 FROM "viewflow_task" U0 INNER JOIN "viewflow_process" U1 ON (U0."process_id" = U1."id") WHERE (U1."flow_class" IN (%s, %s, %s) AND U0."owner_id" = %s AND U0."status" = %s)) ORDER BY "viewflow_process"."created" DESC'
+        self.params = [1,2,3,4,5]
         inner_pipeline = [
             {
                 '$match': {

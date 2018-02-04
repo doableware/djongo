@@ -357,7 +357,7 @@ class NestedInQueryConverter(Converter):
         super().__init__(*args)
 
     def parse(self):
-        from sql2mongo.query import SelectQuery
+        from .query import SelectQuery
 
         self._in_query = SelectQuery(
             self.query.db_ref,
