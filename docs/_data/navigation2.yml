@@ -24,6 +24,8 @@ docs:
         url: /using-django-with-mongodb-objectid/
       - title: "Creating capped models"
         url: /creating-django-capped-models-using-mongodb/
+      - title: "Overcoming Django Migrations"
+        url: /overcoming-django-migrations/
 
   - title: "API Reference"
     children:

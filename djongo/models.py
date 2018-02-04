@@ -346,7 +346,7 @@ class EmbeddedModelField(Field):
             return value
 
         subterfuge = ModelSubterfuge(value)
-        setattr(model_instance, self.attname, subterfuge)
+        # setattr(model_instance, self.attname, subterfuge)
         return subterfuge
 
     def get_db_prep_value(self, value, connection=None, prepared=False):
