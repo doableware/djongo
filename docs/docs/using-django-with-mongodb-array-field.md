@@ -40,7 +40,7 @@ class Entry(models.Model):
 
 The `blog` `ForeignKey` of the `Entry` model was optimized in the [other tutorial](/djongo/integrating-django-with-mongodb/), here we optimize the `authors` `ManyToManyField`. A `ManyToManyField` defines a relation wherein an entry is made by several authors. It also defines a relation wherein an author could have made several entries. Django handles this internally by **creating another table**, the `entry_authors` table which contains different mappings between  `entry_id` and `author_id`. 
 
-Fetching an entry will require 2 SQL queries, with the second query being an expensive JOIN query across `entry_authors` and `authors`. The table schema described above will work perfectly well on MongoDB with Djongo as the connector. MongoDB however offers much more powerful ways to make such queries. These queries come at the cost of higher disk space utilization. As a designer, using Djongo you have the freedom to continue with the above schema or define a schema having a trade off on disk space for higher performance.  
+Fetching an entry will require 2 SQL queries, with the second query being an expensive JOIN query across `entry_authors` and `authors`. The Model described above will work perfectly well on MongoDB as well when you use Djongo as the connector. MongoDB however offers much more powerful ways to make such queries. These queries come at the cost of higher disk space utilization. As a designer, using Djongo you have the freedom to continue with the above schema or define a schema requiring a trade off on disk space for higher performance.  
 
 ## Array Model Field
 
