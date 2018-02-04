@@ -492,3 +492,7 @@ class EmbeddedFormWidget(forms.MultiWidget):
             )
             for i, widget in enumerate(self.widgets)
         )
+
+
+class ReferenceField(ForeignKey):
+    pass

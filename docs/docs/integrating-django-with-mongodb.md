@@ -3,27 +3,26 @@ title: Integrating Django with MongoDB
 permalink: /integrating-django-with-mongodb/
 ---
 
+## A quick sanity test
 
-This document is a tutorial on how to integrate MongoDB with Django with focus on Djongo. It describes the Django ORM internal implementation that is not covered by the [Django documentation](https://docs.djangoproject.com/en/dev/). If you have not yet checked out the [introduction to Djongo](https://nesdis.github.io/djongo/), be sure to do so! 
+While migrating Django to MongoDB for the **very first** time it is **highly recommended** to start on a new DB namespace, eg,. `myapp-djongo-db`. Use this empty DB in your `settings.py` file. 
 
-There are different ways to integrate MongoDB with Django, each with positives and negatives. Insights into the Django ORM design will help understand ways to integrate MongoDB and Django.     
+1. Into `settings.py` file of your project, add:
 
-The following options are supported in `settings.py`:
+      ```python
+      DATABASES = {
+          'default': {
+              'ENGINE': 'djongo',
+              'NAME': 'myapp-djongo-db',
+          }
+      }
+      ```
+  
+2. Run `manage.py makemigrations <myapp>` followed by `manage.py migrate`.
+3.  Open up Django Admin, you should find all the models defined in your app showing up in Django Admin (with no data!).
 
-```python
-    DATABASES = {
-        'default': {
-            'ENGINE': 'djongo',
-            'NAME': 'your-db-name',
-            'HOST': 'host-name or ip address',
-            'PORT': port_number,
-            'USER': 'db-username',
-            'PASSWORD': 'password',
-            'AUTH_SOURCE': 'db-name',
-            'AUTH_MECHANISM': 'SCRAM-SHA-1',
-        }
-    }
-```
+You can continue to work with this newly created DB by inserting data into the models from the admin. Continue reading further if you want to use Djongo with an existing MongoDB database.
+
 ## Using Djongo with an existing MongoDB database
 
 As there is no concept of AUTOINCREMENT fields in MongoDB, internally Djongo creates a `__schema__` collection that tracks all auto increment fields in different tables. The `__schema__` collection has the form:
@@ -64,3 +63,49 @@ If you get step 5 wrong you may lose some data. You can delete the DB created in
 
 You can manually create the `__schema__` collection in your existing DB and add entries for each of the models your app uses in the format described above. This is quite tiresome and prone to manual errors.
 
+## Database configuration
+
+The following options are supported in `settings.py`:
+
+```python
+    DATABASES = {
+        'default': {
+            'ENGINE': 'djongo',
+            'NAME': 'your-db-name',
+            'HOST': 'host-name or ip address',
+            'PORT': port_number,
+            'USER': 'db-username',
+            'PASSWORD': 'password',
+            'AUTH_SOURCE': 'db-name',
+            'AUTH_MECHANISM': 'SCRAM-SHA-1',
+            'ENFORCE_SCHEMA': True
+        }
+    }
+```
+
+All options except `ENGINE` and `ENFORCE_SCHEMA` are the same those listed in the [pymongo documentation](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient).
+
+### Enforce schema
+
+MongoDB is *schemaless*, which means that no schema is enforced by the database — we may add and remove fields however we want and MongoDB won’t complain. This makes life a lot easier in many regards, especially when there is a change to the data model. Take for example the `Blog` Model
+
+```python
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.TextField()
+```
+
+You can save several entries to this Model into the DB and then edit your Model sometime later like so:
+
+```python
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.TextField()
+    description = models.TextField()
+```
+
+You have just added a new field. The new entries can be saved into MongoDB **without running any migrations**. All entries in the Blog collection henceforth will contain 3 fields. This works fine if you know what you are doing. Consider a query that results in retrieving entries belonging to both the 'older' model with just 2 fields and the current model. What will the value of `description` be? 
+
+While connecting to Djongo you can set `ENFORCE_SCHEMA: True`. For the case described above, when field values are missing from the retrieved documents, Djongo will raise a `MigrationError` exception. You can then check what went wrong. Enforce schemas for our documents can help to iron out bugs involving incorrect types or missing fields.
+
+`ENFORCE_SCHEMA: False` works by silently setting the missing fields with the value `None`. If your app is programmed to expect this (which means it's not a bug) you can get away by not calling any migrations.

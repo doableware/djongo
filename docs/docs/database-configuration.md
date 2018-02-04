@@ -16,6 +16,7 @@ The following options are supported in `settings.py`:
             'PASSWORD': 'password',
             'AUTH_SOURCE': 'db-name',
             'AUTH_MECHANISM': 'SCRAM-SHA-1',
+            'ENFORCE_SCHEMA': True
         }
     }
 ```
