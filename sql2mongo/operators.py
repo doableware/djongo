@@ -95,7 +95,7 @@ class _InNotInOp(_InNotInLikeOp):
 
         # Check for nested
         if token[1].ttype == tokens.DML:
-            from sql2mongo.converters import NestedInQueryConverter
+            from .converters import NestedInQueryConverter
 
             self.query.nested_query = NestedInQueryConverter(token, self.query, 0)
             return
