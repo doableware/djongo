@@ -65,7 +65,7 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
  
  If you think djongo is useful, **please share it** with the world! Your endorsements and online reviews will help get more support for this project.
   
- The [roadmap](https://nesdis.github.io/djongo/roadmap/) document contains a list of features that must be implemented in future versions of Djongo. You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](https://nesdis.github.io/djongo/django-mongodb-connector-design-document/) is implemented.
+ Take a look at the [Enhancements project](https://github.com/nesdis/djongo/projects/1) that contains a list of features that must be implemented in future versions of Djongo. You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](https://nesdis.github.io/djongo/django-mongodb-connector-design-document/) is implemented.
  
  Add a star, show some love :) 
  
@@ -73,7 +73,9 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
 
 [Rudolfce](https://github.com/rudolfce)
 
-## Questions
- 
-   Suggestions for improvements or issues, please raise a git-hub issue ticket. For questions and clarifications regarding usage, please put it up on stackoverflow instead. 
+## Questions and Discussion
+
+ * [Djongo groups](https://groups.google.com/d/forum/djongo) is where you can suggest improvements and discuss topics pertaining to Django and MongoDB.
+ * Issues, where things are not working as expected, please raise a git-hub issue ticket. 
+ * For questions and clarifications regarding usage, please put it up on stackoverflow instead. 
    
