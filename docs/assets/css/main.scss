@@ -9,9 +9,13 @@
 
 .page__hero--overlay .page__title, .page__hero--overlay .page__lead {
     color: white;
-   // text-shadow: None
 }
 
 .page__hero--overlay {
     background-position: right;
+}
+
+.heart {
+    padding-bottom: 0.15em;
+    width: $type-size-2 - 0.5em;
 }
