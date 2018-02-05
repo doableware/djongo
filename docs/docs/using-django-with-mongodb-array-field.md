@@ -153,7 +153,7 @@ entries = Entry.objects.filter(authors={'name.2': 'Paul'})
 Note: In MongoDB the first element in the array starts at index 0.
 
 
-## Reference field
+## Array Reference field
 
 The `ArrayModelField` stores the embedded models within a MongoDB array as embedded documents for each entry. If entries contain duplicate embedded documents, using the `ArrayModelField` would result in unnecessary disk utilization. Storing a reference to the embedded document instead of the entire document will save disk space.
 
@@ -198,5 +198,3 @@ class Entry(models.Model):
 
 `ArrayModelField` and `ArrayReferenceField` require all Models in the list to be of the same type. MongoDB allows the saving of arbitrary data inside it's embedded array. The `ListField` is useful in such cases. The list field cannot be represented in Django Admin though and can only be used in the python script.
 
-
--->
