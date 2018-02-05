@@ -11,7 +11,7 @@
               {% assign domain = site.url | append: site.baseurl %}
             {% endif %}
             <li class="masthead__menu-item">
-              <a href="{{ domain }}{{ link.url }}" {% if link.description %}title="{{ link.description }}"{% endif %}>{% if link.thumbnail %}<img src="{{ link.thumbnail }}" width=30em style="padding-bottom: 0.15em" >{% endif %}{{ link.title }}</a>
+              <a href="{{ domain }}{{ link.url }}" {% if link.description %}title="{{ link.description }}"{% endif %}>{% if link.thumbnail %}<img src="{{ link.thumbnail }}" class="heart">{% endif %}{{ link.title }}</a>
             </li>
           {% endfor %}
         </ul>

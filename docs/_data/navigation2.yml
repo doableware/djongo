@@ -22,9 +22,9 @@ docs:
         url: /using-django-with-mongodb-array-field/
       - title: "Using the ObjectID Field"
         url: /using-django-with-mongodb-objectid/
-      - title: "Creating capped models"
+      - title: "IMP Creating capped models"
         url: /creating-django-capped-models-using-mongodb/
-      - title: "Overcoming Django Migrations"
+      - title: "IMP Overcoming Django Migrations"
         url: /overcoming-django-migrations/
       - title: "Django Rest Framework and MongoDB"
         url: /overcoming-django-migrations/
