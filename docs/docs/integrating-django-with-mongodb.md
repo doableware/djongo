@@ -104,7 +104,7 @@ class Blog(models.Model):
     description = models.TextField()
 ```
 
-You have just added a new field. The new entries can be saved into MongoDB **without running any migrations**. All entries in the Blog collection henceforth will contain 3 fields. This works fine if you know what you are doing. Consider a query that results in retrieving entries belonging to both the 'older' model with just 2 fields and the current model. What will the value of `description` be? 
+You have just added a new field. The new entries can be saved into MongoDB **without running any migrations**. All entries in the Blog collection henceforth will contain 3 fields. This works fine if you know what you are doing. Consider a query that  retrieves entries belonging to both the 'older' model (with just 2 fields) and the current model. What will the value of `description` be? 
 
 While connecting to Djongo you can set `ENFORCE_SCHEMA: True`. For the case described above, when field values are missing from the retrieved documents, Djongo will raise a `MigrationError` exception. You can then check what went wrong. Enforce schemas for our documents can help to iron out bugs involving incorrect types or missing fields.
 

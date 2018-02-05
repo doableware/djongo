@@ -4,7 +4,7 @@ permalink: /donate/
 toc: false
 ---
 
-**Thank you** for donating. You belong to the **top 1% of the world** community responsible for fostering open source innovation! We gratefully accept your contribution. 
+You belong to the **top 1% of the world** community responsible for fostering open source innovation! We gratefully accept your contribution. 
 
 
 * At the time of payment checkout, **you don't need to** provide accurate personal information as we don't store it.

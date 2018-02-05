@@ -26,6 +26,8 @@ docs:
         url: /creating-django-capped-models-using-mongodb/
       - title: "Overcoming Django Migrations"
         url: /overcoming-django-migrations/
+      - title: "Django Rest Framework and MongoDB"
+        url: /overcoming-django-migrations/
 
   - title: "API Reference"
     children:
