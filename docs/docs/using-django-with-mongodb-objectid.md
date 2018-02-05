@@ -5,7 +5,7 @@ ready: false
 
 ---
 
-The official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/). exemplifies 3 models that interact with each other: **Blog, Author and Entry**. This tutorial will consider the same models.
+The official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/) exemplifies 3 models that interact with each other: **Blog, Author and Entry**. This tutorial will consider the same models.
 
 ```python
 from djongo import models

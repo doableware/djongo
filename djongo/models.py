@@ -494,5 +494,16 @@ class EmbeddedFormWidget(forms.MultiWidget):
         )
 
 
-class ReferenceField(ForeignKey):
+class ArrayReferenceField(ForeignKey):
+    """
+    When the entry gets saved, only a reference to the primary_key of the author model is saved in the array.
+    """
     pass
+
+
+class ListField(Field):
+    """
+    MongoDB allows the saving of arbitrary data inside it's embedded array. The `ListField` is useful in such cases.
+    """
+    pass
+

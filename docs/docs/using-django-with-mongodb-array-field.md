@@ -1,6 +1,6 @@
 ---
 title: Using Django with MongoDB Array Field
-permalink: "/using-django-with-mongodb-array-field/"
+permalink: /using-django-with-mongodb-array-field/
 ready: false
 ---
 
@@ -152,10 +152,51 @@ entries = Entry.objects.filter(authors={'name.2': 'Paul'})
 ```
 Note: In MongoDB the first element in the array starts at index 0.
 
-<!--
+
 ## Reference field
 
-Instead of using
+The `ArrayModelField` stores the embedded models within a MongoDB array as embedded documents for each entry. If entries contain duplicate embedded documents, using the `ArrayModelField` would result in unnecessary disk utilization. Storing a reference to the embedded document instead of the entire document will save disk space.
 
+In the example the `Entry` Model can be rewritten as follows:
+
+```python
+class Author(models.Model):
+    name = models.CharField(max_length=200)
+    email = models.EmailField()
+
+    def __str__(self):
+        return self.name
+        
+class Entry(models.Model):
+    blog = models.EmbeddedModelField(
+        model_container=Blog,
+        model_form_class=BlogForm
+    )
+    meta_data = models.EmbeddedModelField(
+        model_container=MetaData,
+        model_form_class=MetaDataForm
+    )
+
+    headline = models.CharField(max_length=255)
+    body_text = models.TextField()
+
+    authors = models.ArrayReferenceField(
+        to=Author,
+        on_delete=models.CASCADE,
+    )
+    n_comments = models.IntegerField()
+
+    def __str__(self):
+        return self.headline
+
+``` 
+**Notice** how the `Author` model is no longer set as `abstract`. This means a separate `author` collection will be created in the DB. Simply set the `authors` to a list containing several author instances. When the entry gets saved, only a reference to the primary_key of the author model is saved in the array. Upon retrieving an entry from the DB the corresponding authors are automatically looked up and the author list is populated.
+ 
+ The `ArrayReferenceField` behaves similar to `ArrayModelField`. However, underneath only references are being stored instead of complete embedded documents. Doing this however comes at the cost of performance as internally MongoDB is doing a lookup across two collections.  
+ 
 ## List field 
+
+`ArrayModelField` and `ArrayReferenceField` require all Models in the list to be of the same type. MongoDB allows the saving of arbitrary data inside it's embedded array. The `ListField` is useful in such cases. The list field cannot be represented in Django Admin though and can only be used in the python script.
+
+
 -->
