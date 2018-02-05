@@ -127,7 +127,7 @@ class Entry(models.Model):
 
 **Notice** how the `ManyToManyField` is now replaced by the `ArrayModelField`. To display the Array field in Django Admin, a `Form` for the field must be present. Since the array is made up of abstract `Author` models, the form can be easily created by using a `ModelForm`.  The `AuthorForm` defines `Author` as the model with `name` and `email` as the form fields.
 
-## Django Admin
+### Django Admin
 
 ![Array-model-field](/djongo/assets/images/array-model-field.png)
 
@@ -135,7 +135,7 @@ class Entry(models.Model):
 
 Retrieving an entry from the database will result in **no JOINS and only a single database lookup. It's super fast**   
 
-## Querying Array fields
+### Querying Array fields
 
 Djongo uses a mixture of Django query syntax and MongoDB query syntax. Consider a query to retrieve all entries made by the author *Paul*. Using `ManyToManyField` this requires 2 SQL queries. First selects the `id` for author Paul from the `author` table. Next, a JOIN with `entry_authors` and `entry` gives the corresponding entries. 
  
