@@ -1,6 +1,6 @@
 ---
 title: Creating Capped Models using MongoDB
-permalink: "/creating-django-capped-models-using-mongodb/"
+permalink: "/overcoming-django-migrations/"
 ready: false
 
 ---
