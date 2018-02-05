@@ -20,6 +20,8 @@ docs:
         url: /using-django-with-mongodb-data-fields/
       - title: "Array and List fields"
         url: /using-django-with-mongodb-array-field/
+      - title: "Creating capped models"
+        url: /creating-django-capped-models-using-mongodb/
 
   - title: "API Reference"
     children:
