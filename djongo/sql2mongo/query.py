@@ -253,16 +253,17 @@ class SelectQuery(Query):
             sql_tokens = self.selected_columns.sql_tokens
 
         for selected in sql_tokens:
+            selected_column = '_id' if selected.column == 'id' else selected.column
             if selected.table == self.left_table:
                 try:
-                    ret.append(doc[selected.column])
+                    ret.append(doc[selected_column])
                 except KeyError:
-                    raise MigrationError(selected.column)
+                    raise MigrationError(selected_column)
             else:
                 try:
-                    ret.append(doc[selected.table][selected.column])
+                    ret.append(doc[selected.table][selected_column])
                 except KeyError:
-                    raise MigrationError(selected.column)
+                    raise MigrationError(selected_column)
 
         return tuple(ret)
 
