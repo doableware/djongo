@@ -112,18 +112,18 @@ class ArrayModelField(Field):
 
         return name, path, args, kwargs
 
-    def get_db_prep_value(self, value, connection, prepared):
+    def get_db_prep_value(self, value, connection, prepared=False):
         if prepared:
             return value
 
         if not isinstance(value, list):
-            raise TypeError('Object must be of type list')
+            raise ValueError('Value must be a list')
 
         ret = []
         for a_mdl in value:
             mdl_ob = {}
             if not isinstance(a_mdl, Model):
-                raise TypeError('Array items must be of type Model')
+                raise ValueError('Array items must be Model instances')
             for fld in a_mdl._meta.get_fields():
                 if not useful_field(fld):
                     continue
@@ -356,7 +356,7 @@ class EmbeddedModelField(Field):
             value = value.subterfuge
 
         if not isinstance(value, Model):
-            raise TypeError('Object must be of type Model')
+            raise ValueError('Value must be instance of Model')
 
         mdl_ob = {}
         for fld in value._meta.get_fields():
@@ -498,12 +498,34 @@ class ArrayReferenceField(ForeignKey):
     """
     When the entry gets saved, only a reference to the primary_key of the author model is saved in the array.
     """
-    pass
+    def __set__(self, instance, value):
+        super().__set__(instance, value)
 
 
 class ListField(Field):
     """
     MongoDB allows the saving of arbitrary data inside it's embedded array. The `ListField` is useful in such cases.
     """
-    pass
 
+    def get_db_prep_value(self, value, connection, prepared=False):
+        if prepared:
+            return value
+
+        if not isinstance(value, list):
+            raise ValueError('Value must be a list')
+
+        return value
+
+
+class ObjectIdField(Field):
+    """
+    For every document inserted into a collection MongoDB internally creates an field.
+    The field can be referenced from within the Model as _id.
+    """
+    def __init__(self, *args, **kwargs):
+        id_field_args = {
+            'blank': True,
+            'primary_key': True
+        }
+        id_field_args.update(kwargs)
+        super().__init__(*args, **id_field_args)

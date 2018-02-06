@@ -3,7 +3,6 @@ title: Discussion Board
 permalink: "/discuss/"
 toc: false
 ---
-Google Groups Discussion Board:
 
 <iframe id="forum_embed"
   src="javascript:void(0)"

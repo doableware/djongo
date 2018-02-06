@@ -1,6 +1,6 @@
 ---
-title: Array ObjectID Field
-permalink: "/array-objectid-field/"
+title: List Field
+permalink: "/list-field/"
 ---
 
 

@@ -211,4 +211,17 @@ entries = Entry.objects.filter(blog={'name': 'Beatles Blog'})
 
 This query will return all entries having an embedded blog with the name ‘Beatles Blog’. **The query will hit the database just once and there are no JOINs involved. It’s super fast.**
 
+## ObjectId Field
 
+For every document inserted into a collection MongoDB internally creates an [ObjectID](https://docs.mongodb.com/manual/reference/method/ObjectId/) field with the name `_id`. The field can be referenced from within the Model:
+
+```python
+class Entry(models.Model):
+    _id = models.ObjectIdField()
+    blog = models.EmbeddedModelField(
+        model_container=Blog,
+        model_form_class=BlogForm
+    )
+```
+
+By default the `ObjectIdField` internally sets `primary_key` as `True`. Which means the Django generated `id` autoincrement field will no longer be generated. The Field internally sets `blank` as `True`. Which means, the ObjectID will be automatically generated in MongoDB upon a document insertion. Consider using the `ObjectIdField` in your models if you want to avoid calling Django migrations every time you create a new model.

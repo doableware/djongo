@@ -20,8 +20,6 @@ docs:
         url: /using-django-with-mongodb-data-fields/
       - title: "Array and List fields"
         url: /using-django-with-mongodb-array-field/
-      - title: "Using the ObjectID Field"
-        url: /using-django-with-mongodb-objectid/
       - title: "IMP Creating capped models"
         url: /creating-django-capped-models-using-mongodb/
       - title: "IMP Overcoming Django Migrations"
@@ -38,13 +36,13 @@ docs:
       - title: "Array Model Field"
         url: /array-model-field/
       - title: "List Field"
-        url: /list-field/
+        url: /other-fields/#ListField
       - title: "Dict Field"
         url: /dict-field/
       - title: "ObjectID Field"
-        url: /objectid-field/
-      - title: "Reference Field"
-        url: /reference-field/
+        url: /other-fields/#ObjectIdField
+      - title: "Array Reference Field"
+        url: /other-fields/#ArrayReferenceField
 
   - title: "Other resources"
     children:
