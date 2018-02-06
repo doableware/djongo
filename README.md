@@ -75,7 +75,7 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
 
 ## Questions and Discussion
 
- * [Djongo groups](https://groups.google.com/d/forum/djongo) is where you can suggest improvements and discuss topics pertaining to Django and MongoDB.
+ * [Djongo groups](https://groups.google.com/d/forum/djongo) is where you can watch for new release announcements, suggest improvements, and discuss topics pertaining to Django and MongoDB.
  * Issues, where things are not working as expected, please raise a git-hub issue ticket. 
  * For questions and clarifications regarding usage, please put it up on stackoverflow instead. 
    
