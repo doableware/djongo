@@ -224,4 +224,6 @@ class Entry(models.Model):
     )
 ```
 
-By default the `ObjectIdField` internally sets `primary_key` as `True`. Which means the Django generated `id` autoincrement field will no longer be generated. The Field internally sets `blank` as `True`. Which means, the ObjectID will be automatically generated in MongoDB upon a document insertion. Consider using the `ObjectIdField` in your models if you want to avoid calling Django migrations every time you create a new model.
+By default the `ObjectIdField` internally sets `primary_key` as `True`. Which means the Django generated `id` autoincrement field will no longer be generated. The Field internally sets `blank` as `True`. Which means, the ObjectID will be automatically generated in MongoDB upon a document insertion. 
+
+Consider using the `ObjectIdField` in your models if you want to avoid calling Django migrations every time you create a new model.
