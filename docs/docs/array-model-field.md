@@ -1,13 +1,7 @@
 ---
-title: Array Model Field
+title: Array Model Field Reference
 permalink: "/array-model-field/"
 ---
-
-
-## Embedded Array
-
-With MongoDB there can be an [array](https://docs.mongodb.com/manual/core/document/#arrays) of embedded documents inside the parent document. You can create an **embed array/list of models inside the parent model** and store it directly into MongoDB.
-
 
 ## ArrayModelField
 
@@ -19,6 +13,7 @@ class ArrayModelField(Field):
                  model_form_kwargs_l: dict=None,
                  *args, **kwargs):
 ```
+With MongoDB there can be an [array](https://docs.mongodb.com/manual/core/document/#arrays) of embedded documents inside the parent document. You can create an **embed array/list of models inside the parent model** and store it directly into MongoDB.
 
 ### Parameters
 

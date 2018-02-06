@@ -69,7 +69,7 @@ class ReferenceEntry(models.Model):
     headline = models.CharField(max_length=255)
     # body_text = models.TextField()
 
-    authors = models.ReferenceField(ReferenceAuthor, on_delete=models.CASCADE)
+    authors = models.ArrayReferenceField(ReferenceAuthor, on_delete=models.CASCADE)
     # n_comments = models.IntegerField()
 
     def __str__(self):

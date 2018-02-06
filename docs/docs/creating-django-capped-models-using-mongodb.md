@@ -6,7 +6,7 @@ ready: false
 
 [Capped collections][capped] are fixed-size collections that support high-throughput operations that insert and retrieve documents based on insertion order. Capped collections work in a way similar to circular buffers: once a collection fills its allocated space, it makes room for new documents by overwriting the oldest documents in the collection.
 
-Djongo lets you define certain Models as 'Capped' Models. The `Entry` Model is a perfect candidate for being stored as a capped Model.
+Djongo lets you define certain Models as 'Capped' Models. The `Entry` Model is a perfect candidate for being stored as a Capped Model.
 
 ```python
 class Entry(models.Model):

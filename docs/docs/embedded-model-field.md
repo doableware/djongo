@@ -1,14 +1,7 @@
 ---
-title: Embedded Model Field
+title: Embedded Model Field Reference
 permalink: "/embedded-model-field/"
 ---
-## The Embedded Model
- 
-SQL prevents the usage of embedded objects in your models without serialization. With MongoDB as your Django backend, embed any other model into your parent model and save it as an [embedded document](https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding) into MongoDB
-
-In case you don't plan on using your embedded model as a standalone model (which means it will always be embedded inside a parent model) you should add the `class Meta` and `abstract = True` as shown above. This way Djongo will never register this model as an [actual model](https://docs.djangoproject.com/en/dev/topics/db/models/#abstract-base-classes).
-
-It is always a good practice to **make embedded models as abstract models** and this is **strongly recommended**.
 
 ## EmbeddedModelField
 
@@ -20,6 +13,11 @@ class EmbeddedModelField(Field):
                  model_form_kwargs: typing.Optional[dict]=None,
                  *args, **kwargs):
 ```
+SQL prevents the usage of embedded objects in your models without serialization. With MongoDB as your Django backend, embed any other model into your parent model and save it as an [embedded document](https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding) into MongoDB
+
+In case you don't plan on using your embedded model as a standalone model (which means it will always be embedded inside a parent model) you should add the `class Meta` and `abstract = True` as shown above. This way Djongo will never register this model as an [actual model](https://docs.djangoproject.com/en/dev/topics/db/models/#abstract-base-classes).
+
+It is always a good practice to **make embedded models as abstract models** and this is **strongly recommended**.
 
 ### Parameters
 
