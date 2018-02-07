@@ -5,7 +5,7 @@ permalink: /integrating-django-with-mongodb/
 
 ## A quick sanity test
 
-While migrating Django to MongoDB for the **very first** time it is **highly recommended** to start on a new DB namespace, eg,. `myapp-djongo-db`. Use this empty DB in your `settings.py` file. 
+While migrating Django to MongoDB for the **very first** time it is **highly recommended** to start on a new DB namespace, e.g. `myapp-djongo-db`. Use this empty DB in your `settings.py` file. 
 
 1. Into `settings.py` file of your project, add:
 

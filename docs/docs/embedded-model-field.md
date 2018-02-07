@@ -17,7 +17,7 @@ SQL prevents the usage of embedded objects in your models without serialization.
 
 In case you don't plan on using your embedded model as a standalone model (which means it will always be embedded inside a parent model) you should add the `class Meta` and `abstract = True` as shown above. This way Djongo will never register this model as an [actual model](https://docs.djangoproject.com/en/dev/topics/db/models/#abstract-base-classes).
 
-It is always a good practice to **make embedded models as abstract models** and this is **strongly recommended**.
+It is a good practice to **define embedded models as abstract models** and this is **strongly recommended**.
 
 ### Parameters
 
