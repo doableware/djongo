@@ -4,6 +4,8 @@ main:
      url: /get-started/
    - title: "Get The Source"
      url: https://github.com/nesdis/djongo/
+   - title: "Discuss"
+     url: /discuss/
    - title: "Donate"
      url: /donate/
      thumbnail: /djongo/assets/images/heart.png
@@ -31,10 +33,10 @@ docs:
         url: /embedded-model-field/
       - title: "Array Model Field"
         url: /array-model-field/
-      - title: "ObjectID Field"
-        url: /mongodb-field-reference/#objectidfield
       - title: "Array Reference Field"
         url: /mongodb-field-reference/#arrayreferencefield
+      - title: "ObjectID Field"
+        url: /mongodb-field-reference/#objectidfield
       - title: "List Field"
         url: /mongodb-field-reference/#listfield
 
