@@ -363,7 +363,7 @@ class InsertQuery(Query):
 
         result = db[collection].insert_one(insert)
         if not auto_field_id:
-            auto_field_id = str(result.inserted_id)
+            auto_field_id = result.inserted_id
 
         self._result_ref.last_row_id = auto_field_id
         logger.debug('insert id {}'.format(result.inserted_id))
@@ -490,7 +490,7 @@ class Result:
             except Exception as e:
                 import djongo
                 exe = SQLDecodeError(
-                    f'FAILED SQL: {self._sql}'
+                    f'FAILED SQL: {self._sql}\n'
                     f'Version: {djongo.__version__}'
                 )
                 raise exe from e
