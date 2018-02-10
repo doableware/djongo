@@ -1,6 +1,5 @@
 from . import TestCase
 from dummy.basic_reference_models import ReferenceEntry, ReferenceAuthor
-from django.contrib.auth.models import User
 
 
 class TestWithDjango(TestCase):
@@ -11,7 +10,9 @@ class TestWithDjango(TestCase):
         a1.save()
 
         e1 = ReferenceEntry()
-        e1.authors = [a1]
+        e1.authors = a1
+        e1.save()
+        e1.authors.add(a1)
         e1.save()
         e1.authors.add(a1, a2)
 

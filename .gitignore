@@ -16,7 +16,7 @@ minimal-mistakes
 
 !/docs/_includes/footer.html
 !/docs/_includes/masthead.html
-!/docs/_layouts/single.html
+
 
 /tests/dummy_app/dummy/migrations
 /tests/dummy_app/djongo-test

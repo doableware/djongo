@@ -42,6 +42,8 @@ class MetaDataForm(forms.ModelForm):
 class ReferenceAuthor(models.Model):
     name = models.CharField(max_length=200)
     email = models.EmailField()
+    _id = models.ObjectIdField()
+    i = models.IntegerField()
 
     def __str__(self):
         return self.name
@@ -65,11 +67,11 @@ class ReferenceEntry(models.Model):
     #     model_container=ArrayMetaData,
     #     model_form_class=MetaDataForm
     # )
-
+    _id = models.ObjectIdField()
     headline = models.CharField(max_length=255)
     # body_text = models.TextField()
 
-    authors = models.ArrayReferenceField(ReferenceAuthor, on_delete=models.CASCADE)
+    authors = models.ArrayReferenceField(ReferenceAuthor, models.CASCADE )
     # n_comments = models.IntegerField()
 
     def __str__(self):

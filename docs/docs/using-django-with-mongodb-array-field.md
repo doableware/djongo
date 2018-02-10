@@ -1,7 +1,6 @@
 ---
 title: Using Django with MongoDB Array Field
 permalink: /using-django-with-mongodb-array-field/
-ready: false
 ---
 
 The official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/) exemplifies 3 models that interact with each other: **Blog, Author and Entry**. This tutorial considers the same 3 models.
@@ -197,4 +196,6 @@ class Entry(models.Model):
 ## List field 
 
 `ArrayModelField` and `ArrayReferenceField` require all Models in the list to be of the same type. MongoDB allows the saving of arbitrary data inside it's embedded array. The `ListField` is useful in such cases. The list field cannot be represented in Django Admin though and can only be used in the python script.
+
+{{page.not_ready}}
 
