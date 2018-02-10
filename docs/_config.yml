@@ -188,6 +188,7 @@ defaults:
       path: "docs"
       type: pages
     values:
+      not_ready: "Some parts of this feature are still under development.\n{: .notice--warning}"
       layout: single
       read_time: false
       author_profile: false

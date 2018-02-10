@@ -4,3 +4,5 @@ permalink: "/overcoming-django-migrations/"
 ready: false
 
 ---
+
+{{page.not_ready}}

@@ -1,7 +1,6 @@
 ---
 title: Creating Capped Models using MongoDB
 permalink: /creating-django-capped-models-using-mongodb/
-ready: false
 ---
 
 [Capped collections][capped] are fixed-size collections that support high-throughput operations that insert and retrieve documents based on insertion order. Capped collections work in a way similar to circular buffers: once a collection fills its allocated space, it makes room for new documents by overwriting the oldest documents in the collection.
@@ -45,5 +44,7 @@ python -m djongo.manage migrate
 ```
 
 This will result in all Models having `capped == True` to being recreated as Capped collections. Use this command only if such a collection doesn't already exists or is empty, as `djongo.manage` will drop all collections marked as capped in the model but are not capped in the DB and create a new empty capped collection.
+
+{{page.not_ready}}
 
 [capped]: https://docs.mongodb.com/manual/core/capped-collections/
