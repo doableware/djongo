@@ -3,12 +3,23 @@ The standard way of using djongo is to import models.py
 in place of Django's standard models module.
 """
 from django.db.models import *
+from django.db.models import __all__ as models_all
 from django import forms
 from django.core.exceptions import ValidationError
-from django.db import connection
+from django.db import connection as pymongo_connection
 import typing
 
+from django.db.models.fields.related import RelatedField
+from django.db.models.fields.related_descriptors import ForwardManyToOneDescriptor, ManyToManyDescriptor, \
+    create_forward_many_to_many_manager
+from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
+
+
+__all__ = models_all + [
+    'DjongoManager', 'ListField', 'ArrayModelField',
+    'EmbeddedModelField', 'ArrayReferenceField', 'ObjectIdField'
+]
 
 
 def make_mdl(model, model_dict):
@@ -47,8 +58,37 @@ class DjongoManager(Manager):
             if not name.startswith('mongo_'):
                 raise AttributeError
             name = name.strip('mongo_')
-            m_cli = connection.cursor().db_conn[self.model._meta.db_table]
+            m_cli = pymongo_connection.cursor().db_conn[self.model._meta.db_table]
             return getattr(m_cli, name)
+
+
+class ListField(Field):
+    """
+    MongoDB allows the saving of arbitrary data inside it's embedded array. The `ListField` is useful in such cases.
+    """
+    empty_strings_allowed = False
+
+    def __init__(self, *args, **kwargs):
+        self._value = []
+        super().__init__(*args, **kwargs)
+
+    def __set__(self, instance, value):
+        if not isinstance(value, list):
+            raise ValueError('Value must be a list')
+
+        self._value = value
+
+    def __get__(self, instance, owner):
+        return self._value
+
+    def get_db_prep_value(self, value, connection, prepared=False):
+        if prepared:
+            return value
+
+        if not isinstance(value, list):
+            raise ValueError('Value must be a list')
+
+        return value
 
 
 class ArrayModelField(Field):
@@ -87,6 +127,8 @@ class ArrayModelField(Field):
         )
 
     """
+    empty_strings_allowed = False
+
     def __init__(self,
                  model_container: typing.Type[Model],
                  model_form_class: typing.Type[forms.ModelForm] = None,
@@ -318,6 +360,8 @@ class EmbeddedModelField(Field):
         )
 
     """
+    empty_strings_allowed = False
+
     def __init__(self,
                  model_container: typing.Type[Model],
                  model_form_class: typing.Type[forms.ModelForm]=None,
@@ -493,39 +537,74 @@ class EmbeddedFormWidget(forms.MultiWidget):
             for i, widget in enumerate(self.widgets)
         )
 
+class ObjectIdField(AutoField):
+    """
+    For every document inserted into a collection MongoDB internally creates an field.
+    The field can be referenced from within the Model as _id.
+    """
+
+    def __init__(self, *args, **kwargs):
+        id_field_args = {
+            'primary_key': True,
+        }
+        id_field_args.update(kwargs)
+        super().__init__(*args, **id_field_args)
+
+    def get_prep_value(self, value):
+        value = super(AutoField, self).get_prep_value(value)
+        if value is None:
+            return None
+        return value
+
+
+
+def create_forward_array_manager(super_class):
+
+    class ArrayManyRelatedManager(super_class):
+
+        def _add_items(self, source_field_name, target_field_name, *objs):
+            ids = []
+            for obj in objs:
+                if isinstance(obj, self.model):
+                    pass
+                elif isinstance(obj, Model):
+                    raise TypeError(
+                        "'%s' instance expected, got %r" %
+                        (self.model._meta.object_name, obj)
+                    )
+
+    return ArrayManyRelatedManager
+
+
+class ArrayReferenceDescriptor(ForwardManyToOneDescriptor):
+
+    def add(self, *objs):
+        pass
+
+    def remove(self, *objs):
+        pass
+
+    def clear(self):
+        pass
+
+# class ArrayManyToManyField(ManyToManyField):
+#
+#     def contribute_to_class(self, cls, name, **kwargs):
+#         super().contribute_to_class(cls, name, **kwargs)
+#         setattr(cls, self.name, ArrayManyToManyDescriptor(self.remote_field, reverse=False))
+
 
 class ArrayReferenceField(ForeignKey):
     """
     When the entry gets saved, only a reference to the primary_key of the author model is saved in the array.
     """
+    # forward_related_accessor_class = ArrayReferenceDescriptor
+    # many_to_many = False
+    # many_to_one = True
+    # one_to_many = False
+    # one_to_one = False
+
     def __set__(self, instance, value):
         super().__set__(instance, value)
 
 
-class ListField(Field):
-    """
-    MongoDB allows the saving of arbitrary data inside it's embedded array. The `ListField` is useful in such cases.
-    """
-
-    def get_db_prep_value(self, value, connection, prepared=False):
-        if prepared:
-            return value
-
-        if not isinstance(value, list):
-            raise ValueError('Value must be a list')
-
-        return value
-
-
-class ObjectIdField(Field):
-    """
-    For every document inserted into a collection MongoDB internally creates an field.
-    The field can be referenced from within the Model as _id.
-    """
-    def __init__(self, *args, **kwargs):
-        id_field_args = {
-            'blank': True,
-            'primary_key': True
-        }
-        id_field_args.update(kwargs)
-        super().__init__(*args, **id_field_args)

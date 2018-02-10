@@ -38,7 +38,7 @@ Use MongoDB as a backend database for your Django project, without changing the 
 
 ## How it works
 
-Djongo is a SQL to MongoDB query compiler. It translates a SQL query string into a [MongoDB query document](https://docs.mongodb.com/manual/tutorial/query-documents/). As a result, all Django features, models, etc., work as is.
+Djongo makes minimum changes to the existing Django framework, which means unnecessary bugs dont't crop up. It simply translates a SQL query string into a [MongoDB query document](https://docs.mongodb.com/manual/tutorial/query-documents/). As a result, all Django features, models, etc., work as is.
   
 Django contrib modules: 
 
@@ -60,7 +60,7 @@ Djongo connector for MongoDB ensures that you:
  
 Refer to [Integrating Django with MongoDB](/djongo/integrating-django-with-mongodb/) for the detailed reference.
 
-## Use the Admin app to add documents
+## Use the Django Admin to add documents
 
 Let’s say you want to create a blogging platform using Django with MongoDB as your backend.
 In your Blog `app/models.py` file define the `Blog` model:
