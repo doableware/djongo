@@ -3,6 +3,12 @@ title: Discussion Board
 permalink: "/discuss/"
 toc: false
 ---
+Djongo groups is where you can watch for:
+
+* New release announcements.
+* Suggest improvements.
+* Ask questions.
+* Discuss topics pertaining to Django and MongoDB.
 
 <iframe id="forum_embed"
   src="javascript:void(0)"
