@@ -323,6 +323,10 @@ class InsertQuery(Query):
         nextid, nexttok = sm.token_next(2)
         if isinstance(nexttok, Identifier):
             collection = nexttok.get_name()
+
+            if collection not in db.collection_names(include_system_collections=False):
+                raise MigrationError(collection)
+
             self.left_table = collection
             auto = db['__schema__'].find_one_and_update(
                 {
