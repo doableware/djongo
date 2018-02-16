@@ -51,13 +51,11 @@ class DjongoManager(Manager):
 
     This module allows methods to be passed directly to pymongo.
     """
-    class DjongoManager(Manager):
-    """
-    This modified manager allows to issue Mongo functions by prefixing
-    them with 'mongo_'.
-    This module allows methods to be passed directly to pymongo.
-    """
 
+    """
+    db_name parameter defaults to 'default',
+    but can be passed when using multiple databases so that pymongo operates on the correct db
+    """
     def __init__(self, db_name='default'):
         super(DjongoManager, self).__init__()
         self.db_name = db_name
