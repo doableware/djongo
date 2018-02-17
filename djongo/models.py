@@ -7,6 +7,7 @@ from django.db.models import __all__ as models_all
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db import connection as pymongo_connection
+from django.db import connections as pymongo_connections
 import typing
 
 from django.db.models.fields.related import RelatedField
@@ -50,6 +51,15 @@ class DjongoManager(Manager):
 
     This module allows methods to be passed directly to pymongo.
     """
+
+    """
+    db_name parameter defaults to 'default',
+    but can be passed when using multiple databases so that pymongo operates on the correct db
+    """
+    def __init__(self, db_name='default'):
+        super(DjongoManager, self).__init__()
+        self.db_name = db_name
+
     def __getattr__(self, name):
         try:
             return super().__getattr__(name)
@@ -58,7 +68,7 @@ class DjongoManager(Manager):
             if not name.startswith('mongo_'):
                 raise AttributeError
             name = name.strip('mongo_')
-            m_cli = pymongo_connection.cursor().db_conn[self.model._meta.db_table]
+            m_cli = pymongo_connections[self.db_name].cursor().db_conn[self.model._meta.db_table]
             return getattr(m_cli, name)
 
 
@@ -624,5 +634,3 @@ class ArrayReferenceField(ForeignKey):
 
     def __set__(self, instance, value):
         super().__set__(instance, value)
-
-
