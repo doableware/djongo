@@ -6,9 +6,13 @@ main:
      url: https://github.com/nesdis/djongo/
    - title: "Discuss"
      url: /discuss/
+   - title: "Donate"
+     url: /donate/
+     thumbnail: /djongo/assets/images/heart.png
    - title: "Support"
      url: /support/
      thumbnail: /djongo/assets/images/help.png
+     class: support
 
 docs:
   - title: "Get started"
