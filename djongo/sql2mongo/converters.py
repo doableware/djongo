@@ -195,11 +195,16 @@ class JoinConverter(Converter):
 class InnerJoinConverter(JoinConverter):
 
     def to_mongo(self):
+        if self.left_table == self.query.left_table:
+            match_field = self.left_column
+        else:
+            match_field = f'{self.left_table}.{self.left_column}'
+
         lookup = self._lookup()
         pipeline = [
             {
                 '$match': {
-                    self.left_column: {
+                    match_field: {
                         '$ne': None,
                         '$exists': True
                     }
