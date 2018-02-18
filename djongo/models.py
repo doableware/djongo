@@ -12,7 +12,7 @@ import typing
 
 from django.db.models.fields.related import RelatedField
 from django.db.models.fields.related_descriptors import ForwardManyToOneDescriptor, ManyToManyDescriptor, \
-    create_forward_many_to_many_manager
+    create_forward_many_to_many_manager, ReverseManyToOneDescriptor
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 
@@ -566,11 +566,21 @@ class ObjectIdField(AutoField):
             return None
         return value
 
+def create_reverse_array_reference_manager(superclass, rel):
+    pass
 
+def create_forward_array_reference_manager(superclass, rel):
 
-def create_forward_array_manager(super_class):
+    class ArrayReferenceManager(superclass):
 
-    class ArrayManyRelatedManager(super_class):
+        def __init__(self, instance):
+            super().__init__()
+
+            self.instance = instance
+            self.model = rel.related_model
+            self.field = rel.field
+
+            self.core_filters = {self.field.name: instance}
 
         def _add_items(self, source_field_name, target_field_name, *objs):
             ids = []
@@ -583,19 +593,39 @@ def create_forward_array_manager(super_class):
                         (self.model._meta.object_name, obj)
                     )
 
-    return ArrayManyRelatedManager
+        def add(self, *objs):
+            pass
 
+        def remove(self, *objs):
+            pass
 
-class ArrayReferenceDescriptor(ForwardManyToOneDescriptor):
+        def clear(self):
+            pass
 
-    def add(self, *objs):
-        pass
+    return ArrayReferenceManager
 
-    def remove(self, *objs):
-        pass
+class ReverseArrayReferenceDescriptor(ReverseManyToOneDescriptor):
 
-    def clear(self):
-        pass
+    @cached_property
+    def related_manager_cls(self):
+        related_model = self.rel.related_model
+
+        return create_reverse_array_reference_manager(
+            related_model._default_manager.__class__,
+            self.rel,
+        )
+
+class ArrayReferenceDescriptor(ReverseArrayReferenceDescriptor):
+
+    @cached_property
+    def related_manager_cls(self):
+        related_model = self.rel.related_model
+
+        return create_forward_array_reference_manager(
+            related_model._default_manager.__class__,
+            self.rel,
+        )
+
 
 # class ArrayManyToManyField(ManyToManyField):
 #
@@ -613,23 +643,20 @@ class ArrayReferenceField(ForeignKey):
     # many_to_one = True
     # one_to_many = False
     # one_to_one = False
-    rel_class = ManyToManyRel
+    # rel_class = ManyToManyRel
+    related_accessor_class = ReverseArrayReferenceDescriptor
+    forward_related_accessor_class = ArrayReferenceDescriptor
 
-    def __init__(self, to, related_name=None, related_query_name=None,
+    def __init__(self, to, on_delete=None, related_name=None, related_query_name=None,
                  limit_choices_to=None, parent_link=False, to_field=None,
                  db_constraint=True, **kwargs):
 
-        kwargs['rel'] = self.rel_class(
-            self, to, to_field,
-            related_name=related_name,
-            related_query_name=related_query_name,
-            limit_choices_to=limit_choices_to,
-            parent_link=parent_link,
-            on_delete=on_delete,
-        )
-
-
-        super().__init__(**kwargs)
+        on_delete = on_delete or CASCADE
+        super().__init__(to, on_delete=on_delete, related_name=related_name,
+                         related_query_name=related_query_name,
+                         limit_choices_to=limit_choices_to,
+                         parent_link=parent_link, to_field=to_field,
+                         db_constraint=db_constraint, **kwargs)
 
 
     def __set__(self, instance, value):

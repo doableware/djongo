@@ -575,11 +575,12 @@ class Result:
 
                         _set['auto.seq'] = 0
 
-                    if col.find('PRIMARY KEY') != -1:
-                        self.db[table].create_index(field, unique=True, name='__primary_key__')
+                    if field != '_id':
+                        if col.find('PRIMARY KEY') != -1:
+                            self.db[table].create_index(field, unique=True, name='__primary_key__')
 
-                    if col.find('UNIQUE') != -1:
-                        self.db[table].create_index(field, unique=True)
+                        if col.find('UNIQUE') != -1:
+                            self.db[table].create_index(field, unique=True)
 
                 if _set:
                     update['$set'] = _set
