@@ -600,13 +600,16 @@ class Result:
 
     def _drop(self, sm):
         tok_id, tok = sm.token_next(0)
-
-        if not tok.match(tokens.Keyword, 'DATABASE'):
+        if tok.match(tokens.Keyword, 'DATABASE'):
+            tok_id, tok = sm.token_next(tok_id)
+            db_name = tok.get_name()
+            self.cli_con.drop_database(db_name)
+        elif tok.match(tokens.Keyword, 'TABLE'):
+            tok_id, tok = sm.token_next(tok_id)
+            table_name = tok.get_name()
+            self.db.drop_collection(table_name)
+        else:
             raise SQLDecodeError('statement:{}'.format(sm))
-
-        tok_id, tok = sm.token_next(tok_id)
-        db_name = tok.get_name()
-        self.cli_con.drop_database(db_name)
 
     def _update(self, sm):
         self._query = UpdateQuery(self.db, sm, self._params)
