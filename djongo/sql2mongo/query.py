@@ -601,7 +601,7 @@ class Result:
     def _drop(self, sm):
         tok_id, tok = sm.token_next(0)
 
-        if not tok.match(tokens.Keyword, 'DATABASE'):
+        if not (tok.match(tokens.Keyword, 'TABLE') or tok.match(tokens.Keyword, 'DATABASE')):
             raise SQLDecodeError('statement:{}'.format(sm))
 
         tok_id, tok = sm.token_next(tok_id)
