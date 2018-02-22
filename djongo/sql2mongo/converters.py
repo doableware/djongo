@@ -195,16 +195,11 @@ class JoinConverter(Converter):
 class InnerJoinConverter(JoinConverter):
 
     def to_mongo(self):
-        if self.left_table == self.query.left_table:
-            match_field = self.left_column
-        else:
-            match_field = f'{self.left_table}.{self.left_column}'
-
         lookup = self._lookup()
         pipeline = [
             {
                 '$match': {
-                    match_field: {
+                    self.left_column: {
                         '$ne': None,
                         '$exists': True
                     }
@@ -412,3 +407,23 @@ class GroupbyConverter(Converter):
 
     def to_mongo(self):
         pass
+
+
+class OffsetConverter(Converter):
+    def __init__(self, *args):
+        self.offset: int = None
+        super().__init__(*args)
+
+    def parse(self):
+        sm = self.query.statement
+        self.end_id, tok = sm.token_next(self.begin_id)
+        self.offset = int(tok.value)
+
+    def to_mongo(self):
+        return {'skip': self.offset}
+
+
+class AggOffsetConverter(OffsetConverter):
+
+    def to_mongo(self):
+        return {'$skip': self.offset}

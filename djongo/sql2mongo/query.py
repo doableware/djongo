@@ -24,7 +24,7 @@ from . import SQLDecodeError, SQLToken, MigrationError
 from .converters import (
     ColumnSelectConverter, AggColumnSelectConverter, FromConverter, WhereConverter,
     AggWhereConverter, InnerJoinConverter, OuterJoinConverter, LimitConverter, AggLimitConverter, OrderConverter,
-    SetConverter, AggOrderConverter, DistinctConverter, NestedInQueryConverter, GroupbyConverter)
+    SetConverter, AggOrderConverter, DistinctConverter, NestedInQueryConverter, GroupbyConverter, OffsetConverter, AggOffsetConverter)
 
 logger = getLogger(__name__)
 
@@ -98,6 +98,7 @@ class SelectQuery(Query):
             typing.Union[InnerJoinConverter, OuterJoinConverter]
         ]] = []
         self.order: OrderConverter = None
+        self.offset: OffsetConverter = None
         self.limit: typing.Optional[LimitConverter] = None
         self.distinct: DistinctConverter = None
         self.groupby: GroupbyConverter = None
@@ -121,6 +122,9 @@ class SelectQuery(Query):
 
             elif tok.match(tokens.Keyword, 'ORDER'):
                 c = self.order = OrderConverter(self, tok_id)
+
+            elif tok.match(tokens.Keyword, 'OFFSET'):
+                c = self.offset = OffsetConverter(self, tok_id)
 
             elif tok.match(tokens.Keyword, 'INNER JOIN'):
                 c = InnerJoinConverter(self, tok_id)
@@ -216,6 +220,10 @@ class SelectQuery(Query):
             self.limit.__class__ = AggLimitConverter
             pipeline.append(self.limit.to_mongo())
 
+        if self.offset:
+            self.offset.__class__ = AggOffsetConverter
+            pipeline.append(self.offset.to_mongo())
+
         if not self.distinct and self.selected_columns:
             self.selected_columns.__class__ = AggColumnSelectConverter
             pipeline.append(self.selected_columns.to_mongo())
@@ -240,6 +248,8 @@ class SelectQuery(Query):
 
             if self.order:
                 kwargs.update(self.order.to_mongo())
+            if self.offset:
+                kwargs.update(self.offset.to_mongo())
 
             cur = self.db_ref[self.left_table].find(**kwargs)
 
@@ -323,10 +333,6 @@ class InsertQuery(Query):
         nextid, nexttok = sm.token_next(2)
         if isinstance(nexttok, Identifier):
             collection = nexttok.get_name()
-
-            if collection not in db.collection_names(include_system_collections=False):
-                raise MigrationError(collection)
-
             self.left_table = collection
             auto = db['__schema__'].find_one_and_update(
                 {
@@ -348,26 +354,22 @@ class InsertQuery(Query):
         else:
             raise SQLDecodeError
 
-        nextid, coltok = sm.token_next(nextid)
         nextid, nexttok = sm.token_next(nextid)
-        if not nexttok.match(tokens.Keyword, 'VALUES'):
-            raise SQLDecodeError
 
-        nextid, placeholder = sm.token_next(nextid)
-
-
-        if isinstance(coltok[1], IdentifierList):
-            for an_id, i in zip(coltok[1].get_identifiers(), SQLToken(placeholder)):
+        if isinstance(nexttok[1], IdentifierList):
+            for an_id in nexttok[1].get_identifiers():
                 sql = SQLToken(an_id, None)
-                insert[sql.column] = self.params[i] if i is not None else None
+                insert[sql.column] = self.params.pop(0)
         else:
-            sql = SQLToken(coltok[1], None)
-            i = next(iter(SQLToken(placeholder)))
-            insert[sql.column] = self.params[i] if i is not None else None
+            sql = SQLToken(nexttok[1], None)
+            insert[sql.column] = self.params.pop(0)
+
+        if self.params:
+            raise SQLDecodeError
 
         result = db[collection].insert_one(insert)
         if not auto_field_id:
-            auto_field_id = result.inserted_id
+            auto_field_id = str(result.inserted_id)
 
         self._result_ref.last_row_id = auto_field_id
         logger.debug('insert id {}'.format(result.inserted_id))
@@ -465,7 +467,6 @@ class Result:
     def parse(self):
         logger.debug(f'\n sql_command: {self._sql}')
         statement = sqlparse(self._sql)
-
         if len(statement) > 1:
             raise SQLDecodeError(self._sql)
 
@@ -494,7 +495,7 @@ class Result:
             except Exception as e:
                 import djongo
                 exe = SQLDecodeError(
-                    f'FAILED SQL: {self._sql}\n'
+                    f'FAILED SQL: {self._sql}'
                     f'Version: {djongo.__version__}'
                 )
                 raise exe from e
@@ -575,12 +576,11 @@ class Result:
 
                         _set['auto.seq'] = 0
 
-                    if field != '_id':
-                        if col.find('PRIMARY KEY') != -1:
-                            self.db[table].create_index(field, unique=True, name='__primary_key__')
+                    if col.find('PRIMARY KEY') != -1:
+                        self.db[table].create_index(field, unique=True, name='__primary_key__')
 
-                        if col.find('UNIQUE') != -1:
-                            self.db[table].create_index(field, unique=True)
+                    if col.find('UNIQUE') != -1:
+                        self.db[table].create_index(field, unique=True)
 
                 if _set:
                     update['$set'] = _set
