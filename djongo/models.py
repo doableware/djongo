@@ -579,8 +579,10 @@ def create_forward_array_reference_manager(superclass, rel):
             self.instance = instance
             self.model = rel.related_model
             self.field = rel.field
+            name = self.field.related_fields[0][1].attname
+            ids = getattr(instance, self.field.attname) or []
 
-            self.core_filters = {self.field.name: instance}
+            self.core_filters = {f'{name}__in': ids}
 
         def _add_items(self, source_field_name, target_field_name, *objs):
             ids = []
@@ -594,7 +596,10 @@ def create_forward_array_reference_manager(superclass, rel):
                     )
 
         def add(self, *objs):
-            pass
+            remote_field = self.field.remote_field
+            m_cli = pymongo_connections['test_djongo-test'].cursor().db_conn[self.model._meta.db_table]
+            for lh_field, rh_field in self.field.related_fields:
+                pass
 
         def remove(self, *objs):
             pass
@@ -615,17 +620,31 @@ class ReverseArrayReferenceDescriptor(ReverseManyToOneDescriptor):
             self.rel,
         )
 
-class ArrayReferenceDescriptor(ReverseArrayReferenceDescriptor):
+class ArrayReferenceDescriptor(ForwardManyToOneDescriptor):
 
     @cached_property
     def related_manager_cls(self):
-        related_model = self.rel.related_model
+        related_model = self.field.related_model
 
         return create_forward_array_reference_manager(
             related_model._default_manager.__class__,
-            self.rel,
+            self.field.remote_field,
         )
 
+    def __get__(self, instance, cls=None):
+        """
+        Get the related objects through the reverse relation.
+
+        With the example above, when getting ``parent.children``:
+
+        - ``self`` is the descriptor managing the ``children`` attribute
+        - ``instance`` is the ``parent`` instance
+        - ``cls`` is the ``Parent`` class (unused)
+        """
+        if instance is None:
+            return self
+
+        return self.related_manager_cls(instance)
 
 # class ArrayManyToManyField(ManyToManyField):
 #
@@ -659,5 +678,3 @@ class ArrayReferenceField(ForeignKey):
                          db_constraint=db_constraint, **kwargs)
 
 
-    def __set__(self, instance, value):
-        super().__set__(instance, value)

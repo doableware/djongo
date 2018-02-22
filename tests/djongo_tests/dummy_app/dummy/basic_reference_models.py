@@ -72,7 +72,7 @@ class ReferenceEntry(models.Model):
     # body_text = models.TextField()
 
     # authors = models.ArrayReferenceField(ReferenceAuthor)
-    authors = models.ManyToManyField(ReferenceAuthor)
+    authors = models.ArrayReferenceField(ReferenceAuthor)
 
     # n_comments = models.IntegerField()
 
