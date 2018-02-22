@@ -197,5 +197,5 @@ class Entry(models.Model):
 
 `ArrayModelField` and `ArrayReferenceField` require all Models in the list to be of the same type. MongoDB allows the saving of arbitrary data inside it's embedded array. The `ListField` is useful in such cases. The list field cannot be represented in Django Admin though and can only be used in the python script.
 
-{{page.not_ready}}
+
 
