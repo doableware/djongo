@@ -9,6 +9,7 @@ The following options are supported in `settings.py`:
     DATABASES = {
         'default': {
             'ENGINE': 'djongo',
+            'ENFORCE_SCHEMA': True,
             'NAME': 'your-db-name',
             'HOST': 'host-name or ip address',
             'PORT': port_number,
@@ -16,7 +17,17 @@ The following options are supported in `settings.py`:
             'PASSWORD': 'password',
             'AUTH_SOURCE': 'db-name',
             'AUTH_MECHANISM': 'SCRAM-SHA-1',
-            'ENFORCE_SCHEMA': True
         }
     }
 ```
+
+All options except `ENGINE` and `ENFORCE_SCHEMA` are the same those listed in the [pymongo documentation](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient).
+
+Attribute | Value | Description
+---------|------|-------------
+ENGINE | djongo | The MongoDB connection engine for interfacing with Django.
+ENFORCE_SCHEMA | True | (Default) Ensures that the model schema and database schema are exactly the same. Raises `Migration Error` in case of discrepancy. 
+ENFORCE_SCHEMA | False | Implicitly creates collections. Returns missing fields as `None` instead of raising an exception.
+  
+
+

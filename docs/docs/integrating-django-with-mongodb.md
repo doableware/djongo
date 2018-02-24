@@ -19,13 +19,13 @@ While migrating Django to MongoDB for the **very first** time it is **highly rec
       ```
   
 2. Run `manage.py makemigrations <myapp>` followed by `manage.py migrate`.
-3.  Open up Django Admin, you should find all the models defined in your app showing up in Django Admin (with no data!).
+3.  Open Django Admin, you should find all Models defined in your app, showing up in Django Admin (with no data!).
 
-You can continue to work with this newly created DB by inserting data into the models from the admin. Continue reading further if you want to use Djongo with an existing MongoDB database.
+You can continue to work with this newly created DB by inserting data into the models from the Admin Interface. Continue reading further if you want to use Djongo with an existing MongoDB database.
 
 ## Using Djongo with an existing MongoDB database
 
-As there is no concept of AUTOINCREMENT fields in MongoDB, internally Djongo creates a `__schema__` collection that tracks all auto increment fields in different tables. The `__schema__` collection has the form:
+As there is no concept of a AUTOINCREMENT field in MongoDB, internally Djongo creates a `__schema__` collection that tracks all auto increment fields in different tables. The `__schema__` collection has the form:
 
 ```python
 { 
@@ -39,12 +39,12 @@ As there is no concept of AUTOINCREMENT fields in MongoDB, internally Djongo cre
     }
 }
 ```
-Every collection in the DB that has an autoincrement field has an entry in the schema collection. Running `manage.py migrate` automatically creates these entries. There are 3 ways to use Djongo with an existing DB
+Every collection in the DB that has an autoincrement field has an entry in the `__schema__` collection. Running `manage.py migrate` automatically creates these entries. There are 3 ways to use Djongo with an existing DB
 
 ### Zero risk
 
 1. Start with an empty db
-2. In `models.py ` define your models in Django exactly the same as the fields in existing db.
+2. In `models.py` define your models in Django, exactly the same as the fields in existing db.
 3. Run `manage.py makemigarations <app_name>` followed by `manage.py migrate`. At the end of this step your empty db should have a `__schema__` collection as well as other collections defined in your model.py
 4. Copy all data from existing db to new db
 5. In `__schema__` collection make sure the `auto` field with `field_name` : `id`, `seq` number is incremented to the latest value corresponding to the copied data set. (`seq` will be 0 for all copied collections)
@@ -62,6 +62,8 @@ If you get step 5 wrong you may lose some data. You can delete the DB created in
 ### High risk
 
 You can manually create the `__schema__` collection in your existing DB and add entries for each of the models your app uses in the format described above. This is quite tiresome and prone to manual errors.
+
+*Now that you are done setting up Django with MongoDB, start using Django like you would with any other Database backend.*
 
 ## Database configuration
 
