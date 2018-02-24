@@ -6,7 +6,7 @@ from django.db.models import *
 from django.db.models import __all__ as models_all
 from django import forms
 from django.core.exceptions import ValidationError
-from django.db import connection as pymongo_connection
+from django.db import connection as pymongo_connection, router
 from django.db import connections as pymongo_connections
 import typing
 
@@ -63,12 +63,11 @@ class DjongoManager(Manager):
     def __getattr__(self, name):
         try:
             return super().__getattr__(name)
-
-        except AttributeError:
+        except AttributeError as e:
             if not name.startswith('mongo_'):
-                raise AttributeError
+                raise e
             name = name.strip('mongo_')
-            m_cli = pymongo_connections[self.db_name].cursor().db_conn[self.model._meta.db_table]
+            m_cli = pymongo_connections[self.db].cursor().db_conn[self.model._meta.db_table]
             return getattr(m_cli, name)
 
 
@@ -571,35 +570,52 @@ def create_reverse_array_reference_manager(superclass, rel):
 
 def create_forward_array_reference_manager(superclass, rel):
 
-    class ArrayReferenceManager(superclass):
+    if issubclass(superclass, DjongoManager):
+        baseclass = superclass
+    else:
+        baseclass = type('baseclass', (DjongoManager, superclass), {})
+
+    class ArrayReferenceManager(baseclass):
 
         def __init__(self, instance):
             super().__init__()
 
             self.instance = instance
-            self.model = rel.related_model
+            self.model = rel.model
             self.field = rel.field
+            self.instance_manager = DjongoManager()
+            self.instance_manager.model = instance
             name = self.field.related_fields[0][1].attname
             ids = getattr(instance, self.field.attname) or []
 
             self.core_filters = {f'{name}__in': ids}
 
-        def _add_items(self, source_field_name, target_field_name, *objs):
-            ids = []
-            for obj in objs:
-                if isinstance(obj, self.model):
-                    pass
-                elif isinstance(obj, Model):
-                    raise TypeError(
-                        "'%s' instance expected, got %r" %
-                        (self.model._meta.object_name, obj)
-                    )
-
         def add(self, *objs):
+
+            fks = getattr(self.instance, self.field.attname)
+            if fks is None:
+                fks = set()
+                setattr(self.instance, self.field.attname, fks)
+
+            new_fks = set()
+            for obj in objs:
+                for lh_field, rh_field in self.field.related_fields:
+                    new_fks.add(getattr(obj, rh_field.attname))
+            fks.update(new_fks)
+
             remote_field = self.field.remote_field
-            m_cli = pymongo_connections['test_djongo-test'].cursor().db_conn[self.model._meta.db_table]
-            for lh_field, rh_field in self.field.related_fields:
-                pass
+            db = router.db_for_write(self.instance.__class__, instance=self.instance)
+            self.instance_manager.db_manager(db).mongo_update(
+                {self.instance._meta.pk.name: self.instance.pk},
+                {
+                    '$addToSet': {
+                        self.field.attname: {
+                            '$each': list(new_fks)
+                        }
+                    }
+                }
+            )
+
 
         def remove(self, *objs):
             pass
@@ -657,11 +673,11 @@ class ArrayReferenceField(ForeignKey):
     """
     When the entry gets saved, only a reference to the primary_key of the author model is saved in the array.
     """
-    # forward_related_accessor_class = ArrayReferenceDescriptor
-    # many_to_many = False
-    # many_to_one = True
-    # one_to_many = False
-    # one_to_one = False
+
+    many_to_many = False
+    many_to_one = True
+    one_to_many = False
+    one_to_one = False
     # rel_class = ManyToManyRel
     related_accessor_class = ReverseArrayReferenceDescriptor
     forward_related_accessor_class = ArrayReferenceDescriptor
@@ -676,5 +692,22 @@ class ArrayReferenceField(ForeignKey):
                          limit_choices_to=limit_choices_to,
                          parent_link=parent_link, to_field=to_field,
                          db_constraint=db_constraint, **kwargs)
+
+        self.concrete = False
+
+    # def contribute_to_class(self, cls, name, private_only=False, **kwargs):
+    #     super().contribute_to_class(cls, name, private_only, **kwargs)
+    #     cls._meta.local_fields.remove(self)
+
+    def get_db_prep_value(self, value, connection, prepared=False):
+        if value is None:
+            return []
+        return value
+        # return super().get_db_prep_value(value, connection, prepared)
+
+    def get_db_prep_save(self, value, connection):
+        if value is None:
+            return []
+        return list(value)
 
 
