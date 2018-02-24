@@ -1,5 +1,5 @@
 from djongo import models
-from djongo.models import forms
+from djongo.models import forms, DjongoManager
 
 
 class ReferenceBlog(models.Model):
