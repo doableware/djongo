@@ -4,19 +4,19 @@ medium/
 _site/
 *__pycache__*
 
-docs/.sass-cache
-docs/_includes
-docs/_layouts
-docs/_sass
-docs/_site
-docs/assets/js
+docs/.sass-cache/*
+docs/_includes/*
+docs/_layouts/*
+docs/_sass/*
+docs/_site/*
+docs/assets/js/*
 
 Gemfile.lock
 minimal-mistakes
 
-!/docs/_includes/footer.html
-!/docs/_includes/masthead.html
-
+!docs/_includes/footer.html
+!docs/_includes/masthead.html
+!docs/_layouts/single.html
 
 /tests/dummy_app/dummy/migrations
 /tests/dummy_app/djongo-test
