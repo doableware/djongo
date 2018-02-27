@@ -40,6 +40,22 @@ layout: default
               <header><h4 class="nav__title"><i class="fas fa-{{ page.toc_icon | default: 'file-alt' }}"></i> {{ page.toc_label | default: site.data.ui-text[site.locale].toc_label }}</h4></header>
               {% include toc.html sanitize=true html=content h_min=2 h_max=3 class="toc__menu" %}
             </nav>
+
+            <div class="toc feedback">
+            <header><h4 class="nav__title"><i class="fas fa-{{ page.toc_icon | default: 'file-alt' }}"></i> Rate the Docs</h4></header>
+            <form action="https://formspree.io/nesdis@gmail.com" method="POST">
+              <select name="cars">
+                <option value="1">1 (Sucks)</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+                <option value="4">5 (Awesome)</option>
+              </select>
+              <textarea name="feedback" rows="10" cols="30">Feedback</textarea>
+              <input type="submit" value="Send">
+            </form>
+            </div>
+
           </aside>
         {% endif %}
         {{ content }}
