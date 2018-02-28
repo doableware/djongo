@@ -412,3 +412,22 @@ class GroupbyConverter(Converter):
 
     def to_mongo(self):
         pass
+
+class OffsetConverter(Converter):
+    def __init__(self, *args):
+        self.offset: int = None
+        super().__init__(*args)
+
+    def parse(self):
+        sm = self.query.statement
+        self.end_id, tok = sm.token_next(self.begin_id)
+        self.offset = int(tok.value)
+
+    def to_mongo(self):
+        return {'skip': self.offset}
+
+
+class AggOffsetConverter(OffsetConverter):
+
+    def to_mongo(self):
+        return {'$skip': self.offset}
