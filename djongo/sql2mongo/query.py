@@ -24,7 +24,7 @@ from . import SQLDecodeError, SQLToken, MigrationError
 from .converters import (
     ColumnSelectConverter, AggColumnSelectConverter, FromConverter, WhereConverter,
     AggWhereConverter, InnerJoinConverter, OuterJoinConverter, LimitConverter, AggLimitConverter, OrderConverter,
-    SetConverter, AggOrderConverter, DistinctConverter, NestedInQueryConverter, GroupbyConverter)
+    SetConverter, AggOrderConverter, DistinctConverter, NestedInQueryConverter, GroupbyConverter, OffsetConverter, AggOffsetConverter)
 
 logger = getLogger(__name__)
 
@@ -98,6 +98,7 @@ class SelectQuery(Query):
             typing.Union[InnerJoinConverter, OuterJoinConverter]
         ]] = []
         self.order: OrderConverter = None
+        self.offset: OffsetConverter = None
         self.limit: typing.Optional[LimitConverter] = None
         self.distinct: DistinctConverter = None
         self.groupby: GroupbyConverter = None
@@ -121,6 +122,9 @@ class SelectQuery(Query):
 
             elif tok.match(tokens.Keyword, 'ORDER'):
                 c = self.order = OrderConverter(self, tok_id)
+            
+            elif tok.match(tokens.Keyword, 'OFFSET'):
+                c = self.offset = OffsetConverter(self, tok_id)
 
             elif tok.match(tokens.Keyword, 'INNER JOIN'):
                 c = InnerJoinConverter(self, tok_id)
@@ -215,6 +219,10 @@ class SelectQuery(Query):
         if self.limit:
             self.limit.__class__ = AggLimitConverter
             pipeline.append(self.limit.to_mongo())
+        
+        if self.offset:
+            self.offset.__class__ = AggOffsetConverter
+            pipeline.append(self.offset.to_mongo())
 
         if not self.distinct and self.selected_columns:
             self.selected_columns.__class__ = AggColumnSelectConverter
@@ -240,6 +248,9 @@ class SelectQuery(Query):
 
             if self.order:
                 kwargs.update(self.order.to_mongo())
+            
+            if self.offset:
+                kwargs.update(self.offset.to_mongo())
 
             cur = self.db_ref[self.left_table].find(**kwargs)
 
