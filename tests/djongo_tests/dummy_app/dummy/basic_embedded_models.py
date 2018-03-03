@@ -1,5 +1,5 @@
 from djongo import models
-from djongo.models import forms
+from django import forms
 
 
 class EBlog(models.Model):

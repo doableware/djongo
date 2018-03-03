@@ -16,6 +16,27 @@ from .features import DatabaseFeatures
 from . import database as Database
 
 
+class CachedCollections(set):
+
+    def __init__(self, database):
+        self.db = database
+        super().__init__()
+
+    def __contains__(self, item):
+        ans = super().__contains__(item)
+        if ans:
+            return ans
+        self.update(self.db.collection_names(include_system_collections=False))
+        return super().__contains__(item)
+
+
+class DjongoClient:
+
+    def __init__(self, database, enforce_schema=True):
+        self.enforce_schema = enforce_schema,
+        self.cached_collections = CachedCollections(database)
+
+
 class DatabaseWrapper(BaseDatabaseWrapper):
     """
     DatabaseWrapper for MongoDB using SQL replacements.
@@ -85,7 +106,8 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     ops_class = DatabaseOperations
 
     def __init__(self, *args, **kwargs):
-        self.client_conn = None
+        self.client_connection = None
+        self.djongo_connection = None
         super().__init__(*args, **kwargs)
 
     def is_usable(self):
@@ -107,10 +129,12 @@ class DatabaseWrapper(BaseDatabaseWrapper):
             'USER': 'username',
             'PASSWORD': 'password',
             'AUTH_SOURCE': 'authSource',
-            'AUTH_MECHANISM': 'authMechanism'
+            'AUTH_MECHANISM': 'authMechanism',
+            'ENFORCE_SCHEMA': 'enforce_schema'
         }
         connection_params = {
-            'name': 'djongo_test'
+            'name': 'djongo_test',
+            'enforce_schema': True
         }
         for setting_name, kwarg in valid_settings.items():
             try:
@@ -118,7 +142,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
             except KeyError:
                 continue
 
-            if setting:
+            if setting or setting is False:
                 connection_params[kwarg] = setting
 
         return connection_params
@@ -137,15 +161,19 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         """
 
         name = connection_params.pop('name')
+        es = connection_params.pop('enforce_schema')
+
         connection_params['document_class'] = OrderedDict
         # To prevent leaving unclosed connections behind,
         # client_conn must be closed before a new connection
         # is created.
-        if self.client_conn is not None:
-            self.client_conn.close()
+        if self.client_connection is not None:
+            self.client_connection.close()
 
-        self.client_conn = Database.connect(**connection_params)
-        return self.client_conn[name]
+        self.client_connection = Database.connect(**connection_params)
+        database = self.client_connection[name]
+        self.djongo_connection = DjongoClient(database, es)
+        return self.client_connection[name]
 
     def _set_autocommit(self, autocommit):
         """
@@ -163,7 +191,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         """
         Returns an active connection cursor to the database.
         """
-        return Cursor(self.client_conn, self.connection)
+        return Cursor(self.client_connection, self.connection, self.djongo_connection)
 
     def _close(self):
         """

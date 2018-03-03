@@ -114,6 +114,7 @@ class TestParse(TestCase):
     def setUpClass(cls):
         cls.conn = mock.MagicMock()
         cls.db = mock.MagicMock()
+        cls.conn_prop = mock.MagicMock()
 
         cls.find = cls.conn.__getitem__().find
         cursor = mock.MagicMock()
@@ -132,14 +133,14 @@ class TestParse(TestCase):
 
 
     def find_mock(self):
-        result = Result(self.db, self.conn, self.sql, self.params)
+        result = Result(self.db, self.conn, self.conn_prop, self.sql, self.params)
         return list(result)
 
     def aggregate_mock(self, pipeline, iter_return_value=None, ans=None):
         if iter_return_value:
             self.agg_iter.return_value = iter_return_value
 
-        result = list(Result(self.db, self.conn, self.sql, self.params))
+        result = list(Result(self.db, self.conn, self.conn_prop, self.sql, self.params))
         self.aggregate.assert_any_call(pipeline)
         if self.params == self.params_none:
             self.params.assert_not_called()
@@ -286,25 +287,25 @@ class TestParse(TestCase):
 
         sql = 'UPDATE "table" SET "col1" = %s, "col2" = NULL WHERE "table"."col2" = %s'
         params = [1, 2]
-        result = Result(self.db, self.conn, sql, params)
+        result = Result(self.db, self.conn, self.conn_prop, sql, params)
         um.assert_any_call(filter={'col2': {'$eq': 2}}, update={'$set': {'col1': 1, 'col2': None}})
         self.conn.reset_mock()
 
         sql = 'UPDATE "table" SET "col" = %s WHERE "table"."col" = %s'
         params = [1,2]
-        result = Result(self.db, self.conn, sql, params)
+        result = Result(self.db, self.conn, self.conn_prop, sql, params)
         um.assert_any_call(filter={'col': {'$eq': 2}}, update={'$set': {'col': 1}})
         self.conn.reset_mock()
 
         sql = 'UPDATE "table" SET "col1" = %s WHERE "table"."col2" = %s'
         params = [1,2]
-        result = Result(self.db, self.conn, sql, params)
+        result = Result(self.db, self.conn, self.conn_prop, sql, params)
         um.assert_any_call(filter={'col2': {'$eq': 2}}, update={'$set': {'col1': 1}})
         self.conn.reset_mock()
 
         sql = 'UPDATE "table" SET "col1" = %s, "col2" = %s WHERE "table"."col2" = %s'
         params = [1, 2, 3]
-        result = Result(self.db, self.conn, sql, params)
+        result = Result(self.db, self.conn, self.conn_prop, sql, params)
         um.assert_any_call(filter={'col2': {'$eq': 3}}, update={'$set': {'col1': 1, 'col2': 2}})
         self.conn.reset_mock()
 
@@ -313,20 +314,20 @@ class TestParse(TestCase):
 
         sql = 'INSERT INTO "table" ("col1", "col2") VALUES (%s, %s)'
         params = [1, 2]
-        result = Result(self.db, self.conn, sql, params)
+        result = Result(self.db, self.conn, self.conn_prop, sql, params)
         io.assert_any_call({'col1':1, 'col2': 2})
         self.conn.reset_mock()
 
         sql = 'INSERT INTO "table" ("col1", "col2") VALUES (%s, NULL)'
         params = [1]
-        result = Result(self.db, self.conn, sql, params)
+        result = Result(self.db, self.conn, self.conn_prop, sql, params)
         io.assert_any_call({'col1':1, 'col2': None})
         self.conn.reset_mock()
 
 
         sql = 'INSERT INTO "table" ("col") VALUES (%s)'
         params = [1]
-        result = Result(self.db, self.conn, sql, params)
+        result = Result(self.db, self.conn, self.conn_prop, sql, params)
         io.assert_any_call({'col':1})
         self.conn.reset_mock()
 
