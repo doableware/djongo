@@ -2,25 +2,24 @@
 The standard way of using djongo is to import models.py
 in place of Django's standard models module.
 """
-from django.db.models import *
-from django.db.models import __all__ as models_all
+from bson import ObjectId
+from django.db.models import (
+    Manager, Model, Field, AutoField,
+    ForeignKey, CASCADE, BigAutoField
+)
 from django import forms
 from django.core.exceptions import ValidationError
-from django.db import connection as pymongo_connection, router
+from django.db import router
 from django.db import connections as pymongo_connections
 import typing
+import inspect
+from pymongo.collection import Collection
 
 from django.db.models.fields.related import RelatedField
 from django.db.models.fields.related_descriptors import ForwardManyToOneDescriptor, ManyToManyDescriptor, \
     create_forward_many_to_many_manager, ReverseManyToOneDescriptor
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
-
-
-__all__ = models_all + [
-    'DjongoManager', 'ListField', 'ArrayModelField',
-    'EmbeddedModelField', 'ArrayReferenceField', 'ObjectIdField'
-]
 
 
 def make_mdl(model, model_dict):
@@ -38,38 +37,45 @@ def useful_field(field):
     return field.concrete and not (field.is_relation
                                    or isinstance(field, (AutoField, BigAutoField)))
 
+
 class ModelSubterfuge:
 
     def __init__(self, embedded_model):
         self.subterfuge = embedded_model
 
 
-class DjongoManager(Manager):
+class manager_descriptior:
+
+    def __init__(self, name):
+        self.name = name
+
+    def __get__(self, manager_instance, objtype=None):
+        cli = (pymongo_connections[manager_instance.db]
+            .cursor().db_conn[manager_instance.model
+            ._meta.db_table]
+            )
+        return getattr(cli, self.name)
+
+
+class DjongoManagerBase(type):
+
+    def __new__(cls, name, bases, attrs):
+        for name, _ in inspect.getmembers(Collection):
+            if name.startswith('_'):
+                continue
+            attrs['mongo_'+name] = manager_descriptior(name)
+
+        return super().__new__(cls, name, bases, attrs)
+
+
+class DjongoManager(Manager, metaclass=DjongoManagerBase):
     """
     This modified manager allows to issue Mongo functions by prefixing
     them with 'mongo_'.
 
     This module allows methods to be passed directly to pymongo.
     """
-
-    """
-    db_name parameter defaults to 'default',
-    but can be passed when using multiple databases so that pymongo operates on the correct db
-    """
-    def __init__(self, db_name='default'):
-        super(DjongoManager, self).__init__()
-        self.db_name = db_name
-
-    def __getattr__(self, name):
-        try:
-            return super().__getattr__(name)
-        except AttributeError as e:
-            if not name.startswith('mongo_'):
-                raise e
-            name = name.strip('mongo_')
-            m_cli = pymongo_connections[self.db].cursor().db_conn[self.model._meta.db_table]
-            return getattr(m_cli, name)
-
+    pass
 
 class ListField(Field):
     """
@@ -564,6 +570,15 @@ class ObjectIdField(AutoField):
         if value is None:
             return None
         return value
+
+    def get_db_prep_value(self, value, connection, prepared=False):
+        return self.to_python(value)
+
+    def to_python(self, value):
+        if isinstance(value, str):
+            return ObjectId(value)
+        return value
+
 
 def create_reverse_array_reference_manager(superclass, rel):
     pass

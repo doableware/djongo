@@ -1,5 +1,6 @@
 from djongo import models
-from djongo.models import forms, DjongoManager
+from djongo.models import DjongoManager
+from django import forms
 
 
 class ReferenceBlog(models.Model):
