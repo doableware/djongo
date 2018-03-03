@@ -12,14 +12,14 @@ from logging import getLogger
 import re
 import typing
 from pymongo import ReturnDocument
-from pymongo.errors import OperationFailure
+from pymongo.errors import OperationFailure, CollectionInvalid
 from sqlparse import parse as sqlparse
 from sqlparse import tokens
 from sqlparse.sql import (
     IdentifierList, Identifier, Parenthesis,
     Where, Token,
     Statement)
-
+from djongo import base
 from . import SQLDecodeError, SQLToken, MigrationError
 from .converters import (
     ColumnSelectConverter, AggColumnSelectConverter, FromConverter, WhereConverter,
@@ -49,25 +49,18 @@ class CountWildcardFunc:
 
 
 
-def parse(
-        client_conn: MongoClient,
-        db_conn: Database,
-        sql: str,
-        params: list
-):
-    return Result(client_conn, db_conn, sql, params)
-
-
 class Query:
     def __init__(
             self,
             db_ref: Database,
+            connection_properties: 'base.DjongoClient',
             statement: Statement,
             params: list
 
     ):
         self.statement = statement
         self.db_ref = db_ref
+        self.connection_properties = connection_properties
         self.params = params
 
         self.alias2op: typing.Dict[str, typing.Any] = {}
@@ -257,12 +250,16 @@ class SelectQuery(Query):
                 try:
                     ret.append(doc[selected.column])
                 except KeyError:
-                    raise MigrationError(selected.column)
+                    if self.connection_properties.enforce_schema:
+                        raise MigrationError(selected.column)
+                    ret.append(None)
             else:
                 try:
                     ret.append(doc[selected.table][selected.column])
                 except KeyError:
-                    raise MigrationError(selected.column)
+                    if self.connection_properties.enforce_schema:
+                        raise MigrationError(selected.column)
+                    ret.append(None)
 
         return tuple(ret)
 
@@ -324,8 +321,10 @@ class InsertQuery(Query):
         if isinstance(nexttok, Identifier):
             collection = nexttok.get_name()
 
-            if collection not in db.collection_names(include_system_collections=False):
-                raise MigrationError(collection)
+            if collection not in self.connection_properties.cached_collections:
+                if self.connection_properties.enforce_schema:
+                    raise MigrationError(collection)
+                self.connection_properties.cached_collections.add(collection)
 
             self.left_table = collection
             auto = db['__schema__'].find_one_and_update(
@@ -407,6 +406,7 @@ class Result:
     def __init__(self,
                  client_connection: MongoClient,
                  db_connection: Database,
+                 connection_properties: 'base.DjongoClient',
                  sql: str,
                  params: typing.Optional[list]):
         logger.debug('params: {}'.format(params))
@@ -414,6 +414,7 @@ class Result:
         self._params = params
         self.db = db_connection
         self.cli_con = client_connection
+        self.connection_properties = connection_properties
         self._params_index_count = -1
         self._sql = re.sub(r'%s', self._param_index, sql)
         self.last_row_id = None
@@ -543,14 +544,23 @@ class Result:
     def _create(self, sm):
         tok_id, tok = sm.token_next(0)
         if tok.match(tokens.Keyword, 'TABLE'):
-            if '__schema__' not in self.db.collection_names(include_system_collections=False):
+            if '__schema__' not in self.connection_properties.cached_collections:
                 self.db.create_collection('__schema__')
+                self.connection_properties.cached_collections.add('__schema__')
                 self.db['__schema__'].create_index('name', unique=True)
                 self.db['__schema__'].create_index('auto')
 
             tok_id, tok = sm.token_next(tok_id)
             table = SQLToken(tok, None).table
-            self.db.create_collection(table)
+            try:
+                self.db.create_collection(table)
+            except CollectionInvalid:
+                # if enforce_schema:
+                #     raise
+                # else:
+                #     return
+                return
+
             logger.debug('Created table {}'.format(table))
 
             tok_id, tok = sm.token_next(tok_id)
@@ -565,6 +575,9 @@ class Result:
                 for col in tok.value.strip('()').split(','):
                     field = col[col.find('"') + 1: col.rfind('"')]
 
+                    if field == '_id':
+                        continue
+
                     if col.find('AUTOINCREMENT') != -1:
                         try:
                             push['auto.field_names']['$each'].append(field)
@@ -575,12 +588,11 @@ class Result:
 
                         _set['auto.seq'] = 0
 
-                    if field != '_id':
-                        if col.find('PRIMARY KEY') != -1:
-                            self.db[table].create_index(field, unique=True, name='__primary_key__')
+                    if col.find('PRIMARY KEY') != -1:
+                        self.db[table].create_index(field, unique=True, name='__primary_key__')
 
-                        if col.find('UNIQUE') != -1:
-                            self.db[table].create_index(field, unique=True)
+                    if col.find('UNIQUE') != -1:
+                        self.db[table].create_index(field, unique=True)
 
                 if _set:
                     update['$set'] = _set
@@ -612,16 +624,16 @@ class Result:
             raise SQLDecodeError('statement:{}'.format(sm))
 
     def _update(self, sm):
-        self._query = UpdateQuery(self.db, sm, self._params)
+        self._query = UpdateQuery(self.db, self.connection_properties, sm, self._params)
 
     def _delete(self, sm):
-        self._query = DeleteQuery(self.db, sm, self._params)
+        self._query = DeleteQuery(self.db, self.connection_properties, sm, self._params)
 
     def _insert(self, sm):
-        self._query = InsertQuery(self, self.db, sm, self._params)
+        self._query = InsertQuery(self, self.db, self.connection_properties, sm, self._params)
 
     def _select(self, sm):
-        self._query = SelectQuery(self.db, sm, self._params)
+        self._query = SelectQuery(self.db, self.connection_properties, sm, self._params)
 
     FUNC_MAP = {
         'SELECT': _select,
