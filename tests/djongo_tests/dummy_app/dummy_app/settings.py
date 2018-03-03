@@ -30,11 +30,11 @@ ALLOWED_HOSTS = ['localhost']
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
-        # 'ENGINE': 'django.db.backends.sqlite3',
         'NAME': 'djongo-test',
         'USER': 'user',
         'PASSWORD': 'passpass',
         'AUTH_SOURCE': 'djongo-test',
+        'ENFORCE_SCHEMA': False
 
     },
 }
