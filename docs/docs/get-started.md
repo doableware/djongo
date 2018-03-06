@@ -21,7 +21,7 @@ Use MongoDB as a backend database for your Django project, without changing the 
       ```
   
 3. Run `manage.py makemigrations <app_name>` followed by `manage.py migrate` (ONLY the first time to create collections in MongoDB)
-4. YOU ARE SET! HAVE FUN!
+4. YOU ARE SET! Have fun!
 
 ## Requirements
 
@@ -38,7 +38,7 @@ Use MongoDB as a backend database for your Django project, without changing the 
 
 ## How it works
 
-Djongo makes minimum changes to the existing Django framework, which means unnecessary bugs dont't crop up. It simply translates a SQL query string into a [MongoDB query document](https://docs.mongodb.com/manual/tutorial/query-documents/). As a result, all Django features, models, etc., work as is.
+Djongo makes minimal changes to the existing Django ORM framework, which means unnecessary bugs do not crop up. It simply translates a SQL query string into a [MongoDB query document](https://docs.mongodb.com/manual/tutorial/query-documents/). As a result, all Django features, models, etc., work as is.
   
 Django contrib modules: 
 
@@ -60,14 +60,13 @@ Djongo connector for MongoDB ensures that you:
  
 Refer to [Integrating Django with MongoDB](/djongo/integrating-django-with-mongodb/) for the detailed reference.
 
-## Use the Django Admin to add documents
+## Use Django Admin to add documents
 
 Let’s say you want to create a blogging platform using Django with MongoDB as your backend.
 In your Blog `app/models.py` file define the `Blog` model:
 
 ```python
 from djongo import models
-from djongo.models import forms
 
 class Blog(models.Model):
     name = models.CharField(max_length=100)
@@ -77,25 +76,12 @@ class Blog(models.Model):
         abstract = True
 ```
 
-To access the model using Django Admin you will need a Form definition for the above model. Define it as below:
-
-```python
-class BlogForm(forms.ModelForm):
-
-    class Meta:
-        model = Blog
-        fields = (
-            'name', 'tagline'
-        )
-```
-
 Now ‘embed’ your `Blog` inside a `Entry` using the `EmbeddedModelField`:
 
 ```python
 class Entry(models.Model):
     blog = models.EmbeddedModelField(
         model_container=Blog,
-        model_form_class=BlogForm
     )
     
     headline = models.CharField(max_length=255)
@@ -118,7 +104,7 @@ That’s it you are set! Fire up Django Admin on localhost:8000/admin/ and this 
 
 ### Querying Embedded fields
 
-In the above example to query all Entries with Blogs which have names that start with *Beatles*, use the following query:
+In the above example, to query all Entries with Blogs which have names that start with *Beatles*, use the following query:
 
 ```python
 entries = Entry.objects.filter(blog__startswith={'name': 'Beatles'})
@@ -127,13 +113,12 @@ entries = Entry.objects.filter(blog__startswith={'name': 'Beatles'})
 Refer to [Using Django with MongoDB data fields](/djongo/using-django-with-mongodb-data-fields/) for more details.
 
 ## Djongo Manager
- The Djongo Manager extends the  functionality of the usual [Django Manager](https://docs.djangoproject.com/en/dev/topics/db/managers/). Define your manager as Djongo Manager in the model.
+ The Djongo Manager extends the  functionality of the usual [Django Manager](https://docs.djangoproject.com/en/dev/topics/db/managers/). It gives access to  the complete pymongo collection API. Define your manager as Djongo Manager in the model.
 
  ```python
 class Entry(models.Model):
     blog = models.EmbeddedModelField(
         model_container=Blog,
-        model_form_class=BlogForm
     )
     headline = models.CharField(max_length=255)
     
@@ -168,7 +153,7 @@ class EntryView(DetailView):
 
 ```
 
-You can directly *access any [pymongo](https://api.mongodb.com/python/current/) command* by prefixing `mongo_` to the command name. Eg. to perform `aggregate` on the BlogPage collection (BlogPage is stored as a table in SQL or a collection in MongoDB) the function name becomes `mongo_aggregate`. To directly insert a document (instead of `.save()` a model) use `mongo_insert_one()`
+You can directly *access any [pymongo](https://api.mongodb.com/python/current/) command* by prefixing `mongo_` to the command name. For example, to perform `aggregate` on the BlogPage collection (BlogPage is stored as a table in SQL or a collection in MongoDB) the function name becomes `mongo_aggregate`. To directly insert a document (instead of `.save()` a model) use `mongo_insert_one()`
 
 ## Questions
  
@@ -180,5 +165,5 @@ If you think djongo is useful, **please share it** with the world! Your endorsem
   
 The [roadmap](/djongo/roadmap/) document contains a list of features that must be implemented in future versions of Djongo. You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](/djongo/django-mongodb-connector-design-document/) is implemented.
  
-You can contribute to the continued development and success of Djongo by [making a donation](/djongo/donate/).
+Please contribute to the continued development and success of Djongo by [making a donation](/djongo/donate/).
 
