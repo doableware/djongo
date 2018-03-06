@@ -20,7 +20,7 @@ docs:
 
   - title: "Tutorial"
     children:
-      - title: "Migrate existing MongoDB data"
+      - title: "Integrating Django With MongoDB"
         url: /integrating-django-with-mongodb/
       - title: "MongoDB data fields"
         url: /using-django-with-mongodb-data-fields/
