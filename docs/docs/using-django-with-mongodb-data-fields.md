@@ -8,7 +8,7 @@ Django Admin is a powerful tool for managing data used in your app. If you are u
 
 The Django admin application can use your models to automatically build a site area that you can use to create, view, update, and delete records. This can save you a lot of time during development, making it very easy to test your models and get a feel for whether you have the right data. Most of you already know about Django Admin, but to demonstrate how it is used with Djongo, we start with a simple example.
 
-First we define our basic models. In all tutorials, we use the same models used in the official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/). The documentation talks about 3 models that interact with each other: **Blog, Author and Entry**. Some fields from the original models have been omitted to make the example clearer.
+First we define our basic models. In all tutorials, we use the same models as those used by the official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/). The documentation talks about 3 models that interact with each other: **Blog, Author and Entry**. Some fields from the original models have been omitted to make the example clearer.
 
 ```python
 from djongo import models
@@ -48,9 +48,7 @@ You start with your admin development by *registering* a model. Register the mod
 from django.contrib import admin
 from .models import Blog, Author, Entry
 
-admin.site.register(Blog)
-admin.site.register(Author)
-admin.site.register(Entry)
+admin.site.register([Blog, Author, Entry])
 ```
 
 ## Data Model
@@ -58,7 +56,7 @@ admin.site.register(Entry)
 The `Entry` model defined in the documentation consists of 3 parts:
 * 1-to-Many Relationship: ‘A `Blog` is made up of multiple `Entry`s’ and ‘each `Entry` is associated with just *one* `Blog`’. The same entry can’t appear in two Blogs and this defines the 1-to-Many relationship.
 * Many-to-Many Relationship: ‘An `Entry` can have *multiple* `Author`s’ and ‘an `Author` can make multiple `Entry`s’. This defines the many-to-many relationship for our data model.
-* Normal data columns
+* Normal data columns.
 
 **An interesting point of note** is that the `Blog` model consists of just 2 fields. Most of the data is stored in the `Entry` model.
 
@@ -73,13 +71,13 @@ Next, to retrieve all entries related to the Beatles blog, follow it up with:
 entries = Entry.objects.filter(blog_id=blog.id)
 ```
 
-While it's ok to obtain entries in this fashion, you end up **making 2 trips** to the database. If you are using a SQL based backend this is not the most efficient way. The number of trips can be reduced to one. Django makes the query more efficient:
+While it is ok to obtain entries in this fashion, you end up **making 2 trips** to the database. If you are using a SQL based backend this is not the most efficient way. The number of trips can be reduced to one. Django makes the query more efficient:
 
 ```python
 entries = Entry.objects.filter(blog__name='Beatles Blog')
 ```
 
-This query will hit the database just once. All entries associated with a `Blog` having the name ‘Beatles Blog’ will be retrieved. However, this query generates a SQL JOIN. **JOINs are much slower when compared to a single table lookup**.
+This query will hit the database just once. All entries associated with a `Blog` having the name ‘Beatles Blog’ will be retrieved. However, this query generates a SQL JOIN. **JOINs are much slower when compared to single table lookups**.
 
 Since a `Blog` model shares a 1-to-many relationship with `Entry` I can rewrite my `Entry` model:
 
@@ -106,15 +104,15 @@ I have inserted the `Blog` fields into the `Entry` model. With this new data mod
 entries = Entry.objects.filter(blog_name='Beatles Blog')
 ```
 
-There are no JOINs generated with this and queries will be much faster. What you are thinking though is, aren't we duplicating data? Yes we are, but only if the backend database doesn't use data compression.
+There are no JOINs generated with this and queries will be much faster. What you are thinking though is, are we  not duplicating data? Yes we are, but only if the backend database does not use data compression.
 
-OK, so use compression to mitigate data duplication but take a look at our Entry model, it has 10 columns and is getting unmanageable.
+Using compression to mitigate data duplication is fine but take a look at our Entry model, it has 10 columns and is getting unmanageable.
 
 ## The Embedded Model
 
 A hierarchical structure to *Nature* is apparent. Electrons and protons add up to make atoms, which make molecules, that combine to form proteins, which make cells (and you know the rest).. There is hierarchy to *data* too.
 
-A `Blog` contains a `name` and a `tagline`. An `Entry` contains details of the `Blog`, the `Authors`, `body_text` and some `Meta` data. To make the `Entry` model manageable I will redefine it.
+A `Blog` contains a `name` and a `tagline`. An `Entry` contains details of the `Blog`, the `Authors`, `body_text` and some `Meta` data. To make the `Entry` model manageable let us redefine it:
 
 ```python
 from djongo import models
@@ -127,14 +125,6 @@ class Blog(models.Model):
     class Meta:
         abstract = True
 
-class BlogForm(forms.ModelForm):
-
-    class Meta:
-        model = Blog
-        fields = (
-            'name', 'tagline'
-        )
-
 class MetaData(models.Model):
     pub_date = models.DateField()
     mod_date = models.DateField()
@@ -143,15 +133,6 @@ class MetaData(models.Model):
 
     class Meta:
         abstract = True
-
-class MetaDataForm(forms.ModelForm):
-
-    class Meta:
-        model = MetaData
-        fields = (
-            'pub_date', 'mod_date',
-            'n_pingbacks', 'rating'
-        )
 
 class Author(models.Model):
     name = models.CharField(max_length=200)
@@ -163,16 +144,13 @@ class Author(models.Model):
 class Entry(models.Model):
     blog = models.EmbeddedModelField(
         model_container=Blog,
-        model_form_class=BlogForm
     )
     meta_data = models.EmbeddedModelField(
         model_container=MetaData,
-        model_form_class=MetaDataForm
     )
 
     headline = models.CharField(max_length=255)
     body_text = models.TextField()
-
     authors = models.ManyToManyField(Author)
     n_comments = models.IntegerField()
 
@@ -180,17 +158,20 @@ class Entry(models.Model):
         return self.headline
 ```
 
-To display the embedded models in Django Admin, a `Form` for the embedded fields is required. Since the embedded field is an abstact model, the form for it can be easily created by using a `ModelForm`. The `BlogForm` defines `Blog` as the model with `name` and `tagline` as the form fields. Register the new models in `admin.py`. 
+To display the embedded models in Django Admin, a `Form` for the embedded fields is required. Since the embedded field is an abstact model, the form for it can be easily created by using a `ModelForm`. The `BlogForm` defines `Blog` as the model with `name` and `tagline` as the form fields. 
+
+**If you do not specify a `ModelForm` for your embedded models and pass it though the `model_form_class` argument, Djongo will automatically generate a `ModelForm` for you.** 
+
+Register the new models in `admin.py`. 
 
 ```python
 from django.contrib import admin
 from .embedded_models import Author, Entry
 
-admin.site.register(Author)
-admin.site.register(Entry)
+admin.site.register([Author, Entry])
 ```
 
-The number of fields in `Entry` model is reduce to 6. Fire up Django Admin to check what is up!
+The number of fields in the `Entry` model is reduce to 6. Fire up Django Admin to check what is up!
  
 ![Django Admin](/djongo/assets/images/embedded-admin.png)
 
@@ -220,10 +201,9 @@ class Entry(models.Model):
     _id = models.ObjectIdField()
     blog = models.EmbeddedModelField(
         model_container=Blog,
-        model_form_class=BlogForm
     )
 ```
 
-By default the `ObjectIdField` internally sets `primary_key` as `True`. Which means the Django generated `id` autoincrement field will no longer be generated. The Field internally sets `blank` as `True`. Which means, the ObjectID will be automatically generated in MongoDB upon a document insertion. 
+By default the `ObjectIdField` internally sets `primary_key` as `True`. Which means the implicitly Django created `id` autoincrement field will no longer be generated. The Field internally inherits from the `AutoField`, which means, the ObjectID will be automatically generated in MongoDB upon a document insertion. 
 
 Consider using the `ObjectIdField` in your models if you want to avoid calling Django migrations every time you create a new model.

@@ -47,7 +47,6 @@ The `authors` in the `Entry` models can be redefined using the `ArrayModelField`
 
 ```python
 from djongo import models
-from djongo.models import forms
 
 class Blog(models.Model):
     name = models.CharField(max_length=100)
@@ -55,14 +54,6 @@ class Blog(models.Model):
 
     class Meta:
         abstract = True
-
-class BlogForm(forms.ModelForm):
-
-    class Meta:
-        model = Blog
-        fields = (
-            'name', 'tagline'
-        )
 
 class MetaData(models.Model):
     pub_date = models.DateField()
@@ -72,15 +63,6 @@ class MetaData(models.Model):
 
     class Meta:
         abstract = True
-
-class MetaDataForm(forms.ModelForm):
-
-    class Meta:
-        model = MetaData
-        fields = (
-            'pub_date', 'mod_date',
-            'n_pingbacks', 'rating'
-        )
 
 class Author(models.Model):
     name = models.CharField(max_length=200)
@@ -92,22 +74,12 @@ class Author(models.Model):
     def __str__(self):
         return self.name
 
-class AuthorForm(forms.ModelForm):
-
-    class Meta:
-        model = Author
-        fields = (
-            'name', 'email'
-        )
-
 class Entry(models.Model):
     blog = models.EmbeddedModelField(
         model_container=Blog,
-        model_form_class=BlogForm
     )
     meta_data = models.EmbeddedModelField(
         model_container=MetaData,
-        model_form_class=MetaDataForm
     )
 
     headline = models.CharField(max_length=255)
@@ -115,7 +87,6 @@ class Entry(models.Model):
 
     authors = models.ArrayModelField(
         model_container=Author,
-        model_form_class=AuthorForm,
     )
     n_comments = models.IntegerField()
 
@@ -124,7 +95,7 @@ class Entry(models.Model):
 
 ```
 
-**Notice** how the `ManyToManyField` is now replaced by the `ArrayModelField`. To display the Array field in Django Admin, a `Form` for the field must be present. Since the array is made up of abstract `Author` models, the form can be easily created by using a `ModelForm`.  The `AuthorForm` defines `Author` as the model with `name` and `email` as the form fields.
+**Notice** how the `ManyToManyField` is now replaced by the `ArrayModelField`. To display the Array field in Django Admin, a `Form` for the field must be present. Since the array is made up of abstract `Author` models, the form can be easily created by using a `ModelForm`.  If you do not specify a `ModelForm` for your array  models and pass it though the `model_form_class` argument, Djongo will automatically generate a `ModelForm` for you. 
 
 ### Django Admin
 
@@ -132,7 +103,7 @@ class Entry(models.Model):
 
 > Django Admin reveals multiple neatly nested `Name` and `Email` fields under a single Author label.
 
-Retrieving an entry from the database will result in **no JOINS and only a single database lookup. It's super fast**   
+Retrieving an entry from the database will result in **no JOINS and only a single database lookup. It is super fast**   
 
 ### Querying Array fields
 
@@ -195,7 +166,7 @@ class Entry(models.Model):
  
 ## List field 
 
-`ArrayModelField` and `ArrayReferenceField` require all Models in the list to be of the same type. MongoDB allows the saving of arbitrary data inside it's embedded array. The `ListField` is useful in such cases. The list field cannot be represented in Django Admin though and can only be used in the python script.
+`ArrayModelField` and `ArrayReferenceField` require all Models in the list to be of the same type. MongoDB allows the saving of arbitrary data inside it is embedded array. The `ListField` is useful in such cases. The list field cannot be represented in Django Admin though and can only be used in the python script.
 
 
 

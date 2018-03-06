@@ -37,7 +37,7 @@ class Entry(models.Model):
 
 ``` 
 
-As most SQL DBs do not support capped tables, Django lacks a way to define such tables during a migration. Djongo comes with it's own version of `manage.py` to make this happen. Switch to the root directory of your app and from the command line run:
+As most SQL DBs do not support capped tables, Django lacks a way to define such tables during a migration. Djongo comes with it is own version of `manage.py` to make this happen. Switch to the root directory of your app and from the command line run:
 
 ```
 python -m djongo.manage migrate
