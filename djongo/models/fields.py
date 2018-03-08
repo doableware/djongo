@@ -153,7 +153,7 @@ class ArrayModelField(Field):
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.model_container = model_container
-        self.model_form_class = model_form_class or modelform_factory(model_container)
+        self.model_form_class = model_form_class or modelform_factory(model_container, fields='__all__')
 
         if model_form_kwargs_l is None:
             model_form_kwargs_l = {}
@@ -386,7 +386,7 @@ class EmbeddedModelField(Field):
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.model_container = model_container
-        self.model_form_class = model_form_class or modelform_factory(model_container)
+        self.model_form_class = model_form_class or modelform_factory(model_container, fields='__all__')
         self.null = True
         self.instance = None
 
