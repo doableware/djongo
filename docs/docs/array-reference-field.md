@@ -33,7 +33,7 @@ Argument | Type | Description
 
 ```python
 from djongo import models
-from djongo.models import forms
+from django import forms
 
 class Blog(models.Model):
     name = models.CharField(max_length=100)
