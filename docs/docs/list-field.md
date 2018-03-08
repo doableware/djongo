@@ -26,14 +26,14 @@ class ArrayModelField(Field):
 Argument | Type | Description
 ---------|------|-------------
 `model_container` | `models.Model` | The child model class type (not the instance) that this array field will contain.
-`model_form_class` | `models.forms.ModelForm` | The child model form class type of the array model. All child models inside the array must be of the same type. Mixing different types of child models inside the embedded array is not supported.
+`model_form_class` | `forms.ModelForm` | The child model form class type of the array model. All child models inside the array must be of the same type. Mixing different types of child models inside the embedded array is not supported.
 `model_form_kwargs` | `dict()` | The kwargs (if any) that must be passed to the embedded model form while instantiating it.
   
 ### Example
 
 ```python
 from djongo import models
-from djongo.models import forms
+from django import forms
 
 class Blog(models.Model):
     name = models.CharField(max_length=100)
