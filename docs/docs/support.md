@@ -7,13 +7,13 @@ row1:
   - image_path: /assets/images/sagome.jpg
     alt: "Migration Support"
     title: "Migration Support"
-    excerpt: "Ask for support to migrate existing data from SQL DB or MongoDB in a phased manner."
+    excerpt: "Migrate your existing Django app to MongoDB in a phased manner."
 
 row2:    
   - image_path: /assets/images/optimize.jpg
     alt: "Database Optimization"
     title: "Database Optimization"
-    excerpt: "Ask for support to migrate Django Fields to Djongo Fields in a phased manner and notice the difference."    
+    excerpt: "Migrate Django Fields to powerful Djongo Fields in a phased manner and notice the difference."    
     
 row3:    
   - image_path: /assets/images/bug.jpg

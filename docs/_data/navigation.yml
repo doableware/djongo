@@ -1,18 +1,20 @@
 # main links
 main:
-   - title: "Get Started"
-     url: /get-started/
-   - title: "Get The Source"
-     url: https://github.com/nesdis/djongo/
-   - title: "Discuss"
-     url: /discuss/
-   - title: "Donate"
-     url: /donate/
-     thumbnail: /djongo/assets/images/heart.png
    - title: "Support"
      url: /support/
      thumbnail: /djongo/assets/images/help.png
      class: support
+   - title: "Get Started"
+     url: /get-started/
+   - title: "Discuss"
+     url: /discuss/
+   - title: "Get The Source"
+     url: https://github.com/nesdis/djongo/
+
+#   - title: "Donate"
+#     url: /donate/
+#     thumbnail: /djongo/assets/images/heart.png
+
 
 docs:
   - title: "Get started"
