@@ -15,6 +15,7 @@ import typing
 import inspect
 
 from django.forms import modelform_factory
+from django.utils.html import format_html_join, format_html
 from pymongo.collection import Collection
 
 from django.db.models.fields.related import RelatedField
@@ -246,7 +247,7 @@ class ArrayFormField(forms.Field):
         self.model_form_class = model_form_class
         self.mdl_form_kw_l = mdl_form_kw_l
 
-        widget = ArrayFormWidget(model_form_class._meta.fields[0])
+        widget = ArrayFormWidget(model_form_class.__name__)
         error_messages = {
             'incomplete': 'Enter all required fields.',
         }
@@ -319,7 +320,9 @@ class ArrayFormBoundField(forms.BoundField):
             yield form
 
     def __str__(self):
-        return mark_safe(f'<table>\n{str(self.form_set)}\n</table>')
+        table = format_html_join('\n','<tbody>{}</tbody>', ((form.as_table(),) for form in self.form_set))
+        table = format_html('\n<table class="{}-array-model-field">\n{}\n</table>', self.name, table)
+        return format_html('{}\n{}',table, self.form_set.management_form)
 
     def __len__(self):
         return len(self.form_set)

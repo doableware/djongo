@@ -453,6 +453,9 @@ class Result:
         try:
             yield from iter(self._query)
 
+        except MigrationError:
+            raise
+
         except OperationFailure as e:
             import djongo
             exe = SQLDecodeError(
@@ -493,6 +496,9 @@ class Result:
         else:
             try:
                 return handler(self, statement)
+
+            except MigrationError:
+                raise
 
             except OperationFailure as e:
                 import djongo
