@@ -4,13 +4,13 @@ permalink: /support/
 layout: splash
 
 row1:
-  - image_path: /assets/images/sagome.jpg
+  - image_path: /assets/images/migration.png
     alt: "Migration Support"
     title: "Migration Support"
     excerpt: "Migrate your existing Django app to MongoDB in a phased manner."
 
 row2:    
-  - image_path: /assets/images/optimize.jpg
+  - image_path: /assets/images/optimization.png
     alt: "Database Optimization"
     title: "Database Optimization"
     excerpt: "Migrate Django Fields to powerful Djongo Fields in a phased manner and notice the difference."    
