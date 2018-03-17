@@ -10,7 +10,7 @@ row1:
     excerpt: "Migrate your existing Django app to MongoDB in a phased manner."
 
 row2:    
-  - image_path: /assets/images/optimization.png
+  - image_path: /assets/images/optimization2.png
     alt: "Database Optimization"
     title: "Database Optimization"
     excerpt: "Migrate Django Fields to powerful Djongo Fields in a phased manner and notice the difference."    
