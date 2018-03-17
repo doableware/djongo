@@ -6,6 +6,8 @@ _site/
 
 docs/.sass-cache/*
 docs/_includes/*
+!docs/_includes/analytics-providers/
+docs/_includes/analytics-providers/*.*
 docs/_layouts/*
 docs/_sass/*
 docs/_site/*
@@ -13,6 +15,7 @@ docs/assets/js/*
 
 Gemfile.lock
 minimal-mistakes
+
 
 !docs/_includes/footer.html
 !docs/_includes/masthead.html
