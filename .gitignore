@@ -16,6 +16,7 @@ minimal-mistakes
 
 !docs/_includes/footer.html
 !docs/_includes/masthead.html
+!docs/_includes/analytics-providers/google-universal.html
 !docs/_layouts/single.html
 
 /tests/dummy_app/dummy/migrations
