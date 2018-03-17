@@ -6,8 +6,7 @@ _site/
 
 docs/.sass-cache/*
 docs/_includes/*
-!docs/_includes/analytics-providers/
-docs/_includes/analytics-providers/*.*
+!docs/_includes/head/
 docs/_layouts/*
 docs/_sass/*
 docs/_site/*
@@ -19,8 +18,8 @@ minimal-mistakes
 
 !docs/_includes/footer.html
 !docs/_includes/masthead.html
-!docs/_includes/analytics-providers/google-universal.html
 !docs/_layouts/single.html
+
 
 /tests/dummy_app/dummy/migrations
 /tests/dummy_app/djongo-test
