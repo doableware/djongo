@@ -1,11 +1,11 @@
 # main links
 main:
+   - title: "Get Started"
+     url: /get-started/
    - title: "Support"
      url: /support/
      thumbnail: /djongo/assets/images/help.png
      class: support
-   - title: "Get Started"
-     url: /get-started/
    - title: "Discuss"
      url: /discuss/
    - title: "Get The Source"
