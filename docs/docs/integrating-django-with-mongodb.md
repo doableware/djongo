@@ -47,7 +47,7 @@ All options except `ENGINE` and `ENFORCE_SCHEMA` are the same those listed in th
 
 ### Enforce schema
 
-MongoDB is *schemaless*, which means that no schema is enforced by the database — we may add and remove fields the we want and MongoDB will not complain. This makes life a lot easier in many regards, especially when there is a change to the data model. Take for example the `Blog` Model
+MongoDB is *schemaless*, which means that no schema is enforced by the database — you can add and remove fields the way you want and MongoDB will not complain. This makes life a lot easier in many regards, especially when there are frequent changes to the data model. Take for example the `Blog` Model.
 
 ```python
 class Blog(models.Model):
@@ -55,7 +55,7 @@ class Blog(models.Model):
     tagline = models.TextField()
 ```
 
-You can save several entries to this Model into the DB and then edit your Model sometime later like so:
+You can save several entries into the DB and later modify it like so:
 
 ```python
 class Blog(models.Model):
@@ -64,9 +64,11 @@ class Blog(models.Model):
     description = models.TextField()
 ```
 
-You have just added a new field. The new entries can be saved into MongoDB **without running any migrations**. All entries in the Blog collection henceforth will contain 3 fields. This works fine if you know what you are doing. Consider a query that  retrieves entries belonging to both the 'older' model (with just 2 fields) and the current model. What will the value of `description` be? 
+The modified Model can be saved **without running any migrations**. All entries in the `Blog` collection will now contain 3 fields. 
 
-When connecting to Djongo you can set `ENFORCE_SCHEMA: True`. In this case, a `MigrationError` will be raised when field values are missing from the retrieved documents. You can then check what went wrong. Enforce schema can help to iron out bugs involving incorrect types or missing fields.
+This works fine if you know what you are doing. Consider a query, that retrieves entries belonging to both the 'older' model (with just 2 fields) and the current model. What will the value of `description` now be? 
+
+To handle such scenarios Djongo comes with the `ENFORCE_SCHEMA` option. When connecting to Djongo you can set `ENFORCE_SCHEMA: True`. In this case, a `MigrationError` will be raised when field values are missing from the retrieved documents. You can then check what went wrong. Enforce schema can help to iron out bugs involving incorrect types or missing fields.
 
 `ENFORCE_SCHEMA: False` works by silently setting the missing fields with the value `None`. If your app is programmed to expect this (which means it is not a bug) you can get away by not calling any migrations.
 
@@ -86,15 +88,15 @@ There is no concept of an AUTOINCREMENT field in MongoDB. Internally, Djongo cre
     }
 }
 ```
-For every collection in the DB that has an autoincrement field, there is an entry in the `__schema__` collection. Running `manage.py migrate` automatically creates these entries. There are 3 approaches to use Djongo with an existing DB.
+For every collection in the DB that has an autoincrement field, there is an corresponding entry in the `__schema__` collection. Running `manage.py migrate` automatically creates these entries. There are 3 approaches to use Djongo with an existing DB.
 
 ### Zero risk
 
 1. Start with an empty DB.
 2. Define your models in the `models.py` file, if you have not already done so. The models and model fields have to be exactly the same, as the fields in the existing DB.
-3. Run `manage.py makemigarations <app_name>` followed by `manage.py migrate`. At the end of this step, your empty DB should have a `__schema__` collection, and other collections defined in the `model.py` file.
+3. Run `manage.py makemigarations <app_name>` followed by `manage.py migrate`. At the end of this step your empty DB should have a `__schema__` collection, and other collections defined in the `model.py` file.
 4. Copy all data from the existing DB to the new DB.
-5. In `__schema__` collection make sure that the `seq` number is incremented to the latest value. This should correspond to the document count for each model. For example, if your model has 15 entries (15 documents in the DB), then `seq` should be set as 15.
+5. In `__schema__` collection make sure that the `seq` number is incremented to the latest value. This should correspond to the document count for each model. For example, if your model has 16 entries (16 documents in the DB), then `seq` should be set as 16.
 
 In case your seq number is not the latest value you run the risk of **overwriting** an existing entry with the new entry. But since you have a backup, you are okay.
 
@@ -115,3 +117,5 @@ You can now delete the DB created in step 1.
 You can manually create a `__schema__` collection in your existing DB. Next, add entries for each model your app uses in the format described above. This can be quite tiresome, and prone to manual errors.
 
 *You are done setting up Django with MongoDB. Start using Django like with any other database backend.*
+
+Finally, you can ask for [expert support](/djongo/support/) if your project demands complex migrations. 
