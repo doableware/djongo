@@ -86,25 +86,29 @@ There is no concept of an AUTOINCREMENT field in MongoDB. Internally, Djongo cre
     }
 }
 ```
-For every collection in the DB that has an autoincrement field, there is an entry in the `__schema__` collection. Running `manage.py migrate` automatically creates these entries. There are 3 ways to use Djongo with an existing DB
+For every collection in the DB that has an autoincrement field, there is an entry in the `__schema__` collection. Running `manage.py migrate` automatically creates these entries. There are 3 approaches to use Djongo with an existing DB.
 
 ### Zero risk
 
-1. Start with an empty DB
-2. In `models.py` define your models in Django, exactly the same as the fields in existing DB.
-3. Run `manage.py makemigarations <app_name>` followed by `manage.py migrate`. At the end of this step, your empty DB should have a `__schema__` collection as well as other collections defined in your model.py
-4. Copy all data from existing db to new db
-5. In `__schema__` collection make sure the `seq` number is incremented to the latest value. This should correspond to the copied data set.
+1. Start with an empty DB.
+2. Define your models in the `models.py` file, if you have not already done so. The models and model fields have to be exactly the same, as the fields in the existing DB.
+3. Run `manage.py makemigarations <app_name>` followed by `manage.py migrate`. At the end of this step, your empty DB should have a `__schema__` collection, and other collections defined in the `model.py` file.
+4. Copy all data from the existing DB to the new DB.
+5. In `__schema__` collection make sure that the `seq` number is incremented to the latest value. This should correspond to the document count for each model. For example, if your model has 15 entries (15 documents in the DB), then `seq` should be set as 15.
 
-In case your seq number is not the latest value you run the risk of **overwriting** an existing entry with the new entry. But since you have a backup copy you are okay.
+In case your seq number is not the latest value you run the risk of **overwriting** an existing entry with the new entry. But since you have a backup, you are okay.
 
 ### Medium risk
 
-If you don't want to create a new DB then follow step 1 to 3 as above followed by step 5. In step 4:
+If you do not want to create a new DB.
 
-4. Copy the `__schema__` collection from the new DB to the existing DB
+1. Start with an empty DB. You can always delete this later.
+2. Same as before.
+3. Same as before.
+4. Copy the `__schema__` collection from the new DB to the existing DB.
+5. Same as before.
 
-If you get step 5 wrong you may lose some data. You can delete the DB created in step 1.
+You can now delete the DB created in step 1.
 
 ### High risk
 
