@@ -55,6 +55,10 @@ analytics:
   google:
     tracking_id          : "UA-75159067-1"
 
+footer_scripts:
+  - /assets/js/jquery.easing.min.js
+  - /assets/js/jquery.touchSwipe.min.js
+  - /assets/js/jquery.liquid-slider.min.js
 
 # Site Author
 #author:

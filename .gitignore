@@ -11,6 +11,11 @@ docs/_layouts/*
 docs/_sass/*
 docs/_site/*
 docs/assets/js/*
+!docs/assets/js/jquery.liquid-slider.min.js
+!docs/assets/js/jquery.touchSwipe.min.js
+!docs/assets/js/jquery.easing.min.js
+
+
 
 Gemfile.lock
 minimal-mistakes
