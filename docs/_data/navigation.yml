@@ -52,5 +52,5 @@ docs:
         url: /different-ways-to-integrate-django-with-mongodb/
       - title: "Djongo design documentation"
         url: /django-mongodb-connector-design-document/
-      - title: "Roadmap"
-        url: /roadmap/
+#      - title: "Roadmap"
+#        url: /roadmap/
