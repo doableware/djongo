@@ -66,7 +66,7 @@ class Blog(models.Model):
 
 The modified Model can be saved **without running any migrations**. All entries in the `Blog` collection will now contain 3 fields. 
 
-This works fine if you know what you are doing. Consider a query, that retrieves entries belonging to both the 'older' model (with just 2 fields) and the current model. What will the value of `description` now be? 
+This works fine if you know what you are doing. Consider a query that retrieves entries belonging to both the 'older' model (with just 2 fields) and the current model. What will the value of `description` now be? 
 
 To handle such scenarios Djongo comes with the `ENFORCE_SCHEMA` option. When connecting to Djongo you can set `ENFORCE_SCHEMA: True`. In this case, a `MigrationError` will be raised when field values are missing from the retrieved documents. You can then check what went wrong. Enforce schema can help to iron out bugs involving incorrect types or missing fields.
 
