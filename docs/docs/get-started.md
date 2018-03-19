@@ -163,7 +163,7 @@ Any questions, suggestions for improvements, issues regarding the usage or to co
  
 If you think djongo is useful, **please share it** with the world! Your endorsements and online reviews will help get more support for this project.
   
-The [roadmap](/djongo/roadmap/) document contains a list of features that must be implemented in future versions of Djongo. You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](/djongo/django-mongodb-connector-design-document/) is implemented.
+You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](/djongo/django-mongodb-connector-design-document/) is implemented.
  
 Please contribute to the continued development and success of Djongo by [making a donation](/djongo/donate/).
 

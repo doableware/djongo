@@ -20,7 +20,7 @@ row3:
     alt: "Debug Support"
     title: "Development and Debug Support"
     excerpt: "Support for Django App development. Data model design and development."  
-        
+
 test1:
   - excerpt: ">Thanks again for the quick responses! Great work by the way! --- Chan"
   
@@ -32,7 +32,9 @@ test3:
   
 test4:
   - excerpt: ">I have to say Djongo is very useful between Django and Mongodb.--- Feng"      
+  
 ---
+
 
 
 {% include feature_row id="row1" type="left" %}
@@ -41,16 +43,27 @@ test4:
 
 {% include feature_row id="row3" type="left" %}
 
+<div class="feature__wrapper">
 
-{% include feature_row id="test1" type="center" %}
-
-{% include feature_row id="test2" type="center" %}
-
-{% include feature_row id="test3" type="center" %}
-
-{% include feature_row id="test4" type="center" %}
-
-
+<div class="liquid-slider"  id="slider-1">
+    <div>
+        <h2 class="title">Chan</h2>
+        <p>Thanks again for the quick responses! Great work by the way!</p>
+    </div>
+    <div>
+        <h2 class="title">Theo</h2>
+        <p>Works like a charm. Thanks a lot.</p>
+    </div>
+    <div>
+        <h2 class="title">Ryan</h2>
+        <p>Thanks for you work on this. Thanks so much for your help and for Djongo.</p>
+    </div>
+    <div>
+        <h2 class="title">Feng</h2>
+        <p>I have to say Djongo is very useful between Django and Mongodb.</p>
+    </div>
+</div>   
+</div>
 
 <form action="https://formspree.io/nesdis@gmail.com"
       method="POST">
