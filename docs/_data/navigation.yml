@@ -24,7 +24,7 @@ docs:
     children:
       - title: "Integrating Django With MongoDB"
         url: /integrating-django-with-mongodb/
-      - title: "MongoDB data fields"
+      - title: "Djongo Model fields"
         url: /using-django-with-mongodb-data-fields/
       - title: "Array and List fields"
         url: /using-django-with-mongodb-array-field/

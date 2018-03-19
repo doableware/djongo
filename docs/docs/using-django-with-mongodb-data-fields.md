@@ -1,14 +1,13 @@
 ---
-title: Using Django with MongoDB data fields
+title: Using Django with Djongo Model fields
 permalink: /using-django-with-mongodb-data-fields/
 ---
 
 
-Django Admin is a powerful tool for managing data used in your app. If you are using MongoDB as your backend, Django Admin can be directly used to create NoSQL ‘embedded models’ using Djongo to boost your performance.
+Django Admin is a powerful tool for managing data used in your app. When your models use Djongo relational fields,  you can create NoSQL "embedded models" directly from the Django Admin. These fields provide better performance when compared with Django relational fields.
+The Django admin application can use your models to automatically build a site area that you can use to create, view, update, and delete records. This can save you a lot of time during development, making it very easy to test your models and get a feel for whether you have the right data. Most of you already know about Django Admin, but to demonstrate how to use it with Djongo, we start with a simple example. You can ask for [expert support](/djongo/support/) if your project uses complex models. 
 
-The Django admin application can use your models to automatically build a site area that you can use to create, view, update, and delete records. This can save you a lot of time during development, making it very easy to test your models and get a feel for whether you have the right data. Most of you already know about Django Admin, but to demonstrate how it is used with Djongo, we start with a simple example.
-
-First we define our basic models. In all tutorials, we use the same models as those used by the official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/). The documentation talks about 3 models that interact with each other: **Blog, Author and Entry**. Some fields from the original models have been omitted to make the example clearer.
+We first define our basic models. In the tutorials, we use the example used in the official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/). The documentation talks about 3 models that interact with each other: **Blog, Author and Entry**. To make the example clearer, few fields from the original models are omitted. 
 
 ```python
 from djongo import models
@@ -71,7 +70,7 @@ Next, to retrieve all entries related to the Beatles blog, follow it up with:
 entries = Entry.objects.filter(blog_id=blog.id)
 ```
 
-While it is ok to obtain entries in this fashion, you end up **making 2 trips** to the database. If you are using a SQL based backend this is not the most efficient way. The number of trips can be reduced to one. Django makes the query more efficient:
+While it is fine to obtain entries in this fashion, you end up **making 2 trips** to the database. If you are using a SQL based backend this is not the most efficient way. The number of trips can be reduced to one. Django makes the query more efficient:
 
 ```python
 entries = Entry.objects.filter(blog__name='Beatles Blog')
@@ -158,9 +157,9 @@ class Entry(models.Model):
         return self.headline
 ```
 
-To display the embedded models in Django Admin, a `Form` for the embedded fields is required. Since the embedded field is an abstact model, the form for it can be easily created by using a `ModelForm`. The `BlogForm` defines `Blog` as the model with `name` and `tagline` as the form fields. 
+To display the embedded models in Django Admin, a `Form` for the embedded fields is required. Since the embedded field is an abstract model, the form for it can be easily created by using a `ModelForm`. The `BlogForm` defines `Blog` as the model with `name` and `tagline` as the form fields. 
 
-**If you do not specify a `ModelForm` for your embedded models and pass it though the `model_form_class` argument, Djongo will automatically generate a `ModelForm` for you.** 
+If you do not specify a `ModelForm` for your embedded models, and pass it using the `model_form_class` argument, Djongo will automatically generate a `ModelForm` for you.
 
 Register the new models in `admin.py`. 
 
@@ -194,7 +193,7 @@ This query will return all entries having an embedded blog with the name ‘Beat
 
 ## ObjectId Field
 
-For every document inserted into a collection MongoDB internally creates an [ObjectID](https://docs.mongodb.com/manual/reference/method/ObjectId/) field with the name `_id`. The field can be referenced from within the Model:
+For every document inserted into a collection MongoDB internally creates an [ObjectID](https://docs.mongodb.com/manual/reference/method/ObjectId/) field with the name `_id`. Reference this field from within the Model:
 
 ```python
 class Entry(models.Model):
@@ -204,6 +203,7 @@ class Entry(models.Model):
     )
 ```
 
-By default the `ObjectIdField` internally sets `primary_key` as `True`. Which means the implicitly Django created `id` autoincrement field will no longer be generated. The Field internally inherits from the `AutoField`, which means, the ObjectID will be automatically generated in MongoDB upon a document insertion. 
+By default the `ObjectIdField` internally sets `primary_key` as `True`. This means the implicitly created `id` AUTOINCREMENT field will not be created. The Field inherits from the `AutoField`. An ObjectID will be automatically generated by MongoDB for every document inserted. 
 
 Consider using the `ObjectIdField` in your models if you want to avoid calling Django migrations every time you create a new model.
+
