@@ -58,7 +58,7 @@ Djongo connector for MongoDB ensures that you:
  * Future proof your code
  * Atomic SQL JOIN operations
  
-Refer to [Integrating Django with MongoDB](/djongo/integrating-django-with-mongodb/) for the detailed reference. You can ask for [expert support](/djongo/support/) if your project uses complex models.
+Refer to [Integrating Django with MongoDB](/djongo/integrating-django-with-mongodb/) for the detailed reference. Get [expert support](/djongo/support/) for complex projects.
 
 ## Use Django Admin to add documents
 
