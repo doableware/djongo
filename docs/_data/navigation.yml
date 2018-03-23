@@ -8,7 +8,7 @@ main:
 #     class: support
    - title: "Discuss"
      url: /discuss/
-   - title: "Get The Source"
+   - title: "Source"
      url: https://github.com/nesdis/djongo/
 
 #   - title: "Donate"
