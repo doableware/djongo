@@ -2,7 +2,7 @@
 main:
    - title: "Get Started"
      url: /get-started/
-   - title: "Support"
+   - title: "Get Support"
      url: /support/
 #     thumbnail: /djongo/assets/images/help.png
 #     class: support
