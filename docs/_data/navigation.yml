@@ -54,3 +54,7 @@ docs:
         url: /django-mongodb-connector-design-document/
 #      - title: "Roadmap"
 #        url: /roadmap/
+
+  - title: "Donate"
+    url: /donate/
+    thumbnail: /djongo/assets/images/heart.png
