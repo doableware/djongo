@@ -1,6 +1,5 @@
 import typing
 from collections import OrderedDict
-
 from sqlparse import tokens, parse as sqlparse
 from sqlparse.sql import Identifier, IdentifierList, Parenthesis, Function, Comparison
 
@@ -366,6 +365,7 @@ class NestedInQueryConverter(Converter):
 
         self._in_query = SelectQuery(
             self.query.db_ref,
+            self.query.connection_properties,
             sqlparse(self._token.value[1:-1])[0],
             self.query.params
         )

@@ -70,7 +70,7 @@ class _UnaryOp(_Op):
         return self.rhs.to_mongo()
 
 
-class _InNotInLikeOp(_Op):
+class _IdentifierOp(_Op):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -88,7 +88,7 @@ class _InNotInLikeOp(_Op):
         raise NotImplementedError
 
 
-class _InNotInOp(_InNotInLikeOp):
+class _InNotInOp(_IdentifierOp):
 
     def _fill_in(self, token):
         self._in = []
@@ -155,7 +155,7 @@ class InOp(_InNotInOp):
         self.is_negated = True
 
 
-class LikeOp(_InNotInLikeOp):
+class LikeOp(_IdentifierOp):
 
     def __init__(self, *args, **kwargs):
         super().__init__(name='LIKE', *args, **kwargs)
@@ -183,6 +183,45 @@ class iLikeOp(LikeOp):
             '$options': 'i'
         }}
 
+
+class BetweenOp(_IdentifierOp):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(name='BETWEEN', *args, **kwargs)
+        token = self.token
+
+        tok_id, lower = token.token_next(self._token_id)
+        lower = SQLToken.placeholder_index(lower)
+        self._lower = self.params[lower]
+
+        tok_id, _and = token.token_next(tok_id)
+        if not _and.match(tokens.Keyword, 'AND'):
+            raise SQLDecodeError
+
+        tok_id, upper = token.token_next(tok_id)
+        upper = SQLToken.placeholder_index(upper)
+        self._upper = self.params[upper]
+
+    def negate(self):
+        self.is_negated = True
+
+    def to_mongo(self):
+        if not self.is_negated:
+            return {
+                self._field: {
+                    '$gte': self._lower,
+                    '$lte': self._upper
+                }
+            }
+        else:
+            return {
+                self._field: {
+                    '$not': {
+                        '$gte': self._lower,
+                        '$lte': self._upper
+                    }
+                }
+            }
 
 class NotOp(_UnaryOp):
     def __init__(self, *args, **kwargs):
@@ -363,6 +402,13 @@ class ParenthesisOp(_Op):
                 link_op()
                 self._op_precedence(op)
 
+            elif tok.match(tokens.Keyword, 'BETWEEN'):
+                op = BetweenOp(**kw)
+                link_op()
+                self._op_precedence(op)
+                for _ in range(3):
+                    tok_id, _ = token.token_next(tok_id)
+
             elif isinstance(tok, Comparison):
                 op = CmpOp(0, tok, self.query)
                 self._cmp_ops.append(op)
@@ -457,6 +503,7 @@ OPERATOR_MAP = {
     '<=': '$lte',
 }
 OPERATOR_PRECEDENCE = {
+    'BETWEEN': 7,
     'LIKE': 6,
     'IN': 5,
     'NOT IN': 4,
