@@ -378,7 +378,7 @@ def paired_tests(paired_test, options, test_labels, parallel):
     teardown(state)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description="Run the Django test suite.")
     parser.add_argument(
         'modules', nargs='*', metavar='module',
@@ -474,3 +474,7 @@ if __name__ == "__main__":
         )
         if failures:
             sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
