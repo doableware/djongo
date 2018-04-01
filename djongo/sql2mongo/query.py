@@ -19,7 +19,7 @@ from sqlparse.sql import (
     IdentifierList, Identifier, Parenthesis,
     Where, Token,
     Statement)
-from djongo import base
+
 from . import SQLDecodeError, SQLToken, MigrationError
 from .converters import (
     ColumnSelectConverter, AggColumnSelectConverter, FromConverter, WhereConverter,
@@ -53,7 +53,7 @@ class Query:
     def __init__(
             self,
             db_ref: Database,
-            connection_properties: 'base.DjongoClient',
+            connection_properties: 'djongo.base.DjongoClient',
             statement: Statement,
             params: list
 

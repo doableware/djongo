@@ -100,7 +100,9 @@ WHERE "django_admin_log"."user_id" = %(0)s ORDER BY "django_admin_log"."action_t
 
 'SELECT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content" FROM "dummy_multipleblogposts" WHERE "dummy_multipleblogposts"."h1" IN (SELECT U0."id" AS Col1 FROM "dummy_blogpost" U0 WHERE U0."h1" IN (%s, %s))',
 
-'SELECT "viewflow_process"."id", "viewflow_process"."flow_class", "viewflow_process"."status", "viewflow_process"."created", "viewflow_process"."finished" FROM "viewflow_process" WHERE "viewflow_process"."id" IN (SELECT U0."process_id" AS Col1 FROM "viewflow_task" U0 INNER JOIN "viewflow_process" U1 ON (U0."process_id" = U1."id") WHERE (U1."flow_class" IN (%(0)s, %(1)s, %(2)s) AND U0."owner_id" = %(3)s AND U0."status" = %(4)s)) ORDER BY "viewflow_process"."created" DESC'
+'SELECT "viewflow_process"."id", "viewflow_process"."flow_class", "viewflow_process"."status", "viewflow_process"."created", "viewflow_process"."finished" FROM "viewflow_process" WHERE "viewflow_process"."id" IN (SELECT U0."process_id" AS Col1 FROM "viewflow_task" U0 INNER JOIN "viewflow_process" U1 ON (U0."process_id" = U1."id") WHERE (U1."flow_class" IN (%(0)s, %(1)s, %(2)s) AND U0."owner_id" = %(3)s AND U0."status" = %(4)s)) ORDER BY "viewflow_process"."created" DESC',
+
+'SELECT COUNT(*) AS "__count" FROM "admin_changelist_event" WHERE "admin_changelist_event"."event_date" BETWEEN %(0)s AND %(1)s'
        ]
 
 root_logger = getLogger()
@@ -402,8 +404,8 @@ class TestParse(TestCase):
         self.params = [1]
         ret = self.find_mock()
         self.assertEqual(ret, [(1,)])
-        find.assert_any_call(**find_args)
-        conn.reset_mock()
+        self.find.assert_any_call(**find_args)
+        self.conn.reset_mock()
 
 
 
@@ -894,4 +896,10 @@ class TestParse(TestCase):
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
-
+        # WHERE "admin_changelist_event"."event_date" BETWEEN %(0)s AND %(1)s'
+        self.sql = f'{where} ({t1c1} BETWEEN %s AND %s)'
+        find_args['filter'] = {'col1': {'$gte': 1, '$lte': 2}}
+        self.params = [1, 2]
+        self.find_mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
