@@ -50,3 +50,12 @@ class DatabaseOperations(BaseDatabaseOperations):
     def sql_flush(self, style, tables, sequences, allow_cascade=False):
         # TODO: Need to implement this fully
         return ['ALTER TABLE']
+
+    def max_name_length(self):
+        return 100
+
+    def no_limit_value(self):
+        return None
+
+
+
