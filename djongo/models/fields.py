@@ -80,6 +80,7 @@ class DjongoManager(Manager, metaclass=DjongoManagerBase):
     """
     pass
 
+
 class ListField(Field):
     """
     MongoDB allows the saving of arbitrary data inside it's embedded array. The `ListField` is useful in such cases.
@@ -691,7 +692,8 @@ class ArrayReferenceDescriptor(ForwardManyToOneDescriptor):
 
 class ArrayReferenceField(ForeignKey):
     """
-    When the entry gets saved, only a reference to the primary_key of the author model is saved in the array.
+    When the entry gets saved, only a reference to the primary_key of the model is saved in the array.
+    For all practical aspects, the ArrayReferenceField behaves like a Django ManyToManyField.
     """
 
     many_to_many = False
