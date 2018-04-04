@@ -4,7 +4,8 @@ permalink: /using-django-with-mongodb-data-fields/
 ---
 
 
-Django Admin is a powerful tool for managing data used in your app. When your models use Djongo relational fields,  you can create NoSQL "embedded models" directly from the Django Admin. These fields provide better performance when compared with Django relational fields.
+Django Admin is a powerful tool for managing data used in your app. When your models use Djongo relational fields,  you can create NoSQL "embedded models" directly from the Django Admin. **These fields provide better performance when compared with traditional Django relational fields.**
+
 The Django admin application can use your models to automatically build a site area that you can use to create, view, update, and delete records. This can save you a lot of time during development, making it very easy to test your models and get a feel for whether you have the right data. Most of you already know about Django Admin, but to demonstrate how to use it with Djongo, we start with a simple example. You can ask for [expert support](/djongo/support/) if your project uses complex models. 
 
 We first define our basic models. In the tutorials, we use the example used in the official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/). The documentation talks about 3 models that interact with each other: **Blog, Author and Entry**. To make the example clearer, few fields from the original models are omitted. 
@@ -53,8 +54,8 @@ admin.site.register([Blog, Author, Entry])
 ## Data Model
 
 The `Entry` model defined in the documentation consists of 3 parts:
-* 1-to-Many Relationship: ‘A `Blog` is made up of multiple `Entry`s’ and ‘each `Entry` is associated with just *one* `Blog`’. The same entry can’t appear in two Blogs and this defines the 1-to-Many relationship.
-* Many-to-Many Relationship: ‘An `Entry` can have *multiple* `Author`s’ and ‘an `Author` can make multiple `Entry`s’. This defines the many-to-many relationship for our data model.
+* 1-to-Many Relationship: A `Blog` is made up of multiple `Entry`s’ and each `Entry` is associated with just *one* `Blog`. The same entry cannot appear in two `Blog`s’ and this defines the 1-to-Many relationship.
+* Many-to-Many Relationship: An `Entry` can have *multiple* `Author`s’ and an `Author` can make multiple `Entry`s’. This defines the many-to-many relationship for our data model.
 * Normal data columns.
 
 **An interesting point of note** is that the `Blog` model consists of just 2 fields. Most of the data is stored in the `Entry` model.
@@ -64,6 +65,7 @@ So what happens when a user enters your blog? A user wants to view the ‘Beatle
 ```python
 blog = Blog.objects.get(name='Beatles Blog')
 ```
+
 Next, to retrieve all entries related to the Beatles blog, follow it up with:
 
 ```python

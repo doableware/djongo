@@ -3,7 +3,7 @@ title: Using Django with MongoDB Array Field
 permalink: /using-django-with-mongodb-array-field/
 ---
 
-The official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/) exemplifies 3 models that interact with each other: **Blog, Author and Entry**. This tutorial considers the same 3 models.
+The official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/) exemplifies 3 models that interact with each other: **Blog, Author and Entry**. This tutorial considers the same 3 models. The `blog`; `ForeignKey` of the `Entry` model was optimized in the [other tutorial](/djongo/integrating-django-with-mongodb/), here we optimize the `authors`; `ManyToManyField`.
 
 ```python
 from djongo import models
@@ -37,13 +37,15 @@ class Entry(models.Model):
         return self.headline
 ```
 
-The `blog` `ForeignKey` of the `Entry` model was optimized in the [other tutorial](/djongo/integrating-django-with-mongodb/), here we optimize the `authors` `ManyToManyField`. A `ManyToManyField` defines a relation wherein an entry is made by several authors. It also defines a relation wherein an author could have made several entries. Django handles this internally by **creating another table**, the `entry_authors` table which contains different mappings between  `entry_id` and `author_id`. 
+ A `ManyToManyField` defines a relation wherein *an entry is made by several authors*. It also defines a relation wherein *an author could have made several entries*. Django handles this internally by **creating another table**, the `entry_authors` table which contains different mappings between  `entry_id` and `author_id`.
 
-Fetching an entry will require 2 SQL queries, with the second query being an expensive JOIN query across `entry_authors` and `authors`. The Model described above will work perfectly well on MongoDB as well when you use Djongo as the connector. MongoDB however offers much more powerful ways to make such queries. These queries come at the cost of higher disk space utilization. As a designer, using Djongo you have the freedom to continue with the above schema or define a schema requiring a trade off on disk space for higher performance.  
+Fetching an entry will require 2 SQL queries. The second query will be an expensive JOIN query across `entry_authors` and `authors`. The Model described above will work perfectly well on MongoDB as well, when you use Djongo as the connector. MongoDB however offers much more powerful ways to make such queries. These queries come at the cost of higher disk space utilization.
+
+As a designer using Djongo, you have the freedom to continue with the above schema. Alternatively, you can define a schema having a trade off on disk space for higher performance.
 
 ## Array Model Field
 
-The `authors` in the `Entry` models can be redefined using the `ArrayModelField` as follows:
+Let us redefine the `authors` in the `Entry` models using the `ArrayModelField`:
 
 ```python
 from djongo import models
@@ -95,7 +97,7 @@ class Entry(models.Model):
 
 ```
 
-**Notice** how the `ManyToManyField` is now replaced by the `ArrayModelField`. To display the Array field in Django Admin, a `Form` for the field must be present. Since the array is made up of abstract `Author` models, the form can be easily created by using a `ModelForm`.  If you do not specify a `ModelForm` for your array  models and pass it though the `model_form_class` argument, Djongo will automatically generate a `ModelForm` for you. 
+**Notice** how the `ManyToManyField` is now replaced by the `ArrayModelField`. To display the Array field in Django Admin, a `Form` for the field must be present. Since the array is made up of abstract `Author` models, the form can be easily created by using a `ModelForm`.  If you do not specify a `ModelForm` for your array  models in the `model_form_class` argument, Djongo will automatically generate a `ModelForm` for you.
 
 ### Django Admin
 
@@ -125,7 +127,9 @@ Note: In MongoDB the first element in the array starts at index 0.
 
 ## Array Reference field
 
-The `ArrayModelField` stores the embedded models within a MongoDB array as embedded documents for each entry. If entries contain duplicate embedded documents, using the `ArrayModelField` would result in unnecessary disk utilization. Storing a reference to the embedded document instead of the entire document will save disk space.
+The `ArrayReferenceField` is one of the most powerful features of Djongo. The `ArrayModelField` stores the embedded models within a MongoDB array as embedded documents for each entry. If entries contain duplicate embedded documents, using the `ArrayModelField` would require unnecessary disk space. The `ManyToManyField` on the other hand has a separate table for all the entries. In addition, it also creates an intermediate "through/join" table which records all the mappings.
+
+The `ArrayReferenceField` is a bargain between the `ArrayModelField` and `ManyToManyField`. A separate table is used for storing all entries. This means there is no data duplication cost. However, the intermediate "through/join" table is completely skipped! While the `ManyToManyField` required two queries to fetch data, the `ArrayReferenceField` requires just one query.
 
 In the example the `Entry` Model can be rewritten as follows:
 
@@ -162,7 +166,7 @@ class Entry(models.Model):
 ``` 
 **Notice** how the `Author` model is no longer set as `abstract`. This means a separate `author` collection will be created in the DB. Simply set the `authors` to a list containing several author instances. When the entry gets saved, only a reference to the primary_key of the author model is saved in the array. Upon retrieving an entry from the DB the corresponding authors are automatically looked up and the author list is populated.
  
- The `ArrayReferenceField` behaves similar to `ArrayModelField`. However, underneath only references are being stored instead of complete embedded documents. Doing this however comes at the cost of performance as internally MongoDB is doing a lookup across two collections.  
+ The `ArrayReferenceField` behaves exactly like the `ManyToManyField`. However, underneath only references to the entries are being stored in the array.
  
 ## List field 
 

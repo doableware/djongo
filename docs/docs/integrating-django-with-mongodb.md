@@ -31,6 +31,7 @@ The `settings.py` supports the following options:
     DATABASES = {
         'default': {
             'ENGINE': 'djongo',
+            'ENFORCE_SCHEMA': True
             'NAME': 'your-db-name',
             'HOST': 'host-name or ip address',
             'PORT': port_number,
@@ -38,7 +39,6 @@ The `settings.py` supports the following options:
             'PASSWORD': 'password',
             'AUTH_SOURCE': 'db-name',
             'AUTH_MECHANISM': 'SCRAM-SHA-1',
-            'ENFORCE_SCHEMA': True
         }
     }
 ```
