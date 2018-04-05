@@ -117,6 +117,7 @@ class TestParse(TestCase):
         cls.conn = mock.MagicMock()
         cls.db = mock.MagicMock()
         cls.conn_prop = mock.MagicMock()
+        cls.conn_prop.cached_collections = ['table']
 
         cls.find = cls.conn.__getitem__().find
         cursor = mock.MagicMock()
@@ -326,11 +327,17 @@ class TestParse(TestCase):
         io.assert_any_call({'col1':1, 'col2': None})
         self.conn.reset_mock()
 
-
         sql = 'INSERT INTO "table" ("col") VALUES (%s)'
         params = [1]
         result = Result(self.db, self.conn, self.conn_prop, sql, params)
         io.assert_any_call({'col':1})
+        self.conn.reset_mock()
+
+        #INSERT INTO "m2m_regress_post" ("id") VALUES (DEFAULT)
+        sql = 'INSERT INTO "table" ("id") VALUES (DEFAULT)'
+        params = []
+        result = Result(self.db, self.conn, self.conn_prop, sql, params)
+        io.assert_any_call({})
         self.conn.reset_mock()
 
 
@@ -741,7 +748,7 @@ class TestParse(TestCase):
         find = self.find
 
         t1c1 = '"table"."col1"'
-
+        t1c2 = '"table"."col2"'
         # Testing for different combinations 'where' syntax
         # from here on
 
@@ -750,6 +757,43 @@ class TestParse(TestCase):
             'projection': ['col'],
             'filter': {}
         }
+
+        #SELECT "null_fk_item"."id", "null_fk_item"."title" FROM "null_fk_item" INNER JOIN "null_fk_property" ON ("null_fk_item"."id" = "null_fk_property"."item_id") WHERE ("null_fk_property"."key" = %(0)s AND "null_fk_property"."value_id" IS NULL
+        self.sql = f'{where} ({t1c1} = %s AND {t1c2} IS NULL)'
+        find_args['filter'] = {
+            '$and': [
+                {
+                    'col1': {
+                        '$eq': 1
+                    }
+                },
+                {
+                    'col2': None
+                }
+            ]
+        }
+        self.params = [1, 2]
+        self.find_mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} ({t1c1} = %s AND {t1c2} IS NOT NULL)'
+        find_args['filter'] = {
+            '$and': [
+                {
+                    'col1': {
+                        '$eq': 1
+                    }
+                },
+                {
+                    'col2': {'$ne': None}
+                }
+            ]
+        }
+        self.params = [1]
+        self.find_mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
 
         self.sql = f'{where} ({t1c1} = %s AND {t1c1} <= %s)'
         find_args['filter'] = {

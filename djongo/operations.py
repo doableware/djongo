@@ -52,7 +52,7 @@ class DatabaseOperations(BaseDatabaseOperations):
         return ['ALTER TABLE']
 
     def max_name_length(self):
-        return 100
+        return 50
 
     def no_limit_value(self):
         return None

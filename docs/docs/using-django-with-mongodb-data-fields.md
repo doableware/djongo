@@ -117,7 +117,7 @@ A `Blog` contains a `name` and a `tagline`. An `Entry` contains details of the `
 
 ```python
 from djongo import models
-from djongo.models import forms
+from django import forms
 
 class Blog(models.Model):
     name = models.CharField(max_length=100)
