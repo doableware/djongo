@@ -7,7 +7,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import warnings
+import warnings, logging
 
 import django
 from django.apps import apps
@@ -19,6 +19,10 @@ from django.test.selenium import SeleniumTestCaseBase
 from django.test.utils import get_runner
 from django.utils.deprecation import RemovedInDjango30Warning
 from django.utils.log import DEFAULT_LOGGING
+
+djongo_logger = logging.getLogger('djongo')
+djongo_logger.setLevel(logging.DEBUG)
+djongo_logger.addHandler(logging.StreamHandler())
 
 # Make deprecation warnings errors to ensure no usage of deprecated features.
 warnings.simplefilter("error", RemovedInDjango30Warning)
