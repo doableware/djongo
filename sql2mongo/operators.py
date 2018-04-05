@@ -184,6 +184,29 @@ class iLikeOp(LikeOp):
         }}
 
 
+class IsOp(_IdentifierOp):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(name='IS', *args, **kwargs)
+        token = self.token
+        tok_id, key = token.token_next(self._token_id)
+        if key.match(tokens.Keyword, 'Null'):
+            self._is_null = True
+        elif key.match(tokens.Keyword, 'Not null'):
+            self._is_null = False
+        else:
+            raise SQLDecodeError
+
+    def negate(self):
+        self.is_negated = True
+
+    def to_mongo(self):
+        is_null = not self._is_null if self.is_negated else self._is_null
+        return {
+            self._field: None if is_null else {'$ne': None}
+        }
+
+
 class BetweenOp(_IdentifierOp):
 
     def __init__(self, *args, **kwargs):
@@ -409,6 +432,13 @@ class ParenthesisOp(_Op):
                 for _ in range(3):
                     tok_id, _ = token.token_next(tok_id)
 
+            elif tok.match(tokens.Keyword, 'IS'):
+                op = IsOp(**kw)
+                link_op()
+                self._op_precedence(op)
+                for _ in range(3):
+                    tok_id, _ = token.token_next(tok_id)
+
             elif isinstance(tok, Comparison):
                 op = CmpOp(0, tok, self.query)
                 self._cmp_ops.append(op)
@@ -503,6 +533,7 @@ OPERATOR_MAP = {
     '<=': '$lte',
 }
 OPERATOR_PRECEDENCE = {
+    'IS': 8,
     'BETWEEN': 7,
     'LIKE': 6,
     'IN': 5,

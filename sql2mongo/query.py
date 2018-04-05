@@ -365,15 +365,21 @@ class InsertQuery(Query):
 
         nextid, placeholder = sm.token_next(nextid)
 
-
         if isinstance(coltok[1], IdentifierList):
             for an_id, i in zip(coltok[1].get_identifiers(), SQLToken(placeholder)):
                 sql = SQLToken(an_id, None)
                 insert[sql.column] = self.params[i] if i is not None else None
+
         else:
             sql = SQLToken(coltok[1], None)
-            i = next(iter(SQLToken(placeholder)))
-            insert[sql.column] = self.params[i] if i is not None else None
+            if placeholder[1].match(tokens.Keyword, 'DEFAULT'):
+                if sql.column == 'id':
+                    pass
+                else:
+                    raise SQLDecodeError
+            else:
+                i = next(iter(SQLToken(placeholder)))
+                insert[sql.column] = self.params[i] if i is not None else None
 
         result = db[collection].insert_one(insert)
         if not auto_field_id:
