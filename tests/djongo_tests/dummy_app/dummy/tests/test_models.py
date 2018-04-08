@@ -1,8 +1,5 @@
-from django.db.models import Count
-
 from . import TestCase
-from dummy.basic_models import Blog, Entry, Author
-from django.contrib.auth.models import User
+from dummy.models.basic_models import Blog, Entry, Author
 
 
 class TestWithDjango(TestCase):

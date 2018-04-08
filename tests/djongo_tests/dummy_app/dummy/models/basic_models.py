@@ -1,5 +1,4 @@
 from djongo import models
-from djongo.models import forms
 
 
 class Blog(models.Model):
