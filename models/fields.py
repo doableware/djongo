@@ -14,6 +14,7 @@ from django.db import connections as pymongo_connections
 import typing
 import inspect
 
+from django.db.models.fields.mixins import FieldCacheMixin
 from django.forms import modelform_factory
 from django.utils.html import format_html_join, format_html
 from pymongo.collection import Collection
@@ -47,38 +48,23 @@ class ModelSubterfuge:
         self.subterfuge = embedded_model
 
 
-class manager_descriptior:
-
-    def __init__(self, name):
-        self.name = name
-
-    def __get__(self, manager_instance, objtype=None):
-        cli = (pymongo_connections[manager_instance.db]
-            .cursor().db_conn[manager_instance.model
-            ._meta.db_table]
-            )
-        return getattr(cli, self.name)
-
-
-class DjongoManagerBase(type):
-
-    def __new__(cls, name, bases, attrs):
-        for name, _ in inspect.getmembers(Collection):
-            if name.startswith('_'):
-                continue
-            attrs['mongo_'+name] = manager_descriptior(name)
-
-        return super().__new__(cls, name, bases, attrs)
-
-
-class DjongoManager(Manager, metaclass=DjongoManagerBase):
+class DjongoManager(Manager):
     """
     This modified manager allows to issue Mongo functions by prefixing
     them with 'mongo_'.
 
     This module allows methods to be passed directly to pymongo.
     """
-    pass
+    def __getattr__(self, name):
+        if name.startswith('mongo'):
+            name = name[6:]
+            cli = (pymongo_connections[self.db]
+                .cursor().db_conn[self.model
+                ._meta.db_table]
+                )
+            return getattr(cli, name)
+        else:
+            return super().__getattr__(name)
 
 
 class ListField(Field):
@@ -155,7 +141,7 @@ class ArrayModelField(Field):
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.model_container = model_container
-        self.model_form_class = model_form_class or modelform_factory(model_container, fields='__all__')
+        self.model_form_class = model_form_class
 
         if model_form_kwargs_l is None:
             model_form_kwargs_l = {}
@@ -220,9 +206,10 @@ class ArrayModelField(Field):
         """
         Returns the formfield for the array.
         """
+        model_form_class = self.model_form_class or modelform_factory(self.model_container, fields='__all__')
         defaults = {
             'form_class': ArrayFormField,
-            'model_form_class': self.model_form_class,
+            'model_form_class': model_form_class,
             'name': self.attname,
             'mdl_form_kw_l': self.model_form_kwargs_l
 
@@ -390,7 +377,7 @@ class EmbeddedModelField(Field):
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.model_container = model_container
-        self.model_form_class = model_form_class or modelform_factory(model_container, fields='__all__')
+        self.model_form_class = model_form_class
         self.null = True
         self.instance = None
 
@@ -448,12 +435,11 @@ class EmbeddedModelField(Field):
         return self.instance
 
     def formfield(self, **kwargs):
-        if not self.model_form_class:
-            raise ValidationError('Implementing model form class needed to create field')
+        model_form_class = self.model_form_class or modelform_factory(self.model_container, fields='__all__')
 
         defaults = {
             'form_class': EmbeddedFormField,
-            'model_form_class': self.model_form_class,
+            'model_form_class': model_form_class,
             'model_form_kw': self.model_form_kwargs,
             'name': self.attname
         }
@@ -733,3 +719,5 @@ class ArrayReferenceField(ForeignKey):
         return list(value)
 
 
+class GenericReferenceField(FieldCacheMixin):
+    pass
