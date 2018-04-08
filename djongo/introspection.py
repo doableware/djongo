@@ -15,7 +15,7 @@ class DatabaseIntrospection(introspection.BaseDatabaseIntrospection):
         int: 'IntegerField',
         bson.int64.Int64: 'BigIntegerField',
         bson.objectid.ObjectId: 'ObjectIdField',
-        collections.OrderedDict: 'JSONField',
+        # collections.OrderedDict: 'JSONField',
         bool: 'BooleanField',
         datetime.datetime: 'DateTimeField',
         datetime.date: 'DateField',
