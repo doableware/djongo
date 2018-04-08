@@ -111,7 +111,10 @@ root_logger.addHandler(StreamHandler())
 
 
 class TestParse(TestCase):
-
+    """
+    Test the sql2mongo module with all possible SQL statements and check
+    if the conversion to a query document is happening properly.
+    """
     @classmethod
     def setUpClass(cls):
         cls.conn = mock.MagicMock()
@@ -133,7 +136,6 @@ class TestParse(TestCase):
 
         cls.params_none = mock.MagicMock()
         cls.params: typing.Union[mock.MagicMock, list] = None
-
 
     def find_mock(self):
         result = Result(self.db, self.conn, self.conn_prop, self.sql, self.params)
@@ -749,8 +751,6 @@ class TestParse(TestCase):
 
         t1c1 = '"table"."col1"'
         t1c2 = '"table"."col2"'
-        # Testing for different combinations 'where' syntax
-        # from here on
 
         where = 'SELECT "table"."col" FROM "table" WHERE'
         find_args = {
@@ -758,7 +758,9 @@ class TestParse(TestCase):
             'filter': {}
         }
 
-        #SELECT "null_fk_item"."id", "null_fk_item"."title" FROM "null_fk_item" INNER JOIN "null_fk_property" ON ("null_fk_item"."id" = "null_fk_property"."item_id") WHERE ("null_fk_property"."key" = %(0)s AND "null_fk_property"."value_id" IS NULL
+        # Testing for different combinations 'where' syntax
+        # from here on
+
         self.sql = f'{where} ({t1c1} = %s AND {t1c2} IS NULL)'
         find_args['filter'] = {
             '$and': [
