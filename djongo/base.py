@@ -33,7 +33,7 @@ class CachedCollections(set):
 class DjongoClient:
 
     def __init__(self, database, enforce_schema=True):
-        self.enforce_schema = enforce_schema,
+        self.enforce_schema = enforce_schema
         self.cached_collections = CachedCollections(database)
 
 
