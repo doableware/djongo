@@ -94,7 +94,7 @@ For every collection in the DB that has an autoincrement field, there is an corr
 
 1. Start with an empty DB.
 2. Define your models in the `models.py` file, if you have not already done so. The models and model fields have to be exactly the same, as the fields in the existing DB.
-3. Run `manage.py makemigarations <app_name>` followed by `manage.py migrate`. At the end of this step your empty DB should have a `__schema__` collection, and other collections defined in the `model.py` file.
+3. Run `manage.py makemigrations <app_name>` followed by `manage.py migrate`. At the end of this step your empty DB should have a `__schema__` collection, and other collections defined in the `model.py` file.
 4. Copy all data from the existing DB to the new DB.
 5. In `__schema__` collection make sure that the `seq` number is incremented to the latest value. This should correspond to the document count for each model. For example, if your model has 16 entries (16 documents in the DB), then `seq` should be set as 16.
 
