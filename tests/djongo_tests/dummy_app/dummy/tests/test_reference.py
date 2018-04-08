@@ -1,5 +1,5 @@
 from . import TestCase
-from dummy.basic_reference_models import ReferenceEntry, ReferenceAuthor
+from dummy.models.basic_reference_models import ReferenceEntry, ReferenceAuthor
 
 
 class TestWithDjango(TestCase):

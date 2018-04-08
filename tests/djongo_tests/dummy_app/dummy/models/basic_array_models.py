@@ -10,13 +10,13 @@ class ArrayBlog(models.Model):
         abstract = True
 
 
-class BlogForm(forms.ModelForm):
-
-    class Meta:
-        model = ArrayBlog
-        fields = (
-            'name', 'tagline'
-        )
+# class BlogForm(forms.ModelForm):
+#
+#     class Meta:
+#         model = ArrayBlog
+#         fields = (
+#             'name', 'tagline'
+#         )
 
 
 class ArrayMetaData(models.Model):
@@ -29,14 +29,14 @@ class ArrayMetaData(models.Model):
         abstract = True
 
 
-class MetaDataForm(forms.ModelForm):
-
-    class Meta:
-        model = ArrayMetaData
-        fields = (
-            'pub_date', 'mod_date',
-            'n_pingbacks', 'rating'
-        )
+# class MetaDataForm(forms.ModelForm):
+#
+#     class Meta:
+#         model = ArrayMetaData
+#         fields = (
+#             'pub_date', 'mod_date',
+#             'n_pingbacks', 'rating'
+#         )
 
 
 class ArrayAuthor(models.Model):
@@ -74,7 +74,7 @@ class ArrayEntry(models.Model):
 
     authors = models.ArrayModelField(
         model_container=ArrayAuthor,
-        model_form_class=AuthorForm,
+        model_form_class=AuthorForm
     )
     # n_comments = models.IntegerField()
 

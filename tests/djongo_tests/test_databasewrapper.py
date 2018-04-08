@@ -19,7 +19,7 @@ class TestDatabaseWrapper(unittest.TestCase):
         self.assertEqual(params['port'], 27017)
 
     def test_connection_params(self):
-        '''Check for returned connection params if filled settings dict is provided'''
+        """Check for returned connection params if filled settings dict is provided"""
         name = MagicMock(str)
         port = MagicMock(int)
         host = MagicMock(str)

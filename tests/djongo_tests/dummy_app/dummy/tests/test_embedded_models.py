@@ -1,35 +1,33 @@
 from django.db.models import Count
 
 from . import TestCase
-from dummy.basic_embedded_models import EBlog, EEntry, EAuthor
-from django.contrib.auth.models import User
+from dummy.models.basic_embedded_models import EmbeddedBlog, EmbeddedEntry, EmbeddedAuthor
+
 
 
 class TestWithDjango(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        b1 = EBlog(name='b1', tagline='t1')
-        b2 = EBlog(name='b2', tagline='t2')
-        b3 = EBlog(name='b3', tagline='t3')
+        b1 = EmbeddedBlog(name='b1', tagline='t1')
+        b2 = EmbeddedBlog(name='b2', tagline='t2')
+        b3 = EmbeddedBlog(name='b3', tagline='t3')
 
-        a1 = EAuthor(name='a1')
+        a1 = EmbeddedAuthor(name='a1')
         a1.save()
-        a2 = EAuthor(name='a2')
+        a2 = EmbeddedAuthor(name='a2')
         a2.save()
 
-        e1 = Entry(headline='h1', blog=b1)
+        e1 = EmbeddedEntry(headline='h1', blog=b1)
         e1.save()
-        e1.authors.add(a1, a2)
 
-        e2 = Entry(headline='h2', blog=b1)
+        e2 = EmbeddedEntry(headline='h2', blog=b1)
         e2.save()
-        e2.authors.add(a1, a2)
 
 
     def test_join(self):
-        eqs = Entry.objects.filter(blog__name='b1').values('id')
-        bqs = Blog.objects.filter(id__in=eqs).values('name')
+        eqs = EmbeddedEntry.objects.filter(blog__name='b1').values('id')
+        bqs = EmbeddedBlog.objects.filter(id__in=eqs).values('name')
         self.assertEquals(list(bqs), [{'name': 'b1'}, {'name': 'b2'}])
         print('done')
 
