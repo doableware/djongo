@@ -26,14 +26,18 @@ class DatabaseIntrospection(introspection.BaseDatabaseIntrospection):
         'text': 'TextField',
     }
 
-    # def table_names(self, cursor=None, include_views=False):
-    #     return sorted(cursor.m_cli_connection.collection_names(False))
-
     def get_table_list(self, cursor):
+        '''Return a list of MongDB collections (tables)'''
         return [introspection.TableInfo(c, 't')
                 for c in cursor.db_conn.collection_names(False)]
 
     def get_constraints(self, cursor, table_name):
+        '''
+        Retrieve any constraints or keys (unique, pk, fk, check, index)
+        across one or more columns. Since MongoDB doesn't really support
+        foreign keys this will only ever return unique constraints and primary
+        keys
+        '''
         constraint = {}
 
         indexes = cursor.db_conn[table_name].index_information()
@@ -56,15 +60,25 @@ class DatabaseIntrospection(introspection.BaseDatabaseIntrospection):
         return constraint
 
     def get_key_columns(self, cursor, table_name):
+        '''Key columns are not supported so this always returns `[]`'''
         return []
 
     def get_indexes(self, cursor, table_name):
+        '''Effectively an alias for `get_constraints`'''
         return self.get_constraints(cursor, table_name)
 
     def get_relations(self, cursor, table_name):
+        '''Relations are not supported so this always returns `[]`'''
         return []
 
     def get_table_description(self, cursor, table_name):
+        '''
+        Get a colletction description by fetching a sample of `SAMPLE_SIZE` and
+        analyzing it's contents. Because MongoDB doesn't have a fixed document
+        specification this is only an approximation but depending on the
+        `SAMPLE_SIZE` relative to the collection size it can be rather
+        accurate.
+        '''
         colspecs = collections.defaultdict(lambda: dict(
             types=collections.Counter(),
             specs=collections.defaultdict(int),

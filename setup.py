@@ -1,4 +1,7 @@
-from distutils.core import setup
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 
 LONG_DESCRIPTION = """
 
@@ -74,6 +77,12 @@ setup(
         'jsonfield>=2.0.2',
         'django-jsoneditor>=0.0.12',
     ],
+    extras_require={
+        'docs': [
+            'django>=1.11',
+            'sphinx>=1.7.2',
+        ],
+    },
     long_description=LONG_DESCRIPTION,
     python_requires='>=3.6',
     keywords='Django MongoDB driver connector',

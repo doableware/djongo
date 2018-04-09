@@ -1,0 +1,14 @@
+sudo: false
+cache: pip
+language: python
+python: 3.6
+
+env:
+    - TOX_ENV=apidocs
+
+install:
+    - pip install tox
+
+script:
+    tox -e $TOX_ENV
+

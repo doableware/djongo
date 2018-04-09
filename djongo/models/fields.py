@@ -1,7 +1,7 @@
-"""
+'''
 The standard way of using djongo is to import models.py
 in place of Django's standard models module.
-"""
+'''
 from bson import ObjectId
 from django.db.models import (
     Manager, Model, Field, AutoField,
@@ -28,9 +28,9 @@ from django.utils.safestring import mark_safe
 
 
 def make_mdl(model, model_dict):
-    """
+    '''
     Builds an instance of model from the model_dict.
-    """
+    '''
     for field_name in model_dict:
         field = model._meta.get_field(field_name)
         model_dict[field_name] = field.to_python(model_dict[field_name])
@@ -50,12 +50,12 @@ class ModelSubterfuge:
 
 
 class DjongoManager(Manager):
-    """
+    '''
     This modified manager allows to issue Mongo functions by prefixing
     them with 'mongo_'.
 
     This module allows methods to be passed directly to pymongo.
-    """
+    '''
     def __getattr__(self, name):
         if name.startswith('mongo'):
             name = name[6:]
@@ -69,9 +69,9 @@ class DjongoManager(Manager):
 
 
 class ListField(Field):
-    """
+    '''
     MongoDB allows the saving of arbitrary data inside it's embedded array. The `ListField` is useful in such cases.
-    """
+    '''
     empty_strings_allowed = False
 
     def __init__(self, *args, **kwargs):
@@ -98,7 +98,7 @@ class ListField(Field):
 
 
 class ArrayModelField(Field):
-    """
+    '''
     Implements an array of objects inside the document.
 
     The allowed object type is defined on model declaration. The
@@ -110,29 +110,31 @@ class ArrayModelField(Field):
 
     Example:
 
-    class Author(models.Model):
-        name = models.CharField(max_length=100)
-        email = models.CharField(max_length=100)
+    .. code-block:: python
 
-        class Meta:
-            abstract = True
+        class Author(models.Model):
+            name = models.CharField(max_length=100)
+            email = models.CharField(max_length=100)
+
+            class Meta:
+                abstract = True
 
 
-    class AuthorForm(forms.ModelForm):
-        class Meta:
-            model = Author
-            fields = (
-                'name', 'email'
+        class AuthorForm(forms.ModelForm):
+            class Meta:
+                model = Author
+                fields = (
+                    'name', 'email'
+                )
+
+        class MultipleBlogPosts(models.Model):
+            h1 = models.CharField(max_length=100)
+            content = models.ArrayModelField(
+                model_container=BlogContent,
+                model_form_class=BlogContentForm
             )
 
-    class MultipleBlogPosts(models.Model):
-        h1 = models.CharField(max_length=100)
-        content = models.ArrayModelField(
-            model_container=BlogContent,
-            model_form_class=BlogContentForm
-        )
-
-    """
+    '''
     empty_strings_allowed = False
 
     def __init__(self,
@@ -185,10 +187,10 @@ class ArrayModelField(Field):
         return self.to_python(value)
 
     def to_python(self, value):
-        """
+        '''
         Overrides standard to_python method from django models to allow
         correct translation of Mongo array to a python list.
-        """
+        '''
         if value is None:
             return value
 
@@ -204,9 +206,9 @@ class ArrayModelField(Field):
         return ret
 
     def formfield(self, **kwargs):
-        """
+        '''
         Returns the formfield for the array.
-        """
+        '''
         model_form_class = self.model_form_class or modelform_factory(self.model_container, fields='__all__')
         defaults = {
             'form_class': ArrayFormField,
@@ -340,35 +342,37 @@ class ArrayFormWidget(forms.Widget):
 
 
 class EmbeddedModelField(Field):
-    """
+    '''
     Allows for the inclusion of an instance of an abstract model as
     a field inside a document.
 
     Example:
 
-    class Author(models.Model):
-        name = models.CharField(max_length=100)
-        email = models.CharField(max_length=100)
+    .. code-block:: python
 
-        class Meta:
-            abstract = True
+        class Author(models.Model):
+            name = models.CharField(max_length=100)
+            email = models.CharField(max_length=100)
+
+            class Meta:
+                abstract = True
 
 
-    class AuthorForm(forms.ModelForm):
-        class Meta:
-            model = Author
-            fields = (
-                'name', 'email'
+        class AuthorForm(forms.ModelForm):
+            class Meta:
+                model = Author
+                fields = (
+                    'name', 'email'
+                )
+
+        class MultipleBlogPosts(models.Model):
+            h1 = models.CharField(max_length=100)
+            content = models.ArrayModelField(
+                model_container=BlogContent,
+                model_form_class=BlogContentForm
             )
 
-    class MultipleBlogPosts(models.Model):
-        h1 = models.CharField(max_length=100)
-        content = models.ArrayModelField(
-            model_container=BlogContent,
-            model_form_class=BlogContentForm
-        )
-
-    """
+    '''
     empty_strings_allowed = False
 
     def __init__(self,
@@ -424,10 +428,10 @@ class EmbeddedModelField(Field):
         return self.to_python(value)
 
     def to_python(self, value):
-        """
+        '''
         Overrides Django's default to_python to allow correct
         translation to instance.
-        """
+        '''
         if value is None or isinstance(value, self.model_container):
             return value
         assert isinstance(value, dict)
@@ -546,10 +550,10 @@ class EmbeddedFormWidget(forms.MultiWidget):
         )
 
 class ObjectIdField(AutoField):
-    """
+    '''
     For every document inserted into a collection MongoDB internally creates an field.
     The field can be referenced from within the Model as _id.
-    """
+    '''
 
     def __init__(self, *args, **kwargs):
         id_field_args = {
@@ -656,7 +660,7 @@ class ArrayReferenceDescriptor(ForwardManyToOneDescriptor):
         )
 
     def __get__(self, instance, cls=None):
-        """
+        '''
         Get the related objects through the reverse relation.
 
         With the example above, when getting ``parent.children``:
@@ -664,7 +668,7 @@ class ArrayReferenceDescriptor(ForwardManyToOneDescriptor):
         - ``self`` is the descriptor managing the ``children`` attribute
         - ``instance`` is the ``parent`` instance
         - ``cls`` is the ``Parent`` class (unused)
-        """
+        '''
         if instance is None:
             return self
 
@@ -678,10 +682,10 @@ class ArrayReferenceDescriptor(ForwardManyToOneDescriptor):
 
 
 class ArrayReferenceField(ForeignKey):
-    """
+    '''
     When the entry gets saved, only a reference to the primary_key of the model is saved in the array.
     For all practical aspects, the ArrayReferenceField behaves like a Django ManyToManyField.
-    """
+    '''
 
     many_to_many = False
     many_to_one = True
