@@ -13,6 +13,7 @@ from django.db import router
 from django.db import connections as pymongo_connections
 import typing
 import inspect
+from jsoneditor.fields import django_jsonfield
 
 from django.db.models.fields.mixins import FieldCacheMixin
 from django.forms import modelform_factory
@@ -721,3 +722,9 @@ class ArrayReferenceField(ForeignKey):
 
 class GenericReferenceField(FieldCacheMixin):
     pass
+
+
+class JSONField(django_jsonfield.JSONField):
+
+    def get_prep_value(self, value):
+        return value
