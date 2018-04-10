@@ -13,11 +13,6 @@ class TestWithDjango(TestCase):
         b2 = EmbeddedBlog(name='b2', tagline='t2')
         b3 = EmbeddedBlog(name='b3', tagline='t3')
 
-        a1 = EmbeddedAuthor(name='a1')
-        a1.save()
-        a2 = EmbeddedAuthor(name='a2')
-        a2.save()
-
         e1 = EmbeddedEntry(headline='h1', blog=b1)
         e1.save()
 
