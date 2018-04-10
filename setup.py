@@ -71,9 +71,13 @@ setup(
         'pymongo>=3.2.0',
         'django>=1.8',
         'dataclasses>=0.1',
-        'jsonfield>=2.0.2',
-        'django-jsoneditor>=0.0.12',
     ],
+    extras_require=dict(
+        json=[
+            'jsonfield>=2.0.2',
+            'django-jsoneditor>=0.0.12',
+        ],
+    ),
     long_description=LONG_DESCRIPTION,
     python_requires='>=3.6',
     keywords='Django MongoDB driver connector',
