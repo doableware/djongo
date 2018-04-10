@@ -227,7 +227,7 @@ class SelectQuery(Query):
         if self._needs_aggregation():
             pipeline = self._make_pipeline()
             cur = self.db_ref[self.left_table].aggregate(pipeline)
-
+            logger.debug(f'Aggregation query: {pipeline}')
         else:
             kwargs = {}
             if self.where:
@@ -246,6 +246,7 @@ class SelectQuery(Query):
                 kwargs.update(self.offset.to_mongo())
 
             cur = self.db_ref[self.left_table].find(**kwargs)
+            logger.debug(f'Find query: {kwargs}')
 
         return cur
 
