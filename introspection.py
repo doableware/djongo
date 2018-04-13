@@ -25,7 +25,6 @@ class DatabaseIntrospection(introspection.BaseDatabaseIntrospection):
         'text': 'TextField',
     }
 
-
     # def table_names(self, cursor=None, include_views=False):
     #     return sorted(cursor.m_cli_connection.collection_names(False))
 
