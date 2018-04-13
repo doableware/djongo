@@ -98,6 +98,8 @@ footer_scripts:
 include:
   - .htaccess
   - _pages
+  - _build
+  - _build/_static/.
 
 exclude:
   - "*.sublime-project"
