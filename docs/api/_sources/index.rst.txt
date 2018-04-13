@@ -10,6 +10,7 @@ Welcome to djongo's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   djongo
 
 
 Indices and tables
