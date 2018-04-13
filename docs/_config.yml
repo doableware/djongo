@@ -96,8 +96,7 @@ footer_scripts:
 
 # Reading Files
 include:
-  - .htaccess
-  - _pages
+  - '/api/_static'
 
 
 exclude:
@@ -128,6 +127,9 @@ exclude:
 keep_files:
   - .git
   - .svn
+  - .nojekyll
+  - 'api/.nojekyll'
+
 encoding: "utf-8"
 markdown_ext: "markdown,mkdown,mkdn,mkd,md"
 
