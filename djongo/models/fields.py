@@ -132,6 +132,7 @@ class ArrayModelField(Field):
         )
 
     """
+
     empty_strings_allowed = False
 
     def __init__(self,
