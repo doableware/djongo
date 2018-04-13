@@ -156,3 +156,7 @@ ORDER_BY_MAP = {
     'ASC': ASCENDING,
     'DESC': DESCENDING
 }
+
+# Fixes some circular import issues
+from . import query
+from . import converters
