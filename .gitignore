@@ -1,13 +1,16 @@
 dist/
 medium/
 .idea/
+.tox/
 _site/
 *__pycache__*
+*egg-info/
 
 docs/.sass-cache/*
 docs/_includes/*
 !docs/_includes/head/
 docs/_apidocs/_build/
+docs/_apidocs/doctrees/
 docs/_layouts/*
 docs/_sass/*
 docs/_site/*

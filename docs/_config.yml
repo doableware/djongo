@@ -95,7 +95,7 @@ footer_scripts:
 
 
 # Reading Files
-include: [_static]
+include: [_static, _sources]
 
 exclude:
   - "*.sublime-project"
