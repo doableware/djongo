@@ -12,10 +12,9 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath('.'))))
+
 import django
+import djongo
 from django.conf import settings
 settings.configure(DEBUG=True, STATIC_URL='/')
 django.setup()
@@ -27,9 +26,9 @@ copyright = '2018, nesdis'
 author = 'nesdis'
 
 # The short X.Y version
-version = ''
+version = djongo.__version__
 # The full version, including alpha/beta/rc tags
-release = ''
+release = djongo.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -43,7 +42,6 @@ release = ''
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.githubpages',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

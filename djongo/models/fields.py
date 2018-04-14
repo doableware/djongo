@@ -1,7 +1,18 @@
 """
 The standard way of using djongo is to import models.py
 in place of Django's standard models module.
+
+Djongo Fields is where custom fields for working
+with MongoDB is defined.
+
+ - EmbeddedModelField
+ - ArrayModelField
+ - ArrayReferenceField
+ - GenericReferenceField
+
+These are the main fields for working with MongoDB.
 """
+
 from bson import ObjectId
 from django.db.models import (
     Manager, Model, Field, AutoField,

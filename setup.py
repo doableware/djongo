@@ -1,4 +1,8 @@
 from distutils.core import setup
+from setuptools import find_packages
+import os
+import codecs
+import re
 
 LONG_DESCRIPTION = """
 
@@ -53,10 +57,29 @@ Important links
 * `Source code <https://github.com/nesdis/djongo>`_
 """
 
+
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+packages = find_packages()
+
+
+def read(*parts):
+    with codecs.open(os.path.join(BASE_DIR, *parts), 'r') as fp:
+        return fp.read()
+
+
+def find_version(*file_paths):
+    version_file = read(*file_paths)
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+                              version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
+
 setup(
     name='djongo',
-    version=__import__('djongo').__version__,
-    packages=['djongo', 'djongo.sql2mongo', 'djongo.models'],
+    version=find_version("djongo", "__init__.py"),
+    packages=packages,
     url='https://nesdis.github.io/djongo/',
     license='BSD',
     author='nesdis',
