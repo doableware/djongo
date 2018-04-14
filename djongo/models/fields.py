@@ -38,8 +38,7 @@ def make_mdl(model, model_dict):
 
 
 def useful_field(field):
-    return field.concrete and not (field.is_relation
-                                   or isinstance(field, (AutoField, BigAutoField)))
+    return field.concrete and not isinstance(field, (AutoField, BigAutoField))
 
 
 class ModelSubterfuge:

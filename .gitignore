@@ -29,3 +29,5 @@ minimal-mistakes
 
 /tests/dummy_app/dummy/migrations
 /tests/dummy_app/djongo-test
+
+.ropeproject
