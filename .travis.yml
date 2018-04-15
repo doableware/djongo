@@ -18,5 +18,5 @@ deploy:
     github-token: $GITHUB_API_TOKEN
     keep-history: true
     on:
-        branch: master
+        branch: sphinx
 
