@@ -2,21 +2,18 @@ sudo: false
 cache: pip
 language: python
 python: 3.6
-
 env:
-    - TOX_ENV=apidocs
-
+  matrix:
+  - TOX_ENV=apidocs
+  global:
+    secure: Tj0izD2c5Xp/Rd0Dv0laCpJks17syN9G5ztar9sDhTH8TIOSVNCxGGrzi7CI3J4Bpuua5VIv+8Uc4SGgEAIzwSxpv0DQqQdLrZOuwqAF2G1P6O3zL+2x9N0REGqQIU5L8Xgn2ZtAAV/8PPCzKiTCVjbSwl049zNXOO8BpyRwZReLSQgZo04y9+98z/vKG6oIAN418Iu6GyoYbruNMNRPWhuMofHD2EJQHn2IBppUxdD7V71S8X5c+GrIxM30GasCMyc+i+nAsoGY/OLmVSdqt+3JuXONSu/MJrSxuN7GklvL6MPnw1OdCGH0/We3/AVyLatpHLiijt9yl5cwOPZR2YI5xzFKJ3zn38U11Kb0ltG+AyjBwaGvunxCz4XTb7Nclegnc9wwzQoZdd4FySSzCe2+WziLSMPFH3GUMvQvxDFoLLRsMdyRmOI71wPAJqTAhl6KqczvY7W/FI2A8BBZEWmnj3lqfRbsoM2njzBQID3rSAfUWJQzX3CuNphCSrZsrfkFOmW1aAxOy5V3GpHCb4kfhFDH2wRw2pxa3s1l0QlPzCUo+YNP8CRMxqrdtzC1/drCw1Oug7lU5iCrMxXNmH6LYZQyS6bJbOmhpYybkIZ1xIswz5UAPSVLP83HQaQ5jbpnGMyNtFaihnOm0WBO+7Pn9GcNFDLAjpzyONHNIYI=
 install:
-    - pip install tox
-
-script:
-    tox -e $TOX_ENV
-
+- pip install tox
+script: tox -e $TOX_ENV
 deploy:
-    provider: pages
-    skip-cleanup: true
-    github-token: $GITHUB_API_TOKEN
-    keep-history: true
-    on:
-        branch: sphinx
-
+  provider: pages
+  skip-cleanup: true
+  github-token: "$GITHUB_API_KEY"
+  keep-history: true
+  on:
+    branch: sphinx
