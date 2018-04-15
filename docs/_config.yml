@@ -95,9 +95,7 @@ footer_scripts:
 
 
 # Reading Files
-include:
-  - .htaccess
-  - _pages
+include: [_static, _sources]
 
 exclude:
   - "*.sublime-project"
@@ -127,6 +125,8 @@ exclude:
 keep_files:
   - .git
   - .svn
+
+
 encoding: "utf-8"
 markdown_ext: "markdown,mkdown,mkdn,mkd,md"
 
