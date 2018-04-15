@@ -12,3 +12,11 @@ install:
 script:
     tox -e $TOX_ENV
 
+deploy:
+    provider: pages
+    skip-cleanup: true
+    github-token: $GITHUB_API_TOKEN
+    keep-history: true
+    on:
+        branch: master
+
