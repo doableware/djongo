@@ -1,4 +1,10 @@
 import sys
-import pymongo, django
+import unittest
+from djongo_tests.test_sqlparsing import TestParse
 
-print(f'in my path:{sys.path}, Django:{django.__version__}')
+if __name__ == '__main__':
+    result = unittest.TextTestRunner(verbosity=2, failfast=True).run(
+        unittest.TestLoader().loadTestsFromTestCase(TestParse)
+    )
+    if not result.wasSuccessful():
+        sys.exit(1)
