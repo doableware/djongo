@@ -25,7 +25,7 @@ class DatabaseOperations(BaseDatabaseOperations):
         if isinstance(value, six.string_types):
             return datetime.datetime.strptime(value, '%H:%M:%S')
 
-        return datetime.datetime(1900, 1, 1, value.hour, value.minute, \
+        return datetime.datetime(1900, 1, 1, value.hour, value.minute,
                                  value.second, value.microsecond)
 
     def convert_datefield_value(self, value, expression, connection, context):
@@ -56,6 +56,3 @@ class DatabaseOperations(BaseDatabaseOperations):
 
     def no_limit_value(self):
         return None
-
-
-
