@@ -38,8 +38,10 @@
 </div>
 <div class="section" id="module-djongo.models.fields">
 <span id="djongo-models-fields-module"></span><h2>djongo.models.fields module<a class="headerlink" href="#module-djongo.models.fields" title="Permalink to this headline">¶</a></h2>
-<p>Djongo Fields is where custom fields for working
-with MongoDB is defined.</p>
+<p>The standard way of using djongo is to import models.py
+in place of Django’s standard models module.</p>
+<p>Djongo Fields is where custom fields for working with
+MongoDB is defined.</p>
 <blockquote>
 <div><ul class="simple">
 <li>EmbeddedModelField</li>
@@ -48,7 +50,7 @@ with MongoDB is defined.</p>
 <li>GenericReferenceField</li>
 </ul>
 </div></blockquote>
-<p>The main fields for working with MongoDB</p>
+<p>These are the main fields for working with MongoDB.</p>
 <dl class="class">
 <dt id="djongo.models.fields.ArrayFormBoundField">
 <em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">ArrayFormBoundField</code><span class="sig-paren">(</span><em>form</em>, <em>field</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ArrayFormBoundField" title="Permalink to this definition">¶</a></dt>
@@ -586,8 +588,6 @@ Return the converted value. Subclasses should override this.</p>
 </div>
 <div class="section" id="module-djongo.models">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-djongo.models" title="Permalink to this headline">¶</a></h2>
-<p>The standard way of using djongo is to import models.py
-in place of Django’s standard models module.</p>
 <dl class="class">
 <dt id="djongo.models.Aggregate">
 <em class="property">class </em><code class="descclassname">djongo.models.</code><code class="descname">Aggregate</code><span class="sig-paren">(</span><em>*args</em>, <em>filter=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.Aggregate" title="Permalink to this definition">¶</a></dt>
