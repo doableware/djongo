@@ -91,7 +91,7 @@ setup(
         'django>=1.8',
         'dataclasses>=0.1'
     ],
-	long_description=LONG_DESCRIPTION,
+    long_description=LONG_DESCRIPTION,
     python_requires='>=3.6',
     keywords='Django MongoDB driver connector',
     classifiers=[

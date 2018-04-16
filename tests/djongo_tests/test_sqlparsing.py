@@ -182,13 +182,13 @@ class TestParse(TestCase):
 
         self.aggregate_mock(pipeline, return_value, ans)
 
-        self.sql = 'SELECT DISTINCT "table1"."col1" FROM "table1" INNER JOIN "table2" ON ("table1"."id" = "table2"."id") WHERE ("table2"."col1" IN (%s, %s, %s)) ORDER BY "table1"."col1" ASC'
+        self.sql = 'SELECT DISTINCT "table1"."col1" FROM "table1" INNER JOIN "table2" ON ("table1"."id1" = "table2"."id2") WHERE ("table2"."col1" IN (%s, %s, %s)) ORDER BY "table1"."col1" ASC'
         self.params = [1,2,3]
 
         pipeline =[
             {
                 '$match': {
-                    'id': {
+                    'id1': {
                         '$ne': None,
                         '$exists': True
                     }
@@ -197,8 +197,8 @@ class TestParse(TestCase):
             {
                 '$lookup': {
                     'from': 'table2',
-                    'localField': 'id',
-                    'foreignField': 'id',
+                    'localField': 'id1',
+                    'foreignField': 'id2',
                     'as': 'table2'
                 }
             },
@@ -503,6 +503,103 @@ class TestParse(TestCase):
         self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
+
+    def test_join(self):
+        """
+         sql_command: SELECT "null_fk_comment"."id", "null_fk_comment"."post_id", "null_fk_comment"."comment_text", "null_fk_post"."id", "null_fk_post"."forum_id", "null_fk_post"."title", "null_fk_forum"."id", "null_fk_forum"."system_info_id", "null_fk_forum"."forum_name", "null_fk_systeminfo"."id", "null_fk_systeminfo"."system_details_id", "null_fk_systeminfo"."system_name" FROM "null_fk_comment" LEFT OUTER JOIN "null_fk_post" ON ("null_fk_comment"."post_id" = "null_fk_post"."id") LEFT OUTER JOIN "null_fk_forum" ON ("null_fk_post"."forum_id" = "null_fk_forum"."id") LEFT OUTER JOIN "null_fk_systeminfo" ON ("null_fk_forum"."system_info_id" = "null_fk_systeminfo"."id") ORDER BY "null_fk_comment"."comment_text" ASC
+        :return:
+        """
+        t1c1 = '"table1"."col1"'
+        t2c1 = '"table2"."col1"'
+        t4c1 = '"table4"."col1"'
+
+        t1c2 = '"table1"."col2"'
+        t2c2 = '"table2"."col2"'
+        t3c2 = '"table3"."col2"'
+        t3c1 = '"table3"."col1"'
+
+        self.sql = (f'SELECT {t1c1}, {t2c1}, {t1c2}, {t2c2} '
+        f'FROM table1 '
+        f'LEFT OUTER JOIN table2 ON ({t1c1} = {t2c1}) '
+        f'LEFT OUTER JOIN table3 ON ({t2c2} = {t3c2}) '
+        f'LEFT OUTER JOIN table4 ON ({t3c2} = {t4c1}) '
+        f'ORDER BY {t1c1} ASC')
+        self.params = []
+        return_value = [
+            {
+                'col1': 'a1',
+                'col2': 'a2',
+                'table2': {
+                    'col1': 'a3',
+                    'col2': 'a4'
+                }
+            },
+            {
+                'col1': 'b1',
+                'col2': 'b2',
+                'table2': {
+                    'col1': 'b3',
+                    'col2': 'b4'
+                }
+            },
+        ]
+        ans = [('a1', 'a3', 'a2', 'a4'),('b1', 'b3', 'b2', 'b4')]
+        pipeline = [
+            {
+                '$lookup': {
+                    'from': 'table2',
+                    'localField': 'col1',
+                    'foreignField': 'col1',
+                    'as': 'table2'
+                }
+            },
+            {
+                '$unwind': {
+                     'path': '$table2',
+                     'preserveNullAndEmptyArrays': True
+                 }
+            },
+            {
+                '$lookup': {
+                    'from': 'table3',
+                    'localField': 'table2.col2',
+                    'foreignField': 'col2',
+                    'as': 'table3'
+                }
+            },
+            {
+                '$unwind': {
+                     'path': '$table3',
+                     'preserveNullAndEmptyArrays': True
+                 }
+            },
+            {
+                '$lookup': {
+                    'from': 'table4',
+                    'localField': 'table3.col2',
+                    'foreignField': 'col1',
+                    'as': 'table4'
+                }
+            },
+            {
+                '$unwind': {
+                     'path': '$table4',
+                     'preserveNullAndEmptyArrays': True
+                 }
+            },
+            {
+                '$sort': OrderedDict([('col1', 1)]),
+            },
+            {
+                '$project': {
+                    'col1': True,
+                    'col2': True,
+                    'table2.col1': True,
+                    'table2.col2': True
+                }
+            }
+        ]
+        self.aggregate_mock(pipeline, return_value, ans)
 
     def test_nested_in(self):
 

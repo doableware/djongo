@@ -4,10 +4,10 @@ main:
      url: /get-started/
    - title: "Get Support"
      url: /support/
-#     thumbnail: /djongo/assets/images/help.png
-#     class: support
    - title: "Discuss"
      url: /discuss/
+   - title: "API Reference"
+     url: /api/
    - title: "Source"
      url: https://github.com/nesdis/djongo/
 
@@ -35,20 +35,19 @@ docs:
   - title: "Creating Capped Models"
     url: /creating-django-capped-models-using-mongodb/
 
-  - title: "API Reference"
-    children:
-      - title: "Database configuration"
-        url: /database-configuration/
-      - title: "Embedded Model Field"
-        url: /embedded-model-field/
-      - title: "Array Model Field"
-        url: /array-model-field/
-      - title: "Array Reference Field"
-        url: /mongodb-field-reference/#arrayreferencefield
-      - title: "ObjectID Field"
-        url: /mongodb-field-reference/#objectidfield
-      - title: "List Field"
-        url: /mongodb-field-reference/#listfield
+
+#  - title: "Database configuration"
+#    url: /database-configuration/
+#  - title: "Embedded Model Field"
+#    url: /embedded-model-field/
+#  - title: "Array Model Field"
+#    url: /array-model-field/
+#  - title: "Array Reference Field"
+#    url: /mongodb-field-reference/#arrayreferencefield
+#  - title: "ObjectID Field"
+#    url: /mongodb-field-reference/#objectidfield
+#  - title: "List Field"
+#    url: /mongodb-field-reference/#listfield
 
   - title: "Other resources"
     children:

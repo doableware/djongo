@@ -177,7 +177,8 @@ def setup(verbosity, test_labels, parallel):
     # without raising AppRegistryNotReady when running gis_tests in isolation
     # on some backends (e.g. PostGIS).
     if 'gis_tests' in test_labels_set and not connection.features.gis_enabled:
-        raise SystemExit('Aborting: A GIS database backend is required to run gis_tests.')
+        print('Aborting: A GIS database backend is required to run gis_tests.')
+        sys.exit(1)
 
     # Load all the test model apps.
     test_modules = get_test_modules()
@@ -476,4 +477,4 @@ if __name__ == "__main__":
             options.exclude_tags,
         )
         if failures:
-            raise SystemExit(1)
+            sys.exit(1)

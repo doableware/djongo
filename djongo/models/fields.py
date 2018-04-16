@@ -2,8 +2,8 @@
 The standard way of using djongo is to import models.py
 in place of Django's standard models module.
 
-Djongo Fields is where custom fields for working
-with MongoDB is defined.
+Djongo Fields is where custom fields for working with
+MongoDB is defined.
 
  - EmbeddedModelField
  - ArrayModelField
@@ -69,10 +69,12 @@ class DjongoManager(Manager):
     def __getattr__(self, name):
         if name.startswith('mongo'):
             name = name[6:]
-            cli = (pymongo_connections[self.db]
-                .cursor().db_conn[self.model
-                ._meta.db_table]
-                )
+            cli = (
+                pymongo_connections[self.db]
+                .cursor()
+                .db_conn[self.model
+                         ._meta.db_table]
+            )
             return getattr(cli, name)
         else:
             return super().__getattr__(name)
@@ -320,8 +322,16 @@ class ArrayFormBoundField(forms.BoundField):
             yield form
 
     def __str__(self):
-        table = format_html_join('\n','<tbody>{}</tbody>', ((form.as_table(),) for form in self.form_set))
-        table = format_html('\n<table class="{}-array-model-field">\n{}\n</table>', self.name, table)
+        table = format_html_join(
+            '\n','<tbody>{}</tbody>',
+            ((form.as_table(),)
+             for form in self.form_set))
+        table = format_html(
+            '\n<table class="{}-array-model-field">'
+            '\n{}'
+            '\n</table>',
+            self.name,
+            table)
         return format_html('{}\n{}',table, self.form_set.management_form)
 
     def __len__(self):
