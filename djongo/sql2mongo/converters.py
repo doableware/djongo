@@ -220,14 +220,32 @@ class InnerJoinConverter(JoinConverter):
 
 class OuterJoinConverter(JoinConverter):
 
+    def _null_fields(self, table):
+        toks = self.query.selected_columns.sql_tokens
+        fields = {}
+        for tok in toks:
+            if tok.table == table:
+                fields[tok.column] = None
+
+        return fields
+
     def to_mongo(self):
         lookup = self._lookup()
+        null_fields = self._null_fields(self.right_table)
+
         pipeline = [
             lookup,
             {
                 '$unwind': {
                     'path': '$' + self.right_table,
                     'preserveNullAndEmptyArrays': True
+                }
+            },
+            {
+                '$addFields': {
+                    self.right_table: {
+                        '$ifNull': ['$'+self.right_table, null_fields]
+                    }
                 }
             }
         ]
