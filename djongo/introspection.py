@@ -6,21 +6,22 @@ from django.db.backends.base import introspection
 
 
 class DatabaseIntrospection(introspection.BaseDatabaseIntrospection):
-    SAMPLE_SIZE = 1000
+    SAMPLE_SIZE = 10000
     TYPE_MAPPING = {
         int: bson.int64.Int64,
     }
 
     data_types_reverse = {
-        int: 'IntegerField',
         bson.int64.Int64: 'BigIntegerField',
         bson.objectid.ObjectId: 'ObjectIdField',
-        # collections.OrderedDict: 'JSONField',
-        bool: 'BooleanField',
-        datetime.datetime: 'DateTimeField',
+        collections.OrderedDict: 'JSONField',
         datetime.date: 'DateField',
+        datetime.datetime: 'DateTimeField',
+        bool: 'BooleanField',
+        dict: 'JSONField',
         float: 'FloatField',
-        list: 'ListField',
+        int: 'IntegerField',
+        list: 'JSONField',
         str: 'CharField',
         'text': 'TextField',
     }
