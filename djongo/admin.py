@@ -1,7 +1,7 @@
 import copy
 
 from django.contrib import admin
-from djongon.models import fields
+from djongo.models import fields
 
 
 class ModelAdmin(admin.ModelAdmin):
