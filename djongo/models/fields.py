@@ -23,7 +23,6 @@ from django.core.exceptions import ValidationError
 from django.db import router
 from django.db import connections as pymongo_connections
 import typing
-import inspect
 import functools
 
 from django.db.models.fields.mixins import FieldCacheMixin

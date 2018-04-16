@@ -560,6 +560,10 @@ class TestParse(TestCase):
                  }
             },
             {
+                '$addFields':
+                    {'table2': {'$ifNull': ['$table2', {'col1': None, 'col2': None}]}}
+            },
+            {
                 '$lookup': {
                     'from': 'table3',
                     'localField': 'table2.col2',
@@ -574,6 +578,9 @@ class TestParse(TestCase):
                  }
             },
             {
+                '$addFields': {'table3': {'$ifNull': ['$table3', {}]}}
+            },
+            {
                 '$lookup': {
                     'from': 'table4',
                     'localField': 'table3.col2',
@@ -586,6 +593,9 @@ class TestParse(TestCase):
                      'path': '$table4',
                      'preserveNullAndEmptyArrays': True
                  }
+            },
+            {
+                '$addFields': {'table4': {'$ifNull': ['$table4', {}]}}
             },
             {
                 '$sort': OrderedDict([('col1', 1)]),
