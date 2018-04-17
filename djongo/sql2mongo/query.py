@@ -530,33 +530,32 @@ class Result:
             tok_id, tok = sm.token_next(tok_id)
             if not tok:
                 logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
-                return
+                raise SQLDecodeError
 
             table = SQLToken(tok, None).table
 
             tok_id, tok = sm.token_next(tok_id)
             if (not tok
-                    or not tok.match(tokens.Keyword, 'ADD')):
+               or not tok.match(tokens.Keyword, 'ADD')):
                 logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
-                return
+                raise SQLDecodeError
 
             tok_id, tok = sm.token_next(tok_id)
             if (not tok
-                    or not tok.match(tokens.Keyword, 'CONSTRAINT')):
+               or not tok.match(tokens.Keyword, 'CONSTRAINT')):
                 logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
-                return
+                raise SQLDecodeError
 
             tok_id, tok = sm.token_next(tok_id)
             if not isinstance(tok, Identifier):
                 logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
-                return
+                raise SQLDecodeError
 
             constraint_name = tok.get_name()
-
             tok_id, tok = sm.token_next(tok_id)
             if not tok.match(tokens.Keyword, 'UNIQUE'):
                 logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
-                return
+                raise SQLDecodeError
 
             tok_id, tok = sm.token_next(tok_id)
             if isinstance(tok, Parenthesis):
