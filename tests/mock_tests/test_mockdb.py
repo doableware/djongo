@@ -1,12 +1,14 @@
 import typing
 from collections import OrderedDict
 from unittest import TestCase, mock, skip
+from unittest.mock import patch, MagicMock
 
 from logging import getLogger, DEBUG, StreamHandler
 from pymongo.cursor import Cursor
 from pymongo.command_cursor import CommandCursor
 
 from djongo.sql2mongo.query import Result
+from djongo.base import DatabaseWrapper
 
 'Django SQL:'
 
@@ -1056,3 +1058,46 @@ class TestParse(TestCase):
         self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
+
+
+class TestDatabaseWrapper(TestCase):
+    """Test cases for connection attempts"""
+
+    def test_empty_connection_params(self):
+        """Check for returned connection params if empty settings dict is provided"""
+        settings_dict = {}
+        wrapper = DatabaseWrapper(settings_dict)
+
+        params = wrapper.get_connection_params()
+
+        self.assertEqual(params['name'], 'djongo_test')
+        self.assertEqual(params['enforce_schema'], True)
+
+    def test_connection_params(self):
+        """Check for returned connection params if filled settings dict is provided"""
+        name = MagicMock()
+        port = MagicMock()
+        host = MagicMock()
+
+        settings_dict = {
+                'NAME': name,
+                'PORT': port,
+                'HOST': host
+        }
+
+        wrapper = DatabaseWrapper(settings_dict)
+
+        params = wrapper.get_connection_params()
+
+        assert params['name'] is name
+        assert params['port'] is port
+        assert params['host'] is host
+
+    @patch('djongo.database.MongoClient')
+    def test_connection(self, mocked_mongoclient):
+        settings_dict = MagicMock(dict)
+        wrapper = DatabaseWrapper(settings_dict)
+
+        wrapper.get_new_connection(wrapper.get_connection_params())
+
+        mocked_mongoclient.assert_called_once()
