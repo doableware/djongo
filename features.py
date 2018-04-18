@@ -6,3 +6,4 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     # djongo doesn't seem to support this currently
     has_bulk_insert = False
     has_native_uuid_field = True
+    supports_timezones = False
