@@ -130,7 +130,11 @@ class DatabaseWrapper(BaseDatabaseWrapper):
             'PASSWORD': 'password',
             'AUTH_SOURCE': 'authSource',
             'AUTH_MECHANISM': 'authMechanism',
-            'ENFORCE_SCHEMA': 'enforce_schema'
+            'ENFORCE_SCHEMA': 'enforce_schema',
+            'SSL': 'ssl',
+            'SSL_CERTFILE': 'ssl_certfile',
+            'SSL_CA_CERTS': 'ssl_ca_certs',
+            'READ_PREFERENCE': 'read_preference'
         }
         connection_params = {
             'name': 'djongo_test',
@@ -146,7 +150,6 @@ class DatabaseWrapper(BaseDatabaseWrapper):
                 connection_params[kwarg] = setting
 
         return connection_params
-
 
     def get_new_connection(self, connection_params):
         """
