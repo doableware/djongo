@@ -1,4 +1,4 @@
-import os
+import subprocess
 import sys, logging, threading
 
 djongo_logger = logging.getLogger('djongo')
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     while i < len(tests):
         sys.argv[t_i] = tests[i]
         print(f'## Executing test: {tests[i]} no: {i} ##\n')
-        o = os.system(' '.join(['python']+sys.argv))
+        o = subprocess.run(*(['python'] + sys.argv))
         if o != 0:
             failed_tests.append(tests[i])
         print(f'## Ran test: {tests[i]} no: {i} ##\n')
