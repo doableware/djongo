@@ -112,17 +112,78 @@ root_logger.setLevel(DEBUG)
 root_logger.addHandler(StreamHandler())
 
 
-class TestParse(TestCase):
-    """
-    Test the sql2mongo module with all possible SQL statements and check
-    if the conversion to a query document is happening properly.
-    """
+class MockTest(TestCase):
+
     @classmethod
     def setUpClass(cls):
         cls.conn = mock.MagicMock()
         cls.db = mock.MagicMock()
         cls.conn_prop = mock.MagicMock()
         cls.conn_prop.cached_collections = ['table']
+        cls.params_none = mock.MagicMock()
+        cls.params: typing.Union[mock.MagicMock, list] = None
+
+
+class TestVoidQuery(MockTest):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+    def exe(self):
+        result = Result(self.db, self.conn, self.conn_prop, self.sql, self.params)
+
+    def test_alter(self):
+        self.sql = (
+            'ALTER TABLE "table" '
+            'ADD CONSTRAINT "con" '
+            'FOREIGN KEY ("fk") '
+            'REFERENCES "r" ("id")'
+        )
+        self.exe()
+
+        self.sql = (
+            'ALTER TABLE "table" '
+            'ADD CONSTRAINT "c"'
+            ' UNIQUE ("a", "b")'
+        )
+        self.exe()
+
+        self.sql = (
+            'ALTER TABLE "table" '
+            'ALTER COLUMN "c" '
+            'DROP NOT NULL'
+        )
+        self.exe()
+
+        self.sql = (
+            'ALTER TABLE "table" '
+            'DROP COLUMN "c" '
+            'CASCADE'
+        )
+        self.exe()
+
+        self.sql = (
+            'ALTER TABLE "table" '
+            'ADD COLUMN "c" '
+            'integer DEFAULT %s NOT NULL'
+        )
+        self.params = [1]
+        self.exe()
+        """
+        sql_command: ALTER TABLE "dummy_arrayentry" ADD COLUMN "n_comments" integer DEFAULT %(0)s NOT NULL
+        sql_command: ALTER TABLE "dummy_arrayentry" ALTER COLUMN "n_comments" DROP DEFAULT
+        """
+
+
+class TestQuery(MockTest):
+    """
+    Test the sql2mongo module with all possible SQL statements and check
+    if the conversion to a query document is happening properly.
+    """
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
 
         cls.find = cls.conn.__getitem__().find
         cursor = mock.MagicMock()
@@ -136,8 +197,6 @@ class TestParse(TestCase):
         cls.agg_iter = cursor.__iter__
         cls.aggregate.return_value = cursor
 
-        cls.params_none = mock.MagicMock()
-        cls.params: typing.Union[mock.MagicMock, list] = None
 
     def find_mock(self):
         result = Result(self.db, self.conn, self.conn_prop, self.sql, self.params)
