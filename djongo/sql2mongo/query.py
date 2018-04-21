@@ -82,6 +82,12 @@ class Query:
         raise NotImplementedError
 
 
+class ExecutableQuery(Query):
+
+    def execute(self):
+        raise NotImplementedError
+
+
 class SelectQuery(Query):
 
     def __init__(self, *args):
@@ -390,6 +396,134 @@ class InsertQuery(Query):
         logger.debug('insert id {}'.format(result.inserted_id))
 
 
+class AlterQuery(ExecutableQuery):
+
+    def __init__(self, *args):
+        self._iden_name = None
+        self._default = None
+        self._cascade = None
+        self._null = None
+
+        super().__init__(*args)
+
+    def parse(self):
+        sm = self.statement
+        tok_id = 0
+        tok_id, tok = sm.token_next(tok_id)
+
+        while tok_id is not None:
+            if tok.match(tokens.Keyword, 'TABLE'):
+                tok_id = self._table(tok_id)
+            elif tok.match(tokens.Keyword, 'ADD'):
+                tok_id = self._add(tok_id)
+            elif tok.match(tokens.Keyword.DDL, 'DROP'):
+                tok_id = self._drop(tok_id)
+            elif tok.match(tokens.Keyword.DDL, 'ALTER'):
+                tok_id = self._alter(tok_id)
+            else:
+                raise NotImplementedError
+
+            tok_id, tok = sm.token_next(tok_id)
+
+    def _alter(self, tok_id):
+        self.execute = lambda: None
+
+    def _table(self, tok_id):
+        sm = self.statement
+        tok_id, tok = sm.token_next(tok_id)
+        if not tok:
+            raise SQLDecodeError
+        self.left_table = SQLToken(tok, None).table
+        return tok_id
+
+    def _drop(self, tok_id):
+        sm = self.statement
+        tok_id, tok = sm.token_next(tok_id)
+
+        while tok_id is not None:
+            if tok.match(tokens.Keyword, (
+                    'COLUMN', 'CASCADE'
+            )):
+                pass
+            elif isinstance(tok, Identifier):
+                self._iden_name = tok.get_name()
+            else:
+                raise NotImplementedError
+
+            tok_id, tok = sm.token_next(tok_id)
+
+        self.execute = self._drop_column
+        return tok_id
+
+    def _drop_column(self):
+        self.db_ref[self.left_table].update(
+            {},
+            {
+                '$unset': {
+                    self._iden_name: ''
+                }
+            }
+        )
+
+    def _add(self, tok_id):
+        sm = self.statement
+        tok_id, tok = sm.token_next(tok_id)
+
+        while tok_id is not None:
+            if tok.match(tokens.Keyword, (
+                'CONSTRAINT', 'KEY', 'REFERENCES',
+                'NOT NULL', 'NULL'
+            )):
+                pass
+            elif tok.match(tokens.Name.Builtin, (
+                'integer', 'bool', 'char', 'date',
+                'datetime', 'float', 'time'
+            )):
+                pass
+            elif isinstance(tok, Identifier):
+                self._iden_name = tok.get_name()
+            elif isinstance(tok, Parenthesis):
+                self.index = [
+                    (field.strip(' "'), 1)
+                    for field in tok.value.strip('()').split(',')
+                ]
+            elif tok.match(tokens.Keyword, 'DEFAULT'):
+                tok_id, tok = sm.token_next(tok_id)
+                i = SQLToken.placeholder_index(tok)
+                self._default = self.params[i]
+            elif tok.match(tokens.Keyword, 'UNIQUE'):
+                self.execute = self._unique
+            elif tok.match(tokens.Keyword, 'FOREIGN'):
+                self.execute = self._fk
+            elif tok.match(tokens.Keyword, 'COLUMN'):
+                self.execute = self._add_column
+            else:
+                raise NotImplementedError
+
+            tok_id, tok = sm.token_next(tok_id)
+
+        return tok_id
+
+    def _add_column(self):
+        self.db_ref[self.left_table].update(
+            {},
+            {
+                '$set': {
+                    self._iden_name: self._default
+                }
+            }
+        )
+
+    def _unique(self):
+        self.db_ref[self.left_table].create_index(
+            self.index,
+            unique=True,
+            name=self._iden_name)
+
+    def _fk(self):
+        pass
+
+
 class DeleteQuery(Query):
 
     def __init__(self, *args):
@@ -525,44 +659,12 @@ class Result:
                 raise exe from e
 
     def _alter(self, sm):
-        tok_id, tok = sm.token_next(0)
-        if tok.match(tokens.Keyword, 'TABLE'):
-            tok_id, tok = sm.token_next(tok_id)
-            if not tok:
-                logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
-                raise SQLDecodeError
-
-            table = SQLToken(tok, None).table
-
-            tok_id, tok = sm.token_next(tok_id)
-            if (not tok
-               or not tok.match(tokens.Keyword, 'ADD')):
-                logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
-                raise SQLDecodeError
-
-            tok_id, tok = sm.token_next(tok_id)
-            if (not tok
-               or not tok.match(tokens.Keyword, 'CONSTRAINT')):
-                logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
-                raise SQLDecodeError
-
-            tok_id, tok = sm.token_next(tok_id)
-            if not isinstance(tok, Identifier):
-                logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
-                raise SQLDecodeError
-
-            constraint_name = tok.get_name()
-            tok_id, tok = sm.token_next(tok_id)
-            if not tok.match(tokens.Keyword, 'UNIQUE'):
-                logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
-                raise SQLDecodeError
-
-            tok_id, tok = sm.token_next(tok_id)
-            if isinstance(tok, Parenthesis):
-                index = [(field.strip(' "'), 1) for field in tok.value.strip('()').split(',')]
-                self.db[table].create_index(index, unique=True, name=constraint_name)
-            else:
-                raise NotImplementedError('Alter command not implemented for SQL {}'.format(self._sql))
+        try:
+            self._query = AlterQuery(self.db, self.connection_properties, sm, self._params)
+        except NotImplementedError:
+            logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
+        else:
+            self._query.execute()
 
     def _create(self, sm):
         tok_id, tok = sm.token_next(0)
@@ -578,11 +680,10 @@ class Result:
             try:
                 self.db.create_collection(table)
             except CollectionInvalid:
-                # if enforce_schema:
-                #     raise
-                # else:
-                #     return
-                return
+                if self.connection_properties.enforce_schema:
+                    raise
+                else:
+                    return
 
             logger.debug('Created table {}'.format(table))
 
