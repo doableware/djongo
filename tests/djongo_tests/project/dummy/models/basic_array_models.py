@@ -76,7 +76,7 @@ class ArrayEntry(models.Model):
         model_container=ArrayAuthor,
         model_form_class=AuthorForm
     )
-    # n_comments = models.IntegerField()
+    n_comments = models.IntegerField(default=2)
 
     def __str__(self):
         return self.headline

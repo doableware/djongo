@@ -35,19 +35,20 @@ docs:
   - title: "Creating Capped Models"
     url: /creating-django-capped-models-using-mongodb/
 
-
-#  - title: "Database configuration"
-#    url: /database-configuration/
-#  - title: "Embedded Model Field"
-#    url: /embedded-model-field/
-#  - title: "Array Model Field"
-#    url: /array-model-field/
-#  - title: "Array Reference Field"
-#    url: /mongodb-field-reference/#arrayreferencefield
-#  - title: "ObjectID Field"
-#    url: /mongodb-field-reference/#objectidfield
-#  - title: "List Field"
-#    url: /mongodb-field-reference/#listfield
+  - title: "Quick Reference"
+    children:
+    - title: "Database configuration"
+      url: /database-configuration/
+    - title: "Embedded Model Field"
+      url: /embedded-model-field/
+    - title: "Array Model Field"
+      url: /array-model-field/
+    - title: "Array Reference Field"
+      url: /mongodb-field-reference/#arrayreferencefield
+    - title: "ObjectID Field"
+      url: /mongodb-field-reference/#objectidfield
+    - title: "List Field"
+      url: /mongodb-field-reference/#listfield
 
   - title: "Other resources"
     children:

@@ -59,7 +59,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         'FilePathField': 'char',
         'FloatField': 'float',
         'IntegerField': 'integer',
-        'BigIntegerField': 'bigint',
+        'BigIntegerField': 'integer',
         'IPAddressField': 'char',
         'GenericIPAddressField': 'char',
         'NullBooleanField': 'bool',
