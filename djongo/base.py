@@ -131,6 +131,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
             'AUTH_SOURCE': 'authSource',
             'AUTH_MECHANISM': 'authMechanism',
             'ENFORCE_SCHEMA': 'enforce_schema',
+            'REPLICASET': 'replicaset',
             'SSL': 'ssl',
             'SSL_CERTFILE': 'ssl_certfile',
             'SSL_CA_CERTS': 'ssl_ca_certs',
