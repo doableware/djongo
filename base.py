@@ -80,7 +80,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
 
     operators = {
         'exact': '= %s',
-        'iexact': 'iLIKE %.*s',
+        'iexact': 'iLIKE %s',
         'contains': 'LIKE %s',
         'icontains': 'iLIKE %s',
         'regex': 'REGEXP BINARY %s',
