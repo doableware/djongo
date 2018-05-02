@@ -456,7 +456,12 @@ class EmbeddedModelField(Field):
             value = value.subterfuge
 
         if not isinstance(value, Model):
-            raise ValueError('Value must be instance of Model')
+            raise ValueError(
+                'Value: {value} must be instance of Model: {model}'.format(
+                     value=value, 
+                     model=Model
+                )
+            )
 
         mdl_ob = {}
         for fld in value._meta.get_fields():
