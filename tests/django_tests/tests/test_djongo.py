@@ -15,9 +15,12 @@
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
+        'NAME': 'test1'
     },
     'other': {
         'ENGINE': 'djongo',
+        'NAME': 'test2'
+
     }
 }
 
