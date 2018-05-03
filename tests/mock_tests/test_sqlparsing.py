@@ -136,6 +136,12 @@ class TestVoidQuery(MockTest):
     def test_alter(self):
         self.sql = (
             'ALTER TABLE "table" '
+            'FLUSH'
+        )
+        self.exe()
+
+        self.sql = (
+            'ALTER TABLE "table" '
             'ADD CONSTRAINT "con" '
             'FOREIGN KEY ("fk") '
             'REFERENCES "r" ("id")'
@@ -376,31 +382,31 @@ class TestQuery(MockTest):
         self.conn.reset_mock()
 
     def test_insert(self):
-        io = self.conn.__getitem__.return_value.insert_one
+        io = self.conn.__getitem__.return_value.insert_many
 
         sql = 'INSERT INTO "table" ("col1", "col2") VALUES (%s, %s)'
         params = [1, 2]
         result = Result(self.db, self.conn, self.conn_prop, sql, params)
-        io.assert_any_call({'col1':1, 'col2': 2})
+        io.assert_any_call([{'col1':1, 'col2': 2}], ordered=False)
         self.conn.reset_mock()
 
         sql = 'INSERT INTO "table" ("col1", "col2") VALUES (%s, NULL)'
         params = [1]
         result = Result(self.db, self.conn, self.conn_prop, sql, params)
-        io.assert_any_call({'col1':1, 'col2': None})
+        io.assert_any_call([{'col1': 1, 'col2': None}], ordered=False)
         self.conn.reset_mock()
 
         sql = 'INSERT INTO "table" ("col") VALUES (%s)'
         params = [1]
         result = Result(self.db, self.conn, self.conn_prop, sql, params)
-        io.assert_any_call({'col':1})
+        io.assert_any_call([{'col': 1}], ordered=False)
         self.conn.reset_mock()
 
         #INSERT INTO "m2m_regress_post" ("id") VALUES (DEFAULT)
         sql = 'INSERT INTO "table" ("id") VALUES (DEFAULT)'
         params = []
         result = Result(self.db, self.conn, self.conn_prop, sql, params)
-        io.assert_any_call({})
+        io.assert_any_call([], ordered=False)
         self.conn.reset_mock()
 
 
