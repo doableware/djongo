@@ -45,6 +45,8 @@ class Cursor:
         return self.result.last_row_id
 
     def execute(self, sql, params=None):
+        print(f'Query {sql}')
+
         self.result = Result(
             self.client_conn,
             self.db_conn,
