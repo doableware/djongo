@@ -2,7 +2,7 @@ import shutil
 import subprocess
 import sys
 import unittest
-from mock_tests import test_mockdb
+from mock_tests import test_sqlparsing
 import os
 from pymongo import MongoClient
 
@@ -11,7 +11,7 @@ TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 
 if __name__ == '__main__':
     result = unittest.TextTestRunner(verbosity=2, failfast=True).run(
-        unittest.TestLoader().loadTestsFromModule(test_mockdb)
+        unittest.TestLoader().loadTestsFromModule(test_sqlparsing)
     )
     if not result.wasSuccessful():
         sys.exit(1)

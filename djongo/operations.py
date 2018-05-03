@@ -49,10 +49,17 @@ class DatabaseOperations(BaseDatabaseOperations):
 
     def sql_flush(self, style, tables, sequences, allow_cascade=False):
         # TODO: Need to implement this fully
-        return ['ALTER TABLE']
+        return [f'ALTER TABLE "{table}" FLUSH'
+                for table in tables]
 
     def max_name_length(self):
         return 50
 
     def no_limit_value(self):
         return None
+
+    def bulk_insert_sql(self, fields, placeholder_rows):
+        return ' '.join(
+            'VALUES (%s)' % ', '.join(row)
+            for row in placeholder_rows
+        )
