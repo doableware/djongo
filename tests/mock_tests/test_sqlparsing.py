@@ -296,6 +296,26 @@ class TestQuery(MockTest):
 
         self.aggregate_mock(pipeline, return_value, ans)
 
+    def test_functions(self):
+        t1c1 = '"table1"."col1"'
+        t2c1 = '"table2"."col1"'
+        t4c1 = '"table4"."col1"'
+
+        t1c2 = '"table1"."col2"'
+        t2c2 = '"table2"."col2"'
+        t3c2 = '"table3"."col2"'
+        t3c1 = '"table3"."col1"'
+
+        self.sql = f'SELECT MIN({t1c1}) AS "m__min1", MAX({t1c2}) AS "m__max1"' \
+                   f' FROM "table1"'
+
+        pipeline = [{
+            '$count': '_count'
+        }]
+        return_value = [{'_count': 1}]
+        ans = [(1,)]
+        self.aggregate_mock(pipeline, return_value, ans)
+
     def test_count(self):
         conn = self.conn
         agg = self.aggregate
@@ -430,7 +450,13 @@ class TestQuery(MockTest):
         t1c3 = '"table1"."col3"'
         t2c2 = '"table2"."col2"'
 
-        self.sql = f'SELECT {t1c1}, {t1c2}, COUNT({t1c1}) AS "c1__count", COUNT({t1c3}) AS "c3__count" FROM "table1" GROUP BY {t1c1}, {t1c2}, {t1c3}'
+        self.sql = (
+            f'SELECT {t1c1}, {t1c2}, '
+                f'COUNT({t1c1}) AS "c1__count", '
+                f'COUNT({t1c3}) AS "c3__count" '
+            f'FROM "table1" '
+            f'GROUP BY {t1c1}, {t1c2}, {t1c3}'
+        )
         pipeline = [
             {
                 '$group': {
@@ -585,12 +611,14 @@ class TestQuery(MockTest):
         t3c2 = '"table3"."col2"'
         t3c1 = '"table3"."col1"'
 
-        self.sql = (f'SELECT {t1c1}, {t2c1}, {t1c2}, {t2c2} '
-        f'FROM table1 '
-        f'LEFT OUTER JOIN table2 ON ({t1c1} = {t2c1}) '
-        f'LEFT OUTER JOIN table3 ON ({t2c2} = {t3c2}) '
-        f'LEFT OUTER JOIN table4 ON ({t3c2} = {t4c1}) '
-        f'ORDER BY {t1c1} ASC')
+        self.sql = (
+            f'SELECT {t1c1}, {t2c1}, {t1c2}, {t2c2} '
+            f'FROM table1 '
+            f'LEFT OUTER JOIN table2 ON ({t1c1} = {t2c1}) '
+            f'LEFT OUTER JOIN table3 ON ({t2c2} = {t3c2}) '
+            f'LEFT OUTER JOIN table4 ON ({t3c2} = {t4c1}) '
+            f'ORDER BY {t1c1} ASC'
+        )
         self.params = []
         return_value = [
             {

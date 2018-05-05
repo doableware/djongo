@@ -164,6 +164,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         es = connection_params.pop('enforce_schema')
 
         connection_params['document_class'] = OrderedDict
+        # connection_params['tz_aware'] = True
         # To prevent leaving unclosed connections behind,
         # client_conn must be closed before a new connection
         # is created.
