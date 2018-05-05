@@ -67,8 +67,10 @@ class ColumnSelectConverter(Converter):
             return
 
         elif isinstance(tok[0], Function):
-            if tok[0][0].value == 'COUNT':
+            func = tok[0].get_name()
+            if func == 'COUNT':
                 self.return_count = True
+
 
         else:
             sql = SQLToken(tok, self.query.alias2op)
