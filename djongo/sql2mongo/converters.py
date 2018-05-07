@@ -3,7 +3,7 @@ from collections import OrderedDict
 from sqlparse import tokens, parse as sqlparse
 from sqlparse.sql import Identifier, IdentifierList, Parenthesis, Function, Comparison
 
-from . import query
+from . import query, SQLFunc
 
 from .operators import WhereOp
 from . import SQLDecodeError, SQLToken
@@ -35,9 +35,12 @@ class ColumnSelectConverter(Converter):
         self.select_all = False
         self.return_const = None
         self.return_count = False
+        self.has_func = False
         self.num_columns = 0
 
-        self.sql_tokens: typing.List[SQLToken] = []
+        self.sql_tokens: typing.List[
+            typing.Union[SQLToken, SQLFunc]
+        ]= []
         super().__init__(query_ref, begin_id)
 
     def parse(self):
@@ -67,10 +70,12 @@ class ColumnSelectConverter(Converter):
             return
 
         elif isinstance(tok[0], Function):
-            func = tok[0].get_name()
-            if func == 'COUNT':
+            self.has_func = True
+            func = SQLFunc(tok, self.query.alias2op)
+            if func.func == 'COUNT' and not func.column:
                 self.return_count = True
-
+            else:
+                self.sql_tokens.append(func)
 
         else:
             sql = SQLToken(tok, self.query.alias2op)
@@ -94,6 +99,11 @@ class AggColumnSelectConverter(ColumnSelectConverter):
             return {'$count': '_count'}
 
         else:
+            if self.has_func:
+                # A SELECT func without groupby clause still needs a groupby
+                # in MongoDB
+                return self._group_by_null()
+
             for selected in self.sql_tokens:
                 if selected.table == self.query.left_table:
                     project[selected.column] = True
@@ -102,6 +112,45 @@ class AggColumnSelectConverter(ColumnSelectConverter):
 
         return {'$project': project}
 
+    def _group_by_null(self):
+        group = {
+            '_id': None
+        }
+        for func in self.sql_tokens:
+            if not isinstance(func, SQLFunc):
+                raise SQLDecodeError
+
+            if func.table == self.query.left_table:
+                field = func.column
+            else:
+                field = f'{func.table}.{func.column}'
+
+            if func.func == 'COUNT':
+                if not func.column:
+                    group[func.alias] = {'$sum': 1}
+                else:
+
+                    group[func.alias] = {
+                        '$sum': {
+                            '$cond': {
+                                'if': {
+                                    '$gt': ['$'+field, None]
+                                },
+                                'then': 1,
+                                'else': 0
+                            }
+                        }
+                    }
+            elif func.func == 'MIN':
+                group[func.alias] = {'$min': '$'+field}
+            elif func.func == 'MAX':
+                group[func.alias] = {'$max': '$'+field}
+            elif func.func == 'SUM':
+                group[func.alias] = {'$sum': '$'+field}
+            else:
+                raise SQLDecodeError
+
+        return {'$group': group}
 
 class FromConverter(Converter):
 

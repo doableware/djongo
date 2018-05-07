@@ -195,8 +195,10 @@ class SelectQuery(Query):
             self.nested_query
             or self.joins
             or self.distinct
+            or self.groupby
             or self.selected_columns.return_const
             or self.selected_columns.return_count
+            or self.selected_columns.has_func
         )
 
     def _make_pipeline(self):
@@ -210,6 +212,9 @@ class SelectQuery(Query):
         if self.where:
             self.where.__class__ = AggWhereConverter
             pipeline.append(self.where.to_mongo())
+
+        if self.groupby:
+            pipeline.extend(self.groupby.to_mongo())
 
         if self.distinct:
             pipeline.extend(self.distinct.to_mongo())
@@ -226,7 +231,13 @@ class SelectQuery(Query):
             self.offset.__class__ = AggOffsetConverter
             pipeline.append(self.offset.to_mongo())
 
-        if not self.distinct and self.selected_columns:
+        if (
+            not (
+                self.distinct
+                or self.groupby
+            )
+            and self.selected_columns
+        ):
             self.selected_columns.__class__ = AggColumnSelectConverter
             pipeline.append(self.selected_columns.to_mongo())
 
@@ -267,20 +278,23 @@ class SelectQuery(Query):
             sql_tokens = self.selected_columns.sql_tokens
 
         for selected in sql_tokens:
-            if selected.table == self.left_table:
-                try:
-                    ret.append(doc[selected.column])
-                except KeyError:
-                    if self.connection_properties.enforce_schema:
-                        raise MigrationError(selected.column)
-                    ret.append(None)
+            if isinstance(selected, SQLToken):
+                if selected.table == self.left_table:
+                    try:
+                        ret.append(doc[selected.column])
+                    except KeyError:
+                        if self.connection_properties.enforce_schema:
+                            raise MigrationError(selected.column)
+                        ret.append(None)
+                else:
+                    try:
+                        ret.append(doc[selected.table][selected.column])
+                    except KeyError:
+                        if self.connection_properties.enforce_schema:
+                            raise MigrationError(selected.column)
+                        ret.append(None)
             else:
-                try:
-                    ret.append(doc[selected.table][selected.column])
-                except KeyError:
-                    if self.connection_properties.enforce_schema:
-                        raise MigrationError(selected.column)
-                    ret.append(None)
+                ret.append(doc[selected.alias])
 
         return tuple(ret)
 
