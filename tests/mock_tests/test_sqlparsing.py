@@ -309,11 +309,9 @@ class TestQuery(MockTest):
         self.sql = f'SELECT MIN({t1c1}) AS "m__min1", MAX({t1c2}) AS "m__max1"' \
                    f' FROM "table1"'
 
-        pipeline = [{
-            '$count': '_count'
-        }]
-        return_value = [{'_count': 1}]
-        ans = [(1,)]
+        pipeline = [{'$group': {'_id': None, 'm__min1': {'$min': '$col1'}, 'm__max1': {'$max': '$col2'}}}]
+        return_value = [{'m__min1': 1, 'm__max1': 2}]
+        ans = [(1,2)]
         self.aggregate_mock(pipeline, return_value, ans)
 
     def test_count(self):
@@ -508,7 +506,6 @@ class TestQuery(MockTest):
         self.assertEqual(ret, [(1,)])
         self.find.assert_any_call(**find_args)
         self.conn.reset_mock()
-
 
 
     def test_in(self):
