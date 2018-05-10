@@ -119,36 +119,7 @@ class AggColumnSelectConverter(ColumnSelectConverter):
         for func in self.sql_tokens:
             if not isinstance(func, SQLFunc):
                 raise SQLDecodeError
-
-            if func.table == self.query.left_table:
-                field = func.column
-            else:
-                field = f'{func.table}.{func.column}'
-
-            if func.func == 'COUNT':
-                if not func.column:
-                    group[func.alias] = {'$sum': 1}
-                else:
-
-                    group[func.alias] = {
-                        '$sum': {
-                            '$cond': {
-                                'if': {
-                                    '$gt': ['$'+field, None]
-                                },
-                                'then': 1,
-                                'else': 0
-                            }
-                        }
-                    }
-            elif func.func == 'MIN':
-                group[func.alias] = {'$min': '$'+field}
-            elif func.func == 'MAX':
-                group[func.alias] = {'$max': '$'+field}
-            elif func.func == 'SUM':
-                group[func.alias] = {'$sum': '$'+field}
-            else:
-                raise SQLDecodeError
+            group[func.alias] = func.to_mongo(self.query)
 
         return {'$group': group}
 
@@ -385,10 +356,14 @@ class AggOrderConverter(OrderConverter):
     def to_mongo(self):
         sort = OrderedDict()
         for tok, tok_ord in self.columns:
-            if tok.table == self.query.left_table:
-                sort[tok.column] = tok_ord.order
+            if tok.has_parent():
+                if tok.table == self.query.left_table:
+                    field = tok.column
+                else:
+                    field = tok.table + '.' + tok.column
             else:
-                sort[tok.table + '.' + tok.column] = tok_ord.order
+                field = tok.table
+            sort[field] = tok_ord.order
 
         return {'$sort': sort}
 
@@ -463,14 +438,21 @@ class NestedInQueryConverter(Converter):
         return pipeline
 
 
+class HavingConverter(Converter):
+    pass
+
 class GroupbyConverter(Converter):
 
     def __init__(self, *args):
-        self.sql_tokens = []
+        self.sql_tokens: typing.List[SQLToken] = []
         super().__init__(*args)
 
     def parse(self):
         tok_id, tok = self.query.statement.token_next(self.begin_id)
+        if not tok.match(tokens.Keyword, 'BY'):
+            raise SQLDecodeError
+        tok_id, tok = self.query.statement.token_next(tok_id)
+
         if isinstance(tok, Identifier):
             self.sql_tokens.append(SQLToken(tok, self.query.alias2op))
         else:
@@ -480,7 +462,45 @@ class GroupbyConverter(Converter):
         self.end_id = tok_id
 
     def to_mongo(self):
-        pass
+        _id = {}
+        for iden in self.sql_tokens:
+            if iden.table == self.query.left_table:
+                _id[iden.column] = '$' + iden.column
+            else:
+                try:
+                    _id[iden.table][iden.column] = '$' + iden.table + '.' + iden.column
+                except KeyError:
+                    _id[iden.table] = {iden.column: '$' + iden.table + '.' + iden.column}
+
+        group = {
+            '_id': _id
+        }
+        project = {
+            '_id': False
+        }
+        for selected in self.query.selected_columns.sql_tokens:
+            if isinstance(selected, SQLToken):
+                if selected.table == self.query.left_table:
+                    project[selected.column] = '$_id.' + selected.column
+                else:
+                    project[selected.table + '.' + selected.column] \
+                        = f'_id.{selected.table}.{selected.column}'
+            else:
+                project[selected.alias] = True
+                group[selected.alias] = selected.to_mongo(self.query)
+
+        pipeline = [
+            {
+                '$group': group
+            },
+            {
+                '$project': project
+            }
+        ]
+
+        return pipeline
+
+
 
 class OffsetConverter(Converter):
     def __init__(self, *args):

@@ -49,11 +49,45 @@ class SQLFunc:
     def func(self):
         return self._token[0].get_name()
 
+    def to_mongo(self, query):
+        if self.table == query.left_table:
+            field = self.column
+        else:
+            field = f'{self.table}.{self.column}'
+
+        if self.func == 'COUNT':
+            if not self.column:
+                return {'$sum': 1}
+
+            else:
+                return {
+                    '$sum': {
+                        '$cond': {
+                            'if': {
+                                '$gt': ['$' + field, None]
+                            },
+                            'then': 1,
+                            'else': 0
+                        }
+                    }
+                }
+        elif self.func == 'MIN':
+            return {'$min': '$' + field}
+        elif self.func == 'MAX':
+            return {'$max': '$' + field}
+        elif self.func == 'SUM':
+            return {'$sum': '$' + field}
+        else:
+            raise SQLDecodeError
+
 class SQLToken:
 
     def __init__(self, token: Token, alias2op=None):
         self._token = token
         self.alias2op: typing.Dict[str, SQLToken] = alias2op
+
+    def has_parent(self):
+        return self._token.get_parent_name()
 
     @property
     def table(self):
