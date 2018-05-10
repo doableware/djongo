@@ -451,33 +451,99 @@ class TestQuery(MockTest):
         self.sql = (
             f'SELECT {t1c1}, {t1c2}, '
                 f'COUNT({t1c1}) AS "c1__count", '
-                f'COUNT({t1c3}) AS "c3__count" '
+                f'COUNT({t1c2}) AS "c2__count" '
             f'FROM "table1" '
-            f'GROUP BY {t1c1}, {t1c2}, {t1c3}'
+            f'GROUP BY {t1c1}, {t1c2}'
         )
         pipeline = [
             {
                 '$group': {
                     '_id': {
                         'col1': '$col1',
-                        'col2': '$col2',
-                        'col3': '$col3'
+                        'col2': '$col2'
                     },
                     'c1__count': {
-                        '$sum': 1
+                        '$sum': {
+                            '$cond': {
+                                'if': {'$gt': ['$col1', None]},
+                                'then': 1,
+                                'else': 0}
+                        }
                     },
-                    'c3_count': {
-                        '$sum': 1
+                    'c2__count': {
+                        '$sum': {
+                            '$cond': {
+                                'if': {'$gt': ['$col2', None]},
+                                'then': 1,
+                                'else': 0}
+                        }
                     }
                 }
             },
             {
-                '$addFields': {
+                '$project': {
+                    '_id': False,
                     'col1': '$_id.col1',
-                    'col2': '$_id.col2'
-                }
+                    'col2': '$_id.col2',
+                    'c1__count': True,
+                    'c2__count': True}
             }
         ]
+        return_value = [
+            {
+                'col1': 'a1',
+                'col2': 'a2',
+                'c1__count': 1,
+                'c2__count': 2
+            },
+            {
+                'col1': 'b1',
+                'col2': 'b2',
+                'c1__count': 3,
+                'c2__count': 4
+            },
+        ]
+        ans = [('a1', 'a2',1,2), ('b1', 'b2',3,4)]
+        self.aggregate_mock(pipeline, return_value, ans)
+
+
+        self.sql = (
+            f'SELECT {t1c1}, {t1c2}, MIN({t2c2}) AS "dt" '
+            f'FROM table1 '
+            f'LEFT OUTER JOIN "table2" ON ({t1c1} = {t2c2})'
+            f' GROUP BY {t1c1}, {t2c2} '
+            f'ORDER BY "dt" ASC'
+        )
+        return_value = [
+            {
+                'col1': 'a1',
+                'col2': 'a2',
+                'dt': 1,
+            },
+            {
+                'col1': 'b1',
+                'col2': 'b2',
+                'dt': 3,
+            },
+        ]
+        ans = [('a1', 'a2', 1), ('b1', 'b2', 3)]
+        pipeline = [
+            {'$lookup': {'from': 'table2', 'localField': 'col1', 'foreignField': 'col2', 'as': 'table2'}},
+            {'$unwind': {'path': '$table2', 'preserveNullAndEmptyArrays': True}},
+            {'$addFields': {'table2': {'$ifNull': ['$table2', {'col2': None}]}}},
+            {
+                '$group': {'_id': {'col1': '$col1', 'table2': {'col2': '$table2.col2'}},
+                           'dt': {'$min': '$table2.col2'}}
+            },
+            {'$project': {'_id': False, 'col1': '$_id.col1', 'col2': '$_id.col2', 'dt': True}},
+            {'$sort': OrderedDict([('dt', 1)])}
+        ]
+        self.aggregate_mock(pipeline, return_value, ans)
+
+        """
+        SELECT "timezones_session"."id", "timezones_session"."name", MIN("timezones_sessionevent"."dt") AS "dt" FROM "timezones_session" LEFT OUTER JOIN "timezones_sessionevent" ON ("timezones_session"."id" = "timezones_sessionevent"."session_id") GROUP BY "timezones_session"."id", "timezones_session"."name" HAVING MIN("timezones_sessionevent"."dt") < %(0)s
+        """
+
 
     @skip
     def test_special(self):
@@ -635,7 +701,7 @@ class TestQuery(MockTest):
                 }
             },
         ]
-        ans = [('a1', 'a3', 'a2', 'a4'),('b1', 'b3', 'b2', 'b4')]
+        ans = [('a1', 'a3', 'a2', 'a4'), ('b1', 'b3', 'b2', 'b4')]
         pipeline = [
             {
                 '$lookup': {
