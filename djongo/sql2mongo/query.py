@@ -24,7 +24,8 @@ from . import SQLDecodeError, SQLToken, MigrationError
 from .converters import (
     ColumnSelectConverter, AggColumnSelectConverter, FromConverter, WhereConverter,
     AggWhereConverter, InnerJoinConverter, OuterJoinConverter, LimitConverter, AggLimitConverter, OrderConverter,
-    SetConverter, AggOrderConverter, DistinctConverter, NestedInQueryConverter, GroupbyConverter, OffsetConverter, AggOffsetConverter)
+    SetConverter, AggOrderConverter, DistinctConverter, NestedInQueryConverter, GroupbyConverter, OffsetConverter,
+    AggOffsetConverter, HavingConverter)
 
 logger = getLogger(__name__)
 
@@ -104,6 +105,8 @@ class SelectQuery(Query):
         self.limit: typing.Optional[LimitConverter] = None
         self.distinct: DistinctConverter = None
         self.groupby: GroupbyConverter = None
+        self.having: HavingConverter = None
+
 
         self._cursor: typing.Union[BasicCursor, CommandCursor] = None
         super().__init__(*args)
@@ -136,7 +139,7 @@ class SelectQuery(Query):
                 c = OuterJoinConverter(self, tok_id)
                 self.joins.append(c)
 
-            elif tok.match(tokens.Keyword, 'GROUP BY'):
+            elif tok.match(tokens.Keyword, 'GROUP'):
                 c = self.groupby = GroupbyConverter(self, tok_id)
 
             elif isinstance(tok, Where):
@@ -215,6 +218,9 @@ class SelectQuery(Query):
 
         if self.groupby:
             pipeline.extend(self.groupby.to_mongo())
+
+        if self.having:
+            pipeline.append(self.having.to_mongo())
 
         if self.distinct:
             pipeline.extend(self.distinct.to_mongo())
