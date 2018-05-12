@@ -423,8 +423,18 @@ class TestQuery(MockTest):
         #INSERT INTO "m2m_regress_post" ("id") VALUES (DEFAULT)
         sql = 'INSERT INTO "table" ("id") VALUES (DEFAULT)'
         params = []
+        aid = MagicMock()
+        auto = {
+            'auto': {
+                'field_names': ['id'],
+                'seq': 1
+            }
+        }
+        self.conn.__getitem__().find_one_and_update.return_value = auto
+
         result = Result(self.db, self.conn, self.conn_prop, sql, params)
-        io.assert_any_call([], ordered=False)
+
+        io.assert_any_call([{'id': 1}], ordered=False)
         self.conn.reset_mock()
 
 
@@ -514,6 +524,7 @@ class TestQuery(MockTest):
             f' GROUP BY {t1c1}, {t2c2} '
             f'ORDER BY "dt" ASC'
         )
+
         return_value = [
             {
                 'col1': 'a1',
@@ -528,14 +539,41 @@ class TestQuery(MockTest):
         ]
         ans = [('a1', 'a2', 1), ('b1', 'b2', 3)]
         pipeline = [
-            {'$lookup': {'from': 'table2', 'localField': 'col1', 'foreignField': 'col2', 'as': 'table2'}},
-            {'$unwind': {'path': '$table2', 'preserveNullAndEmptyArrays': True}},
-            {'$addFields': {'table2': {'$ifNull': ['$table2', {'col2': None}]}}},
             {
-                '$group': {'_id': {'col1': '$col1', 'table2': {'col2': '$table2.col2'}},
-                           'dt': {'$min': '$table2.col2'}}
+                '$lookup': {
+                    'from': 'table2',
+                    'localField': 'col1',
+                    'foreignField': 'col2',
+                    'as': 'table2'
+                }
             },
-            {'$project': {'_id': False, 'col1': '$_id.col1', 'col2': '$_id.col2', 'dt': True}},
+            {
+                '$unwind': {
+                    'path': '$table2',
+                    'preserveNullAndEmptyArrays': True
+                }
+            },
+            {
+                '$addFields': {
+                    'table2': {'$ifNull': ['$table2', {'col2': None}]}
+                }
+            },
+            {
+                '$group': {
+                    '_id': {
+                        'col1': '$col1',
+                        'table2': {'col2': '$table2.col2'}},
+                        'dt': {'$min': '$table2.col2'}
+                }
+            },
+            {
+                '$project': {
+                    '_id': False,
+                    'col1': '$_id.col1',
+                    'col2': '$_id.col2',
+                    'dt': True
+                }
+            },
             {'$sort': OrderedDict([('dt', 1)])}
         ]
         self.aggregate_mock(pipeline, return_value, ans)
@@ -544,6 +582,68 @@ class TestQuery(MockTest):
         SELECT "timezones_session"."id", "timezones_session"."name", MIN("timezones_sessionevent"."dt") AS "dt" FROM "timezones_session" LEFT OUTER JOIN "timezones_sessionevent" ON ("timezones_session"."id" = "timezones_sessionevent"."session_id") GROUP BY "timezones_session"."id", "timezones_session"."name" HAVING MIN("timezones_sessionevent"."dt") < %(0)s
         """
 
+        self.sql = (
+            f'SELECT {t1c1}, {t1c2}, MIN({t2c2}) AS "dt" '
+            f'FROM table1 '
+            f'LEFT OUTER JOIN "table2" ON ({t1c1} = {t2c2}) '
+            f'GROUP BY {t1c1}, {t2c2} '
+            f'HAVING MIN({t2c2}) < %s'
+        )
+        self.params = [2]
+        return_value = [
+            {
+                'col1': 'a1',
+                'col2': 'a2',
+                'dt': 1,
+            },
+            {
+                'col1': 'b1',
+                'col2': 'b2',
+                'dt': 0,
+            },
+        ]
+        ans = [('a1', 'a2', 1), ('b1', 'b2', 0)]
+        pipeline = [
+            {
+                '$lookup': {
+                    'from': 'table2',
+                    'localField': 'col1',
+                    'foreignField': 'col2',
+                    'as': 'table2'
+                }
+            },
+            {
+                '$unwind': {
+                    'path': '$table2',
+                    'preserveNullAndEmptyArrays': True
+                }
+            },
+            {
+                '$addFields': {
+                    'table2': {'$ifNull': ['$table2', {'col2': None}]}
+                }
+            },
+            {
+                '$group': {
+                    '_id': {
+                        'col1': '$col1',
+                        'table2': {'col2': '$table2.col2'}},
+                    'dt': {'$min': '$table2.col2'}
+                }
+            },
+            {
+                '$project': {
+                    '_id': False,
+                    'col1': '$_id.col1',
+                    'col2': '$_id.col2',
+                    'dt': True
+                }
+            },
+            {
+                '$match': {'dt' : {'$lt': 2}}
+            }
+        ]
+        self.aggregate_mock(pipeline, return_value, ans)
 
     @skip
     def test_special(self):

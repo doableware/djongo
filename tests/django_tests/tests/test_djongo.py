@@ -15,13 +15,14 @@
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
-        'NAME': 'test1'
+        'NAME': 'test1',
+        'ENFORCE_SCHEMA': True
     },
     'other': {
         'ENGINE': 'djongo',
-        'NAME': 'test2'
-
-    }
+        'NAME': 'test2',
+        'ENFORCE_SCHEMA': True
+}
 }
 
 SECRET_KEY = "django_tests_secret_key"
