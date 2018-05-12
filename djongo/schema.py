@@ -4,7 +4,8 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
-    pass
+    sql_create_index = "ALTER TABLE %(table)s ADD CONSTRAINT %(name)s INDEX (%(columns)s)%(extra)s"
+
     # def create_model(self, model):
     #     db_con = self.connection.connection
     #     db_con.create_collection(model._meta.db_table)
