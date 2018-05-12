@@ -17,6 +17,11 @@ The following options are supported in `settings.py`:
             'PASSWORD': 'password',
             'AUTH_SOURCE': 'db-name',
             'AUTH_MECHANISM': 'SCRAM-SHA-1',
+            'REPLICASET': 'replicaset',
+            'SSL': 'ssl',
+            'SSL_CERTFILE': 'ssl_certfile',
+            'SSL_CA_CERTS': 'ssl_ca_certs',
+            'READ_PREFERENCE': 'read_preference'
         }
     }
 ```
