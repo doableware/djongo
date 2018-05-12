@@ -6,8 +6,9 @@ from collections import OrderedDict
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.backends.base.client import BaseDatabaseClient
 from django.db.backends.base.creation import BaseDatabaseCreation
-from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.utils import Error
+from .schema import DatabaseSchemaEditor
+
 from .introspection import DatabaseIntrospection
 
 from .operations import DatabaseOperations
@@ -96,7 +97,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     }
 
     vendor = 'djongo'
-    SchemaEditorClass = BaseDatabaseSchemaEditor
+    SchemaEditorClass = DatabaseSchemaEditor
     Database = Database
 
     client_class = BaseDatabaseClient
