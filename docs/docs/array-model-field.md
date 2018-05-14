@@ -53,7 +53,7 @@ class Author(models.Model):
 
 class AuthorForm(forms.ModelForm):
     class Meta:
-        model = Blog
+        model = Author
         fields = (
             'name', 'email'
         )

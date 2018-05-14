@@ -17,11 +17,77 @@ class MigrationError(Exception):
     def __init__(self, field):
         self.field = field
 
+
+class SQLFunc:
+
+    def __init__(self, token: Token, alias2op=None):
+        self._token = token
+
+        try:
+            self._iden = SQLToken(token[0].get_parameters()[0], alias2op)
+        except IndexError:
+            if token[0].get_name() == 'COUNT':
+                self._iden = None
+            else:
+                raise
+
+        self.alias2op: typing.Dict[str, SQLToken] = alias2op
+
+    @property
+    def alias(self):
+        return self._token.get_alias()
+
+    @property
+    def table(self):
+        return self._iden.table if self._iden else None
+
+    @property
+    def column(self):
+        return self._iden.column if self._iden else None
+
+    @property
+    def func(self):
+        return self._token[0].get_name()
+
+    def to_mongo(self, query):
+        if self.table == query.left_table:
+            field = self.column
+        else:
+            field = f'{self.table}.{self.column}'
+
+        if self.func == 'COUNT':
+            if not self.column:
+                return {'$sum': 1}
+
+            else:
+                return {
+                    '$sum': {
+                        '$cond': {
+                            'if': {
+                                '$gt': ['$' + field, None]
+                            },
+                            'then': 1,
+                            'else': 0
+                        }
+                    }
+                }
+        elif self.func == 'MIN':
+            return {'$min': '$' + field}
+        elif self.func == 'MAX':
+            return {'$max': '$' + field}
+        elif self.func == 'SUM':
+            return {'$sum': '$' + field}
+        else:
+            raise SQLDecodeError
+
 class SQLToken:
 
     def __init__(self, token: Token, alias2op=None):
         self._token = token
         self.alias2op: typing.Dict[str, SQLToken] = alias2op
+
+    def has_parent(self):
+        return self._token.get_parent_name()
 
     @property
     def table(self):

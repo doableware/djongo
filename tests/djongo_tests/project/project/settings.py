@@ -25,16 +25,16 @@ SECRET_KEY = '5s(0&1x3(963q!xdyt1=$^(5om4(_=_39ys6=bnp7n-h8%7z+('
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = ['localhost','127.0.0.1']
 
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
         'NAME': 'djongo-test',
-        'USER': 'user',
-        'PASSWORD': 'passpass',
-        'AUTH_SOURCE': 'djongo-test',
-        'ENFORCE_SCHEMA': False
+        # 'USER': 'user',
+        # 'PASSWORD': 'passpass',
+        # 'AUTH_SOURCE': 'djongo-test',
+        'ENFORCE_SCHEMA': True
 
     },
 }
@@ -45,23 +45,23 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    # 'django.contrib.sessions',
-    # 'django.contrib.messages',
-    # 'django.contrib.staticfiles',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
 ]
 
 
 MIDDLEWARE = [
-    # 'django.middleware.security.SecurityMiddleware',
-    # 'django.contrib.sessions.middleware.SessionMiddleware',
-    # 'django.middleware.common.CommonMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',
-    # 'django.contrib.auth.middleware.AuthenticationMiddleware',
-    # 'django.contrib.messages.middleware.MessageMiddleware',
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'dummy_app.urls'
+ROOT_URLCONF = 'project.urls'
 
 TEMPLATES = [
     {
@@ -79,7 +79,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'dummy_app.wsgi.application'
+WSGI_APPLICATION = 'project.wsgi.application'
 
 
 

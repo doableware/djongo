@@ -59,7 +59,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         'FilePathField': 'char',
         'FloatField': 'float',
         'IntegerField': 'integer',
-        'BigIntegerField': 'bigint',
+        'BigIntegerField': 'integer',
         'IPAddressField': 'char',
         'GenericIPAddressField': 'char',
         'NullBooleanField': 'bool',
@@ -80,7 +80,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
 
     operators = {
         'exact': '= %s',
-        'iexact': 'iLIKE %.*s',
+        'iexact': 'iLIKE %s',
         'contains': 'LIKE %s',
         'icontains': 'iLIKE %s',
         'regex': 'REGEXP BINARY %s',
@@ -168,6 +168,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         es = connection_params.pop('enforce_schema')
 
         connection_params['document_class'] = OrderedDict
+        # connection_params['tz_aware'] = True
         # To prevent leaving unclosed connections behind,
         # client_conn must be closed before a new connection
         # is created.

@@ -57,7 +57,7 @@ class LegacyDatabaseTests(TestCase):
         self.assertEqual(event.dt, dt)
 
     def test_naive_datetime_with_microsecond(self):
-        dt = datetime.datetime(2011, 9, 1, 13, 20, 30, 405060)
+        dt = datetime.datetime(2011, 9, 1, 13, 20, 30, 405000)
         Event.objects.create(dt=dt)
         event = Event.objects.get()
         self.assertEqual(event.dt, dt)
@@ -196,12 +196,12 @@ class LegacyDatabaseTests(TestCase):
         # Regression test for #17755
         dt = datetime.datetime(2011, 9, 1, 13, 20, 30)
         event = Event.objects.create(dt=dt)
-        self.assertEqual(list(Event.objects.raw('SELECT * FROM timezones_event WHERE dt = %s', [dt])), [event])
+        self.assertEqual(list(Event.objects.raw('SELECT * FROM "timezones_event" WHERE "dt" = %s', [dt])), [event])
 
     def test_cursor_execute_accepts_naive_datetime(self):
         dt = datetime.datetime(2011, 9, 1, 13, 20, 30)
         with connection.cursor() as cursor:
-            cursor.execute('INSERT INTO timezones_event (dt) VALUES (%s)', [dt])
+            cursor.execute('INSERT INTO "timezones_event" ("dt") VALUES (%s)', [dt])
         event = Event.objects.get()
         self.assertEqual(event.dt, dt)
 
@@ -209,7 +209,7 @@ class LegacyDatabaseTests(TestCase):
         dt = datetime.datetime(2011, 9, 1, 13, 20, 30)
         Event.objects.create(dt=dt)
         with connection.cursor() as cursor:
-            cursor.execute('SELECT dt FROM timezones_event WHERE dt = %s', [dt])
+            cursor.execute('SELECT "timezones_event"."dt" FROM "timezones_event" WHERE "timezones_event"."dt" = %s', [dt])
             self.assertEqual(cursor.fetchall()[0][0], dt)
 
     def test_filter_date_field_with_aware_datetime(self):

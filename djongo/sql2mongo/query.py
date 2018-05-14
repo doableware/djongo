@@ -24,7 +24,8 @@ from . import SQLDecodeError, SQLToken, MigrationError
 from .converters import (
     ColumnSelectConverter, AggColumnSelectConverter, FromConverter, WhereConverter,
     AggWhereConverter, InnerJoinConverter, OuterJoinConverter, LimitConverter, AggLimitConverter, OrderConverter,
-    SetConverter, AggOrderConverter, DistinctConverter, NestedInQueryConverter, GroupbyConverter, OffsetConverter, AggOffsetConverter)
+    SetConverter, AggOrderConverter, DistinctConverter, NestedInQueryConverter, GroupbyConverter, OffsetConverter,
+    AggOffsetConverter, HavingConverter)
 
 logger = getLogger(__name__)
 
@@ -82,6 +83,15 @@ class Query:
         raise NotImplementedError
 
 
+class VoidQuery(Query):
+
+    def execute(self):
+        raise NotImplementedError
+
+    def count(self):
+        pass
+
+
 class SelectQuery(Query):
 
     def __init__(self, *args):
@@ -95,6 +105,8 @@ class SelectQuery(Query):
         self.limit: typing.Optional[LimitConverter] = None
         self.distinct: DistinctConverter = None
         self.groupby: GroupbyConverter = None
+        self.having: HavingConverter = None
+
 
         self._cursor: typing.Union[BasicCursor, CommandCursor] = None
         super().__init__(*args)
@@ -127,7 +139,7 @@ class SelectQuery(Query):
                 c = OuterJoinConverter(self, tok_id)
                 self.joins.append(c)
 
-            elif tok.match(tokens.Keyword, 'GROUP BY'):
+            elif tok.match(tokens.Keyword, 'GROUP'):
                 c = self.groupby = GroupbyConverter(self, tok_id)
 
             elif isinstance(tok, Where):
@@ -186,8 +198,10 @@ class SelectQuery(Query):
             self.nested_query
             or self.joins
             or self.distinct
+            or self.groupby
             or self.selected_columns.return_const
             or self.selected_columns.return_count
+            or self.selected_columns.has_func
         )
 
     def _make_pipeline(self):
@@ -201,6 +215,12 @@ class SelectQuery(Query):
         if self.where:
             self.where.__class__ = AggWhereConverter
             pipeline.append(self.where.to_mongo())
+
+        if self.groupby:
+            pipeline.extend(self.groupby.to_mongo())
+
+        if self.having:
+            pipeline.append(self.having.to_mongo())
 
         if self.distinct:
             pipeline.extend(self.distinct.to_mongo())
@@ -217,7 +237,13 @@ class SelectQuery(Query):
             self.offset.__class__ = AggOffsetConverter
             pipeline.append(self.offset.to_mongo())
 
-        if not self.distinct and self.selected_columns:
+        if (
+            not (
+                self.distinct
+                or self.groupby
+            )
+            and self.selected_columns
+        ):
             self.selected_columns.__class__ = AggColumnSelectConverter
             pipeline.append(self.selected_columns.to_mongo())
 
@@ -258,20 +284,23 @@ class SelectQuery(Query):
             sql_tokens = self.selected_columns.sql_tokens
 
         for selected in sql_tokens:
-            if selected.table == self.left_table:
-                try:
-                    ret.append(doc[selected.column])
-                except KeyError:
-                    if self.connection_properties.enforce_schema:
-                        raise MigrationError(selected.column)
-                    ret.append(None)
+            if isinstance(selected, SQLToken):
+                if selected.table == self.left_table:
+                    try:
+                        ret.append(doc[selected.column])
+                    except KeyError:
+                        if self.connection_properties.enforce_schema:
+                            raise MigrationError(selected.column)
+                        ret.append(None)
+                else:
+                    try:
+                        ret.append(doc[selected.table][selected.column])
+                    except KeyError:
+                        if self.connection_properties.enforce_schema:
+                            raise MigrationError(selected.column)
+                        ret.append(None)
             else:
-                try:
-                    ret.append(doc[selected.table][selected.column])
-                except KeyError:
-                    if self.connection_properties.enforce_schema:
-                        raise MigrationError(selected.column)
-                    ret.append(None)
+                ret.append(doc[selected.alias])
 
         return tuple(ret)
 
@@ -318,76 +347,288 @@ class UpdateQuery(Query):
         logger.debug(f'update_many: {self.result.modified_count}, matched: {self.result.matched_count}')
 
 
-class InsertQuery(Query):
+class InsertQuery(VoidQuery):
 
     def __init__(self, result_ref: 'Result', *args):
         self._result_ref = result_ref
+        self._cols = None
+        self._vals = None
+        super().__init__(*args)
+
+    def _table(self, tok_id):
+        tok_id, tok = self.statement.token_next(tok_id)
+        collection = tok.get_name()
+        if collection not in self.connection_properties.cached_collections:
+            if self.connection_properties.enforce_schema:
+                raise MigrationError(collection)
+            self.connection_properties.cached_collections.add(collection)
+
+        self.left_table = collection
+        return tok_id
+
+    def _columns(self, tok_id):
+        tok_id, tok = self.statement.token_next(tok_id)
+        if isinstance(tok[1], IdentifierList):
+            self._cols = [
+                SQLToken(an_id, None).column
+                for an_id in tok[1].get_identifiers()
+            ]
+        else:
+            self._cols = [SQLToken(tok[1], None).column]
+
+        return tok_id
+
+    def _values(self, tok_id):
+        tok_id, tok = self.statement.token_next(tok_id)
+        self._vals = []
+        while tok_id is not None:
+            if tok.match(tokens.Keyword, 'VALUES'):
+                pass
+            elif isinstance(tok, Parenthesis):
+                if isinstance(tok[1], IdentifierList):
+                    self._vals.append(
+                        tuple(
+                            self.params[i] if i is not None else None
+                            for i in SQLToken(tok, None)
+                        )
+                    )
+                else:
+                    if tok[1].match(tokens.Keyword, 'DEFAULT'):
+                        pass
+                    else:
+                        i = next(iter(SQLToken(tok)))
+                        self._vals.append(
+                            (self.params[i] if i is not None else None,)
+                        )
+
+            tok_id, tok = self.statement.token_next(tok_id)
+
+    def execute(self):
+        docs = []
+        num = len(self._vals)
+
+        auto = self.db_ref['__schema__'].find_one_and_update(
+            {
+                'name': self.left_table,
+                'auto': {
+                    '$exists': True
+                }
+            },
+            {'$inc': {'auto.seq': num}},
+            return_document=ReturnDocument.AFTER
+        )
+
+        self._result_ref.last_row_id = auto['auto']['seq'] if auto else None
+        for i, val in enumerate(self._vals):
+            ins = {}
+            if auto:
+                for name in auto['auto']['field_names']:
+                    ins[name] = auto['auto']['seq'] - num + i + 1
+            for k, v in zip(self._cols, val):
+                ins[k] = v
+            docs.append(ins)
+
+        res = self.db_ref[self.left_table].insert_many(docs, ordered=False)
+        logger.debug('insert ids {}'.format(res.inserted_ids))
+
+    def parse(self):
+
+        tok_id = self._table(2)
+        tok_id = self._columns(tok_id)
+        self._values(tok_id)
+    #     tok_id, tok = sm.token_next(tok_id)
+    #
+    #     if isinstance(tok, Identifier):
+    #         self.collection = collection = tok.get_name()
+    #
+    #     if collection not in self.connection_properties.cached_collections:
+    #         if self.connection_properties.enforce_schema:
+    #             raise MigrationError(collection)
+    #         self.connection_properties.cached_collections.add(collection)
+    #
+    #     self.left_table = collection
+    #     auto = db['__schema__'].find_one_and_update(
+    #         {
+    #             'name': collection,
+    #             'auto': {
+    #                 '$exists': True
+    #             }
+    #         },
+    #         {'$inc': {'auto.seq': 1}},
+    #         return_document=ReturnDocument.AFTER
+    #     )
+    #
+    #     if auto:
+    #         auto_field_id = auto['auto']['seq']
+    #         for name in auto['auto']['field_names']:
+    #             insert[name] = auto_field_id
+    #     else:
+    #         auto_field_id = None
+    # else:
+    #     raise SQLDecodeError
+    #
+    #     nextid, coltok = sm.token_next(nextid)
+    #     nextid, nexttok = sm.token_next(nextid)
+    #     if not nexttok.match(tokens.Keyword, 'VALUES'):
+    #         raise SQLDecodeError
+    #
+    #     nextid, placeholder = sm.token_next(nextid)
+    #
+    #     if isinstance(coltok[1], IdentifierList):
+    #         for an_id, i in zip(coltok[1].get_identifiers(), SQLToken(placeholder)):
+    #             sql = SQLToken(an_id, None)
+    #             insert[sql.column] = self.params[i] if i is not None else None
+    #
+    #     else:
+    #         sql = SQLToken(coltok[1], None)
+    #         if placeholder[1].match(tokens.Keyword, 'DEFAULT'):
+    #             if sql.column == 'id':
+    #                 pass
+    #             else:
+    #                 raise SQLDecodeError
+    #         else:
+    #             i = next(iter(SQLToken(placeholder)))
+    #             insert[sql.column] = self.params[i] if i is not None else None
+    #
+    #     result = db[collection].insert_one(insert)
+    #     if not auto_field_id:
+    #         auto_field_id = result.inserted_id
+    #
+    #     self._result_ref.last_row_id = auto_field_id
+    #     logger.debug('insert id {}'.format(result.inserted_id))
+
+
+class AlterQuery(VoidQuery):
+
+    def __init__(self, *args):
+        self._iden_name = None
+        self._default = None
+        self._cascade = None
+        self._null = None
+
         super().__init__(*args)
 
     def parse(self):
-        db = self.db_ref
         sm = self.statement
-        insert = {}
+        tok_id = 0
+        tok_id, tok = sm.token_next(tok_id)
 
-        nextid, nexttok = sm.token_next(2)
-        if isinstance(nexttok, Identifier):
-            collection = nexttok.get_name()
-
-            if collection not in self.connection_properties.cached_collections:
-                if self.connection_properties.enforce_schema:
-                    raise MigrationError(collection)
-                self.connection_properties.cached_collections.add(collection)
-
-            self.left_table = collection
-            auto = db['__schema__'].find_one_and_update(
-                {
-                    'name': collection,
-                    'auto': {
-                        '$exists': True
-                    }
-                },
-                {'$inc': {'auto.seq': 1}},
-                return_document=ReturnDocument.AFTER
-            )
-
-            if auto:
-                auto_field_id = auto['auto']['seq']
-                for name in auto['auto']['field_names']:
-                    insert[name] = auto_field_id
+        while tok_id is not None:
+            if tok.match(tokens.Keyword, 'TABLE'):
+                tok_id = self._table(tok_id)
+            elif tok.match(tokens.Keyword, 'ADD'):
+                tok_id = self._add(tok_id)
+            elif tok.match(tokens.Keyword, 'FLUSH'):
+                self.execute = self._flush
+            elif tok.match(tokens.Keyword.DDL, 'DROP'):
+                tok_id = self._drop(tok_id)
+            elif tok.match(tokens.Keyword.DDL, 'ALTER'):
+                tok_id = self._alter(tok_id)
             else:
-                auto_field_id = None
-        else:
+                raise NotImplementedError
+
+            tok_id, tok = sm.token_next(tok_id)
+
+    def _alter(self, tok_id):
+        self.execute = lambda: None
+
+    def _flush(self):
+        self.db_ref[self.left_table].delete_many({})
+
+    def _table(self, tok_id):
+        sm = self.statement
+        tok_id, tok = sm.token_next(tok_id)
+        if not tok:
             raise SQLDecodeError
+        self.left_table = SQLToken(tok, None).table
+        return tok_id
 
-        nextid, coltok = sm.token_next(nextid)
-        nextid, nexttok = sm.token_next(nextid)
-        if not nexttok.match(tokens.Keyword, 'VALUES'):
-            raise SQLDecodeError
+    def _drop(self, tok_id):
+        sm = self.statement
+        tok_id, tok = sm.token_next(tok_id)
 
-        nextid, placeholder = sm.token_next(nextid)
-
-        if isinstance(coltok[1], IdentifierList):
-            for an_id, i in zip(coltok[1].get_identifiers(), SQLToken(placeholder)):
-                sql = SQLToken(an_id, None)
-                insert[sql.column] = self.params[i] if i is not None else None
-
-        else:
-            sql = SQLToken(coltok[1], None)
-            if placeholder[1].match(tokens.Keyword, 'DEFAULT'):
-                if sql.column == 'id':
-                    pass
-                else:
-                    raise SQLDecodeError
+        while tok_id is not None:
+            if tok.match(tokens.Keyword, (
+                    'COLUMN', 'CASCADE'
+            )):
+                pass
+            elif isinstance(tok, Identifier):
+                self._iden_name = tok.get_name()
             else:
-                i = next(iter(SQLToken(placeholder)))
-                insert[sql.column] = self.params[i] if i is not None else None
+                raise NotImplementedError
 
-        result = db[collection].insert_one(insert)
-        if not auto_field_id:
-            auto_field_id = result.inserted_id
+            tok_id, tok = sm.token_next(tok_id)
 
-        self._result_ref.last_row_id = auto_field_id
-        logger.debug('insert id {}'.format(result.inserted_id))
+        self.execute = self._drop_column
+        return tok_id
+
+    def _drop_column(self):
+        self.db_ref[self.left_table].update(
+            {},
+            {
+                '$unset': {
+                    self._iden_name: ''
+                }
+            }
+        )
+
+    def _add(self, tok_id):
+        sm = self.statement
+        tok_id, tok = sm.token_next(tok_id)
+
+        while tok_id is not None:
+            if tok.match(tokens.Keyword, (
+                'CONSTRAINT', 'KEY', 'REFERENCES',
+                'NOT NULL', 'NULL'
+            )):
+                pass
+            elif tok.match(tokens.Name.Builtin, (
+                'integer', 'bool', 'char', 'date',
+                'datetime', 'float', 'time'
+            )):
+                pass
+            elif isinstance(tok, Identifier):
+                self._iden_name = tok.get_name()
+            elif isinstance(tok, Parenthesis):
+                self.field_dir = [
+                    (field.strip(' "'), 1)
+                    for field in tok.value.strip('()').split(',')
+                ]
+            elif tok.match(tokens.Keyword, 'DEFAULT'):
+                tok_id, tok = sm.token_next(tok_id)
+                i = SQLToken.placeholder_index(tok)
+                self._default = self.params[i]
+            elif tok.match(tokens.Keyword, 'UNIQUE'):
+                self.execute = self._unique
+            elif tok.match(tokens.Keyword, 'FOREIGN'):
+                self.execute = self._fk
+            elif tok.match(tokens.Keyword, 'COLUMN'):
+                self.execute = self._add_column
+            else:
+                raise NotImplementedError
+
+            tok_id, tok = sm.token_next(tok_id)
+
+        return tok_id
+
+    def _add_column(self):
+        self.db_ref[self.left_table].update(
+            {},
+            {
+                '$set': {
+                    self._iden_name: self._default
+                }
+            }
+        )
+
+    def _unique(self):
+        self.db_ref[self.left_table].create_index(
+            self.field_dir,
+            unique=True,
+            name=self._iden_name)
+
+    def _fk(self):
+        pass
 
 
 class DeleteQuery(Query):
@@ -525,45 +766,12 @@ class Result:
                 raise exe from e
 
     def _alter(self, sm):
-        tok_id, tok = sm.token_next(0)
-        if tok.match(tokens.Keyword, 'TABLE'):
-            tok_id, tok = sm.token_next(tok_id)
-            if not tok:
-                logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
-                return
-
-            table = SQLToken(tok, None).table
-
-            tok_id, tok = sm.token_next(tok_id)
-            if (not tok
-                    or not tok.match(tokens.Keyword, 'ADD')):
-                logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
-                return
-
-            tok_id, tok = sm.token_next(tok_id)
-            if (not tok
-                    or not tok.match(tokens.Keyword, 'CONSTRAINT')):
-                logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
-                return
-
-            tok_id, tok = sm.token_next(tok_id)
-            if not isinstance(tok, Identifier):
-                logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
-                return
-
-            constraint_name = tok.get_name()
-
-            tok_id, tok = sm.token_next(tok_id)
-            if not tok.match(tokens.Keyword, 'UNIQUE'):
-                logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
-                return
-
-            tok_id, tok = sm.token_next(tok_id)
-            if isinstance(tok, Parenthesis):
-                index = [(field.strip(' "'), 1) for field in tok.value.strip('()').split(',')]
-                self.db[table].create_index(index, unique=True, name=constraint_name)
-            else:
-                raise NotImplementedError('Alter command not implemented for SQL {}'.format(self._sql))
+        try:
+            self._query = AlterQuery(self.db, self.connection_properties, sm, self._params)
+        except NotImplementedError:
+            logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
+        else:
+            self._query.execute()
 
     def _create(self, sm):
         tok_id, tok = sm.token_next(0)
@@ -579,11 +787,10 @@ class Result:
             try:
                 self.db.create_collection(table)
             except CollectionInvalid:
-                # if enforce_schema:
-                #     raise
-                # else:
-                #     return
-                return
+                if self.connection_properties.enforce_schema:
+                    raise
+                else:
+                    return
 
             logger.debug('Created table {}'.format(table))
 
@@ -655,6 +862,7 @@ class Result:
 
     def _insert(self, sm):
         self._query = InsertQuery(self, self.db, self.connection_properties, sm, self._params)
+        self._query.execute()
 
     def _select(self, sm):
         self._query = SelectQuery(self.db, self.connection_properties, sm, self._params)

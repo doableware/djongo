@@ -49,8 +49,7 @@ def make_mdl(model, model_dict):
 
 
 def useful_field(field):
-    return field.concrete and not (field.is_relation
-                                   or isinstance(field, (AutoField, BigAutoField)))
+    return field.concrete and not isinstance(field, (AutoField, BigAutoField))
 
 
 class ModelSubterfuge:
@@ -457,7 +456,12 @@ class EmbeddedModelField(Field):
             value = value.subterfuge
 
         if not isinstance(value, Model):
-            raise ValueError('Value must be instance of Model')
+            raise ValueError(
+                'Value: {value} must be instance of Model: {model}'.format(
+                     value=value, 
+                     model=Model
+                )
+            )
 
         mdl_ob = {}
         for fld in value._meta.get_fields():

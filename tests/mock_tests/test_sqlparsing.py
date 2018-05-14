@@ -1,12 +1,14 @@
 import typing
 from collections import OrderedDict
 from unittest import TestCase, mock, skip
+from unittest.mock import patch, MagicMock
 
 from logging import getLogger, DEBUG, StreamHandler
 from pymongo.cursor import Cursor
 from pymongo.command_cursor import CommandCursor
 
 from djongo.sql2mongo.query import Result
+from djongo.base import DatabaseWrapper
 
 'Django SQL:'
 
@@ -110,17 +112,84 @@ root_logger.setLevel(DEBUG)
 root_logger.addHandler(StreamHandler())
 
 
-class TestParse(TestCase):
-    """
-    Test the sql2mongo module with all possible SQL statements and check
-    if the conversion to a query document is happening properly.
-    """
+class MockTest(TestCase):
+
     @classmethod
     def setUpClass(cls):
         cls.conn = mock.MagicMock()
         cls.db = mock.MagicMock()
         cls.conn_prop = mock.MagicMock()
         cls.conn_prop.cached_collections = ['table']
+        cls.params_none = mock.MagicMock()
+        cls.params: typing.Union[mock.MagicMock, list] = None
+
+
+class TestVoidQuery(MockTest):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+    def exe(self):
+        result = Result(self.db, self.conn, self.conn_prop, self.sql, self.params)
+
+    def test_alter(self):
+        self.sql = (
+            'ALTER TABLE "table" '
+            'FLUSH'
+        )
+        self.exe()
+
+        self.sql = (
+            'ALTER TABLE "table" '
+            'ADD CONSTRAINT "con" '
+            'FOREIGN KEY ("fk") '
+            'REFERENCES "r" ("id")'
+        )
+        self.exe()
+
+        self.sql = (
+            'ALTER TABLE "table" '
+            'ADD CONSTRAINT "c"'
+            ' UNIQUE ("a", "b")'
+        )
+        self.exe()
+
+        self.sql = (
+            'ALTER TABLE "table" '
+            'ALTER COLUMN "c" '
+            'DROP NOT NULL'
+        )
+        self.exe()
+
+        self.sql = (
+            'ALTER TABLE "table" '
+            'DROP COLUMN "c" '
+            'CASCADE'
+        )
+        self.exe()
+
+        self.sql = (
+            'ALTER TABLE "table" '
+            'ADD COLUMN "c" '
+            'integer DEFAULT %s NOT NULL'
+        )
+        self.params = [1]
+        self.exe()
+        """
+        sql_command: ALTER TABLE "dummy_arrayentry" ADD COLUMN "n_comments" integer DEFAULT %(0)s NOT NULL
+        sql_command: ALTER TABLE "dummy_arrayentry" ALTER COLUMN "n_comments" DROP DEFAULT
+        """
+
+
+class TestQuery(MockTest):
+    """
+    Test the sql2mongo module with all possible SQL statements and check
+    if the conversion to a query document is happening properly.
+    """
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
 
         cls.find = cls.conn.__getitem__().find
         cursor = mock.MagicMock()
@@ -134,8 +203,6 @@ class TestParse(TestCase):
         cls.agg_iter = cursor.__iter__
         cls.aggregate.return_value = cursor
 
-        cls.params_none = mock.MagicMock()
-        cls.params: typing.Union[mock.MagicMock, list] = None
 
     def find_mock(self):
         result = Result(self.db, self.conn, self.conn_prop, self.sql, self.params)
@@ -229,6 +296,24 @@ class TestParse(TestCase):
 
         self.aggregate_mock(pipeline, return_value, ans)
 
+    def test_functions(self):
+        t1c1 = '"table1"."col1"'
+        t2c1 = '"table2"."col1"'
+        t4c1 = '"table4"."col1"'
+
+        t1c2 = '"table1"."col2"'
+        t2c2 = '"table2"."col2"'
+        t3c2 = '"table3"."col2"'
+        t3c1 = '"table3"."col1"'
+
+        self.sql = f'SELECT MIN({t1c1}) AS "m__min1", MAX({t1c2}) AS "m__max1"' \
+                   f' FROM "table1"'
+
+        pipeline = [{'$group': {'_id': None, 'm__min1': {'$min': '$col1'}, 'm__max1': {'$max': '$col2'}}}]
+        return_value = [{'m__min1': 1, 'm__max1': 2}]
+        ans = [(1,2)]
+        self.aggregate_mock(pipeline, return_value, ans)
+
     def test_count(self):
         conn = self.conn
         agg = self.aggregate
@@ -315,31 +400,31 @@ class TestParse(TestCase):
         self.conn.reset_mock()
 
     def test_insert(self):
-        io = self.conn.__getitem__.return_value.insert_one
+        io = self.conn.__getitem__.return_value.insert_many
 
         sql = 'INSERT INTO "table" ("col1", "col2") VALUES (%s, %s)'
         params = [1, 2]
         result = Result(self.db, self.conn, self.conn_prop, sql, params)
-        io.assert_any_call({'col1':1, 'col2': 2})
+        io.assert_any_call([{'col1':1, 'col2': 2}], ordered=False)
         self.conn.reset_mock()
 
         sql = 'INSERT INTO "table" ("col1", "col2") VALUES (%s, NULL)'
         params = [1]
         result = Result(self.db, self.conn, self.conn_prop, sql, params)
-        io.assert_any_call({'col1':1, 'col2': None})
+        io.assert_any_call([{'col1': 1, 'col2': None}], ordered=False)
         self.conn.reset_mock()
 
         sql = 'INSERT INTO "table" ("col") VALUES (%s)'
         params = [1]
         result = Result(self.db, self.conn, self.conn_prop, sql, params)
-        io.assert_any_call({'col':1})
+        io.assert_any_call([{'col': 1}], ordered=False)
         self.conn.reset_mock()
 
         #INSERT INTO "m2m_regress_post" ("id") VALUES (DEFAULT)
         sql = 'INSERT INTO "table" ("id") VALUES (DEFAULT)'
         params = []
         result = Result(self.db, self.conn, self.conn_prop, sql, params)
-        io.assert_any_call({})
+        io.assert_any_call([], ordered=False)
         self.conn.reset_mock()
 
 
@@ -363,30 +448,102 @@ class TestParse(TestCase):
         t1c3 = '"table1"."col3"'
         t2c2 = '"table2"."col2"'
 
-        self.sql = f'SELECT {t1c1}, {t1c2}, COUNT({t1c1}) AS "c1__count", COUNT({t1c3}) AS "c3__count" FROM "table1" GROUP BY {t1c1}, {t1c2}, {t1c3}'
+        self.sql = (
+            f'SELECT {t1c1}, {t1c2}, '
+                f'COUNT({t1c1}) AS "c1__count", '
+                f'COUNT({t1c2}) AS "c2__count" '
+            f'FROM "table1" '
+            f'GROUP BY {t1c1}, {t1c2}'
+        )
         pipeline = [
             {
                 '$group': {
                     '_id': {
                         'col1': '$col1',
-                        'col2': '$col2',
-                        'col3': '$col3'
+                        'col2': '$col2'
                     },
                     'c1__count': {
-                        '$sum': 1
+                        '$sum': {
+                            '$cond': {
+                                'if': {'$gt': ['$col1', None]},
+                                'then': 1,
+                                'else': 0}
+                        }
                     },
-                    'c3_count': {
-                        '$sum': 1
+                    'c2__count': {
+                        '$sum': {
+                            '$cond': {
+                                'if': {'$gt': ['$col2', None]},
+                                'then': 1,
+                                'else': 0}
+                        }
                     }
                 }
             },
             {
-                '$addFields': {
+                '$project': {
+                    '_id': False,
                     'col1': '$_id.col1',
-                    'col2': '$_id.col2'
-                }
+                    'col2': '$_id.col2',
+                    'c1__count': True,
+                    'c2__count': True}
             }
         ]
+        return_value = [
+            {
+                'col1': 'a1',
+                'col2': 'a2',
+                'c1__count': 1,
+                'c2__count': 2
+            },
+            {
+                'col1': 'b1',
+                'col2': 'b2',
+                'c1__count': 3,
+                'c2__count': 4
+            },
+        ]
+        ans = [('a1', 'a2',1,2), ('b1', 'b2',3,4)]
+        self.aggregate_mock(pipeline, return_value, ans)
+
+
+        self.sql = (
+            f'SELECT {t1c1}, {t1c2}, MIN({t2c2}) AS "dt" '
+            f'FROM table1 '
+            f'LEFT OUTER JOIN "table2" ON ({t1c1} = {t2c2})'
+            f' GROUP BY {t1c1}, {t2c2} '
+            f'ORDER BY "dt" ASC'
+        )
+        return_value = [
+            {
+                'col1': 'a1',
+                'col2': 'a2',
+                'dt': 1,
+            },
+            {
+                'col1': 'b1',
+                'col2': 'b2',
+                'dt': 3,
+            },
+        ]
+        ans = [('a1', 'a2', 1), ('b1', 'b2', 3)]
+        pipeline = [
+            {'$lookup': {'from': 'table2', 'localField': 'col1', 'foreignField': 'col2', 'as': 'table2'}},
+            {'$unwind': {'path': '$table2', 'preserveNullAndEmptyArrays': True}},
+            {'$addFields': {'table2': {'$ifNull': ['$table2', {'col2': None}]}}},
+            {
+                '$group': {'_id': {'col1': '$col1', 'table2': {'col2': '$table2.col2'}},
+                           'dt': {'$min': '$table2.col2'}}
+            },
+            {'$project': {'_id': False, 'col1': '$_id.col1', 'col2': '$_id.col2', 'dt': True}},
+            {'$sort': OrderedDict([('dt', 1)])}
+        ]
+        self.aggregate_mock(pipeline, return_value, ans)
+
+        """
+        SELECT "timezones_session"."id", "timezones_session"."name", MIN("timezones_sessionevent"."dt") AS "dt" FROM "timezones_session" LEFT OUTER JOIN "timezones_sessionevent" ON ("timezones_session"."id" = "timezones_sessionevent"."session_id") GROUP BY "timezones_session"."id", "timezones_session"."name" HAVING MIN("timezones_sessionevent"."dt") < %(0)s
+        """
+
 
     @skip
     def test_special(self):
@@ -415,7 +572,6 @@ class TestParse(TestCase):
         self.assertEqual(ret, [(1,)])
         self.find.assert_any_call(**find_args)
         self.conn.reset_mock()
-
 
 
     def test_in(self):
@@ -518,12 +674,14 @@ class TestParse(TestCase):
         t3c2 = '"table3"."col2"'
         t3c1 = '"table3"."col1"'
 
-        self.sql = (f'SELECT {t1c1}, {t2c1}, {t1c2}, {t2c2} '
-        f'FROM table1 '
-        f'LEFT OUTER JOIN table2 ON ({t1c1} = {t2c1}) '
-        f'LEFT OUTER JOIN table3 ON ({t2c2} = {t3c2}) '
-        f'LEFT OUTER JOIN table4 ON ({t3c2} = {t4c1}) '
-        f'ORDER BY {t1c1} ASC')
+        self.sql = (
+            f'SELECT {t1c1}, {t2c1}, {t1c2}, {t2c2} '
+            f'FROM table1 '
+            f'LEFT OUTER JOIN table2 ON ({t1c1} = {t2c1}) '
+            f'LEFT OUTER JOIN table3 ON ({t2c2} = {t3c2}) '
+            f'LEFT OUTER JOIN table4 ON ({t3c2} = {t4c1}) '
+            f'ORDER BY {t1c1} ASC'
+        )
         self.params = []
         return_value = [
             {
@@ -543,7 +701,7 @@ class TestParse(TestCase):
                 }
             },
         ]
-        ans = [('a1', 'a3', 'a2', 'a4'),('b1', 'b3', 'b2', 'b4')]
+        ans = [('a1', 'a3', 'a2', 'a4'), ('b1', 'b3', 'b2', 'b4')]
         pipeline = [
             {
                 '$lookup': {
@@ -1056,3 +1214,46 @@ class TestParse(TestCase):
         self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
+
+
+class TestDatabaseWrapper(TestCase):
+    """Test cases for connection attempts"""
+
+    def test_empty_connection_params(self):
+        """Check for returned connection params if empty settings dict is provided"""
+        settings_dict = {}
+        wrapper = DatabaseWrapper(settings_dict)
+
+        params = wrapper.get_connection_params()
+
+        self.assertEqual(params['name'], 'djongo_test')
+        self.assertEqual(params['enforce_schema'], True)
+
+    def test_connection_params(self):
+        """Check for returned connection params if filled settings dict is provided"""
+        name = MagicMock()
+        port = MagicMock()
+        host = MagicMock()
+
+        settings_dict = {
+                'NAME': name,
+                'PORT': port,
+                'HOST': host
+        }
+
+        wrapper = DatabaseWrapper(settings_dict)
+
+        params = wrapper.get_connection_params()
+
+        assert params['name'] is name
+        assert params['port'] is port
+        assert params['host'] is host
+
+    @patch('djongo.database.MongoClient')
+    def test_connection(self, mocked_mongoclient):
+        settings_dict = MagicMock(dict)
+        wrapper = DatabaseWrapper(settings_dict)
+
+        wrapper.get_new_connection(wrapper.get_connection_params())
+
+        mocked_mongoclient.assert_called_once()
