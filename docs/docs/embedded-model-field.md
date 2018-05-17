@@ -13,9 +13,9 @@ class EmbeddedModelField(Field):
                  model_form_kwargs: typing.Optional[dict]=None,
                  *args, **kwargs):
 ```
-SQL prevents the usage of embedded objects in your models without serialization. With MongoDB as your Django backend, embed any other model into your parent model and save it as an [embedded document](https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding) into MongoDB
+Using MongoDB as your Django backend, you can embed any other model into your parent model and save it as an [embedded document](https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding).
 
-You should use embedded models when it does not make sense to store a data set as another table in the database and refer to it every time with a foreign key lookup. However, you still want to group the data set inside a separate model in python, as you wish to isolate its functionality.
+You should use embedded models when it does not make sense to store a data set as another table in the database and refer to it every time with a foreign key lookup. However, you still want to group the data set inside a separate model in python, to isolate its functionality.
 
 In case you don't plan on using your embedded model as a standalone model (which means it will always be embedded inside a parent model) you should add the `class Meta` and `abstract = True` This way Djongo will never register this model as an [actual model](https://docs.djangoproject.com/en/dev/topics/db/models/#abstract-base-classes).
 
@@ -62,7 +62,7 @@ class Entry(models.Model):
 
 ## Embedded Form
 
-While creating a Form from [the ModelForm](https://docs.djangoproject.com/en/dev/topics/forms/modelforms/), the embedded forms **get automatically generated** if the Model contains an embedded model inside it. Multiple embedded forms get automatically generated when the Model contains an array of embedded models.
+While creating a Form from [the ModelForm](https://docs.djangoproject.com/en/dev/topics/forms/modelforms/), the embedded forms **get automatically generated** if the Model contains an embedded model inside it. Multiple embedded forms get automatically generated when the Model contains an array of embedded models. However, you can still override this by specifying the `model_form_class` argument in the EmbeddedModelField.
 
 ## Querying Embedded fields
 
