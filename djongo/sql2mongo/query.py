@@ -660,7 +660,7 @@ class DeleteQuery(Query):
     def parse(self):
         db_con = self.db_ref
         sm = self.statement
-        kw = {}
+        kw = {'filter': {}}
 
         tok_id, tok = sm.token_next(2)
         sql_token = SQLToken(tok, None)
