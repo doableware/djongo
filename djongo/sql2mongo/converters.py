@@ -346,7 +346,9 @@ class SetConverter(Converter):
         return {
             'update': {
                 '$set': {
-                    sql.lhs_column: self.query.params[sql.rhs_indexes] if sql.rhs_indexes is not None else None for sql in self.sql_tokens}
+                    sql.lhs_column: self.query.params[sql.rhs_indexes]
+                    if sql.rhs_indexes is not None else None
+                    for sql in self.sql_tokens}
             }
         }
 
