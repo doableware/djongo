@@ -133,6 +133,10 @@ class TestVoidQuery(MockTest):
     def exe(self):
         result = Result(self.db, self.conn, self.conn_prop, self.sql, self.params)
 
+    @skip
+    def test_delete(self):
+        self.sql = 'DELETE FROM "table" WHERE "table"."col" IN (%s)'
+
     def test_alter(self):
         self.sql = (
             'ALTER TABLE "table" '
