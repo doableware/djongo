@@ -44,7 +44,6 @@ class ReferenceAuthor(models.Model):
     name = models.CharField(max_length=200)
     email = models.EmailField()
     # _id = models.ObjectIdField()
-    i = models.IntegerField()
 
     def __str__(self):
         return self.name
@@ -68,7 +67,7 @@ class ReferenceEntry(models.Model):
     #     model_container=ArrayMetaData,
     #     model_form_class=MetaDataForm
     # )
-    # _id = models.ObjectIdField()
+    _id = models.ObjectIdField()
     headline = models.CharField(max_length=255)
     # body_text = models.TextField()
 

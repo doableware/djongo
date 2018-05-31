@@ -20,7 +20,7 @@ from django.db.models import (
 )
 from django import forms
 from django.core.exceptions import ValidationError
-from django.db import router
+from django.db import router, connections
 from django.db import connections as pymongo_connections
 import typing
 import functools
@@ -71,8 +71,7 @@ class DjongoManager(Manager):
             cli = (
                 pymongo_connections[self.db]
                 .cursor()
-                .db_conn[self.model
-                         ._meta.db_table]
+                .db_conn[self.model._meta.db_table]
             )
             return getattr(cli, name)
         else:
@@ -609,6 +608,7 @@ class ObjectIdField(AutoField):
     def __init__(self, *args, **kwargs):
         id_field_args = {
             'primary_key': True,
+            'auto_created': True
         }
         id_field_args.update(kwargs)
         super().__init__(*args, **id_field_args)
@@ -628,8 +628,76 @@ class ObjectIdField(AutoField):
         return value
 
 
+class ArrayReferenceManagerMixin:
+
+    def _apply_rel_filters(self, queryset):
+        """
+        Filter the queryset for the instance this manager is bound to.
+        """
+        queryset._add_hints(instance=self.instance)
+        if self._db:
+            queryset = queryset.using(self._db)
+        queryset = queryset.filter(**self.core_filters)
+
+        return queryset
+
+    def get_queryset(self):
+        try:
+            return self.instance._prefetched_objects_cache[self.field.related_query_name()]
+        except (AttributeError, KeyError):
+            queryset = super().get_queryset()
+            return self._apply_rel_filters(queryset)
+
+
 def create_reverse_array_reference_manager(superclass, rel):
-    pass
+    if issubclass(superclass, DjongoManager):
+        baseclass = superclass
+    else:
+        baseclass = type('baseclass', (DjongoManager, superclass), {})
+
+    class ReverseArrayReferenceManager(ArrayReferenceManagerMixin, baseclass):
+        def __init__(self, instance):
+            super().__init__()
+            self.instance = instance
+            self.model = rel.related_model
+            self.field = rel.remote_field
+
+            name = rel.remote_field.name
+            self.core_filters = {name: instance}
+
+        def _apply_rel_filters(self, queryset):
+            queryset = super()._apply_rel_filters(queryset)
+            db = self._db or router.db_for_read(self.model, instance=self.instance)
+            empty_strings_as_null = connections[db].features.interprets_empty_strings_as_nulls
+
+            for field in self.field.foreign_related_fields:
+                val = getattr(self.instance, field.attname)
+                if val is None or (val == '' and empty_strings_as_null):
+                    return queryset.none()
+            return queryset
+
+        def _make_filter(self, *objs):
+            ids = set(obj.pk for obj in objs)
+            return {
+                self.model._meta.pk.name: {
+                    '$in': list(ids)
+                }
+            }
+
+        def add(self, *objs):
+            _filter = self._make_filter(*objs)
+            for lh_field, rh_field in self.field.related_fields:
+                self.mongo_update(
+                    _filter,
+                    {
+                        '$addToSet': {
+                            lh_field.get_attname():
+                                getattr(self.instance, rh_field.get_attname())
+                        }
+                    }
+                )
+
+    return ReverseArrayReferenceManager
 
 def create_forward_array_reference_manager(superclass, rel):
 
@@ -638,14 +706,14 @@ def create_forward_array_reference_manager(superclass, rel):
     else:
         baseclass = type('baseclass', (DjongoManager, superclass), {})
 
-    class ArrayReferenceManager(baseclass):
+    class ArrayReferenceManager(ArrayReferenceManagerMixin, baseclass):
 
         def __init__(self, instance):
             super().__init__()
 
             self.instance = instance
             self.model = rel.model
-            self.field = rel.field
+            self.field = rel.remote_field
             self.instance_manager = DjongoManager()
             self.instance_manager.model = instance
             name = self.field.related_fields[0][1].attname
@@ -653,23 +721,37 @@ def create_forward_array_reference_manager(superclass, rel):
 
             self.core_filters = {f'{name}__in': ids}
 
-        def add(self, *objs):
+        def _apply_rel_filters(self, queryset):
+            queryset = super()._apply_rel_filters(queryset)
+            if not getattr(self.instance, self.field.attname):
+                return queryset.none()
+            return queryset
 
-            fks = getattr(self.instance, self.field.attname)
+        def get_queryset(self):
+            try:
+                return self.instance._prefetched_objects_cache[self.field.related_query_name()]
+            except (AttributeError, KeyError):
+                queryset = super().get_queryset()
+                return self._apply_rel_filters(queryset)
+
+        def _make_filter(self):
+            return {self.instance._meta.pk.name: self.instance.pk}
+
+        def add(self, *objs):
+            fks = getattr(self.instance, self.field.get_attname())
             if fks is None:
                 fks = set()
-                setattr(self.instance, self.field.attname, fks)
+                setattr(self.instance, self.field.get_attname(), fks)
 
             new_fks = set()
             for obj in objs:
-                for lh_field, rh_field in self.field.related_fields:
-                    new_fks.add(getattr(obj, rh_field.attname))
+                for rh_field in self.field.foreign_related_fields:
+                    new_fks.add(getattr(obj, rh_field.get_attname()))
             fks.update(new_fks)
 
-            remote_field = self.field.remote_field
             db = router.db_for_write(self.instance.__class__, instance=self.instance)
             self.instance_manager.db_manager(db).mongo_update(
-                {self.instance._meta.pk.name: self.instance.pk},
+                self._make_filter(),
                 {
                     '$addToSet': {
                         self.field.attname: {
@@ -688,18 +770,10 @@ def create_forward_array_reference_manager(superclass, rel):
 
     return ArrayReferenceManager
 
-class ReverseArrayReferenceDescriptor(ReverseManyToOneDescriptor):
+class ArrayReferenceDescriptor:
 
-    @cached_property
-    def related_manager_cls(self):
-        related_model = self.rel.related_model
-
-        return create_reverse_array_reference_manager(
-            related_model._default_manager.__class__,
-            self.rel,
-        )
-
-class ArrayReferenceDescriptor(ForwardManyToOneDescriptor):
+    def __init__(self, field_with_rel):
+        self.field = field_with_rel
 
     @cached_property
     def related_manager_cls(self):
@@ -713,6 +787,36 @@ class ArrayReferenceDescriptor(ForwardManyToOneDescriptor):
     def __get__(self, instance, cls=None):
         """
         Get the related objects through the reverse relation.
+
+        With the example above, when getting ``parent.children``:
+
+        - ``self`` is the descriptor managing the ``children`` attribute
+        - ``instance`` is the ``parent`` instance
+        - ``cls`` is the ``Parent`` class (unused)
+        """
+        if instance is None:
+            return self
+
+        return self.related_manager_cls(instance)
+
+
+class ReverseArrayReferenceDescriptor:
+
+    def __init__(self, related):
+        self.rel = related
+
+    @cached_property
+    def related_manager_cls(self):
+        related_model = self.rel.related_model
+
+        return create_reverse_array_reference_manager(
+            related_model._default_manager.__class__,
+            self.rel,
+        )
+
+    def __get__(self, instance, cls=None):
+        """
+        Get the related objects through the relation.
 
         With the example above, when getting ``parent.children``:
 
