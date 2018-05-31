@@ -422,7 +422,6 @@ class InsertQuery(VoidQuery):
             return_document=ReturnDocument.AFTER
         )
 
-        self._result_ref.last_row_id = auto['auto']['seq'] if auto else None
         for i, val in enumerate(self._vals):
             ins = {}
             if auto:
@@ -438,6 +437,10 @@ class InsertQuery(VoidQuery):
             docs.append(ins)
 
         res = self.db_ref[self.left_table].insert_many(docs, ordered=False)
+        if auto:
+            self._result_ref.last_row_id = auto['auto']['seq']
+        else:
+            self._result_ref.last_row_id = res.inserted_ids[-1]
         logger.debug('insert ids {}'.format(res.inserted_ids))
 
     def parse(self):

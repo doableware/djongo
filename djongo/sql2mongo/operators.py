@@ -167,7 +167,7 @@ class LikeOp(_IdentifierOp):
 
         to_match = self.params[index]
         if isinstance(to_match, dict):
-            field_ext, to_match = next(iter(to_match.values()))
+            field_ext, to_match = next(iter(to_match.items()))
             self._field += '.' + field_ext
         if not isinstance(to_match, str):
             raise SQLDecodeError
@@ -513,7 +513,7 @@ class CmpOp(_Op):
 
         self._constant = self.params[index] if index is not None else None
         if isinstance(self._constant, dict):
-            self._field_ext, self._constant = next(iter(self._constant))
+            self._field_ext, self._constant = next(iter(self._constant.items()))
         else:
             self._field_ext = None
 
