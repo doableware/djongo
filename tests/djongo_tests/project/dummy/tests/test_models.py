@@ -21,11 +21,16 @@ class TestReference(TestCase):
             email='e2@e2.com'
         )
 
+        self.assertEqual([], list(e1.authors.all()))
+        self.assertEqual([], list(a1.referenceentry_set.all()))
+
         e1.authors.add(a1)
+        self.assertEqual(e1.authors_id, {a1.pk})
         self.assertEqual([a1], list(e1.authors.all()))
         self.assertEqual([e1], list(a1.referenceentry_set.all()))
 
         e2.authors.add(a1,a2)
+        self.assertEqual(e2.authors_id, {a1.pk, a2.pk})
         self.assertEqual([a1, a2], list(e2.authors.all()))
         self.assertEqual([e1, e2], list(a1.referenceentry_set.all()))
         self.assertEqual([e2], list(a2.referenceentry_set.all()))
@@ -38,7 +43,13 @@ class TestReference(TestCase):
         self.assertEqual([e1, e2], g)
 
         a2.referenceentry_set.add(e1)
+        self.assertEqual(e1.authors_id, {a1.pk, a2.pk})
         self.assertEqual([e1, e2], list(a2.referenceentry_set.all()))
+
+        a2.delete()
+        self.assertEqual([a1], list(e2.authors.all()))
+        self.assertEqual([a1], list(e1.authors.all()))
+        self.assertEqual(e1.authors_id, {a1.pk})
 
 class TestEmbedded(TestCase):
 
