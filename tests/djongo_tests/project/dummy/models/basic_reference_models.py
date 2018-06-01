@@ -1,14 +1,15 @@
 from djongo import models
-from djongo.models import DjongoManager
+from djongo.models import DjongoManager, CASCADE
 from django import forms
 
 
 class ReferenceBlog(models.Model):
     name = models.CharField(max_length=100)
     tagline = models.TextField()
+    _id = models.ObjectIdField()
 
-    class Meta:
-        abstract = True
+    # class Meta:
+    #     abstract = True
 
 
 class BlogForm(forms.ModelForm):
@@ -73,6 +74,7 @@ class ReferenceEntry(models.Model):
 
     # authors = models.ArrayReferenceField(ReferenceAuthor)
     authors = models.ArrayReferenceField(ReferenceAuthor)
+    # authors_fk = models.ForeignKey(ReferenceBlog, CASCADE)
 
     # n_comments = models.IntegerField()
 

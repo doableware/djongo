@@ -20,7 +20,7 @@ from django.db.models import (
 )
 from django import forms
 from django.core.exceptions import ValidationError
-from django.db import router, connections
+from django.db import router, connections, transaction
 from django.db import connections as pymongo_connections
 import typing
 import functools
@@ -388,27 +388,30 @@ class EmbeddedModelField(Field):
 
     Example:
 
-    class Author(models.Model):
+    class Blog(models.Model):
         name = models.CharField(max_length=100)
-        email = models.CharField(max_length=100)
+        tagline = models.TextField()
 
         class Meta:
             abstract = True
 
 
-    class AuthorForm(forms.ModelForm):
+    class BlogForm(forms.ModelForm):
         class Meta:
-            model = Author
+            model = Blog
             fields = (
-                'name', 'email'
+                'comment', 'author'
             )
 
-    class MultipleBlogPosts(models.Model):
-        h1 = models.CharField(max_length=100)
-        content = models.ArrayModelField(
-            model_container=BlogContent,
-            model_form_class=BlogContentForm
+
+    class Entry(models.Model):
+        blog = models.EmbeddedModelField(
+            model_container=Blog,
+            model_form_class=BlogForm
         )
+
+        headline = models.CharField(max_length=255)
+        objects = models.DjongoManager()
 
     """
     empty_strings_allowed = False
@@ -483,8 +486,8 @@ class EmbeddedModelField(Field):
             return value
         assert isinstance(value, dict)
 
-        self.instance = make_mdl(self.model_container, value)
-        return self.instance
+        instance = make_mdl(self.model_container, value)
+        return instance
 
     def formfield(self, **kwargs):
         defaults = {
@@ -648,6 +651,33 @@ class ArrayReferenceManagerMixin:
             queryset = super().get_queryset()
             return self._apply_rel_filters(queryset)
 
+    def update_or_create(self, **kwargs):
+        db = router.db_for_write(self.instance.__class__, instance=self.instance)
+        obj, created = super(ArrayReferenceManagerMixin, self.db_manager(db)).update_or_create(**kwargs)
+        # We only need to add() if created because if we got an object back
+        # from get() then the relationship already exists.
+        if created:
+            self.add(obj)
+        return obj, created
+    update_or_create.alters_data = True
+
+    def get_or_create(self, **kwargs):
+        db = router.db_for_write(self.instance.__class__, instance=self.instance)
+        obj, created = super(ArrayReferenceManagerMixin, self.db_manager(db)).get_or_create(**kwargs)
+        # We only need to add() if created because if we got an object back
+        # from get() then the relationship already exists.
+        if created:
+            self.add(obj)
+        return obj, created
+    get_or_create.alters_data = True
+
+    def create(self, **kwargs):
+        db = router.db_for_write(self.instance.__class__, instance=self.instance)
+        new_obj = super(ArrayReferenceManagerMixin, self.db_manager(db)).create(**kwargs)
+        self.add(new_obj)
+        return new_obj
+    create.alters_data = True
+
 
 def create_reverse_array_reference_manager(superclass, rel):
     if issubclass(superclass, DjongoManager):
@@ -664,6 +694,12 @@ def create_reverse_array_reference_manager(superclass, rel):
 
             name = rel.remote_field.name
             self.core_filters = {name: instance}
+
+        def __call__(self, *, manager):
+            manager = getattr(self.model, manager)
+            manager_class = create_reverse_array_reference_manager(manager.__class__, rel)
+            return manager_class(instance=self.instance)
+        do_not_call_in_templates = True
 
         def _apply_rel_filters(self, queryset):
             queryset = super()._apply_rel_filters(queryset)
@@ -686,16 +722,36 @@ def create_reverse_array_reference_manager(superclass, rel):
 
         def add(self, *objs):
             _filter = self._make_filter(*objs)
-            for lh_field, rh_field in self.field.related_fields:
-                self.mongo_update(
-                    _filter,
-                    {
-                        '$addToSet': {
-                            lh_field.get_attname():
-                                getattr(self.instance, rh_field.get_attname())
-                        }
+            lh_field, rh_field = self.field.related_fields[0]
+            self.mongo_update(
+                _filter,
+                {
+                    '$addToSet': {
+                        lh_field.get_attname():
+                            getattr(self.instance, rh_field.get_attname())
                     }
-                )
+                }
+            )
+            for obj in objs:
+                fk_field = getattr(obj, lh_field.get_attname())
+                fk_field.add(getattr(self.instance, rh_field.get_attname()))
+        add.alters_data = True
+
+        def remove(self, *objs):
+            pass
+        remove.alters_data = True
+
+        def clear(self):
+            pass
+        clear.alters_data = True
+
+        def set(self, objs, *, clear=False):
+            pass
+        set.alters_data = True
+
+        def create(self, **kwargs):
+            pass
+        create.alters_data = True
 
     return ReverseArrayReferenceManager
 
@@ -721,6 +777,12 @@ def create_forward_array_reference_manager(superclass, rel):
 
             self.core_filters = {f'{name}__in': ids}
 
+        def __call__(self, *, manager):
+            manager = getattr(self.model, manager)
+            manager_class = create_forward_array_reference_manager(manager.__class__, rel)
+            return manager_class(instance=self.instance)
+        do_not_call_in_templates = True
+
         def _apply_rel_filters(self, queryset):
             queryset = super()._apply_rel_filters(queryset)
             if not getattr(self.instance, self.field.attname):
@@ -744,9 +806,9 @@ def create_forward_array_reference_manager(superclass, rel):
                 setattr(self.instance, self.field.get_attname(), fks)
 
             new_fks = set()
+            rh_field = self.field.foreign_related_fields[0]
             for obj in objs:
-                for rh_field in self.field.foreign_related_fields:
-                    new_fks.add(getattr(obj, rh_field.get_attname()))
+                new_fks.add(getattr(obj, rh_field.get_attname()))
             fks.update(new_fks)
 
             db = router.db_for_write(self.instance.__class__, instance=self.instance)
@@ -760,13 +822,68 @@ def create_forward_array_reference_manager(superclass, rel):
                     }
                 }
             )
-
+        add.alters_data = True
 
         def remove(self, *objs):
-            pass
+            to_del = set(
+                getattr(obj, self.field.foreign_related_fields[0].attname)
+                for obj in objs
+            )
+            self._remove(to_del)
+
+        remove.alters_data = True
+
+        def _remove(self, to_del):
+            fks = getattr(self.instance, self.field.attname)
+            fks.difference_update(to_del)
+            db = self._db or router.db_for_write(self.instance.__class__, instance=self.instance)
+            self.instance_manager.db_manager(db).mongo_update(
+                self._make_filter(),
+                {
+                    '$pull': {
+                        self.field.attname: {
+                            '$in': list(to_del)
+                        }
+                    }
+                }
+            )
 
         def clear(self):
-            pass
+            db = router.db_for_write(self.instance.__class__, instance=self.instance)
+            self.instance_manager.db_manager(db).mongo_update(
+                self._make_filter(),
+                {
+                    '$set': {
+                        self.field.attname: []
+                    }
+                }
+            )
+            setattr(self.instance, self.field.attname, {})
+
+        clear.alters_data = True
+
+        def set(self, objs, *, clear=False):
+            objs = tuple(objs)
+
+            db = router.db_for_write(self.through, instance=self.instance)
+            with transaction.atomic(using=db, savepoint=False):
+                if clear:
+                    self.clear()
+                    self.add(*objs)
+                else:
+                    fks = getattr(self.instance, self.field.attname)
+                    rh_field = self.field.foreign_related_fields[0]
+                    new_fks = set(getattr(obj, rh_field.get_attname()) for obj in objs)
+                    to_del = fks - new_fks
+                    self._remove(to_del)
+                    fks = getattr(self.instance, self.field.attname)
+                    to_add = []
+                    for obj in objs:
+                        if getattr(obj, rh_field.get_attname()) not in fks:
+                            to_add.append(obj)
+                    self.add(to_add)
+
+        set.alters_data = True
 
     return ArrayReferenceManager
 
@@ -854,7 +971,7 @@ class ArrayReferenceField(ForeignKey):
                  limit_choices_to=None, parent_link=False, to_field=None,
                  db_constraint=True, **kwargs):
 
-        on_delete = on_delete or CASCADE
+        on_delete = on_delete or self._on_delete
         super().__init__(to, on_delete=on_delete, related_name=related_name,
                          related_query_name=related_query_name,
                          limit_choices_to=limit_choices_to,
@@ -863,9 +980,20 @@ class ArrayReferenceField(ForeignKey):
 
         self.concrete = False
 
-    # def contribute_to_class(self, cls, name, private_only=False, **kwargs):
-    #     super().contribute_to_class(cls, name, private_only, **kwargs)
-    #     cls._meta.local_fields.remove(self)
+    @staticmethod
+    def _on_delete(collector, field, sub_objs, using):
+        for model, instances in collector.data.items():
+            for obj in sub_objs:
+                getattr(obj, field.name).db_manager(using).remove(*instances)
+
+
+    def from_db_value(self, value, expression, connection, context):
+        return self.to_python(value)
+
+    def to_python(self, value):
+        if value is None:
+            return set()
+        return set(value)
 
     def get_db_prep_value(self, value, connection, prepared=False):
         if value is None:
@@ -879,5 +1007,3 @@ class ArrayReferenceField(ForeignKey):
         return list(value)
 
 
-class GenericReferenceField(FieldCacheMixin):
-    pass
