@@ -70,11 +70,8 @@ class ReferenceEntry(models.Model):
     # )
     _id = models.ObjectIdField()
     headline = models.CharField(max_length=255)
-    # body_text = models.TextField()
-
-    # authors = models.ArrayReferenceField(ReferenceAuthor)
     authors = models.ArrayReferenceField(ReferenceAuthor)
-    # authors_fk = models.ForeignKey(ReferenceBlog, CASCADE)
+
 
     # n_comments = models.IntegerField()
 
