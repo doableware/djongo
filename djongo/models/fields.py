@@ -35,7 +35,7 @@ from django.db.models.fields.related_descriptors import ForwardManyToOneDescript
     create_forward_many_to_many_manager, ReverseManyToOneDescriptor
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
-
+from django.utils.translation import gettext_lazy as _
 
 def make_mdl(model, model_dict):
     """
@@ -602,7 +602,23 @@ class EmbeddedFormWidget(forms.MultiWidget):
             for i, widget in enumerate(self.widgets)
         )
 
-class ObjectIdField(AutoField):
+class ObjectIdFieldMixin:
+    description = _("ObjectId")
+
+    def get_db_prep_value(self, value, connection, prepared=False):
+        return self.to_python(value)
+
+    def to_python(self, value):
+        if isinstance(value, str):
+            return ObjectId(value)
+        return value
+
+
+class GenericObjectIdField(ObjectIdFieldMixin, Field):
+    empty_strings_allowed = False
+
+
+class ObjectIdField(ObjectIdFieldMixin, AutoField):
     """
     For every document inserted into a collection MongoDB internally creates an field.
     The field can be referenced from within the Model as _id.
@@ -622,13 +638,7 @@ class ObjectIdField(AutoField):
             return None
         return value
 
-    def get_db_prep_value(self, value, connection, prepared=False):
-        return self.to_python(value)
 
-    def to_python(self, value):
-        if isinstance(value, str):
-            return ObjectId(value)
-        return value
 
 
 class ArrayReferenceManagerMixin:
