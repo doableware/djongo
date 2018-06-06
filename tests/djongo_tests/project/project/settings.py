@@ -34,7 +34,7 @@ DATABASES = {
         # 'USER': 'user',
         # 'PASSWORD': 'passpass',
         # 'AUTH_SOURCE': 'djongo-test',
-        'ENFORCE_SCHEMA': True
+        'ENFORCE_SCHEMA': False
 
     },
 }
