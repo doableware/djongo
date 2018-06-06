@@ -176,14 +176,7 @@ class SelectQuery(Query):
             return
 
         for doc in cursor:
-            if isinstance(cursor, BasicCursor):
-                if len(doc) - 1 == len(self.selected_columns.sql_tokens):
-                    doc.pop('_id')
-                    yield tuple(doc.values())
-                else:
-                    yield self._align_results(doc)
-            else:
-                yield self._align_results(doc)
+            yield self._align_results(doc)
         return
 
     def count(self):
