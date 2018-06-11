@@ -68,15 +68,17 @@ class DjongoManager(Manager):
     def __getattr__(self, name):
         if name.startswith('mongo'):
             name = name[6:]
-            cli = (
-                pymongo_connections[self.db]
-                .cursor()
-                .db_conn[self.model._meta.db_table]
-            )
-            return getattr(cli, name)
+            return getattr(self._client, name)
         else:
             return super().__getattr__(name)
 
+    @property
+    def _client(self):
+        return (
+            pymongo_connections[self.db]
+            .cursor()
+            .db_conn[self.model._meta.db_table]
+        )
 
 class ListField(Field):
     """
@@ -456,7 +458,8 @@ class EmbeddedModelField(Field):
             return value
         if isinstance(value, ModelSubterfuge):
             value = value.subterfuge
-
+        if value is None and self.blank:
+            return None
         if not isinstance(value, Model):
             raise ValueError(
                 'Value: {value} must be instance of Model: {model}'.format(
