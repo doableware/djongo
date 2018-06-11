@@ -70,8 +70,6 @@ class ReferenceEntry(models.Model):
     # )
     _id = models.ObjectIdField()
     headline = models.CharField(max_length=255)
-    headline1 = models.CharField(max_length=255)
-    headline2 = models.CharField(max_length=255)
 
     authors = models.ArrayReferenceField(ReferenceAuthor)
 

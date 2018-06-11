@@ -8,11 +8,7 @@ class TestReference(TestCase):
     def test_create(self):
         e1 = ReferenceEntry.objects.create(
             headline='h1',
-            headline1='h2',
-            headline2='h3',
-
         )
-        o = list(ReferenceEntry.objects.filter(pk=e1.pk).values('headline', 'authors_id'))
         e2 = ReferenceEntry.objects.create(
             headline='h2',
         )
