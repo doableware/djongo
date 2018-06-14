@@ -142,6 +142,9 @@ class SelectQuery(Query):
             elif tok.match(tokens.Keyword, 'GROUP'):
                 c = self.groupby = GroupbyConverter(self, tok_id)
 
+            elif tok.match(tokens.Keyword, 'HAVING'):
+                c = self.having = HavingConverter(self, tok_id)
+
             elif isinstance(tok, Where):
                 c = self.where = WhereConverter(self, tok_id)
 
@@ -173,14 +176,7 @@ class SelectQuery(Query):
             return
 
         for doc in cursor:
-            if isinstance(cursor, BasicCursor):
-                if len(doc) - 1 == len(self.selected_columns.sql_tokens):
-                    doc.pop('_id')
-                    yield tuple(doc.values())
-                else:
-                    yield self._align_results(doc)
-            else:
-                yield self._align_results(doc)
+            yield self._align_results(doc)
         return
 
     def count(self):
@@ -348,6 +344,7 @@ class UpdateQuery(Query):
 
 
 class InsertQuery(VoidQuery):
+    DEFAULT = object()
 
     def __init__(self, result_ref: 'Result', *args):
         self._result_ref = result_ref
@@ -394,7 +391,7 @@ class InsertQuery(VoidQuery):
                     )
                 else:
                     if tok[1].match(tokens.Keyword, 'DEFAULT'):
-                        pass
+                        self._vals.append((self.DEFAULT,))
                     else:
                         i = next(iter(SQLToken(tok)))
                         self._vals.append(
@@ -418,17 +415,25 @@ class InsertQuery(VoidQuery):
             return_document=ReturnDocument.AFTER
         )
 
-        self._result_ref.last_row_id = auto['auto']['seq'] if auto else None
         for i, val in enumerate(self._vals):
             ins = {}
             if auto:
                 for name in auto['auto']['field_names']:
                     ins[name] = auto['auto']['seq'] - num + i + 1
-            for k, v in zip(self._cols, val):
-                ins[k] = v
+            for fld, v in zip(self._cols, val):
+                if (auto
+                    and fld in auto['auto']['field_names']
+                    and v == self.DEFAULT
+                ):
+                    continue
+                ins[fld] = v
             docs.append(ins)
 
         res = self.db_ref[self.left_table].insert_many(docs, ordered=False)
+        if auto:
+            self._result_ref.last_row_id = auto['auto']['seq']
+        else:
+            self._result_ref.last_row_id = res.inserted_ids[-1]
         logger.debug('insert ids {}'.format(res.inserted_ids))
 
     def parse(self):
@@ -600,6 +605,8 @@ class AlterQuery(VoidQuery):
                 self._default = self.params[i]
             elif tok.match(tokens.Keyword, 'UNIQUE'):
                 self.execute = self._unique
+            elif tok.match(tokens.Keyword, 'INDEX'):
+                self.execute = self._index
             elif tok.match(tokens.Keyword, 'FOREIGN'):
                 self.execute = self._fk
             elif tok.match(tokens.Keyword, 'COLUMN'):
@@ -613,13 +620,22 @@ class AlterQuery(VoidQuery):
 
     def _add_column(self):
         self.db_ref[self.left_table].update(
-            {},
+            {
+                '$or': [
+                    {self._iden_name: {'$exists': False}},
+                    {self._iden_name: None}
+                ]
+            },
             {
                 '$set': {
                     self._iden_name: self._default
                 }
             }
         )
+    def _index(self):
+        self.db_ref[self.left_table].create_index(
+            self.field_dir,
+            name=self._iden_name)
 
     def _unique(self):
         self.db_ref[self.left_table].create_index(
@@ -640,7 +656,7 @@ class DeleteQuery(Query):
     def parse(self):
         db_con = self.db_ref
         sm = self.statement
-        kw = {}
+        kw = {'filter': {}}
 
         tok_id, tok = sm.token_next(2)
         sql_token = SQLToken(tok, None)

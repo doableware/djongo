@@ -1,7 +1,7 @@
 import typing
 from collections import OrderedDict
 from sqlparse import tokens, parse as sqlparse
-from sqlparse.sql import Identifier, IdentifierList, Parenthesis, Function, Comparison
+from sqlparse.sql import Identifier, IdentifierList, Parenthesis, Function, Comparison, Where
 
 from . import query, SQLFunc
 
@@ -346,7 +346,9 @@ class SetConverter(Converter):
         return {
             'update': {
                 '$set': {
-                    sql.lhs_column: self.query.params[sql.rhs_indexes] if sql.rhs_indexes is not None else None for sql in self.sql_tokens}
+                    sql.lhs_column: self.query.params[sql.rhs_indexes]
+                    if sql.rhs_indexes is not None else None
+                    for sql in self.sql_tokens}
             }
         }
 
@@ -439,7 +441,59 @@ class NestedInQueryConverter(Converter):
 
 
 class HavingConverter(Converter):
-    pass
+
+    def parse(self):
+        i = self.query.statement.value.find('HAVING')
+        if i == -1:
+            raise SQLDecodeError
+        having = self.query.statement.value[i:]
+        having = having.replace('HAVING', 'WHERE')
+        having = sqlparse(having)[0][0]
+        if not isinstance(having, Where):
+            raise SQLDecodeError
+        self.end_id = self.begin_id + len(having.tokens) - 1
+        self._sub(having)
+        having.value = str(having)
+        self.op = WhereOp(
+            token_id=0,
+            token=having,
+            query=self.query,
+            params=self.query.params
+        )
+
+    def to_mongo(self):
+        return {'$match': self.op.to_mongo()}
+
+    def _sub(self, token):
+        for i, child_token in enumerate(token.tokens):
+            if isinstance(child_token, Parenthesis):
+                self._sub(child_token)
+
+            elif isinstance(child_token, Function):
+                for func in self.query.selected_columns.sql_tokens:
+                    if (isinstance(func, SQLFunc)
+                            and func._token[0].value == child_token.value
+                    ):
+                        token.tokens[i] = sqlparse(
+                            f'"{self.query.left_table}"."{func.alias}"'
+                        )[0][0]
+                        break
+                else:
+                    raise SQLDecodeError
+
+            elif isinstance(child_token, Comparison):
+                if isinstance(child_token[0], Function):
+                    for func in self.query.selected_columns.sql_tokens:
+                        if (isinstance(func, SQLFunc)
+                           and func._token[0].value == child_token[0].value
+                        ):
+                            child_token.tokens[0] = sqlparse(
+                                f'"{self.query.left_table}"."{func.alias}"'
+                            )[0][0]
+                            break
+                    else:
+                        raise SQLDecodeError
+
 
 class GroupbyConverter(Converter):
 

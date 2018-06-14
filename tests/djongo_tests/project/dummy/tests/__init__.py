@@ -5,6 +5,6 @@ class TestCase(DjangoTestCase):
 
     @classmethod
     def setUpClass(cls):
-        # root_logger = getLogger()
-        # root_logger.addHandler(StreamHandler())
+        root_logger = getLogger()
+        root_logger.addHandler(StreamHandler())
         super().setUpClass()

@@ -1,14 +1,15 @@
 from djongo import models
-from djongo.models import DjongoManager
+from djongo.models import DjongoManager, CASCADE
 from django import forms
 
 
 class ReferenceBlog(models.Model):
     name = models.CharField(max_length=100)
     tagline = models.TextField()
+    _id = models.ObjectIdField()
 
-    class Meta:
-        abstract = True
+    # class Meta:
+    #     abstract = True
 
 
 class BlogForm(forms.ModelForm):
@@ -44,7 +45,6 @@ class ReferenceAuthor(models.Model):
     name = models.CharField(max_length=200)
     email = models.EmailField()
     # _id = models.ObjectIdField()
-    i = models.IntegerField()
 
     def __str__(self):
         return self.name
@@ -68,12 +68,13 @@ class ReferenceEntry(models.Model):
     #     model_container=ArrayMetaData,
     #     model_form_class=MetaDataForm
     # )
-    # _id = models.ObjectIdField()
+    _id = models.ObjectIdField()
     headline = models.CharField(max_length=255)
-    # body_text = models.TextField()
+    headline1 = models.CharField(max_length=255)
+    headline2 = models.CharField(max_length=255)
 
-    # authors = models.ArrayReferenceField(ReferenceAuthor)
     authors = models.ArrayReferenceField(ReferenceAuthor)
+
 
     # n_comments = models.IntegerField()
 

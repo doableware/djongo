@@ -165,7 +165,10 @@ class LikeOp(_IdentifierOp):
     def _make_regex(self, token):
         index = SQLToken.placeholder_index(token)
 
-        to_match =  self.params[index]
+        to_match = self.params[index]
+        if isinstance(to_match, dict):
+            field_ext, to_match = next(iter(to_match.items()))
+            self._field += '.' + field_ext
         if not isinstance(to_match, str):
             raise SQLDecodeError
 
@@ -509,6 +512,10 @@ class CmpOp(_Op):
         index = re_index(self.token.right.value)
 
         self._constant = self.params[index] if index is not None else None
+        if isinstance(self._constant, dict):
+            self._field_ext, self._constant = next(iter(self._constant.items()))
+        else:
+            self._field_ext = None
 
     def negate(self):
         self.is_negated = True
@@ -518,6 +525,8 @@ class CmpOp(_Op):
             field = self._identifier.column
         else:
             field = '{}.{}'.format(self._identifier.table, self._identifier.column)
+        if self._field_ext:
+            field += '.' + self._field_ext
 
         if not self.is_negated:
             return {field: {self._operator: self._constant}}

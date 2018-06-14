@@ -34,7 +34,7 @@ DATABASES = {
         # 'USER': 'user',
         # 'PASSWORD': 'passpass',
         # 'AUTH_SOURCE': 'djongo-test',
-        'ENFORCE_SCHEMA': True
+        'ENFORCE_SCHEMA': False
 
     },
 }
@@ -42,12 +42,12 @@ DATABASES = {
 
 INSTALLED_APPS = [
     'dummy.apps.DummyConfig',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    # 'django.contrib.admin',
+    # 'django.contrib.auth',
+    # 'django.contrib.contenttypes',
+    # 'django.contrib.sessions',
+    # 'django.contrib.messages',
+    # 'django.contrib.staticfiles',
 ]
 
 
