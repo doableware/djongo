@@ -25,6 +25,17 @@ class ListField(Field):
 
 Same as the `Field` Base class
 
+## DictField
+
+```python
+class DictField(Field):
+	def __init__(self, *args, **kwargs):
+```
+
+### Parameters
+
+Same as the `Field` Base class
+
 ## ArrayReferenceField
 
 ```python

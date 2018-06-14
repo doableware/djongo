@@ -49,6 +49,8 @@ docs:
       url: /mongodb-field-reference/#objectidfield
     - title: "List Field"
       url: /mongodb-field-reference/#listfield
+    - title: "Dict Field"
+      url: /mongodb-field-reference/#dictfield
 
   - title: "Other resources"
     children:

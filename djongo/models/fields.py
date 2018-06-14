@@ -78,6 +78,32 @@ class DjongoManager(Manager):
         else:
             return super().__getattr__(name)
 
+class DictField(Field):
+    """
+    MongoDB Dynamic Dict field
+    """
+
+    def __init__(self, *args, **kwargs):
+        self._value = {}
+        super().__init__(*args, **kwargs)
+
+    def __set__(self, instance, value):
+        if not isinstance(value, dict):
+            raise ValueError("Value must be a dict")
+
+        self._value = value
+
+    def __get__(self, instance, owner):
+        return self._value
+
+    def get_db_prep_value(self, value, connection, prepared=False):
+        if prepared:
+            return value
+
+        if not isinstance(value, dict):
+            return ValueError("Value must be a dict")
+
+        return value
 
 class ListField(Field):
     """
