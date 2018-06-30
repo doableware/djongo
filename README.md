@@ -10,7 +10,12 @@ Use MongoDB as a backend database for your Django project, without changing the 
 
 ## Usage:
 <ol>
-<li> pip install djongo </li>
+<li> Install djongo:
+
+``` 
+pip install djongo
+```
+</li>
 <li> Into settings.py file of your project, add: 
 
 ``` 
