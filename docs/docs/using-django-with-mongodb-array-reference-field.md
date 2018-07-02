@@ -9,7 +9,7 @@ The `ArrayReferenceField` is one of the most powerful features of Djongo. The `A
 
 The `ArrayReferenceField` is a bargain between the `ArrayModelField` and `ManyToManyField`. A separate collection is used for storing all entries (instead of embedding it as an array). This means there is no data duplication. However, the intermediate "through/join" mapping table is completely skipped! This is achieved by storing only a reference to the entries in the embedded array.
 
-While the `ManyToManyField` required two queries to fetch data, the `ArrayReferenceField` requires just one query. If you have used the `ManyToManyField`, then you know how to use the `ArrayReferenceField`. In fact **it implements the exact same API** as the `ManyToManyField`.
+While the `ManyToManyField` required two queries to fetch data, the `ArrayReferenceField` requires just one query and is much faster. If you have used the `ManyToManyField`, then you know how to use the `ArrayReferenceField`. In fact **it implements the exact same API** as the `ManyToManyField`. You can replace all existing `ManyToManyField` with `ArrayReferenceField` and everything will continue to work as is.
 
 In the example the `Entry` Model can be rewritten as follows:
 
