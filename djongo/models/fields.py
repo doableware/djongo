@@ -77,9 +77,10 @@ class DjongoManager(Manager):
         else:
             return super().__getattr__(name)
 
-class DictField(Field):
+
+class JSONField(Field):
     """
-    MongoDB Dynamic Dict field
+    MongoDB JsonField (Array or Dictionnary)
     """
 
     def __init__(self, *args, **kwargs):
@@ -87,10 +88,8 @@ class DictField(Field):
         super().__init__(*args, **kwargs)
 
     def __set__(self, instance, value):
-        if not isinstance(value, dict):
-            raise ValueError("Value must be a dict")
-
-        self._value = value
+        if not isinstance(value, dict) and not isinstance(value, list):
+            raise ValueError("Value must be a dict or list")
 
     def __get__(self, instance, owner):
         return self._value
@@ -99,8 +98,8 @@ class DictField(Field):
         if prepared:
             return value
 
-        if not isinstance(value, dict):
-            return ValueError("Value must be a dict")
+        if not isinstance(value, dict) and not isinstance(value, list):
+            raise ValueError("Value must be a dict or list")
 
         return value
 

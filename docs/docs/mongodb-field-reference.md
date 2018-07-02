@@ -25,10 +25,10 @@ class ListField(Field):
 
 Same as the `Field` Base class
 
-## DictField
+## JSONField
 
 ```python
-class DictField(Field):
+class JSONField(Field):
 	def __init__(self, *args, **kwargs):
 ```
 
