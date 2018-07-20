@@ -429,12 +429,22 @@ class InsertQuery(VoidQuery):
                 ins[fld] = v
             docs.append(ins)
 
-        res = self.db_ref[self.left_table].insert_many(docs, ordered=False)
+        if len(docs) == 1:
+            res = self.db_ref[self.left_table].insert_one(docs[0])
+
+            if not auto:
+                self._result_ref.last_row_id = res.inserted_id
+
+        else:
+            res = self.db_ref[self.left_table].insert_many(docs, ordered=False)
+
+            if not auto:
+                self._result_ref.last_row_id = res.inserted_ids[-1]
+
         if auto:
             self._result_ref.last_row_id = auto['auto']['seq']
-        else:
-            self._result_ref.last_row_id = res.inserted_ids[-1]
-        logger.debug('insert ids {}'.format(res.inserted_ids))
+    
+        logger.debug('insert id(s) {}'.format(self._result_ref.last_row_id))
 
     def parse(self):
 
