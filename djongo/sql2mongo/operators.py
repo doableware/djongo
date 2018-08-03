@@ -488,10 +488,17 @@ class ParenthesisOp(_Op):
             raise SQLDecodeError
 
         op = None
+        evaluateds = list()
         while self._ops:
             op = self._ops.pop(0)
+            if op in evaluateds:
+                continue
             op.evaluate()
-        self._op = op
+            evaluateds.append(op)
+        if len(evaluateds) > 1:
+            self._op = evaluateds[-1]
+        else:
+            self._op = op
 
     def negate(self):
         for op in chain(self._ops, self._cmp_ops):
