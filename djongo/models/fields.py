@@ -80,6 +80,31 @@ class DjongoManager(Manager):
             .db_conn[self.model._meta.db_table]
         )
 
+class JSONField(Field):
+    """
+    MongoDB JsonField (Array or Dictionnary)
+    """
+
+    def __init__(self, *args, **kwargs):
+        self._value = {}
+        super().__init__(*args, **kwargs)
+
+    def __set__(self, instance, value):
+        if not isinstance(value, dict) and not isinstance(value, list):
+            raise ValueError("Value must be a dict or list")
+
+    def __get__(self, instance, owner):
+        return self._value
+
+    def get_db_prep_value(self, value, connection, prepared=False):
+        if prepared:
+            return value
+
+        if not isinstance(value, dict) and not isinstance(value, list):
+            raise ValueError("Value must be a dict or list")
+
+        return value
+
 class ListField(Field):
     """
     MongoDB allows the saving of arbitrary data inside it's embedded array. The `ListField` is useful in such cases.
