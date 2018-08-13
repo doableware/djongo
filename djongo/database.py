@@ -39,3 +39,7 @@ class ProgrammingError(DatabaseError):
 
 class NotSupportedError(DatabaseError):
     pass
+
+
+def Binary(value):
+    return value
