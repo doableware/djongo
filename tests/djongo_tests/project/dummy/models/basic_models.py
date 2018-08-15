@@ -4,6 +4,7 @@ from djongo import models
 class Blog(models.Model):
     name = models.CharField(max_length=100)
     tagline = models.TextField()
+    _id = models.ObjectIdField()
 
     def __str__(self):
         return self.name

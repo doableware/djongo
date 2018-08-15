@@ -13,29 +13,24 @@ MongoDB is defined.
 These are the main fields for working with MongoDB.
 """
 
+import functools
+import typing
+
 from bson import ObjectId
-from django.db.models import (
-    Manager, Model, Field, AutoField,
-    ForeignKey, CASCADE, BigAutoField
-)
 from django import forms
 from django.core.exceptions import ValidationError
-from django.db import router, connections, transaction
 from django.db import connections as pymongo_connections
-import typing
-import functools
-
-from django.db.models.fields.mixins import FieldCacheMixin
+from django.db import router, connections, transaction
+from django.db.models import (
+    Manager, Model, Field, AutoField,
+    ForeignKey, BigAutoField
+)
 from django.forms import modelform_factory
-from django.utils.html import format_html_join, format_html
-from pymongo.collection import Collection
-
-from django.db.models.fields.related import RelatedField
-from django.db.models.fields.related_descriptors import ForwardManyToOneDescriptor, ManyToManyDescriptor, \
-    create_forward_many_to_many_manager, ReverseManyToOneDescriptor
 from django.utils.functional import cached_property
+from django.utils.html import format_html_join, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
+
 
 def make_mdl(model, model_dict):
     """
@@ -65,6 +60,7 @@ class DjongoManager(Manager):
 
     This module allows methods to be passed directly to pymongo.
     """
+
     def __getattr__(self, name):
         if name.startswith('mongo'):
             name = name[6:]
@@ -76,9 +72,10 @@ class DjongoManager(Manager):
     def _client(self):
         return (
             pymongo_connections[self.db]
-            .cursor()
-            .db_conn[self.model._meta.db_table]
+                .cursor()
+                .db_conn[self.model._meta.db_table]
         )
+
 
 class ListField(Field):
     """
@@ -346,7 +343,7 @@ class ArrayFormBoundField(forms.BoundField):
 
     def __str__(self):
         table = format_html_join(
-            '\n','<tbody>{}</tbody>',
+            '\n', '<tbody>{}</tbody>',
             ((form.as_table(),)
              for form in self.form_set))
         table = format_html(
@@ -355,7 +352,7 @@ class ArrayFormBoundField(forms.BoundField):
             '\n</table>',
             self.name,
             table)
-        return format_html('{}\n{}',table, self.form_set.management_form)
+        return format_html('{}\n{}', table, self.form_set.management_form)
 
     def __len__(self):
         return len(self.form_set)
@@ -420,8 +417,8 @@ class EmbeddedModelField(Field):
 
     def __init__(self,
                  model_container: typing.Type[Model],
-                 model_form_class: typing.Type[forms.ModelForm]=None,
-                 model_form_kwargs: dict=None,
+                 model_form_class: typing.Type[forms.ModelForm] = None,
+                 model_form_kwargs: dict = None,
                  admin=None,
                  request=None,
                  *args, **kwargs):
@@ -463,8 +460,8 @@ class EmbeddedModelField(Field):
         if not isinstance(value, Model):
             raise ValueError(
                 'Value: {value} must be instance of Model: {model}'.format(
-                     value=value, 
-                     model=Model
+                    value=value,
+                    model=Model
                 )
             )
 
@@ -605,6 +602,7 @@ class EmbeddedFormWidget(forms.MultiWidget):
             for i, widget in enumerate(self.widgets)
         )
 
+
 class ObjectIdFieldMixin:
     description = _("ObjectId")
 
@@ -642,8 +640,6 @@ class ObjectIdField(ObjectIdFieldMixin, AutoField):
         return value
 
 
-
-
 class ArrayReferenceManagerMixin:
 
     def _apply_rel_filters(self, queryset):
@@ -672,6 +668,7 @@ class ArrayReferenceManagerMixin:
         if created:
             self.add(obj)
         return obj, created
+
     update_or_create.alters_data = True
 
     def get_or_create(self, **kwargs):
@@ -682,6 +679,7 @@ class ArrayReferenceManagerMixin:
         if created:
             self.add(obj)
         return obj, created
+
     get_or_create.alters_data = True
 
     def create(self, **kwargs):
@@ -689,6 +687,7 @@ class ArrayReferenceManagerMixin:
         new_obj = super(ArrayReferenceManagerMixin, self.db_manager(db)).create(**kwargs)
         self.add(new_obj)
         return new_obj
+
     create.alters_data = True
 
 
@@ -712,6 +711,7 @@ def create_reverse_array_reference_manager(superclass, rel):
             manager = getattr(self.model, manager)
             manager_class = create_reverse_array_reference_manager(manager.__class__, rel)
             return manager_class(instance=self.instance)
+
         do_not_call_in_templates = True
 
         def _apply_rel_filters(self, queryset):
@@ -748,28 +748,33 @@ def create_reverse_array_reference_manager(superclass, rel):
             for obj in objs:
                 fk_field = getattr(obj, lh_field.get_attname())
                 fk_field.add(getattr(self.instance, rh_field.get_attname()))
+
         add.alters_data = True
 
         def remove(self, *objs):
             pass
+
         remove.alters_data = True
 
         def clear(self):
             pass
+
         clear.alters_data = True
 
         def set(self, objs, *, clear=False):
             pass
+
         set.alters_data = True
 
         def create(self, **kwargs):
             pass
+
         create.alters_data = True
 
     return ReverseArrayReferenceManager
 
-def create_forward_array_reference_manager(superclass, rel):
 
+def create_forward_array_reference_manager(superclass, rel):
     if issubclass(superclass, DjongoManager):
         baseclass = superclass
     else:
@@ -794,6 +799,7 @@ def create_forward_array_reference_manager(superclass, rel):
             manager = getattr(self.model, manager)
             manager_class = create_forward_array_reference_manager(manager.__class__, rel)
             return manager_class(instance=self.instance)
+
         do_not_call_in_templates = True
 
         def _apply_rel_filters(self, queryset):
@@ -835,6 +841,7 @@ def create_forward_array_reference_manager(superclass, rel):
                     }
                 }
             )
+
         add.alters_data = True
 
         def remove(self, *objs):
@@ -900,6 +907,7 @@ def create_forward_array_reference_manager(superclass, rel):
 
     return ArrayReferenceManager
 
+
 class ArrayReferenceDescriptor:
 
     def __init__(self, field_with_rel):
@@ -959,6 +967,7 @@ class ReverseArrayReferenceDescriptor:
 
         return self.related_manager_cls(instance)
 
+
 # class ArrayManyToManyField(ManyToManyField):
 #
 #     def contribute_to_class(self, cls, name, **kwargs):
@@ -999,7 +1008,6 @@ class ArrayReferenceField(ForeignKey):
             for obj in sub_objs:
                 getattr(obj, field.name).db_manager(using).remove(*instances)
 
-
     def from_db_value(self, value, expression, connection, context):
         return self.to_python(value)
 
@@ -1018,5 +1026,3 @@ class ArrayReferenceField(ForeignKey):
         if value is None:
             return []
         return list(value)
-
-
