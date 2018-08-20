@@ -175,7 +175,10 @@ class ArrayModelField(Field):
             return value
 
         if not isinstance(value, list):
-            raise ValueError('Value must be a list')
+            raise ValueError(
+                'Expected value to be type list,'
+                f'Got type {type(value)} instead'
+            )
 
         ret = []
         for a_mdl in value:

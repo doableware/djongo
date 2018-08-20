@@ -124,6 +124,13 @@ entries = Entry.objects.filter(authors={'name.2': 'Paul'})
 ```
 Note: In MongoDB the first element in the array starts at index 0.
 
+### Creating Array fields
 
+A Model having an Array field can be created as follows:
+
+```python
+entry = Entry()
+entry.authors = [Author()]
+```
 
 
