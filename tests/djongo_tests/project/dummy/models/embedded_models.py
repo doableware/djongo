@@ -17,6 +17,7 @@ class EmbeddedEntry(models.Model):
         model_container=EmbeddedBlog
     )
     headline = models.CharField(max_length=255)
+    _id = models.ObjectIdField()
 
     def __str__(self):
         return self.headline

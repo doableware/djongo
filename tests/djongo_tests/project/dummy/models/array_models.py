@@ -17,6 +17,7 @@ class ArrayEntry(models.Model):
     authors = models.ArrayModelField(
         model_container=ArrayAuthor
     )
+    _id = models.ObjectIdField()
 
     def __str__(self):
         return self.headline
