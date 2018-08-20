@@ -1,3 +1,4 @@
+from dummy.models.array_models import ArrayEntry, ArrayAuthor
 from dummy.models.basic_models import Blog, Entry, Author
 from dummy.models.embedded_models import EmbeddedBlog, EmbeddedEntry
 from dummy.models.reference_models import ReferenceEntry, ReferenceAuthor
@@ -30,7 +31,7 @@ class TestReference(TestCase):
         self.assertEqual([a1], list(e1.authors.all()))
         self.assertEqual([e1], list(a1.referenceentry_set.all()))
 
-        e2.authors.add(a1,a2)
+        e2.authors.add(a1, a2)
         self.assertEqual(e2.authors_id, {a1.pk, a2.pk})
         self.assertEqual([a1, a2], list(e2.authors.all()))
         self.assertEqual([e1, e2], list(a1.referenceentry_set.all()))
@@ -51,18 +52,54 @@ class TestReference(TestCase):
         self.assertEqual([a1], list(e2.authors.all()))
         self.assertEqual([a1], list(e1.authors.all()))
 
+
+class TestArray(TestCase):
+    def test_create1(self):
+        e = ArrayEntry.objects.create(
+            headline='h1',
+            authors=[ArrayAuthor(
+                name='n1',
+                email='e1@e1.com'
+            )]
+        )
+        g = ArrayEntry.objects.get(headline='h1')
+        self.assertEqual(e, g)
+        g.authors.append(
+            ArrayAuthor(
+                name='n2',
+                email='e2@e1.com'
+            )
+        )
+        g.save()
+        g = ArrayEntry.objects.get(
+            authors={'1.name': 'n2'}
+        )
+        self.assertEqual(e,g)
+        self.assertNotEqual(e.authors, g.authors)
+
+
 class TestEmbedded(TestCase):
 
     def test_create(self):
         e = EmbeddedEntry.objects.create(
             headline='h1',
-            blog=EmbeddedBlog(name='b1', tagline='t1')
+            blog=EmbeddedBlog(
+                name='b1',
+                tagline='t1'
+            )
         )
         g = EmbeddedEntry.objects.get(headline='h1')
         self.assertEqual(e, g)
 
         g = EmbeddedEntry.objects.get(blog={'name': 'b1'})
         self.assertEqual(e, g)
+        self.assertEqual(g.blog.tagline, 't1')
+        g.blog.tagline = 't2'
+        g.save()
+        g = EmbeddedEntry.objects.get(blog={'name': 'b1'})
+        self.assertEqual(e, g)
+        self.assertEqual(g.blog.tagline, 't2')
+        self.assertNotEqual(e.blog.tagline, g.blog.tagline)
 
     # def test_join(self):
     #     eqs = EmbeddedEntry.objects.filter(blog__name='b1').values('id')
@@ -116,7 +153,7 @@ class TestBasic(TestCase):
         self.assertEqual([a1], list(e1.authors.all()))
         self.assertEqual([e1], list(a1.entry_set.all()))
 
-        e2.authors.add(a1,a2)
+        e2.authors.add(a1, a2)
         self.assertEqual([a1, a2], list(e2.authors.all()))
         self.assertEqual([e1, e2], list(a1.entry_set.all()))
         self.assertEqual([e2], list(a2.entry_set.all()))
@@ -161,8 +198,4 @@ class TestBasic(TestCase):
         eqs = Entry.objects.filter(blog__name='b1').values('id')
         bqs = Blog.objects.filter(id__in=eqs).values('name')
         self.assertEquals(list(bqs), [{'name': 'b1'}, {'name': 'b2'}])
-
-
-class TestArray(TestCase):
-    pass
 
