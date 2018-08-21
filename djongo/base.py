@@ -7,14 +7,13 @@ from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.backends.base.client import BaseDatabaseClient
 from django.db.backends.base.creation import BaseDatabaseCreation
 from django.db.utils import Error
-from .schema import DatabaseSchemaEditor
 
-from .introspection import DatabaseIntrospection
-
-from .operations import DatabaseOperations
+from . import database as Database
 from .cursor import Cursor
 from .features import DatabaseFeatures
-from . import database as Database
+from .introspection import DatabaseIntrospection
+from .operations import DatabaseOperations
+from .schema import DatabaseSchemaEditor
 
 
 class CachedCollections(set):
@@ -46,37 +45,41 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     # This dictionary will map Django model field types to appropriate data
     # types to be used in the database.
     data_types = {
-        'AutoField': 'integer',
-        'BigAutoField': 'integer',
-        'BinaryField': 'integer',
-        'BooleanField': 'bool',
-        'CharField': 'char',
-        'CommaSeparatedIntegerField': 'char',
+        'AutoField': 'int32',
+        'BigAutoField': 'int64',
+        'BinaryField': 'binary',
+        'BooleanField': 'boolean',
+        'CharField': 'string',
+        'CommaSeparatedIntegerField': 'string',
         'DateField': 'date',
-        'DateTimeField': 'datetime',
-        'DecimalField': 'float',
-        'DurationField': 'integer',
-        'FileField': 'char',
-        'FilePathField': 'char',
-        'FloatField': 'float',
-        'IntegerField': 'integer',
-        'BigIntegerField': 'integer',
-        'IPAddressField': 'char',
-        'GenericIPAddressField': 'char',
-        'NullBooleanField': 'bool',
-        'OneToOneField': 'integer',
-        'PositiveIntegerField': 'integer',
-        'PositiveSmallIntegerField': 'integer',
-        'SlugField': 'char',
-        'SmallIntegerField': 'integer',
-        'TextField': 'char',
-        'TimeField': 'time',
-        'UUIDField': 'char',
+        'DateTimeField': 'date',
+        'DecimalField': 'number',
+        'DurationField': 'int64',
+        'FileField': 'string',
+        'FilePathField': 'string',
+        'FloatField': 'number',
+        'IntegerField': 'int32',
+        'BigIntegerField': 'int64',
+        'IPAddressField': 'string',
+        'GenericIPAddressField': 'string',
+        'NullBooleanField': 'boolean',
+        'OneToOneField': 'int32',
+        'PositiveIntegerField': 'int64',
+        'PositiveSmallIntegerField': 'int32',
+        'SlugField': 'string',
+        'SmallIntegerField': 'int32',
+        'TextField': 'string',
+        'TimeField': 'date',
+        'UUIDField': 'string',
+        'ObjectIdField': 'oid',
+        'ListField': 'array',
+        'DictField': 'object'
     }
 
     data_types_suffix = {
         'AutoField': 'AUTOINCREMENT',
         'BigAutoField': 'AUTOINCREMENT',
+        'ObjectIdField': 'AUTOINCREMENT'
     }
 
     operators = {
