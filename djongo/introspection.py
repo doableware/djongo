@@ -1,7 +1,7 @@
-import bson
-import datetime
 import collections
+import datetime
 
+import bson
 from django.db.backends.base import introspection
 
 
@@ -30,8 +30,12 @@ class DatabaseIntrospection(introspection.BaseDatabaseIntrospection):
     #     return sorted(cursor.m_cli_connection.collection_names(False))
 
     def get_table_list(self, cursor):
-        return [introspection.TableInfo(c, 't')
-                for c in cursor.db_conn.collection_names(False)]
+
+        return [
+            introspection.TableInfo(c, 't')
+            for c in cursor.db_conn.collection_names(False)
+            if c != '__schema__'
+        ]
 
     def get_constraints(self, cursor, table_name):
         constraint = {}
@@ -63,6 +67,10 @@ class DatabaseIntrospection(introspection.BaseDatabaseIntrospection):
 
     def get_relations(self, cursor, table_name):
         return []
+
+    def get_sequences(self, cursor, table_name, table_fields=()):
+        pk_col = self.get_primary_key_column(cursor, table_name)
+        return [{'table': table_name, 'column': pk_col}]
 
     def get_table_description(self, cursor, table_name):
         colspecs = collections.defaultdict(lambda: dict(
