@@ -3,15 +3,16 @@ Module with constants and mappings to build MongoDB queries from
 SQL constructors.
 """
 
-from dataclasses import dataclass
-from pymongo.cursor import Cursor as BasicCursor
-from pymongo.command_cursor import CommandCursor
-from pymongo.database import Database
-from pymongo import MongoClient
-from logging import getLogger
 import re
 import typing
+from logging import getLogger
+
+from dataclasses import dataclass
+from pymongo import MongoClient
 from pymongo import ReturnDocument
+from pymongo.command_cursor import CommandCursor
+from pymongo.cursor import Cursor as BasicCursor
+from pymongo.database import Database
 from pymongo.errors import OperationFailure, CollectionInvalid
 from sqlparse import parse as sqlparse
 from sqlparse import tokens
@@ -785,7 +786,7 @@ class Result:
         try:
             self._query = AlterQuery(self.db, self.connection_properties, sm, self._params)
         except NotImplementedError:
-            logger.debug('Not implemented command not implemented for SQL {}'.format(self._sql))
+            logger.debug('Not implemented alter command for SQL {}'.format(self._sql))
         else:
             self._query.execute()
 
