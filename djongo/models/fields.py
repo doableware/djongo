@@ -617,6 +617,9 @@ class ObjectIdFieldMixin:
             return ObjectId(value)
         return value
 
+    def get_internal_type(self):
+        return "ObjectIdField"
+
 
 class GenericObjectIdField(ObjectIdFieldMixin, Field):
     empty_strings_allowed = False
