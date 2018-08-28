@@ -1,14 +1,14 @@
 import typing
 from collections import OrderedDict
+from logging import getLogger, DEBUG, StreamHandler
 from unittest import TestCase, mock, skip
 from unittest.mock import patch, MagicMock
 
-from logging import getLogger, DEBUG, StreamHandler
-from pymongo.cursor import Cursor
 from pymongo.command_cursor import CommandCursor
+from pymongo.cursor import Cursor
 
-from djongo.sql2mongo.query import Result
 from djongo.base import DatabaseWrapper
+from djongo.sql2mongo.query import Result
 
 'Django SQL:'
 
@@ -661,7 +661,7 @@ class TestQuery(MockTest):
 
 
         # 'SELECT (1) AS "a" FROM "django_session" WHERE "django_session"."session_key" = %(0)s LIMIT 1'
-        self.sql = 'SELECT (1) AS "a" FROM "table1" WHERE "table1"."col2" = %s LIMIT 1'
+        self.sql = 'SELECT "auth_group"."id", "auth_group"."name" FROM "auth_group" WHERE (NOT ("auth_group"."name" = %(0)s) AND NOT ("auth_group"."name" = %(1)s))'
         find_args = {
             'filter': {
                 'col2': {
@@ -671,7 +671,7 @@ class TestQuery(MockTest):
             'limit': 1,
             'projection': []
         }
-        self.params = [1]
+        self.params = ['a', 'b']
         ret = self.find_mock()
         self.assertEqual(ret, [(1,)])
         self.find.assert_any_call(**find_args)
@@ -1214,6 +1214,30 @@ class TestQuery(MockTest):
                 {
                     'col1': {
                         '$lte': 2
+                    }
+                },
+                {
+                    'col1': {
+                        '$not': {
+                            '$eq': 1
+                        }
+                    }
+                }
+            ]
+        }
+        self.params = [2, 1]
+        self.find_mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} (NOT ({t1c1} <= %s) AND NOT ({t1c1} = %s))'
+        find_args['filter'] = {
+            '$and': [
+                {
+                    'col1': {
+                        '$not': {
+                            '$lte': 2
+                        }
                     }
                 },
                 {
