@@ -8,6 +8,7 @@ from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identif
 from . import SQLDecodeError, SQLToken
 from . import query
 
+
 def re_index(value: str):
     match = re.match(r'%\(([0-9]+)\)s', value, flags=re.IGNORECASE)
     if match:
@@ -477,8 +478,8 @@ class ParenthesisOp(_Op):
             if operator.precedence > ops[i].precedence:
                 ops.insert(i, operator)
                 break
-            else:
-                ops.append(operator)
+        else:
+            ops.append(operator)
 
     def evaluate(self):
         if self._op is not None:
