@@ -8,7 +8,8 @@ if __name__ == "__main__":
 
     root_logger = getLogger()
     root_logger.setLevel(DEBUG)
-    root_logger.addHandler(StreamHandler())
+    if not root_logger.hasHandlers():
+        root_logger.addHandler(StreamHandler())
 
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")
     try:

@@ -1,6 +1,7 @@
 from dummy.models.array_models import ArrayEntry, ArrayAuthor
 from dummy.models.basic_models import Blog, Entry, Author
 from dummy.models.embedded_models import EmbeddedBlog, EmbeddedEntry
+from dummy.models.misc_models import ListEntry, DictEntry
 from dummy.models.reference_models import ReferenceEntry, ReferenceAuthor
 from . import TestCase
 
@@ -181,12 +182,6 @@ class TestBasic(TestCase):
             name='b2',
             tagline='t2'
         )
-        # a1 = Author.objects.create(
-        #     name='a1'
-        # )
-        # a2 = Author.objects.create(
-        #     name='a2'
-        # )
         e1 = Entry.objects.create(
             headline='h1',
             blog=b1
@@ -199,3 +194,34 @@ class TestBasic(TestCase):
         bqs = Blog.objects.filter(id__in=eqs).values('name')
         self.assertEquals(list(bqs), [{'name': 'b1'}, {'name': 'b2'}])
 
+
+class TestMisc(TestCase):
+
+    def test_create(self):
+        e1 = ListEntry()
+        e1.authors = ['a1', 'a2']
+        e1.headline = 'h1'
+        e1.save()
+        g = ListEntry.objects.get(
+            headline='h1'
+        )
+        self.assertEqual(e1, g)
+
+        # g = ListEntry.objects.get(
+        #     authors={'0.': 'a1'}
+        # )
+        self.assertEqual(e1, g)
+        e2 = DictEntry()
+        e2.headline = 'h2'
+        e2.blog = {
+            'name': 'b1'
+        }
+        e2.save()
+        g = DictEntry.objects.get(
+            headline='h2'
+        )
+        self.assertEqual(e2, g)
+        g = DictEntry.objects.get(
+            blog={'name': 'b1'}
+        )
+        self.assertEqual(e2, g)
