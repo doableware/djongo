@@ -174,7 +174,7 @@ class LikeOp(_IdentifierOp):
             raise SQLDecodeError
 
         to_match = to_match.replace('%', '.*')
-        self._regex = '^'+ to_match + '$'
+        self._regex = '^' + to_match + '$'
 
     def to_mongo(self):
         return {self._field: {'$regex': self._regex}}
@@ -249,6 +249,7 @@ class BetweenOp(_IdentifierOp):
                     }
                 }
             }
+
 
 class NotOp(_UnaryOp):
     def __init__(self, *args, **kwargs):
@@ -450,9 +451,9 @@ class ParenthesisOp(_Op):
 
             elif isinstance(tok, Parenthesis):
                 if (tok[1].match(tokens.Name.Placeholder, '.*', regex=True)
-                    or tok[1].match(tokens.Keyword, 'Null')
-                    or isinstance(tok[1], IdentifierList)
-                    or tok[1].ttype == tokens.DML
+                        or tok[1].match(tokens.Keyword, 'Null')
+                        or isinstance(tok[1], IdentifierList)
+                        or tok[1].ttype == tokens.DML
                 ):
                     pass
                 else:
