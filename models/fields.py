@@ -77,34 +77,55 @@ class DjongoManager(Manager):
         )
 
 
-class ListField(Field):
+class FormlessField(Field):
+    empty_strings_allowed = False
+
+    def formfield(self, **kwargs):
+        raise TypeError(
+            'A Formless Field cannot be modified from Django Admin.'
+        )
+
+
+class ListField(FormlessField):
     """
-    MongoDB allows the saving of arbitrary data inside it's embedded array. The `ListField` is useful in such cases.
+    MongoDB allows the saving of python lists as BSON Array type data. The `ListField` is useful in such cases.
     """
     empty_strings_allowed = False
 
-    def __init__(self, *args, **kwargs):
-        self._value = []
-        super().__init__(*args, **kwargs)
-
-    def __set__(self, instance, value):
-        if not isinstance(value, list):
-            raise ValueError('Value must be a list')
-
-        self._value = value
-
-    def __get__(self, instance, owner):
-        return self._value
-
     def get_db_prep_value(self, value, connection, prepared=False):
-        if prepared:
-            return value
-
         if not isinstance(value, list):
-            raise ValueError('Value must be a list')
-
+            raise ValueError(
+                f'Value: {value} must be of type list'
+            )
         return value
 
+    def to_python(self, value):
+        if not isinstance(value, list):
+            raise ValueError(
+                f'Value: {value} stored in DB must be of type list'
+                'Did you miss any Migrations?'
+            )
+
+
+class DictField(FormlessField):
+    """
+    MongoDB allows the saving of python dicts as BSON object type data. The `DictField` is useful in such cases.
+    """
+    empty_strings_allowed = False
+
+    def get_db_prep_value(self, value, connection, prepared=False):
+        if not isinstance(value, dict):
+            raise ValueError(
+                f'Value: {value} must be of type list'
+            )
+        return value
+
+    def to_python(self, value):
+        if not isinstance(value, dict):
+            raise ValueError(
+                f'Value: {value} stored in DB must be of type list'
+                'Did you miss any Migrations?'
+            )
 
 class ArrayModelField(Field):
     """
