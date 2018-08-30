@@ -31,7 +31,7 @@ if __name__ == '__main__':
     cmds = [
         'makemigrations dummy',
         'migrate',
-        # 'inspectdb',
+        'inspectdb',
         'test dummy.tests.test_models'
     ]
     settings = '--settings=project.settings_precheckin'
