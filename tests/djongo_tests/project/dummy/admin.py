@@ -3,6 +3,7 @@ from django.contrib import admin
 from dummy.models.array_models import ArrayEntry
 from dummy.models.basic_models import Entry, Author, Blog
 from dummy.models.embedded_models import EmbeddedEntry
+from dummy.models.misc_models import ListEntry, DictEntry
 from dummy.models.reference_models import ReferenceEntry, ReferenceAuthor
 
 # Register your models here.
@@ -18,3 +19,6 @@ admin.site.register(ArrayEntry)
 admin.site.register(EmbeddedEntry)
 admin.site.register(ReferenceEntry)
 admin.site.register(ReferenceAuthor)
+admin.site.register(ListEntry)
+admin.site.register(DictEntry)
+
