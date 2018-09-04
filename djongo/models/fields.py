@@ -851,8 +851,10 @@ def create_forward_array_reference_manager(superclass, rel):
                 fks = set()
                 setattr(self.instance, self.field.get_attname(), fks)
 
+            fks = set(fks)
             new_fks = set()
             rh_field = self.field.foreign_related_fields[0]
+
             for obj in objs:
                 new_fks.add(getattr(obj, rh_field.get_attname()))
             fks.update(new_fks)
