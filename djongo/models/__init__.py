@@ -1,4 +1,5 @@
 from django.db.models import __all__ as models_all
+from django.db.models import *
 
 from .fields import (
     ArrayModelField, ListField, DjongoManager,
