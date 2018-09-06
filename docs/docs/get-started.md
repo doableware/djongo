@@ -23,6 +23,10 @@ Use MongoDB as a backend database for your Django project, without changing the 
 3. Run `manage.py makemigrations <app_name>` followed by `manage.py migrate` (ONLY the first time to create collections in MongoDB)
 4. YOU ARE SET! Have fun!
 
+## Questions
+
+Please raise a [support request](/djongo/support/) for questions, suggestions for improvements, issues regarding the usage. For bug reporting, you can use the git-hub issue system.
+
 ## Requirements
 
 1. Python 3.6 or higher.
@@ -154,10 +158,6 @@ class EntryView(DetailView):
 ```
 
 You can directly *access any [pymongo](https://api.mongodb.com/python/current/) command* by prefixing `mongo_` to the command name. For example, to perform `aggregate` on the BlogPage collection (BlogPage is stored as a table in SQL or a collection in MongoDB) the function name becomes `mongo_aggregate`. To directly insert a document (instead of `.save()` a model) use `mongo_insert_one()`
-
-## Questions
- 
-Any questions, suggestions for improvements, issues regarding the usage or to contribute to the package, please raise a git-hub issue ticket.
 
 ## Contribute
  
