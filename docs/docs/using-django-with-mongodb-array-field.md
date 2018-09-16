@@ -126,7 +126,7 @@ Note: In MongoDB the first element in the array starts at index 0.
 
 ### Creating Array fields
 
-A Model having an Array field can be created as follows:
+A Model with an Array field can be created as follows:
 
 ```python
 entry = Entry()

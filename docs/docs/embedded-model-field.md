@@ -15,11 +15,6 @@ class EmbeddedModelField(Field):
 ```
 Using MongoDB as your Django backend, you can embed any other model into your parent model and save it as an [embedded document](https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding).
 
-You should use embedded models when it does not make sense to store a data set as another table in the database and refer to it every time with a foreign key lookup. However, you still want to group the data set inside a separate model in python, to isolate its functionality.
-
-In case you don't plan on using your embedded model as a standalone model (which means it will always be embedded inside a parent model) you should add the `class Meta` and `abstract = True` This way Djongo will never register this model as an [actual model](https://docs.djangoproject.com/en/dev/topics/db/models/#abstract-base-classes).
-
-It is a good practice to **define embedded models as abstract models** and this is **strongly recommended**.
 
 ### Parameters
 
