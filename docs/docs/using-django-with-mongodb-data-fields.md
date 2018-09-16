@@ -111,9 +111,15 @@ Using compression to mitigate data duplication is fine but take a look at our En
 
 ## The Embedded Model
 
-A hierarchical structure to *Nature* is apparent. Electrons and protons add up to make atoms, which make molecules, that combine to form proteins, which make cells (and you know the rest).. There is hierarchy to *data* too.
+The hierarchical structure in *Nature* is apparent. For example,  electrons and protons add up to make atoms, which make molecules. There is hierarchy to *data* too.
 
 A `Blog` contains a `name` and a `tagline`. An `Entry` contains details of the `Blog`, the `Authors`, `body_text` and some `Meta` data. To make the `Entry` model manageable let us redefine it:
+
+You should use embedded models when it does not make sense to store a data set as another table in the database and refer to it every time with a foreign key lookup. However, you still want to group the data set in a hierarchical fashion, to isolate its functionality.
+
+In case you don't plan on using your embedded model as a standalone model (which means it will always be embedded inside a parent model) you should add the `class Meta` and `abstract = True` This way Djongo will never register this model as an [actual model](https://docs.djangoproject.com/en/dev/topics/db/models/#abstract-base-classes).
+
+It is a good practice to **define embedded models as abstract models** and this is **strongly recommended**.
 
 ```python
 from djongo import models
