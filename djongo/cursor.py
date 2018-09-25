@@ -13,6 +13,8 @@ class Cursor:
         self.db_conn = db_conn
         self.client_conn = client_conn
         self.connection_properties = connection_properties
+        # raw query mush have primary key
+        self.description = [['_id']]
         self.result = None
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -32,6 +34,11 @@ class Cursor:
             return getattr(self.db_conn, name)
         except AttributeError:
             raise
+
+    def __iter__(self):
+        for doc in self.result:
+            yield doc
+
 
     @property
     def rowcount(self):

@@ -5,6 +5,7 @@ SQL constructors.
 
 import re
 import typing
+import json
 from logging import getLogger
 
 from dataclasses import dataclass
@@ -677,6 +678,46 @@ class DeleteQuery(Query):
         return self.result.deleted_count
 
 
+class RawQuery(Query):
+
+    def __init__(self, *args):
+        self._cursor = None
+        super().__init__(*args)
+
+    def __iter__(self):
+        if self._cursor is None:
+            self._cursor = self._get_cursor()
+
+        cursor = self._cursor
+
+        for doc in cursor:
+            yield self._align_results(doc)
+        return
+
+    def parse(self):
+        # raw queestion dont' need to do anything
+        try:
+            self.raw_cmd_query = json.loads(self.statement.value)
+        except:
+            raise ValueError("Query {} is not json loadable".format(sm.value))
+
+    def _get_cursor(self):
+        cmd = self.raw_cmd_query.get('cmd')
+        collection = self.raw_cmd_query.get('collection')
+        args = self.raw_cmd_query.get('args', [])
+        kwargs = self.raw_cmd_query.get('kwargs', {})
+        if not collection:
+            raise ValueError("Collection name is not specified in query")
+        if not cmd:
+            raise ValueError("Command is not specified in query")
+
+        result = getattr(self.db_ref[collection], cmd)(*args, **kwargs)
+        logger.debug('raw query excuted: {}'.format(kwargs))
+        return result
+
+    def _align_results(self, doc):
+        return list(doc.items())
+
 class Result:
 
     def __init__(self,
@@ -757,7 +798,6 @@ class Result:
         except KeyError:
             logger.debug('\n Not implemented {} {}'.format(sm_type, statement))
             raise NotImplementedError(f'{sm_type} command not implemented for SQL {self._sql}')
-
         else:
             try:
                 return handler(self, statement)
@@ -890,6 +930,9 @@ class Result:
     def _select(self, sm):
         self._query = SelectQuery(self.db, self.connection_properties, sm, self._params)
 
+    def _raw(self, sm):
+        self._query = RawQuery(self.db, self.connection_properties, sm, self._params)
+
     FUNC_MAP = {
         'SELECT': _select,
         'UPDATE': _update,
@@ -897,7 +940,8 @@ class Result:
         'DELETE': _delete,
         'CREATE': _create,
         'DROP': _drop,
-        'ALTER': _alter
+        'ALTER': _alter,
+        'UNKNOWN': _raw,
     }
 
 # TODO: Need to do this
