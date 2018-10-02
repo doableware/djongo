@@ -9,7 +9,7 @@ header:
     overlay_image: /assets/images/landing-banner3.jpg
 
 punchline:
-  - excerpt: Use MongoDB as the backend for your Django project, without changing the Django ORM.
+  - excerpt: Use MongoDB with Django, by adding just one line of code.
 
 feature_row:
   - image_path: /assets/images/feature-admin-mongo.jpg
