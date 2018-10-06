@@ -11,11 +11,6 @@ main:
    - title: "Source"
      url: https://github.com/nesdis/djongo/
 
-#   - title: "Donate"
-#     url: /donate/
-#     thumbnail: /djongo/assets/images/heart.png
-
-
 docs:
   - title: "Get started"
     url: /get-started/
