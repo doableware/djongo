@@ -39,6 +39,7 @@ Use MongoDB as a backend database for your Django project, without changing the 
 
 I am inundated daily with several queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. To sustain this effort, I have decided to turn to you, my supporter. Visit my [Patreon page](https://www.patreon.com/nesdis) to understand the different levels of support and services you can get from me.
 
+
 ## How it works
 
 Djongo makes minimal changes to the existing Django ORM framework, which means unnecessary bugs do not crop up. It simply translates a SQL query string into a [MongoDB query document](https://docs.mongodb.com/manual/tutorial/query-documents/). As a result, all Django features, models, etc., work as is.
