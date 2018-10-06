@@ -45,7 +45,7 @@ DATABASES = {
 
 ## Dear Supporter
 
-Currently, I am inundated daily with several queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. To sustain this effort, I have decided to turn to you, my supporter. Visit my [Patreon page](https://www.patreon.com/nesdis) to understand the different levels of support and services you can get from me.
+I am inundated daily with your love, appreciation, queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. To sustain this effort, I have decided to turn to you, my supporter. Visit my [Patreon page](https://www.patreon.com/nesdis) to understand the different levels of support and services you can get from me.
 
 ## How it works
 
