@@ -3,7 +3,7 @@ main:
    - title: "Get Started"
      url: /get-started/
    - title: "Get Support"
-     url: /support/
+     url: https://www.patreon.com/nesdis/
    - title: "Discuss"
      url: /discuss/
    - title: "API Reference"

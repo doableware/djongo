@@ -23,9 +23,9 @@ Use MongoDB as a backend database for your Django project, without changing the 
 3. Run `manage.py makemigrations <app_name>` followed by `manage.py migrate` (ONLY the first time to create collections in MongoDB)
 4. YOU ARE SET! Have fun!
 
-## Questions
+## Dear Supporter
 
-Please raise a [support request](/djongo/support/) for questions, suggestions for improvements, issues regarding the usage. For bug reporting, you can use the git-hub issue system.
+I am inundated daily with several queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. To sustain this effort, I have decided to turn to you, my supporter. Visit my [Patreon page](https://www.patreon.com/nesdis) to understand the different levels of support and services you can get from me.
 
 ## Requirements
 
@@ -62,7 +62,7 @@ Djongo connector for MongoDB ensures that you:
  * Future proof your code
  * Atomic SQL JOIN operations
  
-Refer to [Integrating Django with MongoDB](/djongo/integrating-django-with-mongodb/) for the detailed reference. Get [expert support](/djongo/support/) for complex projects.
+Refer to [Integrating Django with MongoDB](/djongo/integrating-django-with-mongodb/) for the detailed reference. Get [expert support](https://www.patreon.com/nesdis) for complex projects.
 
 ## Use Django Admin to add documents
 
@@ -165,5 +165,5 @@ If you think djongo is useful, **please share it** with the world! Your endorsem
   
 You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](/djongo/django-mongodb-connector-design-document/) is implemented.
  
-Please contribute to the continued development and success of Djongo by [making a donation](/djongo/donate/).
+Please contribute to the continued development and success of Djongo by [making a donation](https://www.patreon.com/nesdis).
 
