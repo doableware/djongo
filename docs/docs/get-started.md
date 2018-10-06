@@ -23,10 +23,6 @@ Use MongoDB as a backend database for your Django project, without changing the 
 3. Run `manage.py makemigrations <app_name>` followed by `manage.py migrate` (ONLY the first time to create collections in MongoDB)
 4. YOU ARE SET! Have fun!
 
-## Dear Supporter
-
-I am inundated daily with several queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. To sustain this effort, I have decided to turn to you, my supporter. Visit my [Patreon page](https://www.patreon.com/nesdis) to understand the different levels of support and services you can get from me.
-
 ## Requirements
 
 1. Python 3.6 or higher.
@@ -39,6 +35,9 @@ I am inundated daily with several queries and feature requests for Djongo. Djong
       ```
    MongoDB 3.6 or higher is required.
 
+## Dear Supporter
+
+I am inundated daily with several queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. To sustain this effort, I have decided to turn to you, my supporter. Visit my [Patreon page](https://www.patreon.com/nesdis) to understand the different levels of support and services you can get from me.
 
 ## How it works
 
