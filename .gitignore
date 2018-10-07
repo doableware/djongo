@@ -1,8 +1,7 @@
 dist/
-medium/
+build/
 .idea/
 .tox/
-_site/
 *__pycache__*
 *egg-info/
 

@@ -43,6 +43,9 @@ DATABASES = {
       ```
      MongoDB 3.6 or higher is required.
 
+## Dear Supporter
+
+I am inundated daily with your love, appreciation, queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. To sustain this effort, I have decided to turn to you, my supporter. Visit my [Patreon page](https://www.patreon.com/nesdis) to understand the different levels of support and services you can get from me.
 
 ## How it works
 
@@ -73,10 +76,6 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
  Take a look at the [Enhancements project](https://github.com/nesdis/djongo/projects/1) that contains a list of features that must be implemented in future versions of Djongo. You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](https://nesdis.github.io/djongo/django-mongodb-connector-design-document/) is implemented.
  
  Add a star, show some love :) 
- 
-## Top Star Contributors
-
-[Rudolfce](https://github.com/rudolfce)
 
 ## Questions and Discussion
 
