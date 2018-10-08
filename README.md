@@ -5,7 +5,6 @@
 
 <h2>Driver for allowing Django to use MongoDB as the database backend</h2>
 
-
 Use MongoDB as a backend database for your Django project, without changing the Django ORM. Use the Django Admin GUI to add and modify documents in MongoDB. 
 
 ## Usage:
