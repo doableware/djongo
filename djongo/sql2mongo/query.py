@@ -226,13 +226,13 @@ class SelectQuery(Query):
             self.order.__class__ = AggOrderConverter
             pipeline.append(self.order.to_mongo())
 
-        if self.limit:
-            self.limit.__class__ = AggLimitConverter
-            pipeline.append(self.limit.to_mongo())
-        
         if self.offset:
             self.offset.__class__ = AggOffsetConverter
             pipeline.append(self.offset.to_mongo())
+
+        if self.limit:
+            self.limit.__class__ = AggLimitConverter
+            pipeline.append(self.limit.to_mongo())
 
         if (
             not (
