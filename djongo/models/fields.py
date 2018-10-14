@@ -905,7 +905,7 @@ def create_forward_array_reference_manager(superclass, rel):
                     }
                 }
             )
-            setattr(self.instance, self.field.attname, {})
+            setattr(self.instance, self.field.attname, set())
 
         clear.alters_data = True
 
