@@ -37,7 +37,11 @@ Use MongoDB as a backend database for your Django project, without changing the 
 
 ## Dear Supporter
 
-I am inundated daily with your love, appreciation, queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. To sustain this effort, I have decided to turn to you, my supporter. Visit my [Patreon page](https://www.patreon.com/nesdis/) to understand the different levels of support and services you can get from me.
+[![Djongo Support](/djongo/assets/images/support.png)](https://www.patreon.com/nesdis/)
+
+I am inundated daily with your appreciation, queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. To sustain this effort, I have decided to turn to you.
+
+Visit my [Patreon page](https://www.patreon.com/nesdis/) to understand the different levels of support and services you can get from me.
 
 
 ## How it works
