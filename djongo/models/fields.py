@@ -23,7 +23,7 @@ from django.db import connections as pymongo_connections
 from django.db import router, connections, transaction
 from django.db.models import (
     Manager, Model, Field, AutoField,
-    ForeignKey, BigAutoField
+    ForeignKey, BigAutoField, ManyToManyField, CASCADE
 )
 from django.forms import modelform_factory
 from django.utils.functional import cached_property
@@ -279,6 +279,12 @@ def _get_model_form_class(model_form_class, model_container, admin, request):
 
     return model_form_class
 
+class NestedFormSet(forms.formsets.BaseFormSet):
+    def add_fields(self, form, index):
+        for name, field in form.fields.items():
+            if isinstance(field, ArrayFormField):
+                field.name = '%s-%s' % (form.prefix, name)
+        super(NestedFormSet, self).add_fields(form, index)
 
 class ArrayFormField(forms.Field):
     def __init__(self, name, model_form_class, model_container, mdl_form_kw_l,
@@ -300,7 +306,7 @@ class ArrayFormField(forms.Field):
         }
 
         self.ArrayFormSet = forms.formset_factory(
-            self.model_form_class, can_delete=True)
+            self.model_form_class, formset=NestedFormSet, can_delete=True)
         super().__init__(error_messages=error_messages,
                          widget=widget, *args, **kwargs)
 
@@ -323,7 +329,7 @@ class ArrayFormField(forms.Field):
 
     def has_changed(self, initial, data):
         form_set_initial = []
-        for init in initial:
+        for init in initial or []:
             form_set_initial.append(
                 forms.model_to_dict(
                     init,
@@ -354,7 +360,7 @@ class ArrayFormBoundField(forms.BoundField):
                             exclude=field.model_form_class._meta.exclude
                         ))
 
-        self.form_set = field.ArrayFormSet(data, initial=initial, prefix=name)
+        elf.form_set = field.ArrayFormSet(data, initial=initial, prefix=self.html_name)
 
     def __getitem__(self, idx):
         if not isinstance(idx, (int, slice)):
@@ -557,6 +563,8 @@ class EmbeddedFormField(forms.MultiValueField):
         for field_name, field in self.model_form.fields.items():
             if isinstance(field, (forms.ModelChoiceField, forms.ModelMultipleChoiceField)):
                 continue
+            elif isinstance(field, ArrayFormField):
+                field.name = '%s-%s' % (self.model_form.prefix, field_name)
             form_fields.append(field)
             mdl_form_field_names.append(field_name)
             widgets.append(field.widget)
