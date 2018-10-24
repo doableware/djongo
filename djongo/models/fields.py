@@ -360,7 +360,7 @@ class ArrayFormBoundField(forms.BoundField):
                             exclude=field.model_form_class._meta.exclude
                         ))
 
-        elf.form_set = field.ArrayFormSet(data, initial=initial, prefix=self.html_name)
+        self.form_set = field.ArrayFormSet(data, initial=initial, prefix=self.html_name)
 
     def __getitem__(self, idx):
         if not isinstance(idx, (int, slice)):
