@@ -2,6 +2,8 @@
 
 <a href="https://opensource.org/licenses/BSD-3-Clause"><img src="https://img.shields.io/badge/License-BSD%203--Clause-blue.svg" alt="BSD3" height="18"></a>
 <a href="https://badge.fury.io/py/djongo"><img src="https://badge.fury.io/py/djongo.svg" alt="PyPI version" height="18"></a>
+<a href="#backers" alt="sponsors on Open Collective"><img src="https://opencollective.com/djongo/backers/badge.svg" /></a> 
+<a href="#sponsors" alt="Sponsors on Open Collective"><img src="https://opencollective.com/djongo/sponsors/badge.svg" /></a>
 
 <h2>Driver for allowing Django to use MongoDB as the database backend</h2>
 
@@ -82,3 +84,33 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
  * Issues, where things are not working as expected, please raise a git-hub issue ticket. 
  * For questions and clarifications regarding usage, please put it up on stackoverflow instead. 
    
+
+## Contributors
+
+This project exists thanks to all the people who contribute. 
+<a href="https://github.com/undefined/undefinedgraphs/contributors"><img src="https://opencollective.com/djongo/contributors.svg?width=890&button=false" /></a>
+
+
+## Backers
+
+Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/djongo#backer)]
+
+<a href="https://opencollective.com/djongo#backers" target="_blank"><img src="https://opencollective.com/djongo/backers.svg?width=890"></a>
+
+
+## Sponsors
+
+Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/djongo#sponsor)]
+
+<a href="https://opencollective.com/djongo/sponsor/0/website" target="_blank"><img src="https://opencollective.com/djongo/sponsor/0/avatar.svg"></a>
+<a href="https://opencollective.com/djongo/sponsor/1/website" target="_blank"><img src="https://opencollective.com/djongo/sponsor/1/avatar.svg"></a>
+<a href="https://opencollective.com/djongo/sponsor/2/website" target="_blank"><img src="https://opencollective.com/djongo/sponsor/2/avatar.svg"></a>
+<a href="https://opencollective.com/djongo/sponsor/3/website" target="_blank"><img src="https://opencollective.com/djongo/sponsor/3/avatar.svg"></a>
+<a href="https://opencollective.com/djongo/sponsor/4/website" target="_blank"><img src="https://opencollective.com/djongo/sponsor/4/avatar.svg"></a>
+<a href="https://opencollective.com/djongo/sponsor/5/website" target="_blank"><img src="https://opencollective.com/djongo/sponsor/5/avatar.svg"></a>
+<a href="https://opencollective.com/djongo/sponsor/6/website" target="_blank"><img src="https://opencollective.com/djongo/sponsor/6/avatar.svg"></a>
+<a href="https://opencollective.com/djongo/sponsor/7/website" target="_blank"><img src="https://opencollective.com/djongo/sponsor/7/avatar.svg"></a>
+<a href="https://opencollective.com/djongo/sponsor/8/website" target="_blank"><img src="https://opencollective.com/djongo/sponsor/8/avatar.svg"></a>
+<a href="https://opencollective.com/djongo/sponsor/9/website" target="_blank"><img src="https://opencollective.com/djongo/sponsor/9/avatar.svg"></a>
+
+
