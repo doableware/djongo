@@ -17,12 +17,12 @@ pip install djongo
 </li>
 <li> Into settings.py file of your project, add: 
 
-``` 
+```python
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
         'NAME': 'your-db-name',
-    }`
+    }
 }
 ```
 </li>   
