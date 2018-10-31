@@ -105,6 +105,7 @@ class ListField(FormlessField):
                 f'Value: {value} stored in DB must be of type list'
                 'Did you miss any Migrations?'
             )
+        return value
 
 
 class DictField(FormlessField):
@@ -126,6 +127,7 @@ class DictField(FormlessField):
                 f'Value: {value} stored in DB must be of type list'
                 'Did you miss any Migrations?'
             )
+        return value
 
 class ArrayModelField(Field):
     """
