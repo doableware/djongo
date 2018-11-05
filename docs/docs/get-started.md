@@ -35,13 +35,13 @@ Use MongoDB as a backend database for your Django project, without changing the 
       ```
    MongoDB 3.6 or higher is required.
 
-## Dear Supporter
+## Support
 
 [![Djongo Support](/djongo/assets/images/support.png)](https://www.patreon.com/nesdis/)
 
-I am inundated daily with your appreciation, queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. To sustain this effort, I have decided to turn to you.
+I am inundated daily with your appreciation, queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. To sustain this effort, I have decided to follow an organized approach.
 
-Visit my [Patreon page](https://www.patreon.com/nesdis/) to understand the different levels of support and services you can get from me.
+Visit my [Patreon page](https://www.patreon.com/nesdis/) to understand the different levels of support and to make requests.
 
 
 ## How it works
