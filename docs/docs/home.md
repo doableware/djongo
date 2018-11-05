@@ -32,6 +32,14 @@ feature_row:
     excerpt: "Use the Django Admin app to insert, modify and delete documents in MongoDB."
 
 
+addendum_row1:
+  - image_path: /assets/images/djongo-Nxt-v1.png
+    alt: "Djongo Next"
+    title: "Djongo Next"
+    excerpt: "The next generation connector. Ships with binary extensions for enterprise usage."
+    url: https://www.patreon.com/posts/djongonxt-next-22247203
+    btn_label: "Learn More"
+    btn_class: "btn--primary"
 ---
 
 
@@ -39,3 +47,4 @@ feature_row:
 
 {% include feature_row %}
 
+{% include feature_row id="addendum_row1" type="center" %}
