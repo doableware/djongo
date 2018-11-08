@@ -84,7 +84,7 @@ setup(
     version=find_version("djongo", "__init__.py"),
     packages=packages,
     url='https://nesdis.github.io/djongo/',
-    license='BSD',
+    license='AGPL',
     author='nesdis',
     author_email='nesdis@gmail.com',
     description=(
