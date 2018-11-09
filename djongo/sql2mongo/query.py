@@ -555,18 +555,24 @@ class AlterQuery(VoidQuery):
 
         while tok_id is not None:
             if tok.match(tokens.Keyword, (
-                    'COLUMN', 'CASCADE'
+                'CASCADE'
             )):
                 pass
             elif isinstance(tok, Identifier):
                 self._iden_name = tok.get_name()
+            elif tok.match(tokens.Keyword, 'CONSTRAINT'):
+                self.execute = self._drop_constraint
+            elif tok.match(tokens.Keyword, 'COLUMN'):
+                self.execute = self._drop_column
             else:
                 raise NotImplementedError
 
             tok_id, tok = sm.token_next(tok_id)
 
-        self.execute = self._drop_column
         return tok_id
+
+    def _drop_constraint(self):
+        self.db_ref[self.left_table].drop_index(self._iden_name)
 
     def _drop_column(self):
         self.db_ref[self.left_table].update(
