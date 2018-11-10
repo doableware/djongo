@@ -559,7 +559,7 @@ class AlterQuery(VoidQuery):
             )):
                 pass
             elif isinstance(tok, Identifier):
-                self._iden_name = tok.get_name()
+                self._iden_name = tok.get_real_name()
             elif tok.match(tokens.Keyword, 'CONSTRAINT'):
                 self.execute = self._drop_constraint
             elif tok.match(tokens.Keyword, 'COLUMN'):
@@ -581,7 +581,8 @@ class AlterQuery(VoidQuery):
                 '$unset': {
                     self._iden_name: ''
                 }
-            }
+            },
+            multi=True
         )
 
     def _add(self, tok_id):
@@ -600,7 +601,7 @@ class AlterQuery(VoidQuery):
             )):
                 pass
             elif isinstance(tok, Identifier):
-                self._iden_name = tok.get_name()
+                self._iden_name = tok.get_real_name()
             elif isinstance(tok, Parenthesis):
                 self.field_dir = [
                     (field.strip(' "'), 1)
@@ -637,7 +638,8 @@ class AlterQuery(VoidQuery):
                 '$set': {
                     self._iden_name: self._default
                 }
-            }
+            },
+            multi=True
         )
     def _index(self):
         self.db_ref[self.left_table].create_index(
