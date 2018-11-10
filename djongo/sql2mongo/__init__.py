@@ -77,8 +77,11 @@ class SQLFunc:
             return {'$max': '$' + field}
         elif self.func == 'SUM':
             return {'$sum': '$' + field}
+        elif self.func == 'AVG':
+            return {'$avg': '$' + field}
         else:
             raise SQLDecodeError
+
 
 class SQLToken:
 
