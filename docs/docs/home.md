@@ -15,8 +15,8 @@ feature_row:
 
   - image_path: /assets/images/support.png
     alt: "Support"
-    title: "Assured Support"
-    excerpt: "Instant support for queries on using Django with MongoDB"
+    title: "Support"
+    excerpt: "Get immediate support for queries on using Django with MongoDB"
     url: https://www.patreon.com/nesdis/
     btn_label: "Learn More"
     btn_class: "btn--primary"

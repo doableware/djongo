@@ -13,7 +13,7 @@ from django.test import TestCase, skipUnlessDBFeature
 from django.test.utils import CaptureQueriesContext
 
 from .models import (
-    FK1, Annotation, Article, Author, BaseA, Book, CategoryItem,
+    FK1, Annotation, Article, ArticleDerived, Author, BaseA, Book, CategoryItem,
     CategoryRelationship, Celebrity, Channel, Chapter, Child, ChildObjectA,
     Classroom, CommonMixedCaseForeignKeys, Company, Cover, CustomPk,
     CustomPkTag, Detail, DumbCategory, Eaten, Employment, ExtraInfo, Fan, Food,
@@ -2326,8 +2326,22 @@ class QuerySetSupportsPythonIdioms(TestCase):
             Article.objects.create(
                 name="Article {}".format(i), created=some_date)
 
+        for i in range(1, 8):
+            ArticleDerived.objects.create(
+                name="ArticleDerived {}".format(i), created=some_date)
+
     def get_ordered_articles(self):
         return Article.objects.all().order_by('name')
+
+    def get_ordered_derived_articles(self):
+        return ArticleDerived.objects.all().order_by('name')
+
+    def test_can_get_items_using_index_and_slice_notation_with_derived_model(self):
+        self.assertEqual(self.get_ordered_derived_articles()[0].name, 'ArticleDerived 1')
+        self.assertQuerysetEqual(
+            self.get_ordered_derived_articles()[4:6],
+            ["<ArticleDerived: ArticleDerived 5>", "<ArticleDerived: ArticleDerived 6>"]
+        )
 
     def test_can_get_items_using_index_and_slice_notation(self):
         self.assertEqual(self.get_ordered_articles()[0].name, 'Article 1')

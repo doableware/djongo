@@ -43,6 +43,11 @@ I am inundated daily with your appreciation, queries and feature requests for Dj
 
 Visit my [Patreon page](https://www.patreon.com/nesdis/) to understand the different levels of support and to make requests.
 
+## Sustainable Development
+
+Djongo as a project is at a stage where its development must be transformed into a sustained effort. Djongo has more than [100,000 downloads](https://pypistats.org/packages/djongo) on pypi and continues to grow. I am trying to establish a sustainable development model for the project, and would [love to hear your thoughts.](https://www.patreon.com/posts/to-only-take-22611438)
+
+Djongo is an open source project. Should it also be a free source project? (Free as in "free beer"). When you decide to adopt Djongo for your critical work, should it be backed up by a support mechanism? If not, would you still consider adopting it for your work? Read my [detailed post](https://www.patreon.com/posts/to-only-take-22611438) on sustainable development.
 
 ## How it works
 
