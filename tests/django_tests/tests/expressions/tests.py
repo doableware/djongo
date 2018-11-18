@@ -1,4 +1,5 @@
 import datetime
+import pickle
 import unittest
 import uuid
 from copy import deepcopy
@@ -373,7 +374,8 @@ class BasicExpressionsTests(TestCase):
         # other lookups could not reuse.
         qs = Employee.objects.filter(
             company_ceo_set__num_chairs=F('company_ceo_set__num_employees'),
-            company_ceo_set__num_chairs__gte=1)
+            company_ceo_set__num_chairs__gte=1,
+        )
         self.assertEqual(str(qs.query).count('JOIN'), 1)
 
     def test_ticket_18375_kwarg_ordering_2(self):
@@ -416,6 +418,10 @@ class BasicExpressionsTests(TestCase):
 
         outer = Employee.objects.annotate(is_point_of_contact=Exists(inner))
         self.assertIs(outer.exists(), True)
+
+    def test_exist_single_field_output_field(self):
+        queryset = Company.objects.values('pk')
+        self.assertIsInstance(Exists(queryset).output_field, models.BooleanField)
 
     def test_subquery(self):
         Company.objects.filter(name='Example Inc.').update(
@@ -530,6 +536,16 @@ class BasicExpressionsTests(TestCase):
         # This is a contrived example. It exercises the double OuterRef form.
         self.assertCountEqual(outer, [first, second, third])
 
+    def test_nested_subquery_outer_ref_with_autofield(self):
+        first = Time.objects.create(time='09:00')
+        second = Time.objects.create(time='17:00')
+        SimulationRun.objects.create(start=first, end=second, midpoint='12:00')
+        inner = SimulationRun.objects.filter(start=OuterRef(OuterRef('pk'))).values('start')
+        middle = Time.objects.annotate(other=Subquery(inner)).values('other')[:1]
+        outer = Time.objects.annotate(other=Subquery(middle, output_field=models.IntegerField()))
+        # This exercises the double OuterRef form with AutoField as pk.
+        self.assertCountEqual(outer, [first, second])
+
     def test_annotations_within_subquery(self):
         Company.objects.filter(num_employees__lt=50).update(ceo=Employee.objects.get(firstname='Frank'))
         inner = Company.objects.filter(
@@ -564,6 +580,24 @@ class BasicExpressionsTests(TestCase):
         inner = Result.objects.filter(result_time__gte=OuterRef('experiment__assigned'))
         outer = Result.objects.filter(pk__in=Subquery(inner.values('pk')))
         self.assertFalse(outer.exists())
+
+    def test_outerref_with_operator(self):
+        inner = Company.objects.filter(num_employees=OuterRef('ceo__salary') + 2)
+        outer = Company.objects.filter(pk__in=Subquery(inner.values('pk')))
+        self.assertEqual(outer.get().name, 'Test GmbH')
+
+    def test_pickle_expression(self):
+        expr = Value(1, output_field=models.IntegerField())
+        expr.convert_value  # populate cached property
+        self.assertEqual(pickle.loads(pickle.dumps(expr)), expr)
+
+    def test_incorrect_field_in_F_expression(self):
+        with self.assertRaisesMessage(FieldError, "Cannot resolve keyword 'nope' into field."):
+            list(Employee.objects.filter(firstname=F('nope')))
+
+    def test_incorrect_joined_field_in_F_expression(self):
+        with self.assertRaisesMessage(FieldError, "Cannot resolve keyword 'nope' into field."):
+            list(Company.objects.filter(ceo__pk=F('point_of_contact__nope')))
 
 
 class IterableLookupInnerExpressionsTests(TestCase):
@@ -774,17 +808,20 @@ class ExpressionsTests(TestCase):
         self.assertQuerysetEqual(
             Employee.objects.filter(firstname__contains=F('lastname')),
             ["<Employee: %Joh\\nny %Joh\\n>", "<Employee: Jean-Claude Claude>", "<Employee: Johnny John>"],
-            ordered=False)
+            ordered=False,
+        )
 
         self.assertQuerysetEqual(
             Employee.objects.filter(firstname__startswith=F('lastname')),
             ["<Employee: %Joh\\nny %Joh\\n>", "<Employee: Johnny John>"],
-            ordered=False)
+            ordered=False,
+        )
 
         self.assertQuerysetEqual(
             Employee.objects.filter(firstname__endswith=F('lastname')),
             ["<Employee: Jean-Claude Claude>"],
-            ordered=False)
+            ordered=False,
+        )
 
     def test_insensitive_patterns_escape(self):
         r"""
@@ -806,17 +843,20 @@ class ExpressionsTests(TestCase):
         self.assertQuerysetEqual(
             Employee.objects.filter(firstname__icontains=F('lastname')),
             ["<Employee: %Joh\\nny %joh\\n>", "<Employee: Jean-Claude claude>", "<Employee: Johnny john>"],
-            ordered=False)
+            ordered=False,
+        )
 
         self.assertQuerysetEqual(
             Employee.objects.filter(firstname__istartswith=F('lastname')),
             ["<Employee: %Joh\\nny %joh\\n>", "<Employee: Johnny john>"],
-            ordered=False)
+            ordered=False,
+        )
 
         self.assertQuerysetEqual(
             Employee.objects.filter(firstname__iendswith=F('lastname')),
             ["<Employee: Jean-Claude claude>"],
-            ordered=False)
+            ordered=False,
+        )
 
 
 class ExpressionsNumericTests(TestCase):
@@ -889,10 +929,6 @@ class ExpressionsNumericTests(TestCase):
 
         self.assertEqual(Number.objects.get(pk=n.pk).integer, 10)
         self.assertEqual(Number.objects.get(pk=n.pk).float, Approximate(256.900, places=3))
-
-    def test_incorrect_field_expression(self):
-        with self.assertRaisesMessage(FieldError, "Cannot resolve keyword 'nope' into field."):
-            list(Employee.objects.filter(firstname=F('nope')))
 
 
 class ExpressionOperatorTests(TestCase):

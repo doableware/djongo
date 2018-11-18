@@ -84,7 +84,7 @@ class TestUtilsHtml(SimpleTestCase):
             ('d<a:b c:d>e</p>f', 'def'),
             ('<strong>foo</strong><a href="http://example.com">bar</a>', 'foobar'),
             # caused infinite loop on Pythons not patched with
-            # http://bugs.python.org/issue20288
+            # https://bugs.python.org/issue20288
             ('&gotcha&#;<>', '&gotcha&#;<>'),
             ('<sc<!-- -->ript>test<<!-- -->/script>', 'ript>test'),
             ('<script>alert()</script>&h', 'alert()h'),
@@ -249,7 +249,22 @@ class TestUtilsHtml(SimpleTestCase):
                 lazystr('Search for google.com/?q=!'),
                 'Search for <a href="http://google.com/?q=">google.com/?q=</a>!'
             ),
+            ('foo@example.com', '<a href="mailto:foo@example.com">foo@example.com</a>'),
         )
         for value, output in tests:
             with self.subTest(value=value):
                 self.assertEqual(urlize(value), output)
+
+    def test_urlize_unchanged_inputs(self):
+        tests = (
+            ('a' + '@a' * 50000) + 'a',  # simple_email_re catastrophic test
+            ('a' + '.' * 1000000) + 'a',  # trailing_punctuation catastrophic test
+            'foo@',
+            '@foo.com',
+            'foo@.example.com',
+            'foo@localhost',
+            'foo@localhost.',
+        )
+        for value in tests:
+            with self.subTest(value=value):
+                self.assertEqual(urlize(value), value)
