@@ -359,10 +359,6 @@ class Article(models.Model):
         return self.name
 
 
-class ArticleDerived(Article):
-    pass
-
-
 class Food(models.Model):
     name = models.CharField(max_length=20, unique=True)
 
@@ -680,7 +676,7 @@ class Student(models.Model):
 
 class Classroom(models.Model):
     name = models.CharField(max_length=20)
-    has_blackboard = models.NullBooleanField()
+    has_blackboard = models.BooleanField(null=True)
     school = models.ForeignKey(School, models.CASCADE)
     students = models.ManyToManyField(Student, related_name='classroom')
 
