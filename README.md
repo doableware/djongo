@@ -1,9 +1,7 @@
 <h1>djongo</h1>
 
 [![Build Status](https://travis-ci.com/nesdis/djongo.svg?branch=master)](https://travis-ci.com/nesdis/djongo)
-
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-
 <a href="https://badge.fury.io/py/djongo"><img src="https://badge.fury.io/py/djongo.svg" alt="PyPI version" height="18"></a>
 
 <h2>Driver for allowing Django to use MongoDB as the database backend</h2>
