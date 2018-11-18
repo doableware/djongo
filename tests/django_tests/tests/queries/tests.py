@@ -13,7 +13,7 @@ from django.test import TestCase, skipUnlessDBFeature
 from django.test.utils import CaptureQueriesContext
 
 from .models import (
-    FK1, Annotation, Article, ArticleDerived, Author, BaseA, Book, CategoryItem,
+    FK1, Annotation, Article, Author, BaseA, Book, CategoryItem,
     CategoryRelationship, Celebrity, Channel, Chapter, Child, ChildObjectA,
     Classroom, CommonMixedCaseForeignKeys, Company, Cover, CustomPk,
     CustomPkTag, Detail, DumbCategory, Eaten, Employment, ExtraInfo, Fan, Food,
@@ -1636,7 +1636,8 @@ class Queries5Tests(TestCase):
             ['<Ranking: 1: a3>', '<Ranking: 2: a2>', '<Ranking: 3: a1>']
         )
 
-        qs = Ranking.objects.extra(select={'good': 'case when rank > 2 then 1 else 0 end'})
+        sql = 'case when %s > 2 then 1 else 0 end' % connection.ops.quote_name('rank')
+        qs = Ranking.objects.extra(select={'good': sql})
         self.assertEqual(
             [o.good for o in qs.extra(order_by=('-good',))],
             [True, False, False]
@@ -1657,7 +1658,8 @@ class Queries5Tests(TestCase):
     def test_ticket7256(self):
         # An empty values() call includes all aliases, including those from an
         # extra()
-        qs = Ranking.objects.extra(select={'good': 'case when rank > 2 then 1 else 0 end'})
+        sql = 'case when %s > 2 then 1 else 0 end' % connection.ops.quote_name('rank')
+        qs = Ranking.objects.extra(select={'good': sql})
         dicts = qs.values().order_by('id')
         for d in dicts:
             del d['id']
@@ -1834,15 +1836,15 @@ class Queries6Tests(TestCase):
     @classmethod
     def setUpTestData(cls):
         generic = NamedCategory.objects.create(name="Generic")
-        t1 = Tag.objects.create(name='t1', category=generic)
-        Tag.objects.create(name='t2', parent=t1, category=generic)
-        t3 = Tag.objects.create(name='t3', parent=t1)
-        t4 = Tag.objects.create(name='t4', parent=t3)
-        Tag.objects.create(name='t5', parent=t3)
+        cls.t1 = Tag.objects.create(name='t1', category=generic)
+        cls.t2 = Tag.objects.create(name='t2', parent=cls.t1, category=generic)
+        cls.t3 = Tag.objects.create(name='t3', parent=cls.t1)
+        cls.t4 = Tag.objects.create(name='t4', parent=cls.t3)
+        cls.t5 = Tag.objects.create(name='t5', parent=cls.t3)
         n1 = Note.objects.create(note='n1', misc='foo', id=1)
-        ann1 = Annotation.objects.create(name='a1', tag=t1)
+        ann1 = Annotation.objects.create(name='a1', tag=cls.t1)
         ann1.notes.add(n1)
-        Annotation.objects.create(name='a2', tag=t4)
+        Annotation.objects.create(name='a2', tag=cls.t4)
 
     def test_parallel_iterators(self):
         # Parallel iterators work.
@@ -1920,6 +1922,24 @@ class Queries6Tests(TestCase):
 
     def test_distinct_ordered_sliced_subquery_aggregation(self):
         self.assertEqual(Tag.objects.distinct().order_by('category__name')[:3].count(), 3)
+
+    def test_multiple_columns_with_the_same_name_slice(self):
+        self.assertEqual(
+            list(Tag.objects.order_by('name').values_list('name', 'category__name')[:2]),
+            [('t1', 'Generic'), ('t2', 'Generic')],
+        )
+        self.assertSequenceEqual(
+            Tag.objects.order_by('name').select_related('category')[:2],
+            [self.t1, self.t2],
+        )
+        self.assertEqual(
+            list(Tag.objects.order_by('-name').values_list('name', 'parent__name')[:2]),
+            [('t5', 't3'), ('t4', 't3')],
+        )
+        self.assertSequenceEqual(
+            Tag.objects.order_by('-name').select_related('parent')[:2],
+            [self.t5, self.t4],
+        )
 
 
 class RawQueriesTests(TestCase):
@@ -2235,7 +2255,8 @@ class ValuesQuerysetTests(TestCase):
         # testing for ticket 14930 issues
         qs = Number.objects.extra(
             select={'value_plus_one': 'num+1', 'value_minus_one': 'num-1'},
-            order_by=['value_minus_one'])
+            order_by=['value_minus_one'],
+        )
         qs = qs.values('num')
 
     def test_extra_select_params_values_order_in_extra(self):
@@ -2243,7 +2264,8 @@ class ValuesQuerysetTests(TestCase):
         qs = Number.objects.extra(
             select={'value_plus_x': 'num+%s'},
             select_params=[1],
-            order_by=['value_plus_x'])
+            order_by=['value_plus_x'],
+        )
         qs = qs.filter(num=72)
         qs = qs.values('num')
         self.assertSequenceEqual(qs, [{'num': 72}])
@@ -2326,22 +2348,8 @@ class QuerySetSupportsPythonIdioms(TestCase):
             Article.objects.create(
                 name="Article {}".format(i), created=some_date)
 
-        for i in range(1, 8):
-            ArticleDerived.objects.create(
-                name="ArticleDerived {}".format(i), created=some_date)
-
     def get_ordered_articles(self):
         return Article.objects.all().order_by('name')
-
-    def get_ordered_derived_articles(self):
-        return ArticleDerived.objects.all().order_by('name')
-
-    def test_can_get_items_using_index_and_slice_notation_with_derived_model(self):
-        self.assertEqual(self.get_ordered_derived_articles()[0].name, 'ArticleDerived 1')
-        self.assertQuerysetEqual(
-            self.get_ordered_derived_articles()[4:6],
-            ["<ArticleDerived: ArticleDerived 5>", "<ArticleDerived: ArticleDerived 6>"]
-        )
 
     def test_can_get_items_using_index_and_slice_notation(self):
         self.assertEqual(self.get_ordered_articles()[0].name, 'Article 1')

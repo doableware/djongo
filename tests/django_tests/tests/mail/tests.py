@@ -357,6 +357,11 @@ class MailTests(HeadersCheckMixin, SimpleTestCase):
         msg.attach('example.txt', 'Text file content', 'text/plain')
         self.assertIn(html_content, msg.message().as_string())
 
+    def test_none_body(self):
+        msg = EmailMessage('subject', None, 'from@example.com', ['to@example.com'])
+        self.assertEqual(msg.body, '')
+        self.assertEqual(msg.message().get_payload(), '')
+
     def test_encoding(self):
         """
         Regression for #12791 - Encode body correctly with other encodings
@@ -1295,7 +1300,8 @@ class SMTPBackendTests(BaseEmailBackendTests, SMTPBackendTestsBase):
 
     @override_settings(
         EMAIL_HOST_USER="not empty username",
-        EMAIL_HOST_PASSWORD="not empty password")
+        EMAIL_HOST_PASSWORD='not empty password',
+    )
     def test_email_authentication_use_settings(self):
         backend = smtp.EmailBackend()
         self.assertEqual(backend.username, 'not empty username')
@@ -1303,7 +1309,8 @@ class SMTPBackendTests(BaseEmailBackendTests, SMTPBackendTestsBase):
 
     @override_settings(
         EMAIL_HOST_USER="not empty username",
-        EMAIL_HOST_PASSWORD="not empty password")
+        EMAIL_HOST_PASSWORD='not empty password',
+    )
     def test_email_authentication_override_settings(self):
         backend = smtp.EmailBackend(username='username', password='password')
         self.assertEqual(backend.username, 'username')
@@ -1311,7 +1318,8 @@ class SMTPBackendTests(BaseEmailBackendTests, SMTPBackendTestsBase):
 
     @override_settings(
         EMAIL_HOST_USER="not empty username",
-        EMAIL_HOST_PASSWORD="not empty password")
+        EMAIL_HOST_PASSWORD='not empty password',
+    )
     def test_email_disabled_authentication(self):
         backend = smtp.EmailBackend(username='', password='')
         self.assertEqual(backend.username, '')
