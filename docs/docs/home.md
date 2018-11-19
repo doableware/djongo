@@ -9,7 +9,7 @@ header:
     overlay_image: /assets/images/landing-banner3.jpg
 
 punchline:
-  - excerpt: Use MongoDB with Django, by adding just one line of code.
+  - excerpt: The only connector that let's you use Django with Mongodb *without* changing the Django ORM.
 
 feature_row:
 
