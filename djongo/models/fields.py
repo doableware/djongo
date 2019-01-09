@@ -117,17 +117,18 @@ class DictField(FormlessField):
     def get_db_prep_value(self, value, connection, prepared=False):
         if not isinstance(value, dict):
             raise ValueError(
-                f'Value: {value} must be of type list'
+                f'Value: {value} must be of type dict'
             )
         return value
 
     def to_python(self, value):
         if not isinstance(value, dict):
             raise ValueError(
-                f'Value: {value} stored in DB must be of type list'
+                f'Value: {value} stored in DB must be of type dict'
                 'Did you miss any Migrations?'
             )
         return value
+
 
 class ArrayModelField(Field):
     """
