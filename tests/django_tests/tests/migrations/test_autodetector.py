@@ -783,8 +783,10 @@ class AutodetectorTests(TestCase):
         self.assertOperationAttributes(changes, "testapp", 0, 0, name="name", preserve_default=True)
         self.assertOperationFieldAttributes(changes, "testapp", 0, 0, default='Ada Lovelace')
 
-    @mock.patch('django.db.migrations.questioner.MigrationQuestioner.ask_not_null_alteration',
-                return_value=models.NOT_PROVIDED)
+    @mock.patch(
+        'django.db.migrations.questioner.MigrationQuestioner.ask_not_null_alteration',
+        return_value=models.NOT_PROVIDED,
+    )
     def test_alter_field_to_not_null_without_default(self, mocked_ask_method):
         """
         #23609 - Tests autodetection of nullable to non-nullable alterations.
@@ -797,8 +799,10 @@ class AutodetectorTests(TestCase):
         self.assertOperationAttributes(changes, "testapp", 0, 0, name="name", preserve_default=True)
         self.assertOperationFieldAttributes(changes, "testapp", 0, 0, default=models.NOT_PROVIDED)
 
-    @mock.patch('django.db.migrations.questioner.MigrationQuestioner.ask_not_null_alteration',
-                return_value='Some Name')
+    @mock.patch(
+        'django.db.migrations.questioner.MigrationQuestioner.ask_not_null_alteration',
+        return_value='Some Name',
+    )
     def test_alter_field_to_not_null_oneoff_default(self, mocked_ask_method):
         """
         #23609 - Tests autodetection of nullable to non-nullable alterations.
@@ -916,6 +920,67 @@ class AutodetectorTests(TestCase):
         self.assertOperationAttributes(
             changes, 'app', 0, 1, model_name='bar', old_name='second', new_name='second_renamed',
         )
+
+    def test_rename_field_preserved_db_column(self):
+        """
+        RenameField is used if a field is renamed and db_column equal to the
+        old field's column is added.
+        """
+        before = [
+            ModelState('app', 'Foo', [
+                ('id', models.AutoField(primary_key=True)),
+                ('field', models.IntegerField()),
+            ]),
+        ]
+        after = [
+            ModelState('app', 'Foo', [
+                ('id', models.AutoField(primary_key=True)),
+                ('renamed_field', models.IntegerField(db_column='field')),
+            ]),
+        ]
+        changes = self.get_changes(before, after, MigrationQuestioner({'ask_rename': True}))
+        self.assertNumberMigrations(changes, 'app', 1)
+        self.assertOperationTypes(changes, 'app', 0, ['RenameField', 'AlterField'])
+        self.assertOperationAttributes(
+            changes, 'app', 0, 0, model_name='foo', old_name='field', new_name='renamed_field',
+        )
+        self.assertOperationAttributes(changes, 'app', 0, 1, model_name='foo', name='renamed_field')
+        self.assertEqual(changes['app'][0].operations[-1].field.deconstruct(), (
+            'renamed_field', 'django.db.models.IntegerField', [], {'db_column': 'field'},
+        ))
+
+    def test_rename_related_field_preserved_db_column(self):
+        before = [
+            ModelState('app', 'Foo', [
+                ('id', models.AutoField(primary_key=True)),
+            ]),
+            ModelState('app', 'Bar', [
+                ('id', models.AutoField(primary_key=True)),
+                ('foo', models.ForeignKey('app.Foo', models.CASCADE)),
+            ]),
+        ]
+        after = [
+            ModelState('app', 'Foo', [
+                ('id', models.AutoField(primary_key=True)),
+            ]),
+            ModelState('app', 'Bar', [
+                ('id', models.AutoField(primary_key=True)),
+                ('renamed_foo', models.ForeignKey('app.Foo', models.CASCADE, db_column='foo_id')),
+            ]),
+        ]
+        changes = self.get_changes(before, after, MigrationQuestioner({'ask_rename': True}))
+        self.assertNumberMigrations(changes, 'app', 1)
+        self.assertOperationTypes(changes, 'app', 0, ['RenameField', 'AlterField'])
+        self.assertOperationAttributes(
+            changes, 'app', 0, 0, model_name='bar', old_name='foo', new_name='renamed_foo',
+        )
+        self.assertOperationAttributes(changes, 'app', 0, 1, model_name='bar', name='renamed_foo')
+        self.assertEqual(changes['app'][0].operations[-1].field.deconstruct(), (
+            'renamed_foo',
+            'django.db.models.ForeignKey',
+            [],
+            {'to': 'app.Foo', 'on_delete': models.CASCADE, 'db_column': 'foo_id'},
+        ))
 
     def test_rename_model(self):
         """Tests autodetection of renamed models."""
@@ -2006,6 +2071,25 @@ class AutodetectorTests(TestCase):
         self.assertOperationTypes(changes, 'thirdapp', 0, ["CreateModel", "CreateModel"])
         self.assertOperationAttributes(changes, 'thirdapp', 0, 0, name="CustomUser")
         self.assertOperationAttributes(changes, 'thirdapp', 0, 1, name="Aardvark")
+
+    def test_default_related_name_option(self):
+        model_state = ModelState('app', 'model', [
+            ('id', models.AutoField(primary_key=True)),
+        ], options={'default_related_name': 'related_name'})
+        changes = self.get_changes([], [model_state])
+        self.assertNumberMigrations(changes, 'app', 1)
+        self.assertOperationTypes(changes, 'app', 0, ['CreateModel'])
+        self.assertOperationAttributes(
+            changes, 'app', 0, 0, name='model',
+            options={'default_related_name': 'related_name'},
+        )
+        altered_model_state = ModelState('app', 'Model', [
+            ('id', models.AutoField(primary_key=True)),
+        ])
+        changes = self.get_changes([model_state], [altered_model_state])
+        self.assertNumberMigrations(changes, 'app', 1)
+        self.assertOperationTypes(changes, 'app', 0, ['AlterModelOptions'])
+        self.assertOperationAttributes(changes, 'app', 0, 0, name='model', options={})
 
     @override_settings(AUTH_USER_MODEL="thirdapp.CustomUser")
     def test_swappable_first_setting(self):

@@ -9,9 +9,10 @@ from pymongo import MongoClient
 from mock_tests import test_sqlparsing
 
 client = MongoClient()
-TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 
 if __name__ == '__main__':
+
     result = unittest.TextTestRunner(verbosity=2, failfast=True).run(
         unittest.TestLoader().loadTestsFromModule(test_sqlparsing)
     )
@@ -34,7 +35,8 @@ if __name__ == '__main__':
         'inspectdb',
         'test dummy.tests.test_models'
     ]
+
     settings = '--settings=project.settings_precheckin'
     for cmd in cmds:
         print(f'python {manage_py} {cmd} {settings}')
-        subprocess.run(f'python {manage_py} {cmd} {settings}', check=True)
+        subprocess.run(f'python {manage_py} {cmd} {settings}'.split(), check=True)

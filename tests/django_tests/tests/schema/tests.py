@@ -12,7 +12,7 @@ from django.db.models.deletion import CASCADE, PROTECT
 from django.db.models.fields import (
     AutoField, BigAutoField, BigIntegerField, BinaryField, BooleanField,
     CharField, DateField, DateTimeField, IntegerField, PositiveIntegerField,
-    SlugField, TextField, TimeField,
+    SlugField, TextField, TimeField, UUIDField,
 )
 from django.db.models.fields.related import (
     ForeignKey, ForeignObject, ManyToManyField, OneToOneField,
@@ -476,10 +476,7 @@ class SchemaTests(TransactionTestCase):
         columns = self.column_classes(Author)
         # BooleanField are stored as TINYINT(1) on MySQL.
         field_type = columns['awesome'][0]
-        self.assertEqual(
-            field_type,
-            connection.features.introspected_boolean_field_type(new_field)
-        )
+        self.assertEqual(field_type, connection.features.introspected_boolean_field_type)
 
     def test_add_field_default_transform(self):
         """
@@ -604,6 +601,19 @@ class SchemaTests(TransactionTestCase):
         new_field.set_attributes_from_name('id')
         new_field.model = Author
         with connection.schema_editor() as editor:
+            editor.alter_field(Author, old_field, new_field, strict=True)
+
+    def test_alter_not_unique_field_to_primary_key(self):
+        # Create the table.
+        with connection.schema_editor() as editor:
+            editor.create_model(Author)
+        # Change UUIDField to primary key.
+        old_field = Author._meta.get_field('uuid')
+        new_field = UUIDField(primary_key=True)
+        new_field.set_attributes_from_name('uuid')
+        new_field.model = Author
+        with connection.schema_editor() as editor:
+            editor.remove_field(Author, Author._meta.get_field('id'))
             editor.alter_field(Author, old_field, new_field, strict=True)
 
     def test_alter_text_field(self):
@@ -1547,6 +1557,89 @@ class SchemaTests(TransactionTestCase):
         with self.assertRaises(IntegrityError):
             TagUniqueRename.objects.create(title="bar", slug2="foo")
         Tag.objects.all().delete()
+
+    def test_unique_name_quoting(self):
+        old_table_name = TagUniqueRename._meta.db_table
+        try:
+            with connection.schema_editor() as editor:
+                editor.create_model(TagUniqueRename)
+                editor.alter_db_table(TagUniqueRename, old_table_name, 'unique-table')
+                TagUniqueRename._meta.db_table = 'unique-table'
+                # This fails if the unique index name isn't quoted.
+                editor.alter_unique_together(TagUniqueRename, [], (('title', 'slug2'),))
+        finally:
+            TagUniqueRename._meta.db_table = old_table_name
+
+    @isolate_apps('schema')
+    @unittest.skipIf(connection.vendor == 'sqlite', 'SQLite naively remakes the table on field alteration.')
+    @skipUnlessDBFeature('supports_foreign_keys')
+    def test_unique_no_unnecessary_fk_drops(self):
+        """
+        If AlterField isn't selective about dropping foreign key constraints
+        when modifying a field with a unique constraint, the AlterField
+        incorrectly drops and recreates the Book.author foreign key even though
+        it doesn't restrict the field being changed (#29193).
+        """
+        class Author(Model):
+            name = CharField(max_length=254, unique=True)
+
+            class Meta:
+                app_label = 'schema'
+
+        class Book(Model):
+            author = ForeignKey(Author, CASCADE)
+
+            class Meta:
+                app_label = 'schema'
+
+        with connection.schema_editor() as editor:
+            editor.create_model(Author)
+            editor.create_model(Book)
+        new_field = CharField(max_length=255, unique=True)
+        new_field.model = Author
+        new_field.set_attributes_from_name('name')
+        with self.assertLogs('django.db.backends.schema', 'DEBUG') as cm:
+            with connection.schema_editor() as editor:
+                editor.alter_field(Author, Author._meta.get_field('name'), new_field)
+        # One SQL statement is executed to alter the field.
+        self.assertEqual(len(cm.records), 1)
+
+    @isolate_apps('schema')
+    @unittest.skipIf(connection.vendor == 'sqlite', 'SQLite remakes the table on field alteration.')
+    def test_unique_and_reverse_m2m(self):
+        """
+        AlterField can modify a unique field when there's a reverse M2M
+        relation on the model.
+        """
+        class Tag(Model):
+            title = CharField(max_length=255)
+            slug = SlugField(unique=True)
+
+            class Meta:
+                app_label = 'schema'
+
+        class Book(Model):
+            tags = ManyToManyField(Tag, related_name='books')
+
+            class Meta:
+                app_label = 'schema'
+
+        self.isolated_local_models = [Book._meta.get_field('tags').remote_field.through]
+        with connection.schema_editor() as editor:
+            editor.create_model(Tag)
+            editor.create_model(Book)
+        new_field = SlugField(max_length=75, unique=True)
+        new_field.model = Tag
+        new_field.set_attributes_from_name('slug')
+        with self.assertLogs('django.db.backends.schema', 'DEBUG') as cm:
+            with connection.schema_editor() as editor:
+                editor.alter_field(Tag, Tag._meta.get_field('slug'), new_field)
+        # One SQL statement is executed to alter the field.
+        self.assertEqual(len(cm.records), 1)
+        # Ensure that the field is still unique.
+        Tag.objects.create(title='foo', slug='foo')
+        with self.assertRaises(IntegrityError):
+            Tag.objects.create(title='bar', slug='foo')
 
     def test_unique_together(self):
         """
