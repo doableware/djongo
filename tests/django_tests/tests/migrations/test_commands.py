@@ -786,6 +786,12 @@ class MakeMigrationsTests(MigrationTestBase):
             call_command("makemigrations", "this_app_does_not_exist", stderr=err)
         self.assertIn("'this_app_does_not_exist' could not be found.", err.getvalue())
 
+    def test_makemigrations_app_name_with_dots(self):
+        err = io.StringIO()
+        with self.assertRaises(SystemExit):
+            call_command('makemigrations', 'invalid.app.label', stderr=err)
+        self.assertIn("'invalid.app.label' is not a valid app label. Did you mean 'label'?", err.getvalue())
+
     def test_makemigrations_empty_no_app_specified(self):
         """
         makemigrations exits if no app is specified with 'empty' mode.
@@ -1115,6 +1121,16 @@ class MakeMigrationsTests(MigrationTestBase):
 
         # Command output indicates the migration is created.
         self.assertIn(" - Create model SillyModel", out.getvalue())
+
+    @override_settings(MIGRATION_MODULES={'migrations': 'some.nonexistent.path'})
+    def test_makemigrations_migrations_modules_nonexistent_toplevel_package(self):
+        msg = (
+            'Could not locate an appropriate location to create migrations '
+            'package some.nonexistent.path. Make sure the toplevel package '
+            'exists and can be imported.'
+        )
+        with self.assertRaisesMessage(ValueError, msg):
+            call_command('makemigrations', 'migrations', empty=True, verbosity=0)
 
     def test_makemigrations_interactive_by_default(self):
         """

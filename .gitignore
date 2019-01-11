@@ -27,6 +27,3 @@ minimal-mistakes
 !docs/_includes/nav_list
 !docs/_layouts/single.html
 
-
-/tests/dummy_app/dummy/migrations
-/tests/dummy_app/djongo-test
