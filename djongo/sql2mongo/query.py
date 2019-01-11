@@ -508,6 +508,8 @@ class AlterQuery(VoidQuery):
 
     def __init__(self, *args):
         self._iden_name = None
+        self._old_column = None
+        self._new_column = None
         self._default = None
         self._cascade = None
         self._null = None
@@ -530,10 +532,43 @@ class AlterQuery(VoidQuery):
                 tok_id = self._drop(tok_id)
             elif tok.match(tokens.Keyword.DDL, 'ALTER'):
                 tok_id = self._alter(tok_id)
+            elif tok.match(tokens.Keyword, 'RENAME'):
+                tok_id = self._rename(tok_id)
             else:
                 raise NotImplementedError
 
             tok_id, tok = sm.token_next(tok_id)
+
+    def _rename(self, tok_id):
+        sm = self.statement
+        tok_id, tok = sm.token_next(tok_id)
+
+        to = False
+        while tok_id is not None:
+            if tok.match(tokens.Keyword, ('COLUMN'),):
+                self.execute = self._rename_column
+            if tok.match(tokens.Keyword, ('TO'),):
+                to = True
+            elif isinstance(tok, Identifier):
+                if not to:
+                    self.old_column = tok.get_real_name()
+                else:
+                    self.new_column = tok.get_real_name()
+
+            tok_id, tok = sm.token_next(tok_id)
+
+        return tok_id
+
+    def _rename_column(self):
+        self.db_ref[self.left_table].update(
+            {},
+            {
+                '$rename': {
+                    self.old_column: self.new_column
+                }
+            },
+            multi=True
+        )
 
     def _alter(self, tok_id):
         self.execute = lambda: None
