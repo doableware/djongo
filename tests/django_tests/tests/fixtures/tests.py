@@ -334,7 +334,8 @@ class FixtureLoadingTests(DumpDataAssertMixin, TestCase):
         self._dumpdata_assert(
             ['sites', 'fixtures'],
             '[{"pk": 1, "model": "sites.site", "fields": {"domain": "example.com", "name": "example.com"}}]',
-            exclude_list=['fixtures'])
+            exclude_list=['fixtures'],
+        )
 
         # Excluding fixtures.Article/Book should leave fixtures.Category
         self._dumpdata_assert(
@@ -494,16 +495,9 @@ class FixtureLoadingTests(DumpDataAssertMixin, TestCase):
         parent.
         """
         ProxySpy.objects.create(name='Paul')
-
-        with warnings.catch_warnings(record=True) as warning_list:
-            warnings.simplefilter('always')
+        msg = "fixtures.ProxySpy is a proxy model and won't be serialized."
+        with self.assertWarnsMessage(ProxyModelWarning, msg):
             self._dumpdata_assert(['fixtures.ProxySpy'], '[]')
-        warning = warning_list.pop()
-        self.assertEqual(warning.category, ProxyModelWarning)
-        self.assertEqual(
-            str(warning.message),
-            "fixtures.ProxySpy is a proxy model and won't be serialized."
-        )
 
     def test_dumpdata_proxy_with_concrete(self):
         """
