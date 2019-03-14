@@ -12,6 +12,7 @@ from django.core import mail
 from django.db.models.signals import post_save
 from django.test import SimpleTestCase, TestCase, override_settings
 
+from .models import IntegerUsernameUser
 from .models.with_custom_email_field import CustomEmailField
 
 
@@ -109,7 +110,7 @@ class UserManagerTestCase(TestCase):
         self.assertFalse(user.has_usable_password())
 
     def test_create_user_email_domain_normalize_rfc3696(self):
-        # According to  http://tools.ietf.org/html/rfc3696#section-3
+        # According to https://tools.ietf.org/html/rfc3696#section-3
         # the "@" symbol can be part of the local part of an email address
         returned = UserManager.normalize_email(r'Abc\@DEF@EXAMPLE.com')
         self.assertEqual(returned, r'Abc\@DEF@example.com')
@@ -156,6 +157,16 @@ class UserManagerTestCase(TestCase):
 
 
 class AbstractBaseUserTests(TestCase):
+
+    def test_has_usable_password(self):
+        """
+        Passwords are usable even if they don't correspond to a hasher in
+        settings.PASSWORD_HASHERS.
+        """
+        self.assertIs(User(password='some-gibbberish').has_usable_password(), True)
+
+    def test_normalize_username(self):
+        self.assertEqual(IntegerUsernameUser().normalize_username(123), 123)
 
     def test_clean_normalize_username(self):
         # The normalization happens in AbstractBaseUser.clean()

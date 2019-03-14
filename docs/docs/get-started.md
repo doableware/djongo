@@ -35,6 +35,19 @@ Use MongoDB as a backend database for your Django project, without changing the 
       ```
    MongoDB 3.6 or higher is required.
 
+## Support
+
+[![Djongo Support](/djongo/assets/images/support.png)](https://www.patreon.com/nesdis/)
+
+I am inundated daily with your appreciation, queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. To support the requests, I have decided to follow an organized approach.
+
+Visit my [Patreon page](https://www.patreon.com/nesdis/) to make requests and for support.
+
+## Sustainable Development
+
+Djongo as a project is at a stage where its development must be transformed into a sustained effort. Djongo has more than [100,000 downloads](https://pypistats.org/packages/djongo) on pypi and continues to grow. I am trying to establish a sustainable development model for the project, and would [love to hear your thoughts.](https://www.patreon.com/posts/to-only-take-22611438)
+
+Djongo is an open source project. Should it also be a free source project? (Free as in "free beer"). When you decide to adopt Djongo for your critical work, should it be backed up by a support mechanism? If not, would you still consider adopting it for your work? Read my [detailed post](https://www.patreon.com/posts/to-only-take-22611438) on sustainable development.
 
 ## How it works
 
@@ -58,7 +71,7 @@ Djongo connector for MongoDB ensures that you:
  * Future proof your code
  * Atomic SQL JOIN operations
  
-Refer to [Integrating Django with MongoDB](/djongo/integrating-django-with-mongodb/) for the detailed reference. Get [expert support](/djongo/support/) for complex projects.
+Refer to [Integrating Django with MongoDB](/djongo/integrating-django-with-mongodb/) for the detailed reference. Get [expert support](https://www.patreon.com/nesdis) for complex projects.
 
 ## Use Django Admin to add documents
 
@@ -155,15 +168,11 @@ class EntryView(DetailView):
 
 You can directly *access any [pymongo](https://api.mongodb.com/python/current/) command* by prefixing `mongo_` to the command name. For example, to perform `aggregate` on the BlogPage collection (BlogPage is stored as a table in SQL or a collection in MongoDB) the function name becomes `mongo_aggregate`. To directly insert a document (instead of `.save()` a model) use `mongo_insert_one()`
 
-## Questions
- 
-Any questions, suggestions for improvements, issues regarding the usage or to contribute to the package, please raise a git-hub issue ticket.
-
 ## Contribute
  
 If you think djongo is useful, **please share it** with the world! Your endorsements and online reviews will help get more support for this project.
   
 You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](/djongo/django-mongodb-connector-design-document/) is implemented.
  
-Please contribute to the continued development and success of Djongo by [making a donation](/djongo/donate/).
+Please contribute to the continued development and success of Djongo by [making a donation](https://www.patreon.com/nesdis).
 

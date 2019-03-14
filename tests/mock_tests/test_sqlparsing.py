@@ -1,111 +1,190 @@
 import typing
 from collections import OrderedDict
+from logging import getLogger, DEBUG, StreamHandler
 from unittest import TestCase, mock, skip
 from unittest.mock import patch, MagicMock
 
-from logging import getLogger, DEBUG, StreamHandler
-from pymongo.cursor import Cursor
 from pymongo.command_cursor import CommandCursor
+from pymongo.cursor import Cursor
 
-from djongo.sql2mongo.query import Result
 from djongo.base import DatabaseWrapper
+from djongo.sql2mongo.query import Result
 
-'Django SQL:'
+sqls = [
+    'UPDATE "auth_user" '
+    'SET "password" = %s, '
+    '"last_login" = NULL, '
+    '"is_superuser" = %s, '
+    '"username" = %s, '
+    '"first_name" = %s, '
+    '"last_name" = %s, '
+    '"email" = %s, '
+    '"is_staff" = %s, '
+    '"is_active" = %s, '
+    '"date_joined" = %s '
+    'WHERE "auth_user"."id" = %s',
 
-'SELECT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content", COUNT("dummy_multipleblogposts"."h1") AS "h1__count", COUNT("dummy_multipleblogposts"."content") AS "content__count" FROM "dummy_multipleblogposts" GROUP BY "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content"'
+    'CREATE TABLE "django_migrations" '
+    '("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, '
+    '"app" char NOT NULL, '
+    '"name" char NOT NULL, '
+    '"applied" datetime NOT NULL)',
 
-'sql_command: SELECT DISTINCT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content" FROM "dummy_multipleblogposts" LIMIT 21'
+    'SELECT "django_migrations"."app", "django_migrations"."trial" '
+    'FROM  "django_migrations" '
+    'WHERE ("django_migrations"."app" <=%s '
+    'AND "django_migrations"."trial" >=%s '
+    'AND "django_migrations"."app" >=%s) '
+    'OR ("django_migrations"."app" <=%s '
+    'AND "django_migrations"."app">%s)',
 
-'SELECT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content" FROM "dummy_multipleblogposts" WHERE "dummy_multipleblogposts"."h1" LIKE %(0)s LIMIT 21'
+    'SELECT "auth_permission"."content_type_id", "auth_permission"."codename" '
+    'FROM "auth_permission" INNER JOIN "django_content_type" '
+    'ON ("auth_permission"."content_type_id" = "django_content_type"."id") '
+    'WHERE "auth_permission"."content_type_id" IN (%(0)s, %(1)s) '
+    'ORDER BY "django_content_type"."app_label" ASC,'
+    '"django_content_type"."model" ASC, '
+    '"auth_permission"."codename" ASC',
 
-'SELECT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content" FROM "dummy_multipleblogposts" WHERE "dummy_multipleblogposts"."h1" LIKE BINARY %(0)s LIMIT 21'
+    'SELECT "django_content_type"."id", '
+    '"django_content_type"."app_label",'
+    '"django_content_type"."model" '
+    'FROM "django_content_type" '
+    'WHERE ("django_content_type"."model" = %s AND "django_content_type"."app_label" = %s)',
 
-'SELECT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content" FROM "dummy_multipleblogposts" WHERE "dummy_multipleblogposts"."h1" REGEXP BINARY %(0)s LIMIT 21'
+    'SELECT (1) AS "a" FROM "django_session" WHERE "django_session"."session_key" = %(0)s LIMIT 1',
 
-'Migration SQL:'
+    'SELECT COUNT(*) AS "__count" FROM "auth_user"',
 
-sql = [
-    'UPDATE "auth_user" SET "password" = %s, "last_login" = NULL, "is_superuser" = %s, "username" = %s, "first_name" = %s, "last_name" = %s, "email" = %s, "is_staff" = %s, "is_active" = %s, "date_joined" = %s WHERE "auth_user"."id" = %s',
+    'DELETE FROM "django_session" WHERE "django_session"."session_key" IN (%(0)s)',
 
-'CREATE TABLE "django_migrations" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "app" char NOT NULL, "name" char NOT NULL, "applied" datetime NOT NULL)',
+    'UPDATE "django_session" SET "session_data" = %(0)s, "expire_date" = %(1)s'
+    ' WHERE "django_session"."session_key" = %(2)s',
 
-'SELECT "django_migrations"."app", "django_migrations"."trial" '
-'FROM  "django_migrations" '
-'WHERE ("django_migrations"."app" <=%s '
-      'AND "django_migrations"."trial" >=%s '
-      'AND "django_migrations"."app" >=%s) '
-      'OR ("django_migrations"."app" <=%s '
-      'AND "django_migrations"."app">%s)',
+    'SELECT "django_admin_log"."id", "django_admin_log"."action_time",'
+    '"django_admin_log"."user_id", "django_admin_log"."content_type_id",'
+    '"django_admin_log"."object_id", "django_admin_log"."object_repr", '
+    '"django_admin_log"."action_flag", "django_admin_log"."change_message",'
+    '"auth_user"."id", "auth_user"."password", "auth_user"."last_login", '
+    '"auth_user"."is_superuser", "auth_user"."username", "auth_user"."first_name",'
+    '"auth_user"."last_name", "auth_user"."email", "auth_user"."is_staff",'
+    '"auth_user"."is_active", "auth_user"."date_joined", "django_content_type"."id",'
+    '"django_content_type"."app_label", "django_content_type"."model" '
+    'FROM "django_admin_log" '
+    'INNER JOIN "auth_user" '
+    'ON ("django_admin_log"."user_id" = "auth_user"."id") '
+    'LEFT OUTER JOIN "django_content_type" '
+    'ON ("django_admin_log"."content_type_id" = "django_content_type"."id") '
+    'WHERE "django_admin_log"."user_id" = %(0)s ORDER BY "django_admin_log"."action_time" DESC LIMIT 10',
 
-'SELECT "auth_permission"."content_type_id", "auth_permission"."codename" \
-FROM "auth_permission" INNER JOIN "django_content_type" \
-    ON ("auth_permission"."content_type_id" = "django_content_type"."id") \
-WHERE "auth_permission"."content_type_id" IN (%(0)s, %(1)s) \
-ORDER BY "django_content_type"."app_label" ASC,\
-"django_content_type"."model" ASC, "auth_permission"."codename" ASC',
-
-'SELECT "django_content_type"."id", "django_content_type"."app_label",\
-"django_content_type"."model" FROM "django_content_type" \
-WHERE ("django_content_type"."model" = %s AND "django_content_type"."app_label" = %s)',
-
-'SELECT (1) AS "a" FROM "django_session" WHERE "django_session"."session_key" = %(0)s LIMIT 1',
-
-'SELECT COUNT(*) AS "__count" FROM "auth_user"',
-
-'DELETE FROM "django_session" WHERE "django_session"."session_key" IN (%(0)s)',
-
-'UPDATE "django_session" SET "session_data" = %(0)s, "expire_date" = %(1)s WHERE "django_session"."session_key" = %(2)s',
-
-'SELECT "django_admin_log"."id", "django_admin_log"."action_time",\
-    "django_admin_log"."user_id", "django_admin_log"."content_type_id",\
-    "django_admin_log"."object_id", "django_admin_log"."object_repr", \
-    "django_admin_log"."action_flag", "django_admin_log"."change_message",\
-    "auth_user"."id", "auth_user"."password", "auth_user"."last_login", \
-    "auth_user"."is_superuser", "auth_user"."username", "auth_user"."first_name",\
-    "auth_user"."last_name", "auth_user"."email", "auth_user"."is_staff",\
-    "auth_user"."is_active", "auth_user"."date_joined", "django_content_type"."id",\
-    "django_content_type"."app_label", "django_content_type"."model" \
-FROM "django_admin_log" \
-INNER JOIN "auth_user" \
-    ON ("django_admin_log"."user_id" = "auth_user"."id") \
-LEFT OUTER JOIN "django_content_type" \
-    ON ("django_admin_log"."content_type_id" = "django_content_type"."id") \
-WHERE "django_admin_log"."user_id" = %(0)s ORDER BY "django_admin_log"."action_time" DESC LIMIT 10',
-
-'SELECT "auth_permission"."id", "auth_permission"."name", "auth_permission"."content_type_id", "auth_permission"."codename" '
-'FROM "auth_permission" '
-'INNER JOIN "auth_user_user_permissions" '
+    'SELECT "auth_permission"."id", '
+    '"auth_permission"."name", '
+    '"auth_permission"."content_type_id", '
+    '"auth_permission"."codename" '
+    'FROM "auth_permission" '
+    'INNER JOIN "auth_user_user_permissions" '
     'ON ("auth_permission"."id" = "auth_user_user_permissions"."permission_id") '
-'INNER JOIN "django_content_type" '
+    'INNER JOIN "django_content_type" '
     'ON ("auth_permission"."content_type_id" = "django_content_type"."id") '
-'WHERE "auth_user_user_permissions"."user_id" = %s '
-'ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC',
+    'WHERE "auth_user_user_permissions"."user_id" = %s '
+    'ORDER BY "django_content_type"."app_label" ASC, '
+    '"django_content_type"."model" ASC, '
+    '"auth_permission"."codename" ASC',
 
-'SELECT "auth_permission"."id", "auth_permission"."name", "auth_permission"."content_type_id", '
-    '"auth_permission"."codename", "django_content_type"."id", "django_content_type"."app_label", "django_content_type"."model" '
-'FROM "auth_permission" '
-'INNER JOIN "django_content_type" '
+    'SELECT "auth_permission"."id", "auth_permission"."name", "auth_permission"."content_type_id", '
+    '"auth_permission"."codename", "django_content_type"."id", "django_content_type"."app_label", '
+    '"django_content_type"."model" '
+    'FROM "auth_permission" '
+    'INNER JOIN "django_content_type" '
     'ON ("auth_permission"."content_type_id" = "django_content_type"."id") '
-'ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC',
+    'ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC',
 
-'SELECT "django_admin_log"."id", "django_admin_log"."action_time", "django_admin_log"."user_id", "django_admin_log"."content_type_id", "django_admin_log"."object_id", "django_admin_log"."object_repr", "django_admin_log"."action_flag", "django_admin_log"."change_message", "auth_user"."id", "auth_user"."password", "auth_user"."last_login", "auth_user"."is_superuser", "auth_user"."username", "auth_user"."first_name", "auth_user"."last_name", "auth_user"."email", "auth_user"."is_staff", "auth_user"."is_active", "auth_user"."date_joined", "django_content_type"."id", "django_content_type"."app_label", "django_content_type"."model" FROM "django_admin_log" INNER JOIN "auth_user" ON ("django_admin_log"."user_id" = "auth_user"."id") LEFT OUTER JOIN "django_content_type" ON ("django_admin_log"."content_type_id" = "django_content_type"."id") WHERE "django_admin_log"."user_id" = %(0)s ORDER BY "django_admin_log"."action_time" DESC LIMIT 10',
+    'SELECT "django_admin_log"."id", "django_admin_log"."action_time", '
+    '"django_admin_log"."user_id", "django_admin_log"."content_type_id", '
+    '"django_admin_log"."object_id", "django_admin_log"."object_repr", '
+    '"django_admin_log"."action_flag", "django_admin_log"."change_message", '
+    '"auth_user"."id", "auth_user"."password", "auth_user"."last_login", '
+    '"auth_user"."is_superuser", "auth_user"."username", "auth_user"."first_name", '
+    '"auth_user"."last_name", "auth_user"."email", "auth_user"."is_staff", '
+    '"auth_user"."is_active", "auth_user"."date_joined", "django_content_type"."id", '
+    '"django_content_type"."app_label", "django_content_type"."model" '
+    'FROM "django_admin_log" '
+    'INNER JOIN "auth_user" ON ("django_admin_log"."user_id" = "auth_user"."id") '
+    'LEFT OUTER JOIN "django_content_type" '
+    'ON ("django_admin_log"."content_type_id" = "django_content_type"."id") '
+    'WHERE "django_admin_log"."user_id" = %(0)s '
+    'ORDER BY "django_admin_log"."action_time" DESC LIMIT 10',
 
-'SELECT "auth_permission"."id" FROM "auth_permission" INNER JOIN "auth_group_permissions" ON ("auth_permission"."id" = "auth_group_permissions"."permission_id") INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_group_permissions"."group_id" = %s ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC',
+    'SELECT "auth_permission"."id" '
+    'FROM "auth_permission" '
+    'INNER JOIN "auth_group_permissions" '
+    'ON ("auth_permission"."id" = "auth_group_permissions"."permission_id") '
+    'INNER JOIN "django_content_type" '
+    'ON ("auth_permission"."content_type_id" = "django_content_type"."id") '
+    'WHERE "auth_group_permissions"."group_id" = %s '
+    'ORDER BY "django_content_type"."app_label" ASC, '
+    '"django_content_type"."model" ASC, '
+    '"auth_permission"."codename" ASC',
 
-'SELECT "auth_group_permissions"."permission_id" FROM "auth_group_permissions" WHERE ("auth_group_permissions"."group_id" = %s AND "auth_group_permissions"."permission_id" IN (%s))',
+    'SELECT "auth_group_permissions"."permission_id" '
+    'FROM "auth_group_permissions" '
+    'WHERE ("auth_group_permissions"."group_id" = %s '
+    'AND "auth_group_permissions"."permission_id" IN (%s))',
 
-'SELECT (1) AS "a" FROM "auth_group" WHERE ("auth_group"."name" = %(0)s AND NOT ("auth_group"."id" = %(1)s)) LIMIT 1',
+    'SELECT (1) AS "a" '
+    'FROM "auth_group" '
+    'WHERE ("auth_group"."name" = %(0)s '
+    'AND NOT ("auth_group"."id" = %(1)s)) LIMIT 1',
 
-'SELECT DISTINCT "viewflow_task"."flow_task" FROM "viewflow_task" INNER JOIN "viewflow_process" ON ("viewflow_task"."process_id" = "viewflow_process"."id") WHERE ("viewflow_process"."flow_class" IN (%(0)s, %(1)s, %(2)s) AND "viewflow_task"."owner_id" = %(3)s AND "viewflow_task"."status" = %(4)s) ORDER BY "viewflow_task"."flow_task" ASC'
+    'SELECT DISTINCT "viewflow_task"."flow_task" '
+    'FROM "viewflow_task" '
+    'INNER JOIN "viewflow_process" '
+    'ON ("viewflow_task"."process_id" = "viewflow_process"."id") '
+    'WHERE ("viewflow_process"."flow_class" '
+    'IN (%(0)s, %(1)s, %(2)s) '
+    'AND "viewflow_task"."owner_id" = %(3)s '
+    'AND "viewflow_task"."status" = %(4)s) '
+    'ORDER BY "viewflow_task"."flow_task" ASC',
 
-'SELECT DISTINCT "table1"."col1" FROM "table1" INNER JOIN "table2" ON ("table1"."col2" = "table2"."col1") WHERE ("table2"."flow_class" IN (%(0)s, %(1)s, %(2)s) AND "table1"."col3" = %(3)s AND "table1"."col4" = %(4)s) ORDER BY "table1"."col1" ASC',
+    'SELECT DISTINCT "table1"."col1" '
+    'FROM "table1" INNER JOIN "table2" '
+    'ON ("table1"."col2" = "table2"."col1") '
+    'WHERE ("table2"."flow_class" '
+    'IN (%(0)s, %(1)s, %(2)s) '
+    'AND "table1"."col3" = %(3)s '
+    'AND "table1"."col4" = %(4)s) '
+    'ORDER BY "table1"."col1" ASC',
 
-'SELECT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content" FROM "dummy_multipleblogposts" WHERE "dummy_multipleblogposts"."h1" IN (SELECT U0."id" AS Col1 FROM "dummy_blogpost" U0 WHERE U0."h1" IN (%s, %s))',
+    'SELECT "dummy_multipleblogposts"."id", '
+    '"dummy_multipleblogposts"."h1", '
+    '"dummy_multipleblogposts"."content" '
+    'FROM "dummy_multipleblogposts" '
+    'WHERE "dummy_multipleblogposts"."h1" '
+    'IN (SELECT U0."id" AS Col1 '
+    'FROM "dummy_blogpost" U0 WHERE U0."h1" IN (%s, %s))',
 
-'SELECT "viewflow_process"."id", "viewflow_process"."flow_class", "viewflow_process"."status", "viewflow_process"."created", "viewflow_process"."finished" FROM "viewflow_process" WHERE "viewflow_process"."id" IN (SELECT U0."process_id" AS Col1 FROM "viewflow_task" U0 INNER JOIN "viewflow_process" U1 ON (U0."process_id" = U1."id") WHERE (U1."flow_class" IN (%(0)s, %(1)s, %(2)s) AND U0."owner_id" = %(3)s AND U0."status" = %(4)s)) ORDER BY "viewflow_process"."created" DESC',
+    'SELECT "viewflow_process"."id", '
+    '"viewflow_process"."flow_class", '
+    '"viewflow_process"."status", '
+    '"viewflow_process"."created", '
+    '"viewflow_process"."finished" '
+    'FROM "viewflow_process" '
+    'WHERE "viewflow_process"."id" '
+    'IN (SELECT U0."process_id" '
+    'AS Col1 FROM "viewflow_task" U0 '
+    'INNER JOIN "viewflow_process" U1 '
+    'ON (U0."process_id" = U1."id") '
+    'WHERE (U1."flow_class" '
+    'IN (%(0)s, %(1)s, %(2)s) '
+    'AND U0."owner_id" = %(3)s '
+    'AND U0."status" = %(4)s)) '
+    'ORDER BY "viewflow_process"."created" DESC',
 
-'SELECT COUNT(*) AS "__count" FROM "admin_changelist_event" WHERE "admin_changelist_event"."event_date" BETWEEN %(0)s AND %(1)s'
-       ]
+    'SELECT COUNT(*) AS "__count" '
+    'FROM "admin_changelist_event" '
+    'WHERE "admin_changelist_event"."event_date" '
+    'BETWEEN %(0)s AND %(1)s'
+]
 
 root_logger = getLogger()
 root_logger.setLevel(DEBUG)
@@ -654,14 +733,12 @@ class TestQuery(MockTest):
         """
         SELECT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content", COUNT("dummy_multipleblogposts"."h1") AS "h1__count", COUNT("dummy_multipleblogposts"."content") AS "content__count" FROM "dummy_multipleblogposts" GROUP BY "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content" LIMIT 21
 
-
-
         :return:
         """
-
-
-        # 'SELECT (1) AS "a" FROM "django_session" WHERE "django_session"."session_key" = %(0)s LIMIT 1'
-        self.sql = 'SELECT (1) AS "a" FROM "table1" WHERE "table1"."col2" = %s LIMIT 1'
+        self.sql = ('SELECT "auth_group"."id", "auth_group"."name" ' 
+                    'FROM "auth_group" '
+                    'WHERE (NOT ("auth_group"."name" = %(0)s) ' 
+                    'AND NOT ("auth_group"."name" = %(1)s))')
         find_args = {
             'filter': {
                 'col2': {
@@ -671,12 +748,11 @@ class TestQuery(MockTest):
             'limit': 1,
             'projection': []
         }
-        self.params = [1]
+        self.params = ['a', 'b']
         ret = self.find_mock()
         self.assertEqual(ret, [(1,)])
         self.find.assert_any_call(**find_args)
         self.conn.reset_mock()
-
 
     def test_in(self):
         conn = self.conn
@@ -1214,6 +1290,30 @@ class TestQuery(MockTest):
                 {
                     'col1': {
                         '$lte': 2
+                    }
+                },
+                {
+                    'col1': {
+                        '$not': {
+                            '$eq': 1
+                        }
+                    }
+                }
+            ]
+        }
+        self.params = [2, 1]
+        self.find_mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+        self.sql = f'{where} (NOT ({t1c1} <= %s) AND NOT ({t1c1} = %s))'
+        find_args['filter'] = {
+            '$and': [
+                {
+                    'col1': {
+                        '$not': {
+                            '$lte': 2
+                        }
                     }
                 },
                 {

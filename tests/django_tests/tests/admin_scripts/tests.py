@@ -1495,6 +1495,13 @@ class CommandTypes(AdminScriptTestCase):
         args = ['check', '--help']
         out, err = self.run_manage(args)
         self.assertNoOutput(err)
+        # Command-specific options like --tag appear before options common to
+        # all commands like --version.
+        tag_location = out.find('--tag')
+        version_location = out.find('--version')
+        self.assertNotEqual(tag_location, -1)
+        self.assertNotEqual(version_location, -1)
+        self.assertLess(tag_location, version_location)
         self.assertOutput(out, "Checks the entire Django project for potential problems.")
 
     def test_color_style(self):
@@ -2256,3 +2263,23 @@ class MainModule(AdminScriptTestCase):
     def test_program_name_in_help(self):
         out, err = self.run_test('-m', ['django', 'help'])
         self.assertOutput(out, "Type 'python -m django help <subcommand>' for help on a specific subcommand.")
+
+
+class DjangoAdminSuggestions(AdminScriptTestCase):
+    def setUp(self):
+        self.write_settings('settings.py')
+
+    def tearDown(self):
+        self.remove_settings('settings.py')
+
+    def test_suggestions(self):
+        args = ['rnserver', '--settings=test_project.settings']
+        out, err = self.run_django_admin(args)
+        self.assertNoOutput(out)
+        self.assertOutput(err, "Unknown command: 'rnserver'. Did you mean runserver?")
+
+    def test_no_suggestions(self):
+        args = ['abcdef', '--settings=test_project.settings']
+        out, err = self.run_django_admin(args)
+        self.assertNoOutput(out)
+        self.assertNotInOutput(err, 'Did you mean')

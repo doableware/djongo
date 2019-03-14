@@ -120,10 +120,17 @@ entries = Entry.objects.filter(authors={'name': 'Paul'})
 Djongo lets you get even more specific with your queries. To query all entries where the third author is *Paul*:
 
 ```python
-entries = Entry.objects.filter(authors={'name.2': 'Paul'})
+entries = Entry.objects.filter(authors={'2.name': 'Paul'})
 ```
 Note: In MongoDB the first element in the array starts at index 0.
 
+### Creating Array fields
 
+A Model with an Array field can be created as follows:
+
+```python
+entry = Entry()
+entry.authors = [Author()]
+```
 
 

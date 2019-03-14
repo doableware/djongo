@@ -1,11 +1,11 @@
-import bson
-import datetime
 import collections
+import datetime
 
-from django.db.backends.base import introspection
+import bson
+from django.db.backends.base.introspection import BaseDatabaseIntrospection, FieldInfo, TableInfo
 
 
-class DatabaseIntrospection(introspection.BaseDatabaseIntrospection):
+class DatabaseIntrospection(BaseDatabaseIntrospection):
     SAMPLE_SIZE = 10000
     TYPE_MAPPING = {
         int: bson.int64.Int64,
@@ -24,14 +24,28 @@ class DatabaseIntrospection(introspection.BaseDatabaseIntrospection):
         list: 'JSONField',
         str: 'CharField',
         'text': 'TextField',
+        'int64': 'BigIntegerField',
+        'int32': 'IntegerField',
+        'number': 'DecimalField',
+        'string': 'CharField',
+        'boolean': 'BooleanField',
+        'object': 'djongo.models.DictField',
+        'array': 'djongo.models.ListField',
+        'oid': 'djongo.models.ObjectIdField',
+        'date': 'DateTimeField'
+
     }
 
     # def table_names(self, cursor=None, include_views=False):
     #     return sorted(cursor.m_cli_connection.collection_names(False))
 
     def get_table_list(self, cursor):
-        return [introspection.TableInfo(c, 't')
-                for c in cursor.db_conn.collection_names(False)]
+
+        return [
+            TableInfo(c, 't')
+            for c in cursor.db_conn.collection_names(False)
+            if c != '__schema__'
+        ]
 
     def get_constraints(self, cursor, table_name):
         constraint = {}
@@ -64,12 +78,34 @@ class DatabaseIntrospection(introspection.BaseDatabaseIntrospection):
     def get_relations(self, cursor, table_name):
         return []
 
+    def get_sequences(self, cursor, table_name, table_fields=()):
+        pk_col = self.get_primary_key_column(cursor, table_name)
+        return [{'table': table_name, 'column': pk_col}]
+
     def get_table_description(self, cursor, table_name):
         colspecs = collections.defaultdict(lambda: dict(
             types=collections.Counter(),
             specs=collections.defaultdict(int),
         ))
-
+        fields = cursor.db_conn['__schema__'].find_one(
+            {'name': table_name},
+            {'fields': True}
+        )['fields']
+        columns = []
+        for name, properties in fields.items():
+            columns.append(
+                FieldInfo(
+                    name=name,
+                    type_code=properties['type_code'],
+                    display_size=None,
+                    internal_size=None,
+                    precision=None,
+                    scale=None,
+                    null_ok=None,
+                    default=None
+                )
+            )
+        return columns
         results = cursor.db_conn[table_name].aggregate([
             {'$sample': {'size': self.SAMPLE_SIZE}},
         ])
@@ -116,7 +152,7 @@ class DatabaseIntrospection(introspection.BaseDatabaseIntrospection):
                 print('# Found multiple types for %s.%s: %s' %
                       (table_name, name, types))
 
-            columns.append(introspection.FieldInfo(
+            columns.append(FieldInfo(
                 name,  # name
                 type_,  # type_code
                 specs.get('length'),  # display size
