@@ -17,7 +17,7 @@ from pymongo.errors import OperationFailure, CollectionInvalid
 from sqlparse import parse as sqlparse
 from sqlparse import tokens
 from sqlparse.sql import (
-    IdentifierList, Identifier, Parenthesis,
+    IdentifierList, Identifier, Parenthesis, Values,
     Where, Token,
     Statement)
 
@@ -382,6 +382,8 @@ class InsertQuery(VoidQuery):
         while tok_id is not None:
             if tok.match(tokens.Keyword, 'VALUES'):
                 pass
+            elif isinstance(tok, Values):
+                self._vals.append(self.params)
             elif isinstance(tok, Parenthesis):
                 if isinstance(tok[1], IdentifierList):
                     self._vals.append(
