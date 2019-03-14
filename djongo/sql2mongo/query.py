@@ -16,7 +16,7 @@ from pymongo.errors import OperationFailure, CollectionInvalid
 from sqlparse import parse as sqlparse
 from sqlparse import tokens
 from sqlparse.sql import (
-    IdentifierList, Identifier, Parenthesis, Value,
+    IdentifierList, Identifier, Parenthesis, Values,
     Where, Token,
     Statement)
 
