@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>djongo.sql2mongo package &#8212; djongo 1.2.24 documentation</title>
+    <title>djongo.sql2mongo package &#8212; djongo 1.2.32 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" src="../_static/documentation_options.js"></script>
@@ -158,6 +158,22 @@
 <dl class="method">
 <dt id="djongo.sql2mongo.converters.GroupbyConverter.to_mongo">
 <code class="descname">to_mongo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#djongo.sql2mongo.converters.GroupbyConverter.to_mongo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="djongo.sql2mongo.converters.HavingConverter">
+<em class="property">class </em><code class="descclassname">djongo.sql2mongo.converters.</code><code class="descname">HavingConverter</code><span class="sig-paren">(</span><em>query_ref: Union[_ForwardRef('query.SelectQuery'), _ForwardRef('query.Query')], begin_id: int</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.sql2mongo.converters.HavingConverter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#djongo.sql2mongo.converters.Converter" title="djongo.sql2mongo.converters.Converter"><code class="xref py py-class docutils literal notranslate"><span class="pre">djongo.sql2mongo.converters.Converter</span></code></a></p>
+<dl class="method">
+<dt id="djongo.sql2mongo.converters.HavingConverter.parse">
+<code class="descname">parse</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#djongo.sql2mongo.converters.HavingConverter.parse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="djongo.sql2mongo.converters.HavingConverter.to_mongo">
+<code class="descname">to_mongo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#djongo.sql2mongo.converters.HavingConverter.to_mongo" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -492,6 +508,17 @@
 <p>Module with constants and mappings to build MongoDB queries from
 SQL constructors.</p>
 <dl class="class">
+<dt id="djongo.sql2mongo.query.AlterQuery">
+<em class="property">class </em><code class="descclassname">djongo.sql2mongo.query.</code><code class="descname">AlterQuery</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.sql2mongo.query.AlterQuery" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#djongo.sql2mongo.query.VoidQuery" title="djongo.sql2mongo.query.VoidQuery"><code class="xref py py-class docutils literal notranslate"><span class="pre">djongo.sql2mongo.query.VoidQuery</span></code></a></p>
+<dl class="method">
+<dt id="djongo.sql2mongo.query.AlterQuery.parse">
+<code class="descname">parse</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#djongo.sql2mongo.query.AlterQuery.parse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="djongo.sql2mongo.query.CountDistinctFunc">
 <em class="property">class </em><code class="descclassname">djongo.sql2mongo.query.</code><code class="descname">CountDistinctFunc</code><span class="sig-paren">(</span><em>table_name:str</em>, <em>column_name:str</em>, <em>alias_name:str=None</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.sql2mongo.query.CountDistinctFunc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
@@ -543,7 +570,17 @@ SQL constructors.</p>
 <dl class="class">
 <dt id="djongo.sql2mongo.query.InsertQuery">
 <em class="property">class </em><code class="descclassname">djongo.sql2mongo.query.</code><code class="descname">InsertQuery</code><span class="sig-paren">(</span><em>result_ref: djongo.sql2mongo.query.Result</em>, <em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.sql2mongo.query.InsertQuery" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#djongo.sql2mongo.query.Query" title="djongo.sql2mongo.query.Query"><code class="xref py py-class docutils literal notranslate"><span class="pre">djongo.sql2mongo.query.Query</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#djongo.sql2mongo.query.VoidQuery" title="djongo.sql2mongo.query.VoidQuery"><code class="xref py py-class docutils literal notranslate"><span class="pre">djongo.sql2mongo.query.VoidQuery</span></code></a></p>
+<dl class="attribute">
+<dt id="djongo.sql2mongo.query.InsertQuery.DEFAULT">
+<code class="descname">DEFAULT</code><em class="property"> = &lt;object object&gt;</em><a class="headerlink" href="#djongo.sql2mongo.query.InsertQuery.DEFAULT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="djongo.sql2mongo.query.InsertQuery.execute">
+<code class="descname">execute</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#djongo.sql2mongo.query.InsertQuery.execute" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="djongo.sql2mongo.query.InsertQuery.parse">
 <code class="descname">parse</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#djongo.sql2mongo.query.InsertQuery.parse" title="Permalink to this definition">¶</a></dt>
@@ -573,7 +610,7 @@ SQL constructors.</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="attribute">
 <dt id="djongo.sql2mongo.query.Result.FUNC_MAP">
-<code class="descname">FUNC_MAP</code><em class="property"> = {'ALTER': &lt;function Result._alter at 0x0000000007246EA0&gt;, 'CREATE': &lt;function Result._create at 0x0000000007246F28&gt;, 'DELETE': &lt;function Result._delete at 0x0000000007248158&gt;, 'DROP': &lt;function Result._drop at 0x0000000007248048&gt;, 'INSERT': &lt;function Result._insert at 0x00000000072481E0&gt;, 'SELECT': &lt;function Result._select at 0x0000000007248268&gt;, 'UPDATE': &lt;function Result._update at 0x00000000072480D0&gt;}</em><a class="headerlink" href="#djongo.sql2mongo.query.Result.FUNC_MAP" title="Permalink to this definition">¶</a></dt>
+<code class="descname">FUNC_MAP</code><em class="property"> = {'ALTER': &lt;function Result._alter at 0x000002874AEF2840&gt;, 'CREATE': &lt;function Result._create at 0x000002874AEF28C8&gt;, 'DELETE': &lt;function Result._delete at 0x000002874AEF2A60&gt;, 'DROP': &lt;function Result._drop at 0x000002874AEF2950&gt;, 'INSERT': &lt;function Result._insert at 0x000002874AEF2AE8&gt;, 'SELECT': &lt;function Result._select at 0x000002874AEF2B70&gt;, 'UPDATE': &lt;function Result._update at 0x000002874AEF29D8&gt;}</em><a class="headerlink" href="#djongo.sql2mongo.query.Result.FUNC_MAP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -630,6 +667,22 @@ SQL constructors.</p>
 
 </dd></dl>
 
+<dl class="class">
+<dt id="djongo.sql2mongo.query.VoidQuery">
+<em class="property">class </em><code class="descclassname">djongo.sql2mongo.query.</code><code class="descname">VoidQuery</code><span class="sig-paren">(</span><em>db_ref: pymongo.database.Database</em>, <em>connection_properties: djongo.base.DjongoClient</em>, <em>statement: sqlparse.sql.Statement</em>, <em>params: list</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.sql2mongo.query.VoidQuery" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#djongo.sql2mongo.query.Query" title="djongo.sql2mongo.query.Query"><code class="xref py py-class docutils literal notranslate"><span class="pre">djongo.sql2mongo.query.Query</span></code></a></p>
+<dl class="method">
+<dt id="djongo.sql2mongo.query.VoidQuery.count">
+<code class="descname">count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#djongo.sql2mongo.query.VoidQuery.count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="djongo.sql2mongo.query.VoidQuery.execute">
+<code class="descname">execute</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#djongo.sql2mongo.query.VoidQuery.execute" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
 <div class="section" id="module-djongo.sql2mongo">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-djongo.sql2mongo" title="Permalink to this headline">¶</a></h2>
@@ -646,6 +699,37 @@ SQL constructors.</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="djongo.sql2mongo.SQLFunc">
+<em class="property">class </em><code class="descclassname">djongo.sql2mongo.</code><code class="descname">SQLFunc</code><span class="sig-paren">(</span><em>token: sqlparse.sql.Token</em>, <em>alias2op=None</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.sql2mongo.SQLFunc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="djongo.sql2mongo.SQLFunc.alias">
+<code class="descname">alias</code><a class="headerlink" href="#djongo.sql2mongo.SQLFunc.alias" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="djongo.sql2mongo.SQLFunc.column">
+<code class="descname">column</code><a class="headerlink" href="#djongo.sql2mongo.SQLFunc.column" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="djongo.sql2mongo.SQLFunc.func">
+<code class="descname">func</code><a class="headerlink" href="#djongo.sql2mongo.SQLFunc.func" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="djongo.sql2mongo.SQLFunc.table">
+<code class="descname">table</code><a class="headerlink" href="#djongo.sql2mongo.SQLFunc.table" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="djongo.sql2mongo.SQLFunc.to_mongo">
+<code class="descname">to_mongo</code><span class="sig-paren">(</span><em>query</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.sql2mongo.SQLFunc.to_mongo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="djongo.sql2mongo.SQLToken">
 <em class="property">class </em><code class="descclassname">djongo.sql2mongo.</code><code class="descname">SQLToken</code><span class="sig-paren">(</span><em>token: sqlparse.sql.Token</em>, <em>alias2op=None</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.sql2mongo.SQLToken" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
@@ -657,6 +741,11 @@ SQL constructors.</p>
 <dl class="attribute">
 <dt id="djongo.sql2mongo.SQLToken.column">
 <code class="descname">column</code><a class="headerlink" href="#djongo.sql2mongo.SQLToken.column" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="djongo.sql2mongo.SQLToken.has_parent">
+<code class="descname">has_parent</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#djongo.sql2mongo.SQLToken.has_parent" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">

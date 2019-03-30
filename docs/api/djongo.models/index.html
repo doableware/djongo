@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>djongo.models package &#8212; djongo 1.2.24 documentation</title>
+    <title>djongo.models package &#8212; djongo 1.2.32 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" src="../_static/documentation_options.js"></script>
@@ -59,7 +59,7 @@ MongoDB is defined.</p>
 
 <dl class="class">
 <dt id="djongo.models.fields.ArrayFormField">
-<em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">ArrayFormField</code><span class="sig-paren">(</span><em>name</em>, <em>model_form_class</em>, <em>mdl_form_kw_l</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ArrayFormField" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">ArrayFormField</code><span class="sig-paren">(</span><em>name</em>, <em>model_form_class</em>, <em>model_container</em>, <em>mdl_form_kw_l</em>, <em>widget=None</em>, <em>admin=None</em>, <em>request=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ArrayFormField" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.fields.Field</span></code></p>
 <dl class="method">
 <dt id="djongo.models.fields.ArrayFormField.clean">
@@ -242,7 +242,7 @@ should override this to provide validation logic.</p>
 <dl class="class">
 <dt id="djongo.models.fields.ArrayReferenceDescriptor">
 <em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">ArrayReferenceDescriptor</code><span class="sig-paren">(</span><em>field_with_rel</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ArrayReferenceDescriptor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.fields.related_descriptors.ForwardManyToOneDescriptor</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="attribute">
 <dt id="djongo.models.fields.ArrayReferenceDescriptor.related_manager_cls">
 <code class="descname">related_manager_cls</code><a class="headerlink" href="#djongo.models.fields.ArrayReferenceDescriptor.related_manager_cls" title="Permalink to this definition">¶</a></dt>
@@ -261,6 +261,11 @@ For all practical aspects, the ArrayReferenceField behaves like a Django ManyToM
 <code class="descname">forward_related_accessor_class</code><a class="headerlink" href="#djongo.models.fields.ArrayReferenceField.forward_related_accessor_class" title="Permalink to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="#djongo.models.fields.ArrayReferenceDescriptor" title="djongo.models.fields.ArrayReferenceDescriptor"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayReferenceDescriptor</span></code></a></p>
 </dd></dl>
+
+<dl class="method">
+<dt id="djongo.models.fields.ArrayReferenceField.from_db_value">
+<code class="descname">from_db_value</code><span class="sig-paren">(</span><em>value</em>, <em>expression</em>, <em>connection</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ArrayReferenceField.from_db_value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="djongo.models.fields.ArrayReferenceField.get_db_prep_save">
@@ -301,6 +306,67 @@ For all practical aspects, the ArrayReferenceField behaves like a Django ManyToM
 <dd><p>alias of <a class="reference internal" href="#djongo.models.fields.ReverseArrayReferenceDescriptor" title="djongo.models.fields.ReverseArrayReferenceDescriptor"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReverseArrayReferenceDescriptor</span></code></a></p>
 </dd></dl>
 
+<dl class="method">
+<dt id="djongo.models.fields.ArrayReferenceField.to_python">
+<code class="descname">to_python</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ArrayReferenceField.to_python" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the input value into the expected Python data type, raising
+django.core.exceptions.ValidationError if the data can’t be converted.
+Return the converted value. Subclasses should override this.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="djongo.models.fields.ArrayReferenceManagerMixin">
+<em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">ArrayReferenceManagerMixin</code><a class="headerlink" href="#djongo.models.fields.ArrayReferenceManagerMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="djongo.models.fields.ArrayReferenceManagerMixin.create">
+<code class="descname">create</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ArrayReferenceManagerMixin.create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="djongo.models.fields.ArrayReferenceManagerMixin.get_or_create">
+<code class="descname">get_or_create</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ArrayReferenceManagerMixin.get_or_create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="djongo.models.fields.ArrayReferenceManagerMixin.get_queryset">
+<code class="descname">get_queryset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ArrayReferenceManagerMixin.get_queryset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="djongo.models.fields.ArrayReferenceManagerMixin.update_or_create">
+<code class="descname">update_or_create</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ArrayReferenceManagerMixin.update_or_create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="djongo.models.fields.DictField">
+<em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">DictField</code><span class="sig-paren">(</span><em>verbose_name=None</em>, <em>name=None</em>, <em>primary_key=False</em>, <em>max_length=None</em>, <em>unique=False</em>, <em>blank=False</em>, <em>null=False</em>, <em>db_index=False</em>, <em>rel=None</em>, <em>default=&lt;class 'django.db.models.fields.NOT_PROVIDED'&gt;</em>, <em>editable=True</em>, <em>serialize=True</em>, <em>unique_for_date=None</em>, <em>unique_for_month=None</em>, <em>unique_for_year=None</em>, <em>choices=None</em>, <em>help_text=''</em>, <em>db_column=None</em>, <em>db_tablespace=None</em>, <em>auto_created=False</em>, <em>validators=()</em>, <em>error_messages=None</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.DictField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#djongo.models.fields.FormlessField" title="djongo.models.fields.FormlessField"><code class="xref py py-class docutils literal notranslate"><span class="pre">djongo.models.fields.FormlessField</span></code></a></p>
+<p>MongoDB allows the saving of python dicts as BSON object type data. The <cite>DictField</cite> is useful in such cases.</p>
+<dl class="attribute">
+<dt id="djongo.models.fields.DictField.empty_strings_allowed">
+<code class="descname">empty_strings_allowed</code><em class="property"> = False</em><a class="headerlink" href="#djongo.models.fields.DictField.empty_strings_allowed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="djongo.models.fields.DictField.get_db_prep_value">
+<code class="descname">get_db_prep_value</code><span class="sig-paren">(</span><em>value</em>, <em>connection</em>, <em>prepared=False</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.DictField.get_db_prep_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return field’s value prepared for interacting with the database backend.</p>
+<p>Used by the default implementations of get_db_prep_save().</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="djongo.models.fields.DictField.to_python">
+<code class="descname">to_python</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.DictField.to_python" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the input value into the expected Python data type, raising
+django.core.exceptions.ValidationError if the data can’t be converted.
+Return the converted value. Subclasses should override this.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -320,7 +386,7 @@ them with ‘<a href="#id63"><span class="problematic" id="id64">mongo_</span></
 
 <dl class="class">
 <dt id="djongo.models.fields.EmbeddedFormField">
-<em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">EmbeddedFormField</code><span class="sig-paren">(</span><em>name</em>, <em>model_form_class</em>, <em>model_form_kw</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.EmbeddedFormField" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">EmbeddedFormField</code><span class="sig-paren">(</span><em>name</em>, <em>model_form_class</em>, <em>model_form_kw</em>, <em>model_container</em>, <em>admin=None</em>, <em>request=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.EmbeddedFormField" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.fields.MultiValueField</span></code></p>
 <dl class="method">
 <dt id="djongo.models.fields.EmbeddedFormField.bound_data">
@@ -384,38 +450,40 @@ of this widget or None if it’s not provided.</p>
 
 <dl class="class">
 <dt id="djongo.models.fields.EmbeddedModelField">
-<em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">EmbeddedModelField</code><span class="sig-paren">(</span><em>model_container: Type[django.db.models.base.Model], model_form_class: Type[django.forms.models.ModelForm] = None, model_form_kwargs: dict = None, *args, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.EmbeddedModelField" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">EmbeddedModelField</code><span class="sig-paren">(</span><em>model_container: Type[django.db.models.base.Model], model_form_class: Type[django.forms.models.ModelForm] = None, model_form_kwargs: dict = None, admin=None, request=None, *args, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.EmbeddedModelField" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.fields.Field</span></code></p>
 <p>Allows for the inclusion of an instance of an abstract model as
 a field inside a document.</p>
 <p>Example:</p>
 <dl class="docutils">
-<dt>class Author(models.Model):</dt>
+<dt>class Blog(models.Model):</dt>
 <dd><p class="first">name = models.CharField(max_length=100)
-email = models.CharField(max_length=100)</p>
+tagline = models.TextField()</p>
 <dl class="last docutils">
 <dt>class Meta:</dt>
 <dd>abstract = True</dd>
 </dl>
 </dd>
-<dt>class AuthorForm(forms.ModelForm):</dt>
+<dt>class BlogForm(forms.ModelForm):</dt>
 <dd><dl class="first last docutils">
 <dt>class Meta:</dt>
-<dd><p class="first">model = Author
+<dd><p class="first">model = Blog
 fields = (</p>
 <blockquote>
-<div>‘name’, ‘email’</div></blockquote>
+<div>‘comment’, ‘author’</div></blockquote>
 <p class="last">)</p>
 </dd>
 </dl>
 </dd>
-<dt>class MultipleBlogPosts(models.Model):</dt>
-<dd><p class="first">h1 = models.CharField(max_length=100)
-content = models.ArrayModelField(</p>
-<blockquote>
-<div>model_container=BlogContent,
-model_form_class=BlogContentForm</div></blockquote>
-<p class="last">)</p>
+<dt>class Entry(models.Model):</dt>
+<dd><dl class="first docutils">
+<dt>blog = models.EmbeddedModelField(</dt>
+<dd>model_container=Blog,
+model_form_class=BlogForm</dd>
+</dl>
+<p>)</p>
+<p class="last">headline = models.CharField(max_length=255)
+objects = models.DjongoManager()</p>
 </dd>
 </dl>
 <dl class="method">
@@ -494,16 +562,38 @@ translation to instance.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="djongo.models.fields.GenericReferenceField">
-<em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">GenericReferenceField</code><a class="headerlink" href="#djongo.models.fields.GenericReferenceField" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.fields.mixins.FieldCacheMixin</span></code></p>
+<dt id="djongo.models.fields.FormlessField">
+<em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">FormlessField</code><span class="sig-paren">(</span><em>verbose_name=None</em>, <em>name=None</em>, <em>primary_key=False</em>, <em>max_length=None</em>, <em>unique=False</em>, <em>blank=False</em>, <em>null=False</em>, <em>db_index=False</em>, <em>rel=None</em>, <em>default=&lt;class 'django.db.models.fields.NOT_PROVIDED'&gt;</em>, <em>editable=True</em>, <em>serialize=True</em>, <em>unique_for_date=None</em>, <em>unique_for_month=None</em>, <em>unique_for_year=None</em>, <em>choices=None</em>, <em>help_text=''</em>, <em>db_column=None</em>, <em>db_tablespace=None</em>, <em>auto_created=False</em>, <em>validators=()</em>, <em>error_messages=None</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.FormlessField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.fields.Field</span></code></p>
+<dl class="attribute">
+<dt id="djongo.models.fields.FormlessField.empty_strings_allowed">
+<code class="descname">empty_strings_allowed</code><em class="property"> = False</em><a class="headerlink" href="#djongo.models.fields.FormlessField.empty_strings_allowed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="djongo.models.fields.FormlessField.formfield">
+<code class="descname">formfield</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.FormlessField.formfield" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a django.forms.Field instance for this field.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="djongo.models.fields.GenericObjectIdField">
+<em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">GenericObjectIdField</code><span class="sig-paren">(</span><em>verbose_name=None</em>, <em>name=None</em>, <em>primary_key=False</em>, <em>max_length=None</em>, <em>unique=False</em>, <em>blank=False</em>, <em>null=False</em>, <em>db_index=False</em>, <em>rel=None</em>, <em>default=&lt;class 'django.db.models.fields.NOT_PROVIDED'&gt;</em>, <em>editable=True</em>, <em>serialize=True</em>, <em>unique_for_date=None</em>, <em>unique_for_month=None</em>, <em>unique_for_year=None</em>, <em>choices=None</em>, <em>help_text=''</em>, <em>db_column=None</em>, <em>db_tablespace=None</em>, <em>auto_created=False</em>, <em>validators=()</em>, <em>error_messages=None</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.GenericObjectIdField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#djongo.models.fields.ObjectIdFieldMixin" title="djongo.models.fields.ObjectIdFieldMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">djongo.models.fields.ObjectIdFieldMixin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.fields.Field</span></code></p>
+<dl class="attribute">
+<dt id="djongo.models.fields.GenericObjectIdField.empty_strings_allowed">
+<code class="descname">empty_strings_allowed</code><em class="property"> = False</em><a class="headerlink" href="#djongo.models.fields.GenericObjectIdField.empty_strings_allowed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="djongo.models.fields.ListField">
-<em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">ListField</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ListField" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.fields.Field</span></code></p>
-<p>MongoDB allows the saving of arbitrary data inside it’s embedded array. The <cite>ListField</cite> is useful in such cases.</p>
+<em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">ListField</code><span class="sig-paren">(</span><em>verbose_name=None</em>, <em>name=None</em>, <em>primary_key=False</em>, <em>max_length=None</em>, <em>unique=False</em>, <em>blank=False</em>, <em>null=False</em>, <em>db_index=False</em>, <em>rel=None</em>, <em>default=&lt;class 'django.db.models.fields.NOT_PROVIDED'&gt;</em>, <em>editable=True</em>, <em>serialize=True</em>, <em>unique_for_date=None</em>, <em>unique_for_month=None</em>, <em>unique_for_year=None</em>, <em>choices=None</em>, <em>help_text=''</em>, <em>db_column=None</em>, <em>db_tablespace=None</em>, <em>auto_created=False</em>, <em>validators=()</em>, <em>error_messages=None</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ListField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#djongo.models.fields.FormlessField" title="djongo.models.fields.FormlessField"><code class="xref py py-class docutils literal notranslate"><span class="pre">djongo.models.fields.FormlessField</span></code></a></p>
+<p>MongoDB allows the saving of python lists as BSON Array type data. The <cite>ListField</cite> is useful in such cases.</p>
 <dl class="attribute">
 <dt id="djongo.models.fields.ListField.empty_strings_allowed">
 <code class="descname">empty_strings_allowed</code><em class="property"> = False</em><a class="headerlink" href="#djongo.models.fields.ListField.empty_strings_allowed" title="Permalink to this definition">¶</a></dt>
@@ -514,6 +604,14 @@ translation to instance.</p>
 <code class="descname">get_db_prep_value</code><span class="sig-paren">(</span><em>value</em>, <em>connection</em>, <em>prepared=False</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ListField.get_db_prep_value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return field’s value prepared for interacting with the database backend.</p>
 <p>Used by the default implementations of get_db_prep_save().</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="djongo.models.fields.ListField.to_python">
+<code class="descname">to_python</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ListField.to_python" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the input value into the expected Python data type, raising
+django.core.exceptions.ValidationError if the data can’t be converted.
+Return the converted value. Subclasses should override this.</p>
 </dd></dl>
 
 </dd></dl>
@@ -527,36 +625,47 @@ translation to instance.</p>
 <dl class="class">
 <dt id="djongo.models.fields.ObjectIdField">
 <em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">ObjectIdField</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ObjectIdField" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.fields.AutoField</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="#djongo.models.fields.ObjectIdFieldMixin" title="djongo.models.fields.ObjectIdFieldMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">djongo.models.fields.ObjectIdFieldMixin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.fields.AutoField</span></code></p>
 <p>For every document inserted into a collection MongoDB internally creates an field.
 The field can be referenced from within the Model as _id.</p>
-<dl class="method">
-<dt id="djongo.models.fields.ObjectIdField.get_db_prep_value">
-<code class="descname">get_db_prep_value</code><span class="sig-paren">(</span><em>value</em>, <em>connection</em>, <em>prepared=False</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ObjectIdField.get_db_prep_value" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return field’s value prepared for interacting with the database backend.</p>
-<p>Used by the default implementations of get_db_prep_save().</p>
-</dd></dl>
-
 <dl class="method">
 <dt id="djongo.models.fields.ObjectIdField.get_prep_value">
 <code class="descname">get_prep_value</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ObjectIdField.get_prep_value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform preliminary non-db specific value checks and conversions.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="djongo.models.fields.ObjectIdField.to_python">
-<code class="descname">to_python</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ObjectIdField.to_python" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert the input value into the expected Python data type, raising
-django.core.exceptions.ValidationError if the data can’t be converted.
-Return the converted value. Subclasses should override this.</p>
 </dd></dl>
+
+<dl class="class">
+<dt id="djongo.models.fields.ObjectIdFieldMixin">
+<em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">ObjectIdFieldMixin</code><a class="headerlink" href="#djongo.models.fields.ObjectIdFieldMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="djongo.models.fields.ObjectIdFieldMixin.description">
+<code class="descname">description</code><em class="property"> = 'ObjectId'</em><a class="headerlink" href="#djongo.models.fields.ObjectIdFieldMixin.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="djongo.models.fields.ObjectIdFieldMixin.get_db_prep_value">
+<code class="descname">get_db_prep_value</code><span class="sig-paren">(</span><em>value</em>, <em>connection</em>, <em>prepared=False</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ObjectIdFieldMixin.get_db_prep_value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="djongo.models.fields.ObjectIdFieldMixin.get_internal_type">
+<code class="descname">get_internal_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ObjectIdFieldMixin.get_internal_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="djongo.models.fields.ObjectIdFieldMixin.to_python">
+<code class="descname">to_python</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ObjectIdFieldMixin.to_python" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="djongo.models.fields.ReverseArrayReferenceDescriptor">
-<em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">ReverseArrayReferenceDescriptor</code><span class="sig-paren">(</span><em>rel</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ReverseArrayReferenceDescriptor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.fields.related_descriptors.ReverseManyToOneDescriptor</span></code></p>
+<em class="property">class </em><code class="descclassname">djongo.models.fields.</code><code class="descname">ReverseArrayReferenceDescriptor</code><span class="sig-paren">(</span><em>related</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.fields.ReverseArrayReferenceDescriptor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="attribute">
 <dt id="djongo.models.fields.ReverseArrayReferenceDescriptor.related_manager_cls">
 <code class="descname">related_manager_cls</code><a class="headerlink" href="#djongo.models.fields.ReverseArrayReferenceDescriptor.related_manager_cls" title="Permalink to this definition">¶</a></dt>
@@ -694,6 +803,11 @@ in this query</li>
 <em class="property">class </em><code class="descclassname">djongo.models.</code><code class="descname">Avg</code><span class="sig-paren">(</span><em>*args</em>, <em>filter=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.Avg" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.aggregates.Aggregate</span></code></p>
 <dl class="method">
+<dt id="djongo.models.Avg.as_mysql">
+<code class="descname">as_mysql</code><span class="sig-paren">(</span><em>compiler</em>, <em>connection</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.Avg.as_mysql" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="djongo.models.Avg.as_oracle">
 <code class="descname">as_oracle</code><span class="sig-paren">(</span><em>compiler</em>, <em>connection</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.Avg.as_oracle" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -796,6 +910,11 @@ from the one the database returns.</p>
 <dt id="djongo.models.Sum">
 <em class="property">class </em><code class="descclassname">djongo.models.</code><code class="descname">Sum</code><span class="sig-paren">(</span><em>*args</em>, <em>filter=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.Sum" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.aggregates.Aggregate</span></code></p>
+<dl class="method">
+<dt id="djongo.models.Sum.as_mysql">
+<code class="descname">as_mysql</code><span class="sig-paren">(</span><em>compiler</em>, <em>connection</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.Sum.as_mysql" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="djongo.models.Sum.as_oracle">
 <code class="descname">as_oracle</code><span class="sig-paren">(</span><em>compiler</em>, <em>connection</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.Sum.as_oracle" title="Permalink to this definition">¶</a></dt>
@@ -1095,53 +1214,11 @@ Return the converted value. Subclasses should override this.</p>
 
 <dl class="class">
 <dt id="djongo.models.BooleanField">
-<em class="property">class </em><code class="descclassname">djongo.models.</code><code class="descname">BooleanField</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.BooleanField" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">djongo.models.</code><code class="descname">BooleanField</code><span class="sig-paren">(</span><em>verbose_name=None</em>, <em>name=None</em>, <em>primary_key=False</em>, <em>max_length=None</em>, <em>unique=False</em>, <em>blank=False</em>, <em>null=False</em>, <em>db_index=False</em>, <em>rel=None</em>, <em>default=&lt;class 'django.db.models.fields.NOT_PROVIDED'&gt;</em>, <em>editable=True</em>, <em>serialize=True</em>, <em>unique_for_date=None</em>, <em>unique_for_month=None</em>, <em>unique_for_year=None</em>, <em>choices=None</em>, <em>help_text=''</em>, <em>db_column=None</em>, <em>db_tablespace=None</em>, <em>auto_created=False</em>, <em>validators=()</em>, <em>error_messages=None</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.BooleanField" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.fields.Field</span></code></p>
-<dl class="method">
-<dt id="djongo.models.BooleanField.check">
-<code class="descname">check</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.BooleanField.check" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="djongo.models.BooleanField.deconstruct">
-<code class="descname">deconstruct</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.BooleanField.deconstruct" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return enough information to recreate the field as a 4-tuple:</p>
-<blockquote>
-<div><ul class="simple">
-<li>The name of the field on the model, if contribute_to_class() has
-been run.</li>
-<li>The import path of the field, including the class:e.g.
-django.db.models.IntegerField This should be the most portable
-version, so less specific may be better.</li>
-<li>A list of positional arguments.</li>
-<li>A dict of keyword arguments.</li>
-</ul>
-</div></blockquote>
-<p>Note that the positional or keyword arguments must contain values of
-the following types (including inner values of collection types):</p>
-<blockquote>
-<div><ul class="simple">
-<li>None, bool, str, int, float, complex, set, frozenset, list, tuple,
-dict</li>
-<li>UUID</li>
-<li>datetime.datetime (naive), datetime.date</li>
-<li>top-level classes, top-level functions - will be referenced by their
-full import path</li>
-<li>Storage instances - these have their own deconstruct() method</li>
-</ul>
-</div></blockquote>
-<p>This is because the values here must be serialized into a text format
-(possibly new Python code, possibly JSON) and these are the only types
-with encoding handlers defined.</p>
-<p>There’s no need to return the exact way the field was instantiated this
-time, just ensure that the resulting field is the same - prefer keyword
-arguments over positional ones, and omit parameters with their default
-values.</p>
-</dd></dl>
-
 <dl class="attribute">
 <dt id="djongo.models.BooleanField.default_error_messages">
-<code class="descname">default_error_messages</code><em class="property"> = {'invalid': &quot;'%(value)s' value must be either True or False.&quot;}</em><a class="headerlink" href="#djongo.models.BooleanField.default_error_messages" title="Permalink to this definition">¶</a></dt>
+<code class="descname">default_error_messages</code><em class="property"> = {'invalid': &quot;'%(value)s' value must be either True or False.&quot;, 'invalid_nullable': &quot;'%(value)s' value must be either True, False, or None.&quot;}</em><a class="headerlink" href="#djongo.models.BooleanField.default_error_messages" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1503,13 +1580,6 @@ values.</p>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="djongo.models.DecimalField.format_number">
-<code class="descname">format_number</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.DecimalField.format_number" title="Permalink to this definition">¶</a></dt>
-<dd><p>Format a number into a string with the requisite number of digits and
-decimal places.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="djongo.models.DecimalField.formfield">
 <code class="descname">formfield</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.DecimalField.formfield" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a django.forms.Field instance for this field.</p>
@@ -1730,7 +1800,7 @@ for every subclass of cls, even if cls is not an abstract model.</p>
 
 <dl class="attribute">
 <dt id="djongo.models.Field.creation_counter">
-<code class="descname">creation_counter</code><em class="property"> = 18</em><a class="headerlink" href="#djongo.models.Field.creation_counter" title="Permalink to this definition">¶</a></dt>
+<code class="descname">creation_counter</code><em class="property"> = 19</em><a class="headerlink" href="#djongo.models.Field.creation_counter" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2400,7 +2470,7 @@ Return the converted value. Subclasses should override this.</p>
 <dl class="class">
 <dt id="djongo.models.NullBooleanField">
 <em class="property">class </em><code class="descclassname">djongo.models.</code><code class="descname">NullBooleanField</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.NullBooleanField" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.fields.Field</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.fields.BooleanField</span></code></p>
 <dl class="method">
 <dt id="djongo.models.NullBooleanField.deconstruct">
 <code class="descname">deconstruct</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.NullBooleanField.deconstruct" title="Permalink to this definition">¶</a></dt>
@@ -2440,7 +2510,7 @@ values.</p>
 
 <dl class="attribute">
 <dt id="djongo.models.NullBooleanField.default_error_messages">
-<code class="descname">default_error_messages</code><em class="property"> = {'invalid': &quot;'%(value)s' value must be either None, True or False.&quot;}</em><a class="headerlink" href="#djongo.models.NullBooleanField.default_error_messages" title="Permalink to this definition">¶</a></dt>
+<code class="descname">default_error_messages</code><em class="property"> = {'invalid': &quot;'%(value)s' value must be either None, True or False.&quot;, 'invalid_nullable': &quot;'%(value)s' value must be either None, True or False.&quot;}</em><a class="headerlink" href="#djongo.models.NullBooleanField.default_error_messages" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -2448,35 +2518,10 @@ values.</p>
 <code class="descname">description</code><em class="property"> = 'Boolean (Either True, False or None)'</em><a class="headerlink" href="#djongo.models.NullBooleanField.description" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
-<dt id="djongo.models.NullBooleanField.empty_strings_allowed">
-<code class="descname">empty_strings_allowed</code><em class="property"> = False</em><a class="headerlink" href="#djongo.models.NullBooleanField.empty_strings_allowed" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="djongo.models.NullBooleanField.formfield">
-<code class="descname">formfield</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.NullBooleanField.formfield" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a django.forms.Field instance for this field.</p>
-</dd></dl>
-
 <dl class="method">
 <dt id="djongo.models.NullBooleanField.get_internal_type">
 <code class="descname">get_internal_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.NullBooleanField.get_internal_type" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
-
-<dl class="method">
-<dt id="djongo.models.NullBooleanField.get_prep_value">
-<code class="descname">get_prep_value</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.NullBooleanField.get_prep_value" title="Permalink to this definition">¶</a></dt>
-<dd><p>Perform preliminary non-db specific value checks and conversions.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="djongo.models.NullBooleanField.to_python">
-<code class="descname">to_python</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.NullBooleanField.to_python" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert the input value into the expected Python data type, raising
-django.core.exceptions.ValidationError if the data can’t be converted.
-Return the converted value. Subclasses should override this.</p>
-</dd></dl>
 
 </dd></dl>
 
@@ -2893,7 +2938,7 @@ Return the converted value. Subclasses should override this.</p>
 
 <dl class="class">
 <dt id="djongo.models.Index">
-<em class="property">class </em><code class="descclassname">djongo.models.</code><code class="descname">Index</code><span class="sig-paren">(</span><em>*</em>, <em>fields=[]</em>, <em>name=None</em>, <em>db_tablespace=None</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.Index" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">djongo.models.</code><code class="descname">Index</code><span class="sig-paren">(</span><em>*</em>, <em>fields=()</em>, <em>name=None</em>, <em>db_tablespace=None</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.Index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="method">
 <dt id="djongo.models.Index.check_name">
@@ -3975,6 +4020,11 @@ Meta.order_with_respect_to is specified.</p>
 <dd></dd></dl>
 
 <dl class="attribute">
+<dt id="djongo.models.Lookup.can_use_none_as_rhs">
+<code class="descname">can_use_none_as_rhs</code><em class="property"> = False</em><a class="headerlink" href="#djongo.models.Lookup.can_use_none_as_rhs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
 <dt id="djongo.models.Lookup.contains_aggregate">
 <code class="descname">contains_aggregate</code><a class="headerlink" href="#djongo.models.Lookup.contains_aggregate" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -4119,6 +4169,11 @@ Meta.order_with_respect_to is specified.</p>
 <dl class="attribute">
 <dt id="djongo.models.Q.OR">
 <code class="descname">OR</code><em class="property"> = 'OR'</em><a class="headerlink" href="#djongo.models.Q.OR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="djongo.models.Q.conditional">
+<code class="descname">conditional</code><em class="property"> = True</em><a class="headerlink" href="#djongo.models.Q.conditional" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -4268,6 +4323,11 @@ set.</p>
 <dl class="method">
 <dt id="djongo.models.QuerySet.exists">
 <code class="descname">exists</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.QuerySet.exists" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="djongo.models.QuerySet.explain">
+<code class="descname">explain</code><span class="sig-paren">(</span><em>*</em>, <em>format=None</em>, <em>**options</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.QuerySet.explain" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -4780,6 +4840,14 @@ being constructed.</p>
 <code class="descname">target_field</code><a class="headerlink" href="#djongo.models.ForeignKey.target_field" title="Permalink to this definition">¶</a></dt>
 <dd><p>When filtering against this relation, return the field on the remote
 model against which the filtering should happen.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="djongo.models.ForeignKey.to_python">
+<code class="descname">to_python</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.ForeignKey.to_python" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the input value into the expected Python data type, raising
+django.core.exceptions.ValidationError if the data can’t be converted.
+Return the converted value. Subclasses should override this.</p>
 </dd></dl>
 
 <dl class="method">
@@ -5311,18 +5379,6 @@ Provided for symmetry with ManyToOneRel.</p>
 flags for the reverse relation.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="djongo.models.permalink">
-<code class="descclassname">djongo.models.</code><code class="descname">permalink</code><span class="sig-paren">(</span><em>func</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.permalink" title="Permalink to this definition">¶</a></dt>
-<dd><p>Decorator that calls urls.reverse() to return a URL using parameters
-returned by the decorated function “func”.</p>
-<p>“func” should be a function that returns a tuple in one of the
-following formats:</p>
-<blockquote>
-<div>(viewname, viewargs)
-(viewname, viewargs, viewkwargs)</div></blockquote>
-</dd></dl>
-
 <dl class="class">
 <dt id="djongo.models.DjongoManager">
 <em class="property">class </em><code class="descclassname">djongo.models.</code><code class="descname">DjongoManager</code><a class="headerlink" href="#djongo.models.DjongoManager" title="Permalink to this definition">¶</a></dt>
@@ -5334,9 +5390,9 @@ them with ‘<a href="#id85"><span class="problematic" id="id86">mongo_</span></
 
 <dl class="class">
 <dt id="djongo.models.ListField">
-<em class="property">class </em><code class="descclassname">djongo.models.</code><code class="descname">ListField</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.ListField" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.fields.Field</span></code></p>
-<p>MongoDB allows the saving of arbitrary data inside it’s embedded array. The <cite>ListField</cite> is useful in such cases.</p>
+<em class="property">class </em><code class="descclassname">djongo.models.</code><code class="descname">ListField</code><span class="sig-paren">(</span><em>verbose_name=None</em>, <em>name=None</em>, <em>primary_key=False</em>, <em>max_length=None</em>, <em>unique=False</em>, <em>blank=False</em>, <em>null=False</em>, <em>db_index=False</em>, <em>rel=None</em>, <em>default=&lt;class 'django.db.models.fields.NOT_PROVIDED'&gt;</em>, <em>editable=True</em>, <em>serialize=True</em>, <em>unique_for_date=None</em>, <em>unique_for_month=None</em>, <em>unique_for_year=None</em>, <em>choices=None</em>, <em>help_text=''</em>, <em>db_column=None</em>, <em>db_tablespace=None</em>, <em>auto_created=False</em>, <em>validators=()</em>, <em>error_messages=None</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.ListField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#djongo.models.fields.FormlessField" title="djongo.models.fields.FormlessField"><code class="xref py py-class docutils literal notranslate"><span class="pre">djongo.models.fields.FormlessField</span></code></a></p>
+<p>MongoDB allows the saving of python lists as BSON Array type data. The <cite>ListField</cite> is useful in such cases.</p>
 <dl class="attribute">
 <dt id="djongo.models.ListField.empty_strings_allowed">
 <code class="descname">empty_strings_allowed</code><em class="property"> = False</em><a class="headerlink" href="#djongo.models.ListField.empty_strings_allowed" title="Permalink to this definition">¶</a></dt>
@@ -5347,6 +5403,14 @@ them with ‘<a href="#id85"><span class="problematic" id="id86">mongo_</span></
 <code class="descname">get_db_prep_value</code><span class="sig-paren">(</span><em>value</em>, <em>connection</em>, <em>prepared=False</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.ListField.get_db_prep_value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return field’s value prepared for interacting with the database backend.</p>
 <p>Used by the default implementations of get_db_prep_save().</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="djongo.models.ListField.to_python">
+<code class="descname">to_python</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.ListField.to_python" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the input value into the expected Python data type, raising
+django.core.exceptions.ValidationError if the data can’t be converted.
+Return the converted value. Subclasses should override this.</p>
 </dd></dl>
 
 </dd></dl>
@@ -5469,38 +5533,40 @@ should override this to provide validation logic.</p>
 
 <dl class="class">
 <dt id="djongo.models.EmbeddedModelField">
-<em class="property">class </em><code class="descclassname">djongo.models.</code><code class="descname">EmbeddedModelField</code><span class="sig-paren">(</span><em>model_container: Type[django.db.models.base.Model], model_form_class: Type[django.forms.models.ModelForm] = None, model_form_kwargs: dict = None, *args, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.EmbeddedModelField" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">djongo.models.</code><code class="descname">EmbeddedModelField</code><span class="sig-paren">(</span><em>model_container: Type[django.db.models.base.Model], model_form_class: Type[django.forms.models.ModelForm] = None, model_form_kwargs: dict = None, admin=None, request=None, *args, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.EmbeddedModelField" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.fields.Field</span></code></p>
 <p>Allows for the inclusion of an instance of an abstract model as
 a field inside a document.</p>
 <p>Example:</p>
 <dl class="docutils">
-<dt>class Author(models.Model):</dt>
+<dt>class Blog(models.Model):</dt>
 <dd><p class="first">name = models.CharField(max_length=100)
-email = models.CharField(max_length=100)</p>
+tagline = models.TextField()</p>
 <dl class="last docutils">
 <dt>class Meta:</dt>
 <dd>abstract = True</dd>
 </dl>
 </dd>
-<dt>class AuthorForm(forms.ModelForm):</dt>
+<dt>class BlogForm(forms.ModelForm):</dt>
 <dd><dl class="first last docutils">
 <dt>class Meta:</dt>
-<dd><p class="first">model = Author
+<dd><p class="first">model = Blog
 fields = (</p>
 <blockquote>
-<div>‘name’, ‘email’</div></blockquote>
+<div>‘comment’, ‘author’</div></blockquote>
 <p class="last">)</p>
 </dd>
 </dl>
 </dd>
-<dt>class MultipleBlogPosts(models.Model):</dt>
-<dd><p class="first">h1 = models.CharField(max_length=100)
-content = models.ArrayModelField(</p>
-<blockquote>
-<div>model_container=BlogContent,
-model_form_class=BlogContentForm</div></blockquote>
-<p class="last">)</p>
+<dt>class Entry(models.Model):</dt>
+<dd><dl class="first docutils">
+<dt>blog = models.EmbeddedModelField(</dt>
+<dd>model_container=Blog,
+model_form_class=BlogForm</dd>
+</dl>
+<p>)</p>
+<p class="last">headline = models.CharField(max_length=255)
+objects = models.DjongoManager()</p>
 </dd>
 </dl>
 <dl class="method">
@@ -5591,6 +5657,11 @@ For all practical aspects, the ArrayReferenceField behaves like a Django ManyToM
 </dd></dl>
 
 <dl class="method">
+<dt id="djongo.models.ArrayReferenceField.from_db_value">
+<code class="descname">from_db_value</code><span class="sig-paren">(</span><em>value</em>, <em>expression</em>, <em>connection</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.ArrayReferenceField.from_db_value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="djongo.models.ArrayReferenceField.get_db_prep_save">
 <code class="descname">get_db_prep_save</code><span class="sig-paren">(</span><em>value</em>, <em>connection</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.ArrayReferenceField.get_db_prep_save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return field’s value prepared for saving into a database.</p>
@@ -5629,30 +5700,61 @@ For all practical aspects, the ArrayReferenceField behaves like a Django ManyToM
 <dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">ReverseArrayReferenceDescriptor</span></code></p>
 </dd></dl>
 
+<dl class="method">
+<dt id="djongo.models.ArrayReferenceField.to_python">
+<code class="descname">to_python</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.ArrayReferenceField.to_python" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the input value into the expected Python data type, raising
+django.core.exceptions.ValidationError if the data can’t be converted.
+Return the converted value. Subclasses should override this.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="djongo.models.ObjectIdField">
 <em class="property">class </em><code class="descclassname">djongo.models.</code><code class="descname">ObjectIdField</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.ObjectIdField" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.fields.AutoField</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="#djongo.models.fields.ObjectIdFieldMixin" title="djongo.models.fields.ObjectIdFieldMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">djongo.models.fields.ObjectIdFieldMixin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.fields.AutoField</span></code></p>
 <p>For every document inserted into a collection MongoDB internally creates an field.
 The field can be referenced from within the Model as _id.</p>
-<dl class="method">
-<dt id="djongo.models.ObjectIdField.get_db_prep_value">
-<code class="descname">get_db_prep_value</code><span class="sig-paren">(</span><em>value</em>, <em>connection</em>, <em>prepared=False</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.ObjectIdField.get_db_prep_value" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return field’s value prepared for interacting with the database backend.</p>
-<p>Used by the default implementations of get_db_prep_save().</p>
-</dd></dl>
-
 <dl class="method">
 <dt id="djongo.models.ObjectIdField.get_prep_value">
 <code class="descname">get_prep_value</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.ObjectIdField.get_prep_value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform preliminary non-db specific value checks and conversions.</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="class">
+<dt id="djongo.models.GenericObjectIdField">
+<em class="property">class </em><code class="descclassname">djongo.models.</code><code class="descname">GenericObjectIdField</code><span class="sig-paren">(</span><em>verbose_name=None</em>, <em>name=None</em>, <em>primary_key=False</em>, <em>max_length=None</em>, <em>unique=False</em>, <em>blank=False</em>, <em>null=False</em>, <em>db_index=False</em>, <em>rel=None</em>, <em>default=&lt;class 'django.db.models.fields.NOT_PROVIDED'&gt;</em>, <em>editable=True</em>, <em>serialize=True</em>, <em>unique_for_date=None</em>, <em>unique_for_month=None</em>, <em>unique_for_year=None</em>, <em>choices=None</em>, <em>help_text=''</em>, <em>db_column=None</em>, <em>db_tablespace=None</em>, <em>auto_created=False</em>, <em>validators=()</em>, <em>error_messages=None</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.GenericObjectIdField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#djongo.models.fields.ObjectIdFieldMixin" title="djongo.models.fields.ObjectIdFieldMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">djongo.models.fields.ObjectIdFieldMixin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.fields.Field</span></code></p>
+<dl class="attribute">
+<dt id="djongo.models.GenericObjectIdField.empty_strings_allowed">
+<code class="descname">empty_strings_allowed</code><em class="property"> = False</em><a class="headerlink" href="#djongo.models.GenericObjectIdField.empty_strings_allowed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="djongo.models.DictField">
+<em class="property">class </em><code class="descclassname">djongo.models.</code><code class="descname">DictField</code><span class="sig-paren">(</span><em>verbose_name=None</em>, <em>name=None</em>, <em>primary_key=False</em>, <em>max_length=None</em>, <em>unique=False</em>, <em>blank=False</em>, <em>null=False</em>, <em>db_index=False</em>, <em>rel=None</em>, <em>default=&lt;class 'django.db.models.fields.NOT_PROVIDED'&gt;</em>, <em>editable=True</em>, <em>serialize=True</em>, <em>unique_for_date=None</em>, <em>unique_for_month=None</em>, <em>unique_for_year=None</em>, <em>choices=None</em>, <em>help_text=''</em>, <em>db_column=None</em>, <em>db_tablespace=None</em>, <em>auto_created=False</em>, <em>validators=()</em>, <em>error_messages=None</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.DictField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#djongo.models.fields.FormlessField" title="djongo.models.fields.FormlessField"><code class="xref py py-class docutils literal notranslate"><span class="pre">djongo.models.fields.FormlessField</span></code></a></p>
+<p>MongoDB allows the saving of python dicts as BSON object type data. The <cite>DictField</cite> is useful in such cases.</p>
+<dl class="attribute">
+<dt id="djongo.models.DictField.empty_strings_allowed">
+<code class="descname">empty_strings_allowed</code><em class="property"> = False</em><a class="headerlink" href="#djongo.models.DictField.empty_strings_allowed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
-<dt id="djongo.models.ObjectIdField.to_python">
-<code class="descname">to_python</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.ObjectIdField.to_python" title="Permalink to this definition">¶</a></dt>
+<dt id="djongo.models.DictField.get_db_prep_value">
+<code class="descname">get_db_prep_value</code><span class="sig-paren">(</span><em>value</em>, <em>connection</em>, <em>prepared=False</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.DictField.get_db_prep_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return field’s value prepared for interacting with the database backend.</p>
+<p>Used by the default implementations of get_db_prep_save().</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="djongo.models.DictField.to_python">
+<code class="descname">to_python</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#djongo.models.DictField.to_python" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert the input value into the expected Python data type, raising
 django.core.exceptions.ValidationError if the data can’t be converted.
 Return the converted value. Subclasses should override this.</p>
