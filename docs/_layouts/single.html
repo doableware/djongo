@@ -41,7 +41,7 @@ layout: default
               {% include toc.html sanitize=true html=content h_min=2 h_max=3 class="toc__menu" %}
             </nav>
 
-            <div class="toc feedback">
+            <div class="toc feedback" style="display: none">
             <header><h4 class="nav__title"><i class="fas fa-{{ page.toc_icon | default: 'file-alt' }}"></i> Rate the Docs</h4></header>
             <form action="https://formspree.io/nesdis@gmail.com" method="POST">
               <select name="rating">
@@ -56,6 +56,13 @@ layout: default
             </form>
             </div>
 
+          </aside>
+        {% endif %}
+
+        {% if page.pizza %}
+          <aside class="sidebar__right" style="position: sticky; top: 2em; float: right">
+            <header><h4 class="nav__title"><i class="fas fa-{{ page.toc_icon | default: 'file-alt' }}"></i> Donate A Pizza</h4></header>
+            <a href="https://www.patreon.com/posts/sustainable-22611438"><img src="/djongo/assets/images/pizza.jpg"></a>
           </aside>
         {% endif %}
         {{ content }}

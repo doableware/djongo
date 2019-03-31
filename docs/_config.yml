@@ -199,7 +199,8 @@ defaults:
       author_profile: false
       share: false
       comments: false
-      toc: true
+      toc: false
+      pizza: true
       sidebar:
         nav: "docs"
 
