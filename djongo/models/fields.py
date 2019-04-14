@@ -915,7 +915,7 @@ def create_forward_array_reference_manager(superclass, rel):
         def set(self, objs, *, clear=False):
             objs = tuple(objs)
 
-            db = router.db_for_write(self.through, instance=self.instance)
+            db = router.db_for_write(self.instance.__class__, instance=self.instance)
             with transaction.atomic(using=db, savepoint=False):
                 if clear:
                     self.clear()
@@ -1024,11 +1024,15 @@ class ArrayReferenceField(ForeignKey):
                  db_constraint=True, **kwargs):
 
         on_delete = on_delete or self._on_delete
-        super().__init__(to, on_delete=on_delete, related_name=related_name,
+        super().__init__(to,
+                         on_delete=on_delete,
+                         related_name=related_name,
                          related_query_name=related_query_name,
                          limit_choices_to=limit_choices_to,
-                         parent_link=parent_link, to_field=to_field,
-                         db_constraint=db_constraint, **kwargs)
+                         parent_link=parent_link,
+                         to_field=to_field,
+                         db_constraint=db_constraint,
+                         **kwargs)
 
         self.concrete = False
 
@@ -1049,10 +1053,35 @@ class ArrayReferenceField(ForeignKey):
     def get_db_prep_value(self, value, connection, prepared=False):
         if value is None:
             return []
+        elif isinstance(value, set):
+            return list(value)
         return value
         # return super().get_db_prep_value(value, connection, prepared)
 
     def get_db_prep_save(self, value, connection):
-        if value is None:
-            return []
-        return list(value)
+        return self.get_db_prep_value(value, connection)
+        # if value is None:
+        #     return []
+        # return list(value)
+
+    def validate(self, value, model_instance):
+        pass
+        # super().validate(list(value), model_instance)
+
+    def save_form_data(self, instance, data):
+        getattr(instance, self.name).set(list(data), clear=True)
+
+    def formfield(self, *, using=None, **kwargs):
+        defaults = {
+            'form_class': forms.ModelMultipleChoiceField,
+            'queryset': self.remote_field.model._default_manager.using(using),
+            **kwargs,
+        }
+        # If initial is passed in, it's a list of related objects, but the
+        # MultipleChoiceField takes a list of IDs.
+        if defaults.get('initial') is not None:
+            initial = defaults['initial']
+            if callable(initial):
+                initial = initial()
+            defaults['initial'] = [i.pk for i in initial]
+        return super().formfield(**defaults)

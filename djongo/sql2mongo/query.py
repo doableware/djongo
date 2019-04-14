@@ -768,6 +768,7 @@ class Result:
             import djongo
             exe = SQLDecodeError(
                 f'FAILED SQL: {self._sql}\n' 
+                f'Params: {self._params}\n'
                 f'Pymongo error: {e.details}\n'
                 f'Version: {djongo.__version__}'
             )
@@ -777,6 +778,7 @@ class Result:
             import djongo
             exe = SQLDecodeError(
                 f'FAILED SQL: {self._sql}\n'
+                f'Params: {self._params}\n'
                 f'Version: {djongo.__version__}'
             )
             raise exe from e
@@ -812,6 +814,7 @@ class Result:
                 import djongo
                 exe = SQLDecodeError(
                     f'FAILED SQL: {self._sql}\n'
+                    f'Params: {self._params}\n'
                     f'Pymongo error: {e.details}\n'
                     f'Version: {djongo.__version__}'
                 )
@@ -821,6 +824,7 @@ class Result:
                 import djongo
                 exe = SQLDecodeError(
                     f'FAILED SQL: {self._sql}\n'
+                    f'Params: {self._params}\n'
                     f'Version: {djongo.__version__}'
                 )
                 raise exe from e
