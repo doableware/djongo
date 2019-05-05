@@ -32,6 +32,18 @@ DATABASES = {
    <li> YOUR ARE SET! HAVE FUN! </li>
 </ol>
 
+## Live support
+
+### Get help
+
+If you have an urgent problem, hire a mentor for a 1:1 live session on Git-Start:
+[![Get 1:1 live support for your issue.](https://git-start.com/assets/git-start-mentee-banner-medium.svg?sanitize=true)](https://git-start.com/help-request/create/nesdis%2Fdjongo)
+
+### Provide help
+
+Help others in paid 1:1 live sessions to get started.
+[![Give paid 1:1 live support.](https://git-start.com/assets/git-start-mentor-banner-medium.svg?sanitize=true)](https://git-start.com/help-request/overview/nesdis%2Fdjongo)
+
 ## Requirements:
 
   1. Python 3.6 or higher.
