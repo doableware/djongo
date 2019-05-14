@@ -642,7 +642,7 @@ class AlterQuery(VoidQuery):
             )):
                 pass
             elif tok.match(tokens.Name.Builtin, (
-                'integer', 'bool', 'char', 'date',
+                'integer', 'bool', 'char', 'date', 'boolean',
                 'datetime', 'float', 'time', 'number'
             )):
                 pass
