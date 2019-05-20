@@ -86,7 +86,7 @@ class FormlessField(Field):
         )
 
 
-class ListField(FormlessField):
+class ListField(Field):
     """
     MongoDB allows the saving of python lists as BSON Array type data. The `ListField` is useful in such cases.
     """
@@ -108,7 +108,7 @@ class ListField(FormlessField):
         return value
 
 
-class DictField(FormlessField):
+class DictField(Field):
     """
     MongoDB allows the saving of python dicts as BSON object type data. The `DictField` is useful in such cases.
     """
