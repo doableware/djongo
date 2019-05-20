@@ -508,8 +508,9 @@ class AlterQuery(VoidQuery):
 
     def __init__(self, *args):
         self._iden_name = None
-        self._old_column = None
-        self._new_column = None
+        self._old_name = None
+        self._new_name = None
+        self._new_name = None
         self._default = None
         self._cascade = None
         self._null = None
@@ -543,19 +544,26 @@ class AlterQuery(VoidQuery):
         sm = self.statement
         tok_id, tok = sm.token_next(tok_id)
 
+        column = False
         to = False
         while tok_id is not None:
             if tok.match(tokens.Keyword, ('COLUMN'),):
                 self.execute = self._rename_column
+                column = True
+
             if tok.match(tokens.Keyword, ('TO'),):
                 to = True
             elif isinstance(tok, Identifier):
                 if not to:
-                    self.old_column = tok.get_real_name()
+                    self._old_name = tok.get_real_name()
                 else:
-                    self.new_column = tok.get_real_name()
+                    self._new_name = tok.get_real_name()
 
             tok_id, tok = sm.token_next(tok_id)
+
+        if not column:
+            # Rename table
+            self.execute = self._rename_collection
 
         return tok_id
 
@@ -564,11 +572,14 @@ class AlterQuery(VoidQuery):
             {},
             {
                 '$rename': {
-                    self.old_column: self.new_column
+                    self._old_name: self._new_name
                 }
             },
             multi=True
         )
+
+    def _rename_collection(self):
+        self.db_ref[self.left_table].rename(self._new_name)
 
     def _alter(self, tok_id):
         self.execute = lambda: None
@@ -631,8 +642,8 @@ class AlterQuery(VoidQuery):
             )):
                 pass
             elif tok.match(tokens.Name.Builtin, (
-                'integer', 'bool', 'char', 'date',
-                'datetime', 'float', 'time'
+                'integer', 'bool', 'char', 'date', 'boolean',
+                'datetime', 'float', 'time', 'number'
             )):
                 pass
             elif isinstance(tok, Identifier):
