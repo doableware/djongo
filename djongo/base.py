@@ -26,7 +26,7 @@ class CachedCollections(set):
         ans = super().__contains__(item)
         if ans:
             return ans
-        self.update(self.db.collection_names(include_system_collections=False))
+        self.update(self.db.list_collection_names())
         return super().__contains__(item)
 
 
