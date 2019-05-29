@@ -43,7 +43,7 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
 
         return [
             TableInfo(c, 't')
-            for c in cursor.db_conn.list_collection_names(False)
+            for c in cursor.db_conn.list_collection_names()
             if c != '__schema__'
         ]
 
