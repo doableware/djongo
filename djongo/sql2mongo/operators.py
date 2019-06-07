@@ -441,8 +441,6 @@ class ParenthesisOp(_Op):
                 op = IsOp(**kw)
                 link_op()
                 self._op_precedence(op)
-                for _ in range(3):
-                    tok_id, _ = token.token_next(tok_id)
 
             elif isinstance(tok, Comparison):
                 op = CmpOp(0, tok, self.query)
