@@ -19,10 +19,10 @@ if __name__ == '__main__':
     if not result.wasSuccessful():
         sys.exit(1)
 
-    app_root = os.path.join(TEST_DIR, 'djongo_tests', 'project')
-    dummy_app = os.path.join(app_root, 'dummy')
-    if 'migrations' in os.listdir(dummy_app):
-        shutil.rmtree(os.path.join(dummy_app, 'migrations'))
+    app_root = os.path.join(TEST_DIR, 'djongo_tests', 'test_project')
+    main_test_app = os.path.join(app_root, 'main_test')
+    if 'migrations' in os.listdir(main_test_app):
+        shutil.rmtree(os.path.join(main_test_app, 'migrations'))
         print('Migrations removed')
 
     with client:
@@ -30,13 +30,13 @@ if __name__ == '__main__':
 
     manage_py = os.path.join(app_root, "manage.py")
     cmds = [
-        'makemigrations dummy',
+        'makemigrations main_test',
         'migrate',
         'inspectdb',
-        'test dummy.tests.test_models'
+        'test main_test.tests.test_models'
     ]
 
-    settings = '--settings=project.settings_precheckin'
+    settings = '--settings=test_project.settings.settings_precheckin'
     for cmd in cmds:
         print(f'python {manage_py} {cmd} {settings}')
         subprocess.run(f'python {manage_py} {cmd} {settings}'.split(), check=True)

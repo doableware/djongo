@@ -123,4 +123,4 @@ You can manually create a `__schema__` collection in your existing DB. Next, add
 
 *You are done setting up Django with MongoDB. Start using Django like with any other database backend.*
 
-Finally, you can ask for [expert support](/djongo/support/) if your project demands complex migrations. 
+Finally, you can ask for [expert support](https://www.patreon.com/nesdis) if your project demands complex migrations.
