@@ -11,7 +11,7 @@ if __name__ == "__main__":
     if not root_logger.hasHandlers():
         root_logger.addHandler(StreamHandler())
 
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "test_project.settings.settings_loaded")
     try:
         from django.core.management import execute_from_command_line
     except ImportError:
