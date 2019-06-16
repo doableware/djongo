@@ -6,7 +6,7 @@ permalink: /using-django-with-mongodb-data-fields/
 
 Django Admin is a powerful tool for managing data used in your app. When your models use Djongo relational fields,  you can create NoSQL "embedded models" directly from the Django Admin. **These fields provide better performance when compared with traditional Django relational fields.**
 
-The Django admin application can use your models to automatically build a site area that you can use to create, view, update, and delete records. This can save you a lot of time during development, making it very easy to test your models and get a feel for whether you have the right data. Most of you already know about Django Admin, but to demonstrate how to use it with Djongo, we start with a simple example. You can ask for [expert support](/djongo/support/) if your project uses complex models. 
+The Django admin application can use your models to automatically build a site area that you can use to create, view, update, and delete records. This can save you a lot of time during development, making it very easy to test your models and get a feel for whether you have the right data. Most of you already know about Django Admin, but to demonstrate how to use it with Djongo, we start with a simple example. You can ask for [expert support](https://www.patreon.com/nesdis) if your project uses complex models.
 
 We first define our basic models. In the tutorials, we use the example used in the official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/). The documentation talks about 3 models that interact with each other: **Blog, Author and Entry**. To make the example clearer, few fields from the original models are omitted. 
 

@@ -1,8 +1,8 @@
-from dummy.models.array_models import ArrayEntry, ArrayAuthor
-from dummy.models.basic_models import Blog, Entry, Author
-from dummy.models.embedded_models import EmbeddedBlog, EmbeddedEntry
-from dummy.models.misc_models import ListEntry, DictEntry
-from dummy.models.reference_models import ReferenceEntry, ReferenceAuthor
+from main_test.models.array_models import ArrayEntry, ArrayAuthor
+from main_test.models.basic_models import Blog, Entry, Author
+from main_test.models.embedded_models import EmbeddedBlog, EmbeddedEntry
+from main_test.models.misc_models import ListEntry, DictEntry
+from main_test.models.reference_models import ReferenceEntry, ReferenceAuthor
 from . import TestCase
 
 
