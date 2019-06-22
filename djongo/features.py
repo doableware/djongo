@@ -7,3 +7,4 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     has_bulk_insert = True
     has_native_uuid_field = True
     supports_timezones = False
+    uses_savepoints = False

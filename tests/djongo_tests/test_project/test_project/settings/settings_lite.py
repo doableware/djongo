@@ -31,9 +31,6 @@ DATABASES = {
     'default': {
         'ENGINE': 'djongo',
         'NAME': 'djongo-test',
-        # 'USER': 'user',
-        # 'PASSWORD': 'passpass',
-        # 'AUTH_SOURCE': 'djongo-test',
         'ENFORCE_SCHEMA': False
 
     },
@@ -42,12 +39,6 @@ DATABASES = {
 
 INSTALLED_APPS = [
     'main_test.apps.MainTestConfig',
-    # 'django.contrib.admin',
-    # 'django.contrib.auth',
-    # 'django.contrib.contenttypes',
-    # 'django.contrib.sessions',
-    # 'django.contrib.messages',
-    # 'django.contrib.staticfiles',
 ]
 
 
