@@ -91,9 +91,9 @@ setup(
         'Driver for allowing Django to use MongoDB as the database backend.'),
     install_requires=[
         'sqlparse==0.2.4',
-        'pymongo==3.8.0',
+        'pymongo>=3.2.0',
         'django>=2.0',
-        'dataclasses==0.6',
+        'dataclasses>=0.1',
     ],
     extras_require=dict(
         json=[
