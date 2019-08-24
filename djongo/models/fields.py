@@ -23,7 +23,7 @@ from django.db import connections as pymongo_connections
 from django.db import router, connections, transaction
 from django.db.models import (
     Manager, Model, Field, AutoField,
-    ForeignKey, BigAutoField
+    ForeignKey, BigAutoField, ManyToManyField, CASCADE
 )
 from django.forms import modelform_factory
 from django.utils.functional import cached_property
@@ -86,7 +86,7 @@ class FormlessField(Field):
         )
 
 
-class ListField(Field):
+class ListField(FormlessField):
     """
     MongoDB allows the saving of python lists as BSON Array type data. The `ListField` is useful in such cases.
     """
@@ -108,7 +108,7 @@ class ListField(Field):
         return value
 
 
-class DictField(Field):
+class DictField(FormlessField):
     """
     MongoDB allows the saving of python dicts as BSON object type data. The `DictField` is useful in such cases.
     """
@@ -124,7 +124,7 @@ class DictField(Field):
     def to_python(self, value):
         if not isinstance(value, dict):
             raise ValueError(
-                f'Value: {value} stored in DB must be of type dict'
+                f'Value: {value} stored in DB must be of type list'
                 'Did you miss any Migrations?'
             )
         return value
@@ -283,6 +283,14 @@ def _get_model_form_class(model_form_class, model_container, admin, request):
     return model_form_class
 
 
+class NestedFormSet(forms.formsets.BaseFormSet):
+    def add_fields(self, form, index):
+        for name, field in form.fields.items():
+            if isinstance(field, ArrayFormField):
+                field.name = '%s-%s' % (form.prefix, name)
+        super(NestedFormSet, self).add_fields(form, index)
+
+
 class ArrayFormField(forms.Field):
     def __init__(self, name, model_form_class, model_container, mdl_form_kw_l,
                  widget=None, admin=None, request=None, *args, **kwargs):
@@ -303,7 +311,7 @@ class ArrayFormField(forms.Field):
         }
 
         self.ArrayFormSet = forms.formset_factory(
-            self.model_form_class, can_delete=True)
+            self.model_form_class, formset=NestedFormSet, can_delete=True)
         super().__init__(error_messages=error_messages,
                          widget=widget, *args, **kwargs)
 
@@ -326,7 +334,7 @@ class ArrayFormField(forms.Field):
 
     def has_changed(self, initial, data):
         form_set_initial = []
-        for init in initial:
+        for init in initial or []:
             form_set_initial.append(
                 forms.model_to_dict(
                     init,
@@ -357,7 +365,7 @@ class ArrayFormBoundField(forms.BoundField):
                             exclude=field.model_form_class._meta.exclude
                         ))
 
-        self.form_set = field.ArrayFormSet(data, initial=initial, prefix=name)
+        self.form_set = field.ArrayFormSet(data, initial=initial, prefix=self.html_name)
 
     def __getitem__(self, idx):
         if not isinstance(idx, (int, slice)):
@@ -560,6 +568,8 @@ class EmbeddedFormField(forms.MultiValueField):
         for field_name, field in self.model_form.fields.items():
             if isinstance(field, (forms.ModelChoiceField, forms.ModelMultipleChoiceField)):
                 continue
+            elif isinstance(field, ArrayFormField):
+                field.name = '%s-%s' % (self.model_form.prefix, field_name)
             form_fields.append(field)
             mdl_form_field_names.append(field_name)
             widgets.append(field.widget)
@@ -1024,15 +1034,11 @@ class ArrayReferenceField(ForeignKey):
                  db_constraint=True, **kwargs):
 
         on_delete = on_delete or self._on_delete
-        super().__init__(to,
-                         on_delete=on_delete,
-                         related_name=related_name,
+        super().__init__(to, on_delete=on_delete, related_name=related_name,
                          related_query_name=related_query_name,
                          limit_choices_to=limit_choices_to,
-                         parent_link=parent_link,
-                         to_field=to_field,
-                         db_constraint=db_constraint,
-                         **kwargs)
+                         parent_link=parent_link, to_field=to_field,
+                         db_constraint=db_constraint, **kwargs)
 
         self.concrete = False
 
