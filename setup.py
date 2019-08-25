@@ -82,6 +82,7 @@ def find_version(*file_paths):
 setup(
     name='djongo',
     version=find_version("djongo", "__init__.py"),
+    include_package_data=True,
     packages=packages,
     url='https://nesdis.github.io/djongo/',
     license='AGPL',

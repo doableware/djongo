@@ -42,6 +42,7 @@ DATABASES = {
 
 INSTALLED_APPS = [
     'main_test.apps.MainTestConfig',
+    'djongo.dynamic_formsets.apps.DynamicFormsetsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
