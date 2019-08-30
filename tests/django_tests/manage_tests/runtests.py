@@ -46,7 +46,7 @@ PARSER_ARGS = {
 DEFAULT_TESTRUNNER_ARGS = {
     'settings': '--settings=test_mongodb',
     'failfast': '--failfast',
-    'parallel': '--parallel'
+    # 'parallel': '--parallel'
 }
 
 
