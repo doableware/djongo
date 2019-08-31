@@ -4,7 +4,7 @@ build/
 .tox/
 *__pycache__*
 *egg-info/
-*\migrations*
+
 
 docs/.sass-cache/*
 docs/_includes/*
