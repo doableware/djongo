@@ -197,7 +197,8 @@ class ArrayModelField(Field):
     def get_db_prep_value(self, value, connection, prepared=False):
         if prepared:
             return value
-
+        if value is None:
+            return None
         if not isinstance(value, list):
             raise ValueError(
                 'Expected value to be type list,'
