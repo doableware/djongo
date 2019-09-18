@@ -50,7 +50,6 @@ class CountWildcardFunc:
     alias_name: str = None
 
 
-
 class Query:
     def __init__(
             self,
@@ -687,6 +686,7 @@ class AlterQuery(VoidQuery):
             },
             multi=True
         )
+
     def _index(self):
         self.db_ref[self.left_table].create_index(
             self.field_dir,
