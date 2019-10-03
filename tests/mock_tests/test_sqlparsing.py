@@ -212,17 +212,28 @@ class TestVoidQuery(MockTest):
     def exe(self):
         result = Result(self.db, self.conn, self.conn_prop, self.sql, self.params)
 
+
+class TestVoidQueryDelete(TestVoidQuery):
+
     @skip
     def test_delete(self):
         self.sql = 'DELETE FROM "table" WHERE "table"."col" IN (%s)'
 
-    def test_alter(self):
+
+class TestVoidQueryAlter(TestVoidQuery):
+    """
+    sql_command: ALTER TABLE "dummy_arrayentry" ADD COLUMN "n_comments" integer DEFAULT %(0)s NOT NULL
+    sql_command: ALTER TABLE "dummy_arrayentry" ALTER COLUMN "n_comments" DROP DEFAULT
+    """
+
+    def test_pattern1(self):
         self.sql = (
             'ALTER TABLE "table" '
             'FLUSH'
         )
         self.exe()
 
+    def test_pattern2(self):
         self.sql = (
             'ALTER TABLE "table" '
             'ADD CONSTRAINT "con" '
@@ -231,6 +242,7 @@ class TestVoidQuery(MockTest):
         )
         self.exe()
 
+    def test_pattern3(self):
         self.sql = (
             'ALTER TABLE "table" '
             'ADD CONSTRAINT "c"'
@@ -238,6 +250,7 @@ class TestVoidQuery(MockTest):
         )
         self.exe()
 
+    def test_pattern4(self):
         self.sql = (
             'ALTER TABLE "table" '
             'ALTER COLUMN "c" '
@@ -245,6 +258,7 @@ class TestVoidQuery(MockTest):
         )
         self.exe()
 
+    def test_pattern5(self):
         self.sql = (
             'ALTER TABLE "table" '
             'DROP COLUMN "c" '
@@ -252,6 +266,16 @@ class TestVoidQuery(MockTest):
         )
         self.exe()
 
+
+    def test_pattern6(self):
+        self.sql = (
+            'ALTER TABLE "table" '
+            'ADD COLUMN "c" '
+            'string NOT NULL UNIQUE'
+        )
+        self.exe()
+
+    def test_pattern7(self):
         self.sql = (
             'ALTER TABLE "table" '
             'ADD COLUMN "c" '
@@ -259,10 +283,6 @@ class TestVoidQuery(MockTest):
         )
         self.params = [1]
         self.exe()
-        """
-        sql_command: ALTER TABLE "dummy_arrayentry" ADD COLUMN "n_comments" integer DEFAULT %(0)s NOT NULL
-        sql_command: ALTER TABLE "dummy_arrayentry" ALTER COLUMN "n_comments" DROP DEFAULT
-        """
 
 
 class TestQuery(MockTest):
@@ -286,7 +306,6 @@ class TestQuery(MockTest):
         cls.agg_iter = cursor.__iter__
         cls.aggregate.return_value = cursor
 
-
     def find_mock(self):
         result = Result(self.db, self.conn, self.conn_prop, self.sql, self.params)
         return list(result)
@@ -304,9 +323,12 @@ class TestQuery(MockTest):
 
         self.conn.reset_mock()
 
-    def test_distinct(self):
+
+class TestQueryDistinct(TestQuery):
+
+    def test_pattern1(self):
         return_value = [{'col1': 'a'}, {'col1': 'b'}]
-        ans = [('a',),('b',)]
+        ans = [('a',), ('b',)]
 
         self.sql = 'SELECT DISTINCT "table1"."col1" FROM "table1" WHERE "table1"."col2" = %s'
         self.params = [1]
@@ -332,10 +354,14 @@ class TestQuery(MockTest):
 
         self.aggregate_mock(pipeline, return_value, ans)
 
-        self.sql = 'SELECT DISTINCT "table1"."col1" FROM "table1" INNER JOIN "table2" ON ("table1"."id1" = "table2"."id2") WHERE ("table2"."col1" IN (%s, %s, %s)) ORDER BY "table1"."col1" ASC'
-        self.params = [1,2,3]
+    def test_pattern2(self):
+        return_value = [{'col1': 'a'}, {'col1': 'b'}]
+        ans = [('a',), ('b',)]
 
-        pipeline =[
+        self.sql = 'SELECT DISTINCT "table1"."col1" FROM "table1" INNER JOIN "table2" ON ("table1"."id1" = "table2"."id2") WHERE ("table2"."col1" IN (%s, %s, %s)) ORDER BY "table1"."col1" ASC'
+        self.params = [1, 2, 3]
+
+        pipeline = [
             {
                 '$match': {
                     'id1': {
@@ -358,7 +384,7 @@ class TestQuery(MockTest):
             {
                 '$match': {
                     'table2.col1': {
-                        '$in': [1,2,3]
+                        '$in': [1, 2, 3]
                     }
                 }
             },
@@ -379,7 +405,10 @@ class TestQuery(MockTest):
 
         self.aggregate_mock(pipeline, return_value, ans)
 
-    def test_functions(self):
+
+class TestQueryFunctions(TestQuery):
+
+    def test_pattern1(self):
         t1c1 = '"table1"."col1"'
         t2c1 = '"table2"."col1"'
         t4c1 = '"table4"."col1"'
@@ -390,18 +419,17 @@ class TestQuery(MockTest):
         t3c1 = '"table3"."col1"'
 
         self.sql = f'SELECT MIN({t1c1}) AS "m__min1", MAX({t1c2}) AS "m__max1"' \
-                   f' FROM "table1"'
+            f' FROM "table1"'
 
         pipeline = [{'$group': {'_id': None, 'm__min1': {'$min': '$col1'}, 'm__max1': {'$max': '$col2'}}}]
         return_value = [{'m__min1': 1, 'm__max1': 2}]
-        ans = [(1,2)]
+        ans = [(1, 2)]
         self.aggregate_mock(pipeline, return_value, ans)
 
-    def test_count(self):
-        conn = self.conn
-        agg = self.aggregate
-        iter = self.iter
 
+class TestQueryCount(TestQuery):
+
+    def test_pattern1(self):
         self.sql = 'SELECT COUNT(*) AS "__count" FROM "table"'
         pipeline = [{
             '$count': '_count'
@@ -436,6 +464,7 @@ class TestQuery(MockTest):
         ans = [(1,)]
         self.aggregate_mock(pipeline, return_value, ans)
 
+    def test_pattern2(self):
         self.sql = 'SELECT (1) AS "a" FROM "table1" LIMIT 1'
         self.params = [2]
         pipeline = [
@@ -455,7 +484,10 @@ class TestQuery(MockTest):
         ans = [(1,)]
         self.aggregate_mock(pipeline, return_value, ans)
 
-    def test_update(self):
+
+class TestQueryUpdate(TestQuery):
+
+    def test_pattern1(self):
         um = self.conn.__getitem__.return_value.update_many
 
         sql = 'UPDATE "table" SET "col1" = %s, "col2" = NULL WHERE "table"."col2" = %s'
@@ -464,32 +496,44 @@ class TestQuery(MockTest):
         um.assert_any_call(filter={'col2': {'$eq': 2}}, update={'$set': {'col1': 1, 'col2': None}})
         self.conn.reset_mock()
 
+    def test_pattern2(self):
+        um = self.conn.__getitem__.return_value.update_many
         sql = 'UPDATE "table" SET "col" = %s WHERE "table"."col" = %s'
-        params = [1,2]
+        params = [1, 2]
         result = Result(self.db, self.conn, self.conn_prop, sql, params)
         um.assert_any_call(filter={'col': {'$eq': 2}}, update={'$set': {'col': 1}})
         self.conn.reset_mock()
 
+    def test_pattern3(self):
+        um = self.conn.__getitem__.return_value.update_many
         sql = 'UPDATE "table" SET "col1" = %s WHERE "table"."col2" = %s'
-        params = [1,2]
+        params = [1, 2]
         result = Result(self.db, self.conn, self.conn_prop, sql, params)
         um.assert_any_call(filter={'col2': {'$eq': 2}}, update={'$set': {'col1': 1}})
         self.conn.reset_mock()
 
+    def test_pattern4(self):
+        um = self.conn.__getitem__.return_value.update_many
         sql = 'UPDATE "table" SET "col1" = %s, "col2" = %s WHERE "table"."col2" = %s'
         params = [1, 2, 3]
         result = Result(self.db, self.conn, self.conn_prop, sql, params)
         um.assert_any_call(filter={'col2': {'$eq': 3}}, update={'$set': {'col1': 1, 'col2': 2}})
         self.conn.reset_mock()
 
-    def test_insert(self):
+
+class TestQueryInsert(TestQuery):
+
+    def test_pattern1(self):
         io = self.conn.__getitem__.return_value.insert_many
 
         sql = 'INSERT INTO "table" ("col1", "col2") VALUES (%s, %s)'
         params = [1, 2]
         result = Result(self.db, self.conn, self.conn_prop, sql, params)
-        io.assert_any_call([{'col1':1, 'col2': 2}], ordered=False)
+        io.assert_any_call([{'col1': 1, 'col2': 2}], ordered=False)
         self.conn.reset_mock()
+
+    def test_pattern2(self):
+        io = self.conn.__getitem__.return_value.insert_many
 
         sql = 'INSERT INTO "table" ("col1", "col2") VALUES (%s, NULL)'
         params = [1]
@@ -497,16 +541,22 @@ class TestQuery(MockTest):
         io.assert_any_call([{'col1': 1, 'col2': None}], ordered=False)
         self.conn.reset_mock()
 
+    def test_pattern3(self):
+        io = self.conn.__getitem__.return_value.insert_many
+
         sql = 'INSERT INTO "table" ("col") VALUES (%s)'
         params = [1]
         result = Result(self.db, self.conn, self.conn_prop, sql, params)
         io.assert_any_call([{'col': 1}], ordered=False)
         self.conn.reset_mock()
 
-        #INSERT INTO "m2m_regress_post" ("id") VALUES (DEFAULT)
+    def test_pattern4(self):
+        """INSERT INTO "m2m_regress_post" ("id") VALUES (DEFAULT)"""
+
+        io = self.conn.__getitem__.return_value.insert_many
+
         sql = 'INSERT INTO "table" ("id") VALUES (DEFAULT)'
         params = []
-        aid = MagicMock()
         auto = {
             'auto': {
                 'field_names': ['id'],
@@ -521,8 +571,10 @@ class TestQuery(MockTest):
         self.conn.reset_mock()
 
 
+class TestQueryStatement(TestQuery):
+
     @skip
-    def test_statement(self):
+    def test_pattern1(self):
         """
         'SELECT * FROM table'
         :return:
@@ -535,7 +587,10 @@ class TestQuery(MockTest):
         self.find_mock()
         find = self.find
 
-    def test_groupby(self):
+
+class TestQueryGroupBy(TestQuery):
+
+    def test_pattern1(self):
         t1c1 = '"table1"."col1"'
         t1c2 = '"table1"."col2"'
         t1c3 = '"table1"."col3"'
@@ -543,8 +598,8 @@ class TestQuery(MockTest):
 
         self.sql = (
             f'SELECT {t1c1}, {t1c2}, '
-                f'COUNT({t1c1}) AS "c1__count", '
-                f'COUNT({t1c2}) AS "c2__count" '
+            f'COUNT({t1c1}) AS "c1__count", '
+            f'COUNT({t1c2}) AS "c2__count" '
             f'FROM "table1" '
             f'GROUP BY {t1c1}, {t1c2}'
         )
@@ -596,9 +651,14 @@ class TestQuery(MockTest):
                 'c2__count': 4
             },
         ]
-        ans = [('a1', 'a2',1,2), ('b1', 'b2',3,4)]
+        ans = [('a1', 'a2', 1, 2), ('b1', 'b2', 3, 4)]
         self.aggregate_mock(pipeline, return_value, ans)
 
+    def test_pattern2(self):
+        t1c1 = '"table1"."col1"'
+        t1c2 = '"table1"."col2"'
+        t1c3 = '"table1"."col3"'
+        t2c2 = '"table2"."col2"'
 
         self.sql = (
             f'SELECT {t1c1}, {t1c2}, MIN({t2c2}) AS "dt" '
@@ -646,7 +706,7 @@ class TestQuery(MockTest):
                     '_id': {
                         'col1': '$col1',
                         'table2': {'col2': '$table2.col2'}},
-                        'dt': {'$min': '$table2.col2'}
+                    'dt': {'$min': '$table2.col2'}
                 }
             },
             {
@@ -661,9 +721,14 @@ class TestQuery(MockTest):
         ]
         self.aggregate_mock(pipeline, return_value, ans)
 
+    def test_pattern3(self):
         """
         SELECT "timezones_session"."id", "timezones_session"."name", MIN("timezones_sessionevent"."dt") AS "dt" FROM "timezones_session" LEFT OUTER JOIN "timezones_sessionevent" ON ("timezones_session"."id" = "timezones_sessionevent"."session_id") GROUP BY "timezones_session"."id", "timezones_session"."name" HAVING MIN("timezones_sessionevent"."dt") < %(0)s
         """
+        t1c1 = '"table1"."col1"'
+        t1c2 = '"table1"."col2"'
+        t1c3 = '"table1"."col3"'
+        t2c2 = '"table2"."col2"'
 
         self.sql = (
             f'SELECT {t1c1}, {t1c2}, MIN({t2c2}) AS "dt" '
@@ -723,21 +788,24 @@ class TestQuery(MockTest):
                 }
             },
             {
-                '$match': {'dt' : {'$lt': 2}}
+                '$match': {'dt': {'$lt': 2}}
             }
         ]
         self.aggregate_mock(pipeline, return_value, ans)
 
-    @skip
-    def test_special(self):
-        """
-        SELECT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content", COUNT("dummy_multipleblogposts"."h1") AS "h1__count", COUNT("dummy_multipleblogposts"."content") AS "content__count" FROM "dummy_multipleblogposts" GROUP BY "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content" LIMIT 21
 
-        :return:
+class TestQuerySpecial(TestQuery):
+
+    @skip
+    def test_pattern1(self):
         """
-        self.sql = ('SELECT "auth_group"."id", "auth_group"."name" ' 
+         SELECT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content", COUNT("dummy_multipleblogposts"."h1") AS "h1__count", COUNT("dummy_multipleblogposts"."content") AS "content__count" FROM "dummy_multipleblogposts" GROUP BY "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content" LIMIT 21
+
+         :return:
+         """
+        self.sql = ('SELECT "auth_group"."id", "auth_group"."name" '
                     'FROM "auth_group" '
-                    'WHERE (NOT ("auth_group"."name" = %(0)s) ' 
+                    'WHERE (NOT ("auth_group"."name" = %(0)s) '
                     'AND NOT ("auth_group"."name" = %(1)s))')
         find_args = {
             'filter': {
@@ -754,7 +822,10 @@ class TestQuery(MockTest):
         self.find.assert_any_call(**find_args)
         self.conn.reset_mock()
 
-    def test_in(self):
+
+class TestQueryIn(TestQuery):
+
+    def test_pattern1(self):
         conn = self.conn
         find = self.find
         iter = self.iter
@@ -780,8 +851,24 @@ class TestQuery(MockTest):
         iter.return_value = [{'_id': 'x', 'col1': 1, 'col2': 2}, {'_id': 'x', 'col1': 3, 'col2': 4}]
         ans = self.find_mock()
         find.assert_any_call(**find_args)
-        self.assertEqual(ans, [(1,2), (3,4)])
+        self.assertEqual(ans, [(1, 2), (3, 4)])
         conn.reset_mock()
+
+    def test_pattern2(self):
+        conn = self.conn
+        find = self.find
+        iter = self.iter
+
+        t1c1 = '"table1"."col1"'
+
+        # Testing for different combinations 'where' syntax
+        # from here on
+
+        where = 'SELECT "table1"."col1", "table1"."col2" FROM "table1" WHERE'
+        find_args = {
+            'projection': ['col1', 'col2'],
+            'filter': {}
+        }
 
         # TODO: This is not the right SQL syntax
         self.sql = f'{where} {t1c1} IN (NULL, %s)'
@@ -796,6 +883,22 @@ class TestQuery(MockTest):
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
+    def test_pattern3(self):
+        conn = self.conn
+        find = self.find
+        iter = self.iter
+
+        t1c1 = '"table1"."col1"'
+
+        # Testing for different combinations 'where' syntax
+        # from here on
+
+        where = 'SELECT "table1"."col1", "table1"."col2" FROM "table1" WHERE'
+        find_args = {
+            'projection': ['col1', 'col2'],
+            'filter': {}
+        }
+
         self.sql = f'{where} {t1c1} IN (NULL)'
         find_args['filter'] = {
             'col1': {
@@ -806,6 +909,22 @@ class TestQuery(MockTest):
         self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
+
+    def test_pattern4(self):
+        conn = self.conn
+        find = self.find
+        iter = self.iter
+
+        t1c1 = '"table1"."col1"'
+
+        # Testing for different combinations 'where' syntax
+        # from here on
+
+        where = 'SELECT "table1"."col1", "table1"."col2" FROM "table1" WHERE'
+        find_args = {
+            'projection': ['col1', 'col2'],
+            'filter': {}
+        }
 
         self.sql = f'{where} {t1c1} NOT IN (%s)'
         find_args['filter'] = {
@@ -818,6 +937,22 @@ class TestQuery(MockTest):
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
+    def test_pattern5(self):
+        conn = self.conn
+        find = self.find
+        iter = self.iter
+
+        t1c1 = '"table1"."col1"'
+
+        # Testing for different combinations 'where' syntax
+        # from here on
+
+        where = 'SELECT "table1"."col1", "table1"."col2" FROM "table1" WHERE'
+        find_args = {
+            'projection': ['col1', 'col2'],
+            'filter': {}
+        }
+
         self.sql = f'{where} {t1c1} NOT IN (%s, %s)'
         find_args['filter'] = {
             'col1': {
@@ -828,6 +963,22 @@ class TestQuery(MockTest):
         self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
+
+    def test_pattern6(self):
+        conn = self.conn
+        find = self.find
+        iter = self.iter
+
+        t1c1 = '"table1"."col1"'
+
+        # Testing for different combinations 'where' syntax
+        # from here on
+
+        where = 'SELECT "table1"."col1", "table1"."col2" FROM "table1" WHERE'
+        find_args = {
+            'projection': ['col1', 'col2'],
+            'filter': {}
+        }
 
         self.sql = f'{where} NOT ({t1c1} IN (%s))'
         find_args['filter'] = {
@@ -840,7 +991,10 @@ class TestQuery(MockTest):
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
-    def test_join(self):
+
+class TestQueryJoin(TestQuery):
+
+    def test_pattern1(self):
         """
          sql_command: SELECT "null_fk_comment"."id", "null_fk_comment"."post_id", "null_fk_comment"."comment_text", "null_fk_post"."id", "null_fk_post"."forum_id", "null_fk_post"."title", "null_fk_forum"."id", "null_fk_forum"."system_info_id", "null_fk_forum"."forum_name", "null_fk_systeminfo"."id", "null_fk_systeminfo"."system_details_id", "null_fk_systeminfo"."system_name" FROM "null_fk_comment" LEFT OUTER JOIN "null_fk_post" ON ("null_fk_comment"."post_id" = "null_fk_post"."id") LEFT OUTER JOIN "null_fk_forum" ON ("null_fk_post"."forum_id" = "null_fk_forum"."id") LEFT OUTER JOIN "null_fk_systeminfo" ON ("null_fk_forum"."system_info_id" = "null_fk_systeminfo"."id") ORDER BY "null_fk_comment"."comment_text" ASC
         :return:
@@ -893,9 +1047,9 @@ class TestQuery(MockTest):
             },
             {
                 '$unwind': {
-                     'path': '$table2',
-                     'preserveNullAndEmptyArrays': True
-                 }
+                    'path': '$table2',
+                    'preserveNullAndEmptyArrays': True
+                }
             },
             {
                 '$addFields':
@@ -911,9 +1065,9 @@ class TestQuery(MockTest):
             },
             {
                 '$unwind': {
-                     'path': '$table3',
-                     'preserveNullAndEmptyArrays': True
-                 }
+                    'path': '$table3',
+                    'preserveNullAndEmptyArrays': True
+                }
             },
             {
                 '$addFields': {'table3': {'$ifNull': ['$table3', {}]}}
@@ -928,9 +1082,9 @@ class TestQuery(MockTest):
             },
             {
                 '$unwind': {
-                     'path': '$table4',
-                     'preserveNullAndEmptyArrays': True
-                 }
+                    'path': '$table4',
+                    'preserveNullAndEmptyArrays': True
+                }
             },
             {
                 '$addFields': {'table4': {'$ifNull': ['$table4', {}]}}
@@ -949,22 +1103,24 @@ class TestQuery(MockTest):
         ]
         self.aggregate_mock(pipeline, return_value, ans)
 
-    def test_nested_in(self):
 
+class TestQueryNestedIn(TestQuery):
+
+    def test_pattern1(self):
         t1c1 = '"table1"."col1"'
         t1c2 = '"table1"."col2"'
         t2c1 = '"table2"."col1"'
         t2c2 = '"table2"."col2"'
         return_value = [{'col1': 'a1', 'col2': 'a2'}, {'col1': 'b1', 'col2': 'b2'}]
-        ans = [('a1', 'a2'),('b1', 'b2')]
+        ans = [('a1', 'a2'), ('b1', 'b2')]
 
         self.sql = f'SELECT {t1c1}, {t1c2} FROM "table1" WHERE ({t1c1} IN (SELECT {t2c1} FROM "table2" U0 WHERE (U0."col2" IN (%s, %s))))'
-        self.params = [1,2]
+        self.params = [1, 2]
         inner_pipeline = [
             {
                 '$match': {
                     'col2': {
-                        '$in': [1,2]
+                        '$in': [1, 2]
                     }
                 }
             },
@@ -1010,9 +1166,17 @@ class TestQuery(MockTest):
         ]
         self.aggregate_mock(pipeline, return_value, ans)
 
+    def test_pattern2(self):
+        t1c1 = '"table1"."col1"'
+        t1c2 = '"table1"."col2"'
+        t2c1 = '"table2"."col1"'
+        t2c2 = '"table2"."col2"'
+        return_value = [{'col1': 'a1', 'col2': 'a2'}, {'col1': 'b1', 'col2': 'b2'}]
+        ans = [('a1', 'a2'), ('b1', 'b2')]
+
         self.sql = f'SELECT {t1c1}, {t1c2} FROM "table1" WHERE {t1c1} IN (SELECT U0."col1" AS Col1 FROM "table2" U0 INNER JOIN "table1" U1 ON (U0."col1" = U1."col1") WHERE (U1."col2" IN (%s, %s))) ORDER BY {t1c2} DESC'
 
-        self.params = [1,2,3,4,5]
+        self.params = [1, 2, 3, 4, 5]
         inner_pipeline = [
             {
                 '$match': {
@@ -1036,7 +1200,7 @@ class TestQuery(MockTest):
             {
                 '$match': {
                     'table1.col2': {
-                        '$in': [1,2]
+                        '$in': [1, 2]
                     }
                 }
             },
@@ -1083,8 +1247,9 @@ class TestQuery(MockTest):
         self.aggregate_mock(pipeline, return_value, ans)
 
 
+class TestQueryNot(TestQuery):
 
-    def test_not(self):
+    def test_pattern1(self):
         conn = self.conn
         find = self.find
 
@@ -1108,10 +1273,25 @@ class TestQuery(MockTest):
             }
         }
         self.params = [1]
-        self.iter.return_value = [{'_id': 'x', 'col': 1}, {'_id': 'x', 'col': 3,}]
+        self.iter.return_value = [{'_id': 'x', 'col': 1}, {'_id': 'x', 'col': 3, }]
         self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
+
+    def test_pattern2(self):
+        conn = self.conn
+        find = self.find
+
+        t1c1 = '"table"."col1"'
+
+        # Testing for different combinations 'where' syntax
+        # from here on
+
+        where = 'SELECT "table"."col" FROM "table" WHERE'
+        find_args = {
+            'projection': ['col'],
+            'filter': {}
+        }
 
         self.sql = f'{where} NOT {t1c1} <= %s'
         find_args['filter'] = {
@@ -1122,7 +1302,7 @@ class TestQuery(MockTest):
             }
         }
         self.params = [1]
-        self.iter.return_value = [{'_id': 'x', 'col': 1}, {'_id': 'x', 'col': 3,}]
+        self.iter.return_value = [{'_id': 'x', 'col': 1}, {'_id': 'x', 'col': 3, }]
         self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
@@ -1141,8 +1321,39 @@ class TestQuery(MockTest):
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
+    def test_pattern3(self):
+        conn = self.conn
+        find = self.find
 
-    def test_basic(self):
+        t1c1 = '"table"."col1"'
+
+        # Testing for different combinations 'where' syntax
+        # from here on
+
+        where = 'SELECT "table"."col" FROM "table" WHERE'
+        find_args = {
+            'projection': ['col'],
+            'filter': {}
+        }
+
+        self.sql = f'{where} NOT {t1c1} = NULL'
+        find_args['filter'] = {
+            'col1': {
+                '$not': {
+                    '$eq': None
+                }
+            }
+        }
+        self.params = []
+        self.iter.return_value = [{'_id': 'x', 'col': 1}, {'_id': 'x', 'col': 3, }]
+        self.find_mock()
+        find.assert_any_call(**find_args)
+        conn.reset_mock()
+
+
+class TestQueryBasic(TestQuery):
+
+    def test_pattern1(self):
         conn = self.conn
         find = self.find
 
@@ -1168,6 +1379,21 @@ class TestQuery(MockTest):
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
+    def test_pattern2(self):
+        conn = self.conn
+        find = self.find
+
+        t1c1 = '"table"."col1"'
+
+        # Testing for different combinations 'where' syntax
+        # from here on
+
+        where = 'SELECT "table"."col" FROM "table" WHERE'
+        find_args = {
+            'projection': ['col'],
+            'filter': {}
+        }
+
         self.sql = f'{where} {t1c1} <= %s'
         find_args['filter'] = {
             'col1': {
@@ -1178,6 +1404,21 @@ class TestQuery(MockTest):
         self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
+
+    def test_pattern3(self):
+        conn = self.conn
+        find = self.find
+
+        t1c1 = '"table"."col1"'
+
+        # Testing for different combinations 'where' syntax
+        # from here on
+
+        where = 'SELECT "table"."col" FROM "table" WHERE'
+        find_args = {
+            'projection': ['col'],
+            'filter': {}
+        }
 
         self.sql = f'{where} {t1c1} = NULL'
         find_args['filter'] = {
@@ -1190,7 +1431,10 @@ class TestQuery(MockTest):
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
-    def test_and_or(self):
+
+class TestQueryAndOr(TestQuery):
+
+    def test_pattern1(self):
         conn = self.conn
         find = self.find
 
@@ -1202,9 +1446,6 @@ class TestQuery(MockTest):
             'projection': ['col'],
             'filter': {}
         }
-
-        # Testing for different combinations 'where' syntax
-        # from here on
 
         self.sql = f'{where} ({t1c1} = %s AND {t1c2} IS NULL)'
         find_args['filter'] = {
@@ -1224,6 +1465,19 @@ class TestQuery(MockTest):
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
+    def test_pattern2(self):
+        conn = self.conn
+        find = self.find
+
+        t1c1 = '"table"."col1"'
+        t1c2 = '"table"."col2"'
+
+        where = 'SELECT "table"."col" FROM "table" WHERE'
+        find_args = {
+            'projection': ['col'],
+            'filter': {}
+        }
+
         self.sql = f'{where} ({t1c1} = %s AND {t1c2} IS NOT NULL)'
         find_args['filter'] = {
             '$and': [
@@ -1241,6 +1495,19 @@ class TestQuery(MockTest):
         self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
+
+    def test_pattern3(self):
+        conn = self.conn
+        find = self.find
+
+        t1c1 = '"table"."col1"'
+        t1c2 = '"table"."col2"'
+
+        where = 'SELECT "table"."col" FROM "table" WHERE'
+        find_args = {
+            'projection': ['col'],
+            'filter': {}
+        }
 
         self.sql = f'{where} ({t1c1} = %s AND {t1c1} <= %s)'
         find_args['filter'] = {
@@ -1261,6 +1528,19 @@ class TestQuery(MockTest):
         self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
+
+    def test_pattern4(self):
+        conn = self.conn
+        find = self.find
+
+        t1c1 = '"table"."col1"'
+        t1c2 = '"table"."col2"'
+
+        where = 'SELECT "table"."col" FROM "table" WHERE'
+        find_args = {
+            'projection': ['col'],
+            'filter': {}
+        }
 
         self.sql = f'{where} (NOT ({t1c1} = %s) AND {t1c1} <= %s)'
         find_args['filter'] = {
@@ -1284,6 +1564,19 @@ class TestQuery(MockTest):
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
+    def test_pattern5(self):
+        conn = self.conn
+        find = self.find
+
+        t1c1 = '"table"."col1"'
+        t1c2 = '"table"."col2"'
+
+        where = 'SELECT "table"."col" FROM "table" WHERE'
+        find_args = {
+            'projection': ['col'],
+            'filter': {}
+        }
+
         self.sql = f'{where} {t1c1} <= %s AND NOT ({t1c1} = %s)'
         find_args['filter'] = {
             '$and': [
@@ -1305,6 +1598,19 @@ class TestQuery(MockTest):
         self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
+
+    def test_pattern6(self):
+        conn = self.conn
+        find = self.find
+
+        t1c1 = '"table"."col1"'
+        t1c2 = '"table"."col2"'
+
+        where = 'SELECT "table"."col" FROM "table" WHERE'
+        find_args = {
+            'projection': ['col'],
+            'filter': {}
+        }
 
         self.sql = f'{where} (NOT ({t1c1} <= %s) AND NOT ({t1c1} = %s))'
         find_args['filter'] = {
@@ -1330,6 +1636,19 @@ class TestQuery(MockTest):
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
+    def test_pattern7(self):
+        conn = self.conn
+        find = self.find
+
+        t1c1 = '"table"."col1"'
+        t1c2 = '"table"."col2"'
+
+        where = 'SELECT "table"."col" FROM "table" WHERE'
+        find_args = {
+            'projection': ['col'],
+            'filter': {}
+        }
+
         self.sql = f'{where} NOT ({t1c1} <= %s AND {t1c1} = %s)'
         find_args['filter'] = {
             '$or': [
@@ -1354,6 +1673,19 @@ class TestQuery(MockTest):
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
+    def test_pattern8(self):
+        conn = self.conn
+        find = self.find
+
+        t1c1 = '"table"."col1"'
+        t1c2 = '"table"."col2"'
+
+        where = 'SELECT "table"."col" FROM "table" WHERE'
+        find_args = {
+            'projection': ['col'],
+            'filter': {}
+        }
+
         self.sql = f'{where} NOT ({t1c1} <= %s OR {t1c1} = %s)'
         find_args['filter'] = {
             '$and': [
@@ -1377,6 +1709,19 @@ class TestQuery(MockTest):
         self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
+
+    def test_pattern9(self):
+        conn = self.conn
+        find = self.find
+
+        t1c1 = '"table"."col1"'
+        t1c2 = '"table"."col2"'
+
+        where = 'SELECT "table"."col" FROM "table" WHERE'
+        find_args = {
+            'projection': ['col'],
+            'filter': {}
+        }
 
         self.sql = f'{where} NOT ({t1c1} <= %s OR {t1c1} = %s) AND {t1c1} >= %s'
         find_args['filter'] = {
@@ -1411,7 +1756,19 @@ class TestQuery(MockTest):
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
-        # WHERE "admin_changelist_event"."event_date" BETWEEN %(0)s AND %(1)s'
+    def test_pattern10(self):
+        conn = self.conn
+        find = self.find
+
+        t1c1 = '"table"."col1"'
+        t1c2 = '"table"."col2"'
+
+        where = 'SELECT "table"."col" FROM "table" WHERE'
+        find_args = {
+            'projection': ['col'],
+            'filter': {}
+        }
+
         self.sql = f'{where} ({t1c1} BETWEEN %s AND %s)'
         find_args['filter'] = {'col1': {'$gte': 1, '$lte': 2}}
         self.params = [1, 2]
