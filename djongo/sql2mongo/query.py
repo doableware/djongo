@@ -642,7 +642,7 @@ class AlterQuery(VoidQuery):
                 pass
             elif tok.match(tokens.Name.Builtin, (
                 'integer', 'bool', 'char', 'date', 'boolean',
-                'datetime', 'float', 'time', 'number'
+                'datetime', 'float', 'time', 'number', 'string'
             )):
                 pass
             elif isinstance(tok, Identifier):
@@ -657,6 +657,8 @@ class AlterQuery(VoidQuery):
                 i = SQLToken.placeholder_index(tok)
                 self._default = self.params[i]
             elif tok.match(tokens.Keyword, 'UNIQUE'):
+                if self.execute == self._add_column:
+                    self.field_dir = [(self._iden_name, 1)]
                 self.execute = self._unique
             elif tok.match(tokens.Keyword, 'INDEX'):
                 self.execute = self._index
