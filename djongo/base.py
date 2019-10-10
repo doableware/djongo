@@ -8,6 +8,7 @@ from django.db.backends.base.client import BaseDatabaseClient
 from django.db.backends.base.creation import BaseDatabaseCreation
 from django.db.utils import Error
 
+from .creation import DatabaseCreation
 from . import database as Database
 from .cursor import Cursor
 from .features import DatabaseFeatures
@@ -104,7 +105,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     Database = Database
 
     client_class = BaseDatabaseClient
-    creation_class = BaseDatabaseCreation
+    creation_class = DatabaseCreation
     features_class = DatabaseFeatures
     introspection_class = DatabaseIntrospection
     ops_class = DatabaseOperations
