@@ -357,7 +357,7 @@ class InsertQuery(VoidQuery):
         collection = tok.get_name()
         if collection not in self.connection_properties.cached_collections:
             if self.connection_properties.enforce_schema:
-                raise MigrationError(collection)
+                raise MigrationError(f'Table {collection} does not exist in database')
             self.connection_properties.cached_collections.add(collection)
 
         self.left_table = collection
