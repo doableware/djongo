@@ -8,3 +8,4 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     has_native_uuid_field = True
     supports_timezones = False
     uses_savepoints = False
+    can_clone_databases = True

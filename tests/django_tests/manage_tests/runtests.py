@@ -41,12 +41,17 @@ PARSER_ARGS = {
         'action': 'store_true',
         'dest': 'discover_tests'
     },
+    '--run-specific': {
+        'default': None,
+        'type': str,
+        'dest': 'run_specific'
+    },
 }
 
 DEFAULT_TESTRUNNER_ARGS = {
     'settings': '--settings=test_mongodb',
     'failfast': '--failfast',
-    # 'parallel': '--parallel'
+    'parallel': '--parallel'
 }
 
 
@@ -78,7 +83,8 @@ def build_args(args: list, parsed_args):
     uargs = extract_useful_args(args)
 
     for option in DEFAULT_TESTRUNNER_ARGS:
-        if not getattr(parsed_args, option, False):
+        if (not hasattr(parsed_args, option)
+                or getattr(parsed_args, option) is None):
             uargs.append(DEFAULT_TESTRUNNER_ARGS[option])
 
     path = os.path.join(TEST_DIR, 'runtests.py')
@@ -157,11 +163,12 @@ def discover_passing(_parsed):
 
 def check_passing(_parsed):
     tests = get_tests_list()
-    orig_args = sys.argv
-    sys.argv = build_args(orig_args[1:], _parsed)
     passing = set(tests['all_tests']) - set(tests['failing_tests'])
+
     pass_exit_code = 0
     fail_exit_code = 1
+    orig_args = sys.argv
+    sys.argv = build_args(orig_args[1:], _parsed)
 
     for i, atest in enumerate(passing):
         sys.argv[1] = atest
@@ -175,6 +182,23 @@ def check_passing(_parsed):
     sys.argv = orig_args
     return pass_exit_code
 
+
+def check_specific(_parsed, atest):
+    pass_exit_code = 0
+    fail_exit_code = 1
+    orig_args = sys.argv
+    sys.argv = build_args(orig_args[1:], _parsed)
+
+    sys.argv[1] = atest
+    print(f'## Executing test: {atest}##\n')
+    o = subprocess.run((['python'] + sys.argv))
+    if o.returncode != 0:
+        sys.argv = orig_args
+        return fail_exit_code
+    print(f'## Ran test: {atest}##\n')
+
+    sys.argv = orig_args
+    return pass_exit_code
 
 def get_parser():
     _parser = argparse.ArgumentParser(parents=[get_django_parser()], add_help=False)
@@ -202,3 +226,5 @@ if __name__ == '__main__':
         discover_passing(parsed)
     if parsed.run_currently_passing:
         exit(check_passing(parsed))
+    if parsed.run_specific:
+        exit(check_specific(parsed, parsed.run_specific))
