@@ -151,12 +151,13 @@ def discover_passing(_parsed):
 
     for i, atest in enumerate(tests['all_tests']):
         sys.argv[1] = atest
-        print(f'## Executing test: {atest} no: {i} ##\n')
+        print(f'## Executing test: {atest} no: {i}/{len(tests["all_tests"])} ##\n')
         o = subprocess.run((['python'] + sys.argv))
         if o.returncode != 0:
             currently_failing.append(atest)
 
     sys.argv = orig_args
+    currently_failing.sort()
     tests['failing_tests'] = currently_failing
     dump_test_list(tests)
 
