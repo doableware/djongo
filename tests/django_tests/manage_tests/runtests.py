@@ -173,7 +173,7 @@ def check_passing(_parsed):
 
     for i, atest in enumerate(passing):
         sys.argv[1] = atest
-        print(f'## Executing test: {atest}; no: {i} ##\n')
+        print(f'## Executing test: {atest} no: {i}/{len(passing)} ##\n')
         o = subprocess.run((['python'] + sys.argv))
         if o.returncode != 0:
             sys.argv = orig_args
