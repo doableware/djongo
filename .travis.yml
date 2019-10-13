@@ -5,8 +5,12 @@ python:
 
 install:
   - pip install tox
+  - pip install tblib
 
 services: mongodb
+
+before_script:
+  - mongo --version
 
 script:
   - tox -e django_dev
