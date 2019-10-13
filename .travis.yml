@@ -3,10 +3,11 @@ language: python
 python:
   - "3.6"
 
+install:
+  - pip install tox
+
 services: mongodb
 
 script:
   - tox -e django_dev
 
-after_script:
-  - pkill mongod
