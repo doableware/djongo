@@ -3,15 +3,7 @@ language: python
 python:
   - "3.6"
 
-install:
-  - wget http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-4.2.0.tgz
-  - tar xzf mongodb-linux-x86_64-4.2.0.tgz
-  - ${PWD}/mongodb-linux-x86_64-4.2.0/bin/mongod --version
-  - pip install tox
-
-before_script:
-  - mkdir ${PWD}/mongodb-linux-x86_64-4.2.0/data
-  - ${PWD}/mongodb-linux-x86_64-4.2.0/bin/mongod --dbpath ${PWD}/mongodb-linux-x86_64-4.2.0/data --logpath ${PWD}/mongodb-linux-x86_64-4.2.0/mongodb.log --fork
+services: mongodb
 
 script:
   - tox -e django_dev
