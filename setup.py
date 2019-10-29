@@ -94,7 +94,7 @@ setup(
         'sqlparse==0.2.4',
         'pymongo>=3.2.0',
         'django>=2.0',
-        'dataclasses>=0.1',
+        'dataclasses==0.6',
     ],
     extras_require=dict(
         json=[
