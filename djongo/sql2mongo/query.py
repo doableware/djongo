@@ -63,7 +63,6 @@ class Query:
         self.db_ref = db_ref
         self.connection_properties = connection_properties
         self.params = params
-
         self.alias2op: typing.Dict[str, typing.Any] = {}
         self.nested_query: NestedInQueryConverter = None
 
@@ -174,7 +173,6 @@ class SelectQuery(Query):
             for doc in cursor:
                 yield (doc['_count'],)
             return
-
         for doc in cursor:
             yield self._align_results(doc)
         return
@@ -434,7 +432,7 @@ class InsertQuery(VoidQuery):
             self._result_ref.last_row_id = auto['auto']['seq']
         else:
             self._result_ref.last_row_id = res.inserted_ids[-1]
-        logger.debug('insert ids {}'.format(res.inserted_ids))
+        logger.debug('inserted ids {}'.format(res.inserted_ids))
 
     def parse(self):
 
@@ -740,8 +738,7 @@ class Result:
                  db_connection: Database,
                  connection_properties: 'base.DjongoClient',
                  sql: str,
-                 params: typing.Optional[list]):
-        logger.debug('params: {}'.format(params))
+                 params: typing.Optional[tuple]):
 
         self._params = params
         self.db = db_connection
@@ -801,7 +798,10 @@ class Result:
         return '%({})s'.format(self._params_index_count)
 
     def parse(self):
-        logger.debug(f'\n sql_command: {self._sql}')
+        logger.debug(
+            f'sql_command: {self._sql}\n'
+            f'params: {self._params}'
+        )
         statement = sqlparse(self._sql)
 
         if len(statement) > 1:
