@@ -2,12 +2,11 @@
 MongoDB database backend for Django
 """
 from collections import OrderedDict
-
+from logging import getLogger
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.backends.base.client import BaseDatabaseClient
-from django.db.backends.base.creation import BaseDatabaseCreation
+from logging.config import dictConfig
 from django.db.utils import Error
-
 from .creation import DatabaseCreation
 from . import database as Database
 from .cursor import Cursor
@@ -15,6 +14,8 @@ from .features import DatabaseFeatures
 from .introspection import DatabaseIntrospection
 from .operations import DatabaseOperations
 from .schema import DatabaseSchemaEditor
+
+logger = getLogger(__name__)
 
 
 class CachedCollections(set):
@@ -179,8 +180,11 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         # is created.
         if self.client_connection is not None:
             self.client_connection.close()
+            logger.debug('Existing MongoClient connection closed')
 
-        self.client_connection = Database.connect(**connection_params)
+        self.client_connection = Database.connect(db=name, **connection_params)
+        logger.debug('New Database connection')
+
         database = self.client_connection[name]
         self.djongo_connection = DjongoClient(database, es)
         return self.client_connection[name]
@@ -195,7 +199,10 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         pass
 
     def init_connection_state(self):
-        pass
+        try:
+            dictConfig(self.settings_dict['LOGGING'])
+        except KeyError:
+            pass
 
     def create_cursor(self, name=None):
         """
@@ -210,6 +217,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         if self.connection:
             with self.wrap_database_errors:
                 self.connection.client.close()
+                logger.debug('MongoClient connection closed')
 
     def _rollback(self):
         raise Error
