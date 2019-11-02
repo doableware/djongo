@@ -10,8 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
-import os
-
+import os, sys
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -31,8 +30,24 @@ DATABASES = {
     'default': {
         'ENGINE': 'djongo',
         'NAME': 'djongo-test',
-        'ENFORCE_SCHEMA': False
-
+        'ENFORCE_SCHEMA': False,
+        'LOGGING': {
+            'version': 1,
+            'loggers': {
+                'djongo': {
+                    'level': 'DEBUG',
+                    'propagate': False,
+                    'handlers': ['console']
+                }
+            },
+            'handlers': {
+                'console': {
+                    'class': 'logging.StreamHandler',
+                    'level': 'DEBUG',
+                    'stream': sys.stdout
+                }
+            }
+        }
     },
 }
 # Application definition
