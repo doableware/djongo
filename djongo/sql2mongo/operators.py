@@ -22,7 +22,6 @@ def re_index(value: str):
 
 
 class _Op:
-    params: tuple
 
     def __init__(
             self,
@@ -36,7 +35,9 @@ class _Op:
         self._token_id = token_id
 
         if params is not None:
-            _Op.params = params
+            self.params = params
+        else:
+            self.params = query.params
         self.query = query
         self.left_table = query.left_table
 

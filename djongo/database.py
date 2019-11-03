@@ -1,8 +1,17 @@
+from logging import getLogger
 from pymongo import MongoClient
 
+logger = getLogger(__name__)
+clients = {}
 
-def connect(**kwargs):
-    return MongoClient(**kwargs, connect=False)
+
+def connect(db, **kwargs):
+    try:
+        return clients[db]
+    except KeyError:
+        logger.debug('New MongoClient connection')
+        clients[db] = MongoClient(**kwargs, connect=False)
+    return clients[db]
 
 
 class Error(Exception):  # NOQA: StandardError undefined on PY3
