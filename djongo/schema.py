@@ -3,8 +3,17 @@ from logging import getLogger
 
 logger = getLogger(__name__)
 
+
 class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
+
     sql_create_index = "ALTER TABLE %(table)s ADD CONSTRAINT %(name)s INDEX (%(columns)s)%(extra)s"
+    sql_delete_index = "DROP INDEX %(name)s ON %(table)s"
+
+    def quote_value(self, value):
+        raise NotImplementedError()
+
+    def prepare_default(self, value):
+        raise NotImplementedError()
 
     # def create_model(self, model):
     #     db_con = self.connection.connection
