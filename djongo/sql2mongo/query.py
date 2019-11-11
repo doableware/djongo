@@ -501,16 +501,6 @@ class InsertQuery(VoidQuery):
     #     logger.debug('insert id {}'.format(result.inserted_id))
 
 
-class DropQuery(VoidQuery):
-
-    def parse(self):
-        sm = self.statement
-
-
-    def execute(self):
-        pass
-
-
 class AlterQuery(VoidQuery):
 
     def __init__(self, *args):
