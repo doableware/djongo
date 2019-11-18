@@ -26,7 +26,7 @@ from django.db.models import (
     ForeignKey, BigAutoField, ManyToManyField, CASCADE
 )
 from django.forms import modelform_factory
-from django.utils.functional import cached_property
+from django.utils.functional import cached_property, Promise
 from django.utils.html import format_html_join, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -643,6 +643,10 @@ class EmbeddedFormWidget(forms.MultiWidget):
 class ObjectIdFieldMixin:
     description = _("ObjectId")
 
+    def validate(self, value, model_instance):
+        if not isinstance(value, ObjectId):
+            ObjectId(value)
+
     def get_db_prep_value(self, value, connection, prepared=False):
         return self.to_python(value)
 
@@ -651,19 +655,57 @@ class ObjectIdFieldMixin:
             return ObjectId(value)
         return value
 
+    def get_prep_value(self, value):
+        if isinstance(value, Promise):
+            value = value._proxy____cast()
+
+        if value is None or isinstance(value, ObjectId):
+            return value
+        elif isinstance(value, str):
+            return ObjectId(value)
+        raise ValueError("%s (type: %s) is not an ObjectId" % (value, type(value)))
+
+
+class GenericObjectIdField(Field):
+    description = _("ObjectId")
+    empty_strings_allowed = False
+    default_error_messages = {
+        'invalid': _("'%(value)s' value must be an object id."),
+    }
+
     def get_internal_type(self):
         return "ObjectIdField"
 
+    def validate(self, value, model_instance):
+        if not isinstance(value, ObjectId):
+            ObjectId(value)
 
-class GenericObjectIdField(ObjectIdFieldMixin, Field):
-    empty_strings_allowed = False
+    def get_db_prep_value(self, value, connection, prepared=False):
+        return self.to_python(value)
+
+    def to_python(self, value):
+        if isinstance(value, str):
+            return ObjectId(value)
+        return value
+
+    def get_prep_value(self, value):
+        if isinstance(value, Promise):
+            value = value._proxy____cast()
+
+        if value is None or isinstance(value, ObjectId):
+            return value
+        elif isinstance(value, str):
+            return ObjectId(value)
+        raise ValueError("%s (type: %s) is not an ObjectId" % (value, type(value)))
 
 
-class ObjectIdField(ObjectIdFieldMixin, AutoField):
+class ObjectIdField(AutoField):
     """
     For every document inserted into a collection MongoDB internally creates an field.
     The field can be referenced from within the Model as _id.
     """
+
+    description = _("ObjectId")
 
     def __init__(self, *args, **kwargs):
         id_field_args = {
@@ -673,11 +715,33 @@ class ObjectIdField(ObjectIdFieldMixin, AutoField):
         id_field_args.update(kwargs)
         super().__init__(*args, **id_field_args)
 
-    def get_prep_value(self, value):
-        value = super(AutoField, self).get_prep_value(value)
-        if value is None:
-            return None
+    def get_internal_type(self):
+        return "ObjectIdField"
+
+    def rel_db_type(self, connection):
+        return self.db_type(connection=connection)
+
+    def validate(self, value, model_instance):
+        if not isinstance(value, ObjectId):
+            ObjectId(value)
+
+    def get_db_prep_value(self, value, connection, prepared=False):
+        return self.to_python(value)
+
+    def to_python(self, value):
+        if isinstance(value, str):
+            return ObjectId(value)
         return value
+
+    def get_prep_value(self, value):
+        if isinstance(value, Promise):
+            value = value._proxy____cast()
+
+        if value is None or isinstance(value, ObjectId):
+            return value
+        elif isinstance(value, str):
+            return ObjectId(value)
+        raise ValueError("%s (type: %s) is not an ObjectId" % (value, type(value)))
 
 
 class ArrayReferenceManagerMixin:
