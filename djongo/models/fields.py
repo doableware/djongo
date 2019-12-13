@@ -737,10 +737,13 @@ class ObjectIdField(AutoField):
         if isinstance(value, Promise):
             value = value._proxy____cast()
 
+        from core.models.base import BaseModel
         if value is None or isinstance(value, ObjectId):
             return value
         elif isinstance(value, str):
             return ObjectId(value)
+        elif isinstance(value, BaseModel):
+            return value._id
         raise ValueError("%s (type: %s) is not an ObjectId" % (value, type(value)))
 
 
