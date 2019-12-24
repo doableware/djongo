@@ -934,6 +934,15 @@ class Result:
             tok_id, tok = sm.token_next(tok_id)
             table_name = tok.get_name()
             self.db.drop_collection(table_name)
+        elif tok.match(tokens.Keyword, 'INDEX'):
+            tok_id, tok = sm.token_next(tok_id)
+            index_name = tok.get_name()
+            tok_id, tok = sm.token_next(tok_id)
+            if not tok.match(tokens.Keyword, 'ON'):
+                raise SQLDecodeError('statement:{}'.format(sm))
+            tok_id, tok = sm.token_next(tok_id)
+            collection_name = tok.get_name()
+            self.db[collection_name].drop_index(index_name)
         else:
             raise SQLDecodeError('statement:{}'.format(sm))
 
