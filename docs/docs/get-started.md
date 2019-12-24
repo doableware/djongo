@@ -125,6 +125,24 @@ entries = Entry.objects.filter(blog__startswith={'name': 'Beatles'})
 
 Refer to [Using Django with MongoDB data fields](/djongo/using-django-with-mongodb-data-fields/) for more details.
 
+
+### Saving files to MongoDB with GridFS 
+
+To save files in database using [GridFS](https://docs.mongodb.com/manual/core/gridfs/) you must create a file storage instance of `GridFSStorage`:
+
+```python
+grid_fs_storage = GridFSStorage(collection='myfiles')
+```
+
+An in your model define your field as FileField or ImageField as usual:
+
+```python
+avatar = models.ImageField(storage=grid_fs_storage, upload_to='')
+```
+
+Refer to [Using GridFSStorage](/djongo/using-django-with-mongodb-gridfs/) for more details.
+
+
 ## Djongo Manager
  The Djongo Manager extends the  functionality of the usual [Django Manager](https://docs.djangoproject.com/en/dev/topics/db/managers/). It gives access to  the complete pymongo collection API. Define your manager as Djongo Manager in the model.
 
