@@ -3,6 +3,7 @@ import datetime
 
 import bson
 from django.db.backends.base.introspection import BaseDatabaseIntrospection, FieldInfo, TableInfo
+from django.db.models import Index
 
 
 class DatabaseIntrospection(BaseDatabaseIntrospection):
@@ -66,6 +67,7 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
                 'orders': orders,
                 "foreign_key": False,
                 "check": False,
+                'type': Index.suffix
             }
         return constraint
 
