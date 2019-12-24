@@ -151,7 +151,7 @@ def discover_passing(_parsed):
 
     for i, atest in enumerate(tests['all_tests']):
         sys.argv[1] = atest
-        print(f'## Executing test: {atest} no: {i}/{len(tests["all_tests"])} ##\n')
+        print(f'## Executing test: {atest} no: {i}/{len(tests["all_tests"])} ##\n', flush=True)
         o = subprocess.run((['python'] + sys.argv))
         if o.returncode != 0:
             currently_failing.append(atest)
@@ -173,12 +173,12 @@ def check_passing(_parsed):
 
     for i, atest in enumerate(passing):
         sys.argv[1] = atest
-        print(f'## Executing test: {atest} no: {i}/{len(passing)} ##\n')
+        print(f'## Executing test: {atest} no: {i}/{len(passing)} ##\n', flush=True)
         o = subprocess.run((['python'] + sys.argv))
         if o.returncode != 0:
             sys.argv = orig_args
             return fail_exit_code
-        print(f'## Ran test: {atest}##\n')
+        print(f'## Ran test: {atest}##\n', flush=True)
 
     sys.argv = orig_args
     return pass_exit_code
@@ -191,12 +191,12 @@ def check_specific(_parsed, atest):
     sys.argv = build_args(orig_args[1:], _parsed)
 
     sys.argv[1] = atest
-    print(f'## Executing test: {atest}##\n')
+    print(f'## Executing test: {atest}##\n', flush=True)
     o = subprocess.run((['python'] + sys.argv))
     if o.returncode != 0:
         sys.argv = orig_args
         return fail_exit_code
-    print(f'## Ran test: {atest}##\n')
+    print(f'## Ran test: {atest}##\n', flush=True)
 
     sys.argv = orig_args
     return pass_exit_code

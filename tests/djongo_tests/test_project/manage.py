@@ -2,14 +2,8 @@
 import os
 import sys
 
-from logging import getLogger, DEBUG, StreamHandler
 
 if __name__ == "__main__":
-
-    root_logger = getLogger()
-    root_logger.setLevel(DEBUG)
-    if not root_logger.hasHandlers():
-        root_logger.addHandler(StreamHandler())
 
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "test_project.settings.settings_loaded")
     try:

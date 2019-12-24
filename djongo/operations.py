@@ -1,9 +1,11 @@
 import pytz
 from django.conf import settings
 from django.db.backends.base.operations import BaseDatabaseOperations
-from django.utils import six, timezone
+from django.utils import timezone
 import datetime
 import calendar
+import six
+
 
 
 class DatabaseOperations(BaseDatabaseOperations):
