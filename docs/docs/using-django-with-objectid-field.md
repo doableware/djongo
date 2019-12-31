@@ -1,9 +1,9 @@
 ---
-title: Other Djongo fields
+title: Other fields
 permalink: /using-django-with-objectid-field/
 ---
 
-## ObjectId Field
+## The ObjectId Field
 
 For every document inserted into a collection MongoDB internally creates an [ObjectID](https://docs.mongodb.com/manual/reference/method/ObjectId/) field with the name `_id`. Reference this field from within the Model:
 
@@ -19,7 +19,28 @@ By default the `ObjectIdField` internally sets `primary_key` as `True`. This mea
 
 Consider using the `ObjectIdField` in your models if you want to avoid calling Django migrations every time you create a new model.
 
-## List field
+## ObjectIdField
+
+```python
+class ObjectIdField(Field):
+    def __init__(self, *args, **kwargs):
+```
+
+### Parameters
+
+Same as the `Field` Base class
+
+## The List field
 
 `ArrayModelField` and `ArrayReferenceField` require all Models in the list to be of the same type. MongoDB allows the saving of arbitrary data inside it is embedded array. The `ListField` is useful in such cases. The list field cannot be represented in Django Admin though and can only be used in the python script.
 
+### ListField
+
+```python
+class ListField(Field):
+    def __init__(self, *args, **kwargs):
+```
+
+### Parameters
+
+Same as the `Field` Base class

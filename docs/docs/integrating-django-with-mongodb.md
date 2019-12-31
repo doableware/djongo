@@ -50,6 +50,14 @@ The `settings.py` supports the following options:
 
 All options except `ENGINE` and `ENFORCE_SCHEMA` are the same those listed in the [pymongo documentation](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient).
 
+Attribute | Value | Description
+---------|------|-------------
+ENGINE | djongo | The MongoDB connection engine for interfacing with Django.
+ENFORCE_SCHEMA | True | (Default) Ensures that the model schema and database schema are exactly the same. Raises `Migration Error` in case of discrepancy. 
+ENFORCE_SCHEMA | False | Implicitly creates collections. Returns missing fields as `None` instead of raising an exception.
+NAME | your-db-name | Specify your database name. This field cannot be left empty.
+  
+
 ### Enforce schema
 
 MongoDB is *schemaless*, which means that no schema is enforced by the database — you can add and remove fields the way you want and MongoDB will not complain. This makes life a lot easier in many regards, especially when there are frequent changes to the data model. Take for example the `Blog` Model.
