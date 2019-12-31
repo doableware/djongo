@@ -26,7 +26,7 @@ class ObjectIdField(Field):
     def __init__(self, *args, **kwargs):
 ```
 
-### Parameters
+### Arguments
 
 Same as the `Field` Base class
 
@@ -41,6 +41,6 @@ class ListField(Field):
     def __init__(self, *args, **kwargs):
 ```
 
-### Parameters
+### Arguments
 
 Same as the `Field` Base class

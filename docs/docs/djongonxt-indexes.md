@@ -18,6 +18,8 @@ class CompoundIndex(
     collation=None)
 ```
 
+### Arguments
+
 Argument | Type | Description
 ---------|------|-------------
 `fields` | `Tuple` or `List` |  A tuple of strings containing the fields to be indexed. Adding a '-' before the field name, builds the index in the [descending order](https://docs.djangoproject.com/en/dev/ref/models/indexes/#django.db.models.Index.fields).

@@ -16,7 +16,7 @@ class EmbeddedModelField(Field):
 Using MongoDB as your Django backend, you can embed any other model into your parent model and save it as an [embedded document](https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding).
 
 
-### Parameters
+### Arguments
 
 Argument | Type | Description
 ---------|------|-------------

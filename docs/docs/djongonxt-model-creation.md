@@ -35,6 +35,8 @@ class CollectionConstraint(**kwargs)
 
 All arguments passed to `create_collection` with the exception of `name` can be used to create the `CollectionConstraint` instance. Valid arguments include, but are not limited to those described below
 
+### Arguments
+
 Argument | Type | Description
 ---------|------|-------------
 `codec_options` | `CodecOptions` | An instance of [CodecOptions](https://api.mongodb.com/python/current/api/bson/codec_options.html#bson.codec_options.CodecOptions).
