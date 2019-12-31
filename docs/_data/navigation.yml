@@ -6,8 +6,6 @@ main:
      url: https://www.patreon.com/nesdis/
    - title: "Discuss"
      url: /discuss/
-   - title: "API Reference"
-     url: /api/
    - title: "Source"
      url: https://github.com/nesdis/djongo/
 
@@ -15,9 +13,9 @@ docs:
   - title: "Get started"
     url: /get-started/
 
-  - title: "Integrating Django With MongoDB"
+  - title: "Using Djongo"
     url: /integrating-django-with-mongodb/
-  - title: "Using Djongo Fields"
+  - title: "Djongo Fields"
     children:
     - title: "Embedded Model Field"
       url: /using-django-with-mongodb-data-fields/
@@ -25,32 +23,34 @@ docs:
       url: /using-django-with-mongodb-array-field/
     - title: "Array Reference Field"
       url: /using-django-with-mongodb-array-reference-field/
-    - title: "ObjectID Field"
+    - title: "Other fields"
       url: /using-django-with-objectid-field/
-  - title: "Creating Capped Models"
-    url: /creating-django-capped-models-using-mongodb/
+#  - title: "Creating Capped Models"
+#    url: /creating-django-capped-models-using-mongodb/
 
-  - title: "Quick Reference"
+  - title: "DjongoNxt"
     children:
-    - title: "Database configuration"
-      url: /database-configuration/
-    - title: "Embedded Model Field"
-      url: /embedded-model-field/
-    - title: "Array Model Field"
-      url: /array-model-field/
-    - title: "Array Reference Field"
-      url: /mongodb-field-reference/#arrayreferencefield
-    - title: "ObjectID Field"
-      url: /mongodb-field-reference/#objectidfield
-    - title: "List Field"
-      url: /mongodb-field-reference/#listfield
+    - title: "Indexes"
+      url: /djongonxt-indexes/
+    - title: "Model Query"
+      url: /djongonxt-model-query/
+    - title: "Model Creation"
+      url: /djongonxt-model-creation/
+    - title: "Model Update"
+      url: /djongonxt-model-update/
+    - title: "Database Transactions"
+      url: /djongonxt-database-transactions/
+#    - title: "Aggregation"
+#      url: /djongonxt-aggregation/
+    - title: "More Information"
+      url: /djongonxt-more-info/
 
-  - title: "Other resources"
+  - title: "Side stuff"
     children:
-      - title: "Different ways to integrate Django with MongoDBs"
-        url: /different-ways-to-integrate-django-with-mongodb/
-      - title: "Djongo design documentation"
-        url: /django-mongodb-connector-design-document/
+    - title: "Different ways to integrate Django with MongoDBs"
+      url: /different-ways-to-integrate-django-with-mongodb/
+    - title: "Djongo design documentation"
+      url: /django-mongodb-connector-design-document/
 #      - title: "Roadmap"
 #        url: /roadmap/
 
