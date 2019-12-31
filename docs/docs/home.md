@@ -36,7 +36,7 @@ addendum_row1:
   - image_path: /assets/images/djongo-Nxt-v1.png
     alt: "Djongo Next"
     title: "Djongo Next"
-    excerpt: "The next generation connector. Ships with binary extensions for enterprise usage."
+    excerpt: "The next generation connector. Ships with binary extensions for professional usage."
     url: https://nesdis.github.io/djongo/djongonxt-indexes/
     btn_label: "Learn More"
     btn_class: "btn--primary"
