@@ -15,8 +15,7 @@ class ArrayModelField(Field):
 ```
 With Djongo there can be an [array](https://docs.mongodb.com/manual/core/document/#arrays) of embedded documents inside the parent document. You can create an **embed array/list of models inside the parent model** and store it directly into MongoDB.
 
-### Parameters
-
+### Arguments
 
 Argument | Type | Description
 ---------|------|-------------

@@ -11,6 +11,8 @@ MongoDB lets you perform [Bulk Write operations](https://docs.mongodb.com/manual
 class BulkWrite(ordered=True)
 ```
 
+### Arguments
+
 Argument | Type | Description
 ---------|------|-------------
 `ordered` | `boolean` | Perform the write operations either in order or arbitrarily.

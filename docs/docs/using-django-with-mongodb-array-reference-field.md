@@ -54,6 +54,6 @@ class Entry(models.Model):
 class ArrayReferenceField(ForeignKey):
     def __init__(self, *args, **kwargs):
 ```
-### Parameters
+### Arguments
 
 Same as the `ForeignKey` Base class
