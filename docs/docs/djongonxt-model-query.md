@@ -102,6 +102,8 @@ db.entry.find({
 
 Djongo lets you specify the configuration of the find command into your [QuerySets](https://docs.djangoproject.com/en/dev/ref/models/querysets/). Call the `configure` method on a QuerySet to configure the find query. All options supported by [aggregate](https://api.mongodb.com/python/current/api/pymongo/collection.html#pymongo.collection.Collection.aggregate) or [find](https://api.mongodb.com/python/current/api/pymongo/collection.html#pymongo.collection.Collection.find) can be included as `kwargs`. Example of valid arguments:
 
+### Arguments
+
 Argument | Type | Description
 ---------|------|-------------
 `allowDiskUse` | `boolean` | Enables writing to temporary files
