@@ -66,7 +66,7 @@ class Cursor:
         try:
             return self.result.next()
         except StopIteration:
-            return []
+            return None
 
     def fetchall(self):
         return list(self.result)
