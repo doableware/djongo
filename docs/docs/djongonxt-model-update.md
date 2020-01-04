@@ -3,7 +3,7 @@ title: DjongoNxt Model Update
 permalink: "/djongonxt-model-update/"
 ---
 
-## Bulk Write Transactions
+## Bulk Write
 
 MongoDB lets you perform [Bulk Write operations](https://docs.mongodb.com/manual/core/bulk-write-operations/) using [`bulk_write`](https://api.mongodb.com/python/current/api/pymongo/collection.html#pymongo.collection.Collection.bulk_write) which is currently not supported in Django. However, by using Djongo it is possible to perform bulk writes.
 
