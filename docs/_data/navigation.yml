@@ -48,7 +48,7 @@ docs:
 
   - title: "Side stuff"
     children:
-    - title: "Different ways to integrate Django with MongoDBs"
+    - title: "Other ways to integrate Django with MongoDBs"
       url: /different-ways-to-integrate-django-with-mongodb/
     - title: "Djongo design documentation"
       url: /django-mongodb-connector-design-document/
