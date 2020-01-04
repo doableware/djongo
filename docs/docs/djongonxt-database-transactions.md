@@ -6,7 +6,7 @@ permalink: "/djongonxt-database-transactions/"
 
 ## Transaction and Commit 
 
-Djongo integrates with MongoDB Transactions API to support multi document atomic transactions. [Atomic transactions](https://docs.djangoproject.com/en/3.0/topics/db/transactions/) are enabled in Django using the usual transaction.atomic() decorator or context manager. MongoDB transactions significantly speed up Django test execution and validation.
+Djongo integrates with MongoDB Transactions API to support multi document atomic transactions. [Atomic transactions](https://docs.djangoproject.com/en/3.0/topics/db/transactions/) are enabled in Django using the usual `transaction.atomic()` decorator or context manager. MongoDB transactions significantly speed up Django test execution and validation.
 
 ### Example
 
