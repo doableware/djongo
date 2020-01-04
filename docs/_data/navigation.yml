@@ -29,6 +29,7 @@ docs:
 #    url: /creating-django-capped-models-using-mongodb/
 
   - title: "DjongoNxt"
+    url: /djongonxt/
     children:
     - title: "Indexes"
       url: /djongonxt-indexes/

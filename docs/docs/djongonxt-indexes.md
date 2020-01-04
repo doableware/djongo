@@ -3,9 +3,6 @@ title: DjongoNxt Indexes
 permalink: "/djongonxt-indexes/"
 ---
 
-DjongoNxt is a Django and MongoDB connector for professional usage. It has all the features of Djongo and much more. It supports document query, update, transactions, document validation, indexes, and aggregation operators used in MongoDB. 
- 
-
 ## Compound Index
 ```python
 class CompoundIndex(
