@@ -14,7 +14,7 @@ class ArrayAuthor(models.Model):
 
 class ArrayEntry(models.Model):
     headline = models.CharField(max_length=255)
-    authors = models.ArrayModelField(
+    authors = models.ArrayField(
         model_container=ArrayAuthor
     )
     _id = models.ObjectIdField()

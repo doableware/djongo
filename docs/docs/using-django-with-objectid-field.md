@@ -10,7 +10,7 @@ For every document inserted into a collection MongoDB internally creates an [Obj
 ```python
 class Entry(models.Model):
     _id = models.ObjectIdField()
-    blog = models.EmbeddedModelField(
+    blog = models.EmbeddedField(
         model_container=Blog,
     )
 ```
@@ -32,7 +32,7 @@ Same as the `Field` Base class
 
 ## The List field
 
-`ArrayModelField` and `ArrayReferenceField` require all Models in the list to be of the same type. MongoDB allows the saving of arbitrary data inside it is embedded array. The `ListField` is useful in such cases. The list field cannot be represented in Django Admin though and can only be used in the python script.
+`ArrayField` and `ArrayReferenceField` require all Models in the list to be of the same type. MongoDB allows the saving of arbitrary data inside it is embedded array. The `ListField` is useful in such cases. The list field cannot be represented in Django Admin though and can only be used in the python script.
 
 ### ListField
 
