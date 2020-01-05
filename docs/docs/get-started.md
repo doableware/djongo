@@ -89,11 +89,11 @@ class Blog(models.Model):
         abstract = True
 ```
 
-Now ‘embed’ your `Blog` inside a `Entry` using the `EmbeddedModelField`:
+Now ‘embed’ your `Blog` inside a `Entry` using the `EmbeddedField`:
 
 ```python
 class Entry(models.Model):
-    blog = models.EmbeddedModelField(
+    blog = models.EmbeddedField(
         model_container=Blog,
     )
     
@@ -148,7 +148,7 @@ Refer to [Using GridFSStorage](/djongo/using-django-with-mongodb-gridfs/) for mo
 
  ```python
 class Entry(models.Model):
-    blog = models.EmbeddedModelField(
+    blog = models.EmbeddedField(
         model_container=Blog,
     )
     headline = models.CharField(max_length=255)

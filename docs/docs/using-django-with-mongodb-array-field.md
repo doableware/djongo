@@ -3,10 +3,10 @@ title: Using Djongo Array Model Field
 permalink: /using-django-with-mongodb-array-field/
 ---
 
-## ArrayModelField
+## ArrayField
 
 ```python
-class ArrayModelField(Field):
+class ArrayField(Field):
     def __init__(self,
                  model_container: typing.Type[Model],
                  model_form_class: typing.Type[forms.ModelForm]=None,
@@ -58,13 +58,13 @@ class AuthorForm(forms.ModelForm):
         )
         
 class Entry(models.Model):
-    blog = models.EmbeddedModelField(
+    blog = models.EmbeddedField(
         model_container=Blog,
         model_form_class=BlogForm
     )
     
     headline = models.CharField(max_length=255)    
-    authors = models.ArrayModelField(
+    authors = models.ArrayField(
         model_container=Author,
         model_form_class=AuthorForm
     )
@@ -84,7 +84,7 @@ entry.authors = [Author()]
 
 Djongo uses a mixture of Django query syntax and MongoDB query syntax. Consider a query to retrieve all entries made by the author *Paul*. Using `ManyToManyField` this requires 2 SQL queries. First selects the `id` for author Paul from the `author` table. Next, a JOIN with `entry_authors` and `entry` gives the corresponding entries. 
  
-With `ArrayModelField` the query reduces to a single simple query:   
+With `ArrayField` the query reduces to a single simple query:   
 
 ```python
 entries = Entry.objects.filter(authors={'name': 'Paul'})
@@ -97,7 +97,7 @@ entries = Entry.objects.filter(authors={'2.name': 'Paul'})
 ```
 Note: In MongoDB the first element in the array starts at index 0.
 
-## Using ArrayModelField in Django Admin
+## Using ArrayField in Django Admin
 
 The official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/) exemplifies 3 models that interact with each other: **Blog, Author and Entry**. This tutorial considers the same 3 models. The `blog`; `ForeignKey` of the `Entry` model was optimized in the [other tutorial](/djongo/using-django-with-mongodb-data-fields/), here we optimize the `authors`; `ManyToManyField`.
 
@@ -139,7 +139,7 @@ Fetching an entry will require 2 SQL queries. The second query will be an expens
 
 As a designer using Djongo, you have the freedom to continue with the above schema. Alternatively, you can define a schema having a trade off on disk space for higher performance.
 
-Let us redefine the `authors` in the `Entry` models using the `ArrayModelField`:
+Let us redefine the `authors` in the `Entry` models using the `ArrayField`:
 
 ```python
 from djongo import models
@@ -171,17 +171,17 @@ class Author(models.Model):
         return self.name
 
 class Entry(models.Model):
-    blog = models.EmbeddedModelField(
+    blog = models.EmbeddedField(
         model_container=Blog,
     )
-    meta_data = models.EmbeddedModelField(
+    meta_data = models.EmbeddedField(
         model_container=MetaData,
     )
 
     headline = models.CharField(max_length=255)
     body_text = models.TextField()
 
-    authors = models.ArrayModelField(
+    authors = models.ArrayField(
         model_container=Author,
     )
     n_comments = models.IntegerField()
@@ -191,7 +191,7 @@ class Entry(models.Model):
 
 ```
 
-**Notice** how the `ManyToManyField` is now replaced by the `ArrayModelField`. To display the Array field in Django Admin, a `Form` for the field must be present. Since the array is made up of abstract `Author` models, the form can be easily created by using a `ModelForm`.  If you do not specify a `ModelForm` for your array  models in the `model_form_class` argument, Djongo will automatically generate a `ModelForm` for you.
+**Notice** how the `ManyToManyField` is now replaced by the `ArrayField`. To display the Array field in Django Admin, a `Form` for the field must be present. Since the array is made up of abstract `Author` models, the form can be easily created by using a `ModelForm`.  If you do not specify a `ModelForm` for your array  models in the `model_form_class` argument, Djongo will automatically generate a `ModelForm` for you.
 
 ![Array-model-field](/djongo/assets/images/array-model-field.png)
 
