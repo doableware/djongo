@@ -17,9 +17,9 @@ docs:
     url: /integrating-django-with-mongodb/
   - title: "Djongo Fields"
     children:
-    - title: "Embedded Model Field"
+    - title: "Embedded Field"
       url: /using-django-with-mongodb-data-fields/
-    - title: "Array Model Field"
+    - title: "Array Field"
       url: /using-django-with-mongodb-array-field/
     - title: "Array Reference Field"
       url: /using-django-with-mongodb-array-reference-field/
