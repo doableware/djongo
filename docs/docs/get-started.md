@@ -43,11 +43,13 @@ I am inundated daily with your appreciation, queries and feature requests for Dj
 
 Visit my [Patreon page](https://www.patreon.com/nesdis/) to make requests and for support.
 
+<!--
 ## Sustainable Development
 
 Djongo as a project is at a stage where its development must be transformed into a sustained effort. Djongo has more than [100,000 downloads](https://pypistats.org/packages/djongo) on pypi and continues to grow. I am trying to establish a sustainable development model for the project, and would [love to hear your thoughts.](https://www.patreon.com/posts/to-only-take-22611438)
 
 Djongo is an open source project. Should it also be a free source project? (Free as in "free beer"). When you decide to adopt Djongo for your critical work, should it be backed up by a support mechanism? If not, would you still consider adopting it for your work? Read my [detailed post](https://www.patreon.com/posts/to-only-take-22611438) on sustainable development.
+-->
 
 ## How it works
 
@@ -64,14 +66,14 @@ and others... fully supported.
   
 ## Usage with Django
 
-Djongo connector for MongoDB ensures that you:
+Djongo connector ensures that you:
 
  * Reuse Django Models/ORM
  * Work with the original Django variant
  * Future proof your code
  * Atomic SQL JOIN operations
  
-Refer to [Integrating Django with MongoDB](/djongo/integrating-django-with-mongodb/) for the detailed reference. Get [expert support](https://www.patreon.com/nesdis) for complex projects.
+Get [expert support](https://www.patreon.com/nesdis) for complex projects.
 
 ## Use Django Admin to add documents
 
@@ -125,24 +127,6 @@ entries = Entry.objects.filter(blog__startswith={'name': 'Beatles'})
 
 Refer to [Using Django with MongoDB data fields](/djongo/using-django-with-mongodb-data-fields/) for more details.
 
-
-### Saving files to MongoDB with GridFS 
-
-To save files in database using [GridFS](https://docs.mongodb.com/manual/core/gridfs/) you must create a file storage instance of `GridFSStorage`:
-
-```python
-grid_fs_storage = GridFSStorage(collection='myfiles')
-```
-
-An in your model define your field as FileField or ImageField as usual:
-
-```python
-avatar = models.ImageField(storage=grid_fs_storage, upload_to='')
-```
-
-Refer to [Using GridFSStorage](/djongo/using-django-with-mongodb-gridfs/) for more details.
-
-
 ## Djongo Manager
  The Djongo Manager extends the  functionality of the usual [Django Manager](https://docs.djangoproject.com/en/dev/topics/db/managers/). It gives access to  the complete pymongo collection API. Define your manager as Djongo Manager in the model.
 
@@ -185,6 +169,23 @@ class EntryView(DetailView):
 ```
 
 You can directly *access any [pymongo](https://api.mongodb.com/python/current/) command* by prefixing `mongo_` to the command name. For example, to perform `aggregate` on the BlogPage collection (BlogPage is stored as a table in SQL or a collection in MongoDB) the function name becomes `mongo_aggregate`. To directly insert a document (instead of `.save()` a model) use `mongo_insert_one()`
+
+### Saving files to MongoDB with GridFS 
+
+To save files using [GridFS](https://docs.mongodb.com/manual/core/gridfs/) you must create a file storage instance of `GridFSStorage`:
+
+```python
+grid_fs_storage = GridFSStorage(collection='myfiles')
+```
+
+In your model define your field as FileField or ImageField as usual:
+
+```python
+avatar = models.ImageField(storage=grid_fs_storage, upload_to='')
+```
+
+Refer to [Using GridFSStorage](/djongo/using-django-with-mongodb-gridfs/) for more details.
+
 
 ## Contribute
  
