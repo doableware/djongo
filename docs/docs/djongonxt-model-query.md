@@ -55,13 +55,13 @@ from djongo import models
 
 class Location(models.Model):
     type = models.CharField(max_length=100)
-    coordinates = models.EmbeddedArrayField()
+    coordinates = models.ArrayField()
 
     class Meta:
         abstract = True
 
 class Entry(models.Model):
-    loc = models.EmbeddedModelField(
+    loc = models.EmbeddedField(
         model_container=Location,
     )
     class Meta:

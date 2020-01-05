@@ -9,11 +9,11 @@ Djongo lets you define certain Models as 'Capped' Models. The `Entry` Model is a
 
 ```python
 class Entry(models.Model):
-    blog = models.EmbeddedModelField(
+    blog = models.EmbeddedField(
         model_container=Blog,
         model_form_class=BlogForm
     )
-    meta_data = models.EmbeddedModelField(
+    meta_data = models.EmbeddedField(
         model_container=MetaData,
         model_form_class=MetaDataForm
     )

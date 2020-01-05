@@ -3,10 +3,10 @@ title: Using Djongo Model fields
 permalink: /using-django-with-mongodb-data-fields/
 ---
 
-## EmbeddedModelField
+## EmbeddedField
 
 ```python
-class EmbeddedModelField(Field):
+class EmbeddedField(Field):
     def __init__(self,
                  model_container: typing.Type[Model],
                  model_form_class: typing.Optional[Type[forms.ModelForm]]=None,
@@ -46,7 +46,7 @@ class BlogForm(forms.ModelForm):
 
 
 class Entry(models.Model):
-    blog = models.EmbeddedModelField(
+    blog = models.EmbeddedField(
         model_container=Blog,
         model_form_class=BlogForm
     )
@@ -57,7 +57,7 @@ class Entry(models.Model):
 
 ## Embedded Form
 
-While creating a Form from [the ModelForm](https://docs.djangoproject.com/en/dev/topics/forms/modelforms/), the embedded forms **get automatically generated** if the Model contains an embedded model inside it. Multiple embedded forms get automatically generated when the Model contains an array of embedded models. However, you can still override this by specifying the `model_form_class` argument in the EmbeddedModelField.
+While creating a Form from [the ModelForm](https://docs.djangoproject.com/en/dev/topics/forms/modelforms/), the embedded forms **get automatically generated** if the Model contains an embedded model inside it. Multiple embedded forms get automatically generated when the Model contains an array of embedded models. However, you can still override this by specifying the `model_form_class` argument in the `EmbeddedField`.
 
 ## Querying Embedded fields
 
@@ -76,7 +76,7 @@ filter = {
     }
 }
 ```
-## Using EmbeddedModelField in Django Admin
+## Using EmbeddedField in Django Admin
  
 Django Admin is a powerful tool for managing data used in your app. When your models use Djongo relational fields,  you can create NoSQL "embedded models" directly from the Django Admin. **These fields provide better performance when compared with traditional Django relational fields.**
 
@@ -223,10 +223,10 @@ class Author(models.Model):
         return self.name
 
 class Entry(models.Model):
-    blog = models.EmbeddedModelField(
+    blog = models.EmbeddedField(
         model_container=Blog,
     )
-    meta_data = models.EmbeddedModelField(
+    meta_data = models.EmbeddedField(
         model_container=MetaData,
     )
 
