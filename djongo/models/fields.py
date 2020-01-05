@@ -5,8 +5,8 @@ in place of Django's standard models module.
 Djongo Fields is where custom fields for working with
 MongoDB is defined.
 
- - EmbeddedModelField
- - ArrayModelField
+ - EmbeddedField
+ - ArrayField
  - ArrayReferenceField
  - GenericReferenceField
 
@@ -130,7 +130,7 @@ class DictField(FormlessField):
         return value
 
 
-class ArrayModelField(Field):
+class ArrayField(Field):
     """
     Implements an array of objects inside the document.
 
@@ -140,31 +140,6 @@ class ArrayModelField(Field):
 
     The model of the container must be declared as abstract, thus should
     not be treated as a collection of its own.
-
-    Example:
-
-    class Author(models.Model):
-        name = models.CharField(max_length=100)
-        email = models.CharField(max_length=100)
-
-        class Meta:
-            abstract = True
-
-
-    class AuthorForm(forms.ModelForm):
-        class Meta:
-            model = Author
-            fields = (
-                'name', 'email'
-            )
-
-    class MultipleBlogPosts(models.Model):
-        h1 = models.CharField(max_length=100)
-        content = models.ArrayModelField(
-            model_container=BlogContent,
-            model_form_class=BlogContentForm
-        )
-
     """
 
     empty_strings_allowed = False
@@ -416,7 +391,7 @@ class ArrayFormWidget(forms.Widget):
         return True
 
 
-class EmbeddedModelField(Field):
+class EmbeddedField(Field):
     """
     Allows for the inclusion of an instance of an abstract model as
     a field inside a document.
@@ -440,7 +415,7 @@ class EmbeddedModelField(Field):
 
 
     class Entry(models.Model):
-        blog = models.EmbeddedModelField(
+        blog = models.EmbeddedField(
             model_container=Blog,
             model_form_class=BlogForm
         )
