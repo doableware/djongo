@@ -2,7 +2,7 @@
 main:
    - title: "Get Started"
      url: /get-started/
-   - title: "Get Support"
+   - title: "Sponsor"
      url: https://www.patreon.com/nesdis/
    - title: "Discuss"
      url: /discuss/
@@ -25,8 +25,6 @@ docs:
       url: /using-django-with-mongodb-array-reference-field/
     - title: "Other fields"
       url: /using-django-with-objectid-field/
-#  - title: "Creating Capped Models"
-#    url: /creating-django-capped-models-using-mongodb/
 
   - title: "DjongoNxt"
     url: /djongonxt/
@@ -43,7 +41,7 @@ docs:
       url: /djongonxt-database-transactions/
 #    - title: "Aggregation"
 #      url: /djongonxt-aggregation/
-    - title: "More Information"
+    - title: "Contact"
       url: /djongonxt-more-info/
 
   - title: "Side stuff"
