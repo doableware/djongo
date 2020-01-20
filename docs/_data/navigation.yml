@@ -41,8 +41,8 @@ docs:
       url: /djongonxt-database-transactions/
 #    - title: "Aggregation"
 #      url: /djongonxt-aggregation/
-    - title: "Contact"
-      url: /djongonxt-more-info/
+  - title: "Contact"
+    url: /djongonxt-more-info/
 
   - title: "Side stuff"
     children:
