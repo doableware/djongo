@@ -13,7 +13,7 @@ class EmbeddedField(Field):
                  model_form_kwargs: typing.Optional[dict]=None,
                  *args, **kwargs):
 ```
-Using MongoDB as your Django backend, you can embed any other model into your parent model and save it as an [embedded document](https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding).
+MongoDB allows the creation of an [embedded document](https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding). By using Djongo as your connector, you can embed any other model into your parent model through the `EmbeddedField`. 
 
 
 ### Arguments
@@ -57,7 +57,7 @@ class Entry(models.Model):
 
 ## Embedded Form
 
-While creating a Form from [the ModelForm](https://docs.djangoproject.com/en/dev/topics/forms/modelforms/), the embedded forms **get automatically generated** if the Model contains an embedded model inside it. Multiple embedded forms get automatically generated when the Model contains an array of embedded models. However, you can still override this by specifying the `model_form_class` argument in the `EmbeddedField`.
+While creating a Form for [the ModelForm](https://docs.djangoproject.com/en/dev/topics/forms/modelforms/), the embedded forms **are automatically generated**. Multiple embedded forms get automatically generated when the Model contains an array of embedded models. However, you can still override this by specifying the `model_form_class` argument in the `EmbeddedField`.
 
 ## Querying Embedded fields
 
@@ -76,6 +76,7 @@ filter = {
     }
 }
 ```
+
 ## Using EmbeddedField in Django Admin
  
 Django Admin is a powerful tool for managing data used in your app. When your models use Djongo relational fields,  you can create NoSQL "embedded models" directly from the Django Admin. **These fields provide better performance when compared with traditional Django relational fields.**
