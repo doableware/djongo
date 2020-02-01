@@ -37,11 +37,37 @@ class Blog(models.Model):
     class Meta:
         abstract = True
 
+class Entry(models.Model):
+    blog = models.EmbeddedField(
+        model_container=Blog
+    )
+    
+    headline = models.CharField(max_length=255)    
+    objects = models.DjongoManager()
+```
+
+## Embedded Form
+
+While creating a Form for [the ModelForm](https://docs.djangoproject.com/en/dev/topics/forms/modelforms/), the embedded forms **are automatically generated**. Multiple embedded forms get automatically generated when the Model contains an array of embedded models. However, you can still override this by specifying the `model_form_class` argument in the `EmbeddedField`.
+
+### Example
+
+```python
+from djongo import models
+from django import forms
+
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.TextField()
+
+    class Meta:
+        abstract = True
+
 class BlogForm(forms.ModelForm):
     class Meta:
         model = Blog
         fields = (
-            'comment', 'author'
+            'name', 'tagline'
         )
 
 
@@ -54,10 +80,6 @@ class Entry(models.Model):
     headline = models.CharField(max_length=255)    
     objects = models.DjongoManager()
 ```
-
-## Embedded Form
-
-While creating a Form for [the ModelForm](https://docs.djangoproject.com/en/dev/topics/forms/modelforms/), the embedded forms **are automatically generated**. Multiple embedded forms get automatically generated when the Model contains an array of embedded models. However, you can still override this by specifying the `model_form_class` argument in the `EmbeddedField`.
 
 ## Querying Embedded fields
 
