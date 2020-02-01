@@ -40,7 +40,7 @@ class BlogForm(forms.ModelForm):
     class Meta:
         model = Blog
         fields = (
-            'comment', 'author'
+            'name', 'tagline'
         )
 
 class Author(models.Model):
