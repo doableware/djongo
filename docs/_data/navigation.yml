@@ -41,8 +41,10 @@ docs:
       url: /djongonxt-database-transactions/
 #    - title: "Aggregation"
 #      url: /djongonxt-aggregation/
-  - title: "Contact"
-    url: /djongonxt-more-info/
+    - title: "Contact"
+      url: /djongonxt-more-info/
+  - title: "Get DjongoNxt"
+    url: https://www.patreon.com/nesdis
 
   - title: "Side stuff"
     children:
