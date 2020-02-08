@@ -1798,17 +1798,18 @@ class TestDatabaseWrapper(TestCase):
 
         settings_dict = {
                 'NAME': name,
-                'PORT': port,
-                'HOST': host
+                'CLIENT': {
+                    'port': port,
+                    'host': host
+                },
         }
 
         wrapper = DatabaseWrapper(settings_dict)
-
         params = wrapper.get_connection_params()
 
-        assert params['name'] is name
-        assert params['port'] is port
-        assert params['host'] is host
+        self.assertIs(params['name'], name)
+        self.assertIs(params['port'], port)
+        self.assertIs(params['host'], host)
 
     @patch('djongo.database.MongoClient')
     def test_connection(self, mocked_mongoclient):
@@ -1816,5 +1817,4 @@ class TestDatabaseWrapper(TestCase):
         wrapper = DatabaseWrapper(settings_dict)
 
         wrapper.get_new_connection(wrapper.get_connection_params())
-
         mocked_mongoclient.assert_called_once()
