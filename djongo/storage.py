@@ -31,7 +31,7 @@ class GridFSStorage(Storage):
     This backend aims to add a GridFS storage to upload files to
     using Django's file fields.
 
-    For performance, the file hirarchy is represented as a tree of
+    For performance, the file hierarchy is represented as a tree of
     MongoDB sub-collections.
 
     (One could use a flat list, but to list a directory '/this/path/'

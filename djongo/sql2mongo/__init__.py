@@ -12,6 +12,12 @@ class SQLDecodeError(ValueError):
         self.err_sql = err_sql
 
 
+class NotSupportedError(ValueError):
+
+    def __init__(self, keyword=None):
+        self.keyword = keyword
+
+
 class MigrationError(Exception):
 
     def __init__(self, field):
