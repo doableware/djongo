@@ -25,6 +25,82 @@ You can continue to work with this new DB. Start by inserting data into the mode
 
 You may want to go through the quick [get started](/djongo/get-started) guide for setting up Djongo before proceeding ahead. An introduction to [using MongoDB fields in Django](/djongo/using-django-with-mongodb-data-fields/) can prove useful.
 
+## Database configuration
+
+The `settings.py` supports (but is not limited to) the following  options:
+
+```python
+    DATABASES = {
+        'default': {
+            'ENGINE': 'djongo',
+            'ENFORCE_SCHEMA': True,
+            'LOGGING': {
+                'loggers': {
+                    'djongo': {
+                        'level': 'DEBUG',
+                        'propogate': False,
+                        'handlers': ['console']
+                    }
+                },
+                'handlers': {
+                    'console': {
+                        'class': 'logging.StreamHandler',
+                        'level': 'DEBUG'
+                    }
+                }
+            },
+            'NAME': 'your-db-name',
+            'CLIENT': {
+                'host': 'host-name or ip address',
+                'port': port_number,
+                'username': 'db-username',
+                'password': 'password',
+                'authSource': 'db-name',
+                'authMechanism': 'SCRAM-SHA-1'
+            }
+        }
+    }
+```
+
+All options except `ENGINE` and `ENFORCE_SCHEMA` are the same those listed in the [pymongo documentation](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient).
+
+Attribute | Value | Description
+---------|------|-------------
+ENGINE | djongo | The MongoDB connection engine for interfacing with Django.
+ENFORCE_SCHEMA | True | (Default) Ensures that the model schema and database schema are exactly the same. Raises `Migration Error` in case of discrepancy. 
+ENFORCE_SCHEMA | False | Implicitly creates collections. Returns missing fields as `None` instead of raising an exception.
+NAME | your-db-name | Specify your database name. This field cannot be left empty.
+LOGGING | dict | A [dictConfig](https://docs.python.org/3.6/library/logging.config.html) for the type of logging to run on djongo.
+CLIENT | dict | A set of key-value pairs that will be passed directly to [`MongoClient`]((http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient)) as kwargs while creating a new client connection.
+  
+
+### Enforce schema
+
+MongoDB is *schemaless*, which means that no schema is enforced by the database — you can add and remove fields the way you want and MongoDB will not complain. This makes life a lot easier in many regards, especially when there are frequent changes to the data model. Take for example the `Blog` Model.
+
+```python
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.TextField()
+```
+
+You can save several entries into the DB and later modify it like so:
+
+```python
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.TextField()
+    description = models.TextField()
+```
+
+The modified Model can be saved **without running any migrations**. All entries in the `Blog` collection will now contain 3 fields. 
+
+This works fine if you know what you are doing. Consider a query that retrieves entries belonging to both the 'older' model (with just 2 fields) and the current model. What will the value of `description` now be? 
+
+To handle such scenarios Djongo comes with the `ENFORCE_SCHEMA` option. When connecting to Djongo you can set `ENFORCE_SCHEMA: True`. In this case, a `MigrationError` will be raised when field values are missing from the retrieved documents. You can then check what went wrong. Enforce schema can help to iron out bugs involving incorrect types or missing fields.
+
+`ENFORCE_SCHEMA: False` works by silently setting the missing fields with the value `None`. If your app is programmed to expect this (which means it is not a bug) you can get away by not calling any migrations.
+
 ## Migrating an existing MongoDB database to Django using Djongo
 
 There is no concept of an AUTOINCREMENT field in MongoDB. Internally, Djongo creates a `__schema__` collection. This collection is used to track all auto increment fields in different tables. The `__schema__` collection looks like:
@@ -73,64 +149,4 @@ You can manually create a `__schema__` collection in your existing DB. Next, add
 
 Finally, you can ask for [expert support](https://www.patreon.com/nesdis) if your project demands complex migrations.
 
-## Database configuration
 
-The `settings.py` supports the following options:
-
-```python
-    DATABASES = {
-        'default': {
-            'ENGINE': 'djongo',
-            'ENFORCE_SCHEMA': True
-            'NAME': 'your-db-name',
-            'HOST': 'host-name or ip address',
-            'PORT': port_number,
-            'USER': 'db-username',
-            'PASSWORD': 'password',
-            'AUTH_SOURCE': 'db-name',
-            'AUTH_MECHANISM': 'SCRAM-SHA-1',
-            'REPLICASET': 'replicaset',
-            'SSL': 'ssl',
-            'SSL_CERTFILE': 'ssl_certfile',
-            'SSL_CA_CERTS': 'ssl_ca_certs',
-            'READ_PREFERENCE': 'read_preference'
-        }
-    }
-```
-
-All options except `ENGINE` and `ENFORCE_SCHEMA` are the same those listed in the [pymongo documentation](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient).
-
-Attribute | Value | Description
----------|------|-------------
-ENGINE | djongo | The MongoDB connection engine for interfacing with Django.
-ENFORCE_SCHEMA | True | (Default) Ensures that the model schema and database schema are exactly the same. Raises `Migration Error` in case of discrepancy. 
-ENFORCE_SCHEMA | False | Implicitly creates collections. Returns missing fields as `None` instead of raising an exception.
-NAME | your-db-name | Specify your database name. This field cannot be left empty.
-  
-
-### Enforce schema
-
-MongoDB is *schemaless*, which means that no schema is enforced by the database — you can add and remove fields the way you want and MongoDB will not complain. This makes life a lot easier in many regards, especially when there are frequent changes to the data model. Take for example the `Blog` Model.
-
-```python
-class Blog(models.Model):
-    name = models.CharField(max_length=100)
-    tagline = models.TextField()
-```
-
-You can save several entries into the DB and later modify it like so:
-
-```python
-class Blog(models.Model):
-    name = models.CharField(max_length=100)
-    tagline = models.TextField()
-    description = models.TextField()
-```
-
-The modified Model can be saved **without running any migrations**. All entries in the `Blog` collection will now contain 3 fields. 
-
-This works fine if you know what you are doing. Consider a query that retrieves entries belonging to both the 'older' model (with just 2 fields) and the current model. What will the value of `description` now be? 
-
-To handle such scenarios Djongo comes with the `ENFORCE_SCHEMA` option. When connecting to Djongo you can set `ENFORCE_SCHEMA: True`. In this case, a `MigrationError` will be raised when field values are missing from the retrieved documents. You can then check what went wrong. Enforce schema can help to iron out bugs involving incorrect types or missing fields.
-
-`ENFORCE_SCHEMA: False` works by silently setting the missing fields with the value `None`. If your app is programmed to expect this (which means it is not a bug) you can get away by not calling any migrations.
