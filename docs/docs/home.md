@@ -37,7 +37,7 @@ addendum_row1:
     alt: "Djongo Next"
     title: "Djongo Next"
     excerpt: "The next generation connector. Ships with binary extensions for professional usage."
-    url: /djongonxt/
+    url: https://www.patreon.com/nesdis
     btn_label: "Learn More"
     btn_class: "btn--primary"
 ---
