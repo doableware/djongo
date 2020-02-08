@@ -9,3 +9,4 @@
 #       * thestick613
 
 __version__ = '1.3.0'
+djongo_access_url = 'https://www.patreon.com/nesdis'
