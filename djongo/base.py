@@ -130,18 +130,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         """
         valid_settings = {
             'NAME': 'name',
-            'HOST': 'host',
-            'PORT': 'port',
-            'USER': 'username',
-            'PASSWORD': 'password',
-            'AUTH_SOURCE': 'authSource',
-            'AUTH_MECHANISM': 'authMechanism',
             'ENFORCE_SCHEMA': 'enforce_schema',
-            'REPLICASET': 'replicaset',
-            'SSL': 'ssl',
-            'SSL_CERTFILE': 'ssl_certfile',
-            'SSL_CA_CERTS': 'ssl_ca_certs',
-            'READ_PREFERENCE': 'read_preference'
         }
         connection_params = {
             'name': 'djongo_test',
@@ -155,6 +144,10 @@ class DatabaseWrapper(BaseDatabaseWrapper):
 
             if setting or setting is False:
                 connection_params[kwarg] = setting
+        try:
+            connection_params.update(self.settings_dict['CLIENT'])
+        except KeyError:
+            pass
 
         return connection_params
 
@@ -165,9 +158,6 @@ class DatabaseWrapper(BaseDatabaseWrapper):
 
         Dictionary correct setup is made through the
         get_connection_params method.
-
-        TODO: This needs to be made more generic to accept
-        other MongoClient parameters.
         """
 
         name = connection_params.pop('name')
