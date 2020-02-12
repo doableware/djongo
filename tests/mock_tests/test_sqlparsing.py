@@ -186,9 +186,16 @@ sqls = [
     'BETWEEN %(0)s AND %(1)s'
 ]
 
-root_logger = getLogger()
-root_logger.setLevel(DEBUG)
-root_logger.addHandler(StreamHandler())
+t1c1 = '"table1"."col1"'
+t1c2 = '"table1"."col2"'
+t2c1 = '"table2"."col1"'
+t2c2 = '"table2"."col2"'
+t3c1 = '"table3"."col1"'
+t3c2 = '"table3"."col2"'
+t4c1 = '"table4"."col1"'
+t4c2 = '"table4"."col2"'
+
+where = 'SELECT "table1"."col1" FROM "table1" WHERE'
 
 
 class MockTest(TestCase):
@@ -198,19 +205,50 @@ class MockTest(TestCase):
         cls.conn = mock.MagicMock()
         cls.db = mock.MagicMock()
         cls.conn_prop = mock.MagicMock()
-        cls.conn_prop.cached_collections = ['table']
+        cls.conn_prop.cached_collections = ['table', '__schema__']
         cls.params_none = mock.MagicMock()
         cls.params: typing.Union[mock.MagicMock, list] = None
+        logger = getLogger('djongo')
+        logger.setLevel(DEBUG)
+        logger.addHandler(StreamHandler())
 
 
 class TestVoidQuery(MockTest):
 
+    def exe(self):
+        result = Result(self.db, self.conn, self.conn_prop, self.sql, self.params)
+        self.assertRaises(StopIteration, result.next)
+
+
+class TestCreateTable(TestVoidQuery):
+    """
+        'CREATE TABLE "django_migrations" '
+        '("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, '
+        '"app" char NOT NULL, '
+        '"name" char NOT NULL, '
+        '"applied" datetime NOT NULL)',
+    """
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.base_sql = 'CREATE TABLE "table" '
 
-    def exe(self):
-        result = Result(self.db, self.conn, self.conn_prop, self.sql, self.params)
+    def test_notNull_with_pk(self):
+        self.sql = self.base_sql + '("col1" NOT NULL PRIMARY KEY)'
+        self.exe()
+
+    def test_notNull_with_autoInc(self):
+        self.sql = self.base_sql + '("col1" NOT NULL AUTOINCREMENT)'
+        self.exe()
+
+    def test_notNull_with_unique(self):
+        self.sql = self.base_sql + '("col1" NOT NULL UNIQUE)'
+        self.exe()
+
+
+class TestAlterTable(TestVoidQuery):
+    pass
 
 
 class TestVoidQueryDelete(TestVoidQuery):
@@ -409,15 +447,6 @@ class TestQueryDistinct(TestQuery):
 class TestQueryFunctions(TestQuery):
 
     def test_pattern1(self):
-        t1c1 = '"table1"."col1"'
-        t2c1 = '"table2"."col1"'
-        t4c1 = '"table4"."col1"'
-
-        t1c2 = '"table1"."col2"'
-        t2c2 = '"table2"."col2"'
-        t3c2 = '"table3"."col2"'
-        t3c1 = '"table3"."col1"'
-
         self.sql = f'SELECT MIN({t1c1}) AS "m__min1", MAX({t1c2}) AS "m__max1"' \
             f' FROM "table1"'
 
@@ -591,11 +620,6 @@ class TestQueryStatement(TestQuery):
 class TestQueryGroupBy(TestQuery):
 
     def test_pattern1(self):
-        t1c1 = '"table1"."col1"'
-        t1c2 = '"table1"."col2"'
-        t1c3 = '"table1"."col3"'
-        t2c2 = '"table2"."col2"'
-
         self.sql = (
             f'SELECT {t1c1}, {t1c2}, '
             f'COUNT({t1c1}) AS "c1__count", '
@@ -655,11 +679,6 @@ class TestQueryGroupBy(TestQuery):
         self.aggregate_mock(pipeline, return_value, ans)
 
     def test_pattern2(self):
-        t1c1 = '"table1"."col1"'
-        t1c2 = '"table1"."col2"'
-        t1c3 = '"table1"."col3"'
-        t2c2 = '"table2"."col2"'
-
         self.sql = (
             f'SELECT {t1c1}, {t1c2}, MIN({t2c2}) AS "dt" '
             f'FROM table1 '
@@ -725,11 +744,6 @@ class TestQueryGroupBy(TestQuery):
         """
         SELECT "timezones_session"."id", "timezones_session"."name", MIN("timezones_sessionevent"."dt") AS "dt" FROM "timezones_session" LEFT OUTER JOIN "timezones_sessionevent" ON ("timezones_session"."id" = "timezones_sessionevent"."session_id") GROUP BY "timezones_session"."id", "timezones_session"."name" HAVING MIN("timezones_sessionevent"."dt") < %(0)s
         """
-        t1c1 = '"table1"."col1"'
-        t1c2 = '"table1"."col2"'
-        t1c3 = '"table1"."col3"'
-        t2c2 = '"table2"."col2"'
-
         self.sql = (
             f'SELECT {t1c1}, {t1c2}, MIN({t2c2}) AS "dt" '
             f'FROM table1 '
@@ -830,7 +844,7 @@ class TestQueryIn(TestQuery):
         find = self.find
         iter = self.iter
 
-        t1c1 = '"table1"."col1"'
+
 
         # Testing for different combinations 'where' syntax
         # from here on
@@ -859,7 +873,6 @@ class TestQueryIn(TestQuery):
         find = self.find
         iter = self.iter
 
-        t1c1 = '"table1"."col1"'
 
         # Testing for different combinations 'where' syntax
         # from here on
@@ -888,7 +901,6 @@ class TestQueryIn(TestQuery):
         find = self.find
         iter = self.iter
 
-        t1c1 = '"table1"."col1"'
 
         # Testing for different combinations 'where' syntax
         # from here on
@@ -915,7 +927,6 @@ class TestQueryIn(TestQuery):
         find = self.find
         iter = self.iter
 
-        t1c1 = '"table1"."col1"'
 
         # Testing for different combinations 'where' syntax
         # from here on
@@ -942,7 +953,6 @@ class TestQueryIn(TestQuery):
         find = self.find
         iter = self.iter
 
-        t1c1 = '"table1"."col1"'
 
         # Testing for different combinations 'where' syntax
         # from here on
@@ -969,7 +979,6 @@ class TestQueryIn(TestQuery):
         find = self.find
         iter = self.iter
 
-        t1c1 = '"table1"."col1"'
 
         # Testing for different combinations 'where' syntax
         # from here on
@@ -999,15 +1008,6 @@ class TestQueryJoin(TestQuery):
          sql_command: SELECT "null_fk_comment"."id", "null_fk_comment"."post_id", "null_fk_comment"."comment_text", "null_fk_post"."id", "null_fk_post"."forum_id", "null_fk_post"."title", "null_fk_forum"."id", "null_fk_forum"."system_info_id", "null_fk_forum"."forum_name", "null_fk_systeminfo"."id", "null_fk_systeminfo"."system_details_id", "null_fk_systeminfo"."system_name" FROM "null_fk_comment" LEFT OUTER JOIN "null_fk_post" ON ("null_fk_comment"."post_id" = "null_fk_post"."id") LEFT OUTER JOIN "null_fk_forum" ON ("null_fk_post"."forum_id" = "null_fk_forum"."id") LEFT OUTER JOIN "null_fk_systeminfo" ON ("null_fk_forum"."system_info_id" = "null_fk_systeminfo"."id") ORDER BY "null_fk_comment"."comment_text" ASC
         :return:
         """
-        t1c1 = '"table1"."col1"'
-        t2c1 = '"table2"."col1"'
-        t4c1 = '"table4"."col1"'
-
-        t1c2 = '"table1"."col2"'
-        t2c2 = '"table2"."col2"'
-        t3c2 = '"table3"."col2"'
-        t3c1 = '"table3"."col1"'
-
         self.sql = (
             f'SELECT {t1c1}, {t2c1}, {t1c2}, {t2c2} '
             f'FROM table1 '
@@ -1107,14 +1107,15 @@ class TestQueryJoin(TestQuery):
 class TestQueryNestedIn(TestQuery):
 
     def test_pattern1(self):
-        t1c1 = '"table1"."col1"'
-        t1c2 = '"table1"."col2"'
-        t2c1 = '"table2"."col1"'
-        t2c2 = '"table2"."col2"'
         return_value = [{'col1': 'a1', 'col2': 'a2'}, {'col1': 'b1', 'col2': 'b2'}]
         ans = [('a1', 'a2'), ('b1', 'b2')]
 
-        self.sql = f'SELECT {t1c1}, {t1c2} FROM "table1" WHERE ({t1c1} IN (SELECT {t2c1} FROM "table2" U0 WHERE (U0."col2" IN (%s, %s))))'
+        self.sql = f'SELECT {t1c1}, {t1c2} ' \
+                   f'FROM "table1" ' \
+                   f'WHERE ({t1c1} ' \
+                   f'IN (SELECT {t2c1} ' \
+                   f'FROM "table2" U0 ' \
+                   f'WHERE (U0."col2" IN (%s, %s))))'
         self.params = [1, 2]
         inner_pipeline = [
             {
@@ -1167,14 +1168,15 @@ class TestQueryNestedIn(TestQuery):
         self.aggregate_mock(pipeline, return_value, ans)
 
     def test_pattern2(self):
-        t1c1 = '"table1"."col1"'
-        t1c2 = '"table1"."col2"'
-        t2c1 = '"table2"."col1"'
-        t2c2 = '"table2"."col2"'
         return_value = [{'col1': 'a1', 'col2': 'a2'}, {'col1': 'b1', 'col2': 'b2'}]
         ans = [('a1', 'a2'), ('b1', 'b2')]
 
-        self.sql = f'SELECT {t1c1}, {t1c2} FROM "table1" WHERE {t1c1} IN (SELECT U0."col1" AS Col1 FROM "table2" U0 INNER JOIN "table1" U1 ON (U0."col1" = U1."col1") WHERE (U1."col2" IN (%s, %s))) ORDER BY {t1c2} DESC'
+        self.sql = f'SELECT {t1c1}, {t1c2} ' \
+                   f'FROM "table1" ' \
+                   f'WHERE {t1c1} IN (SELECT U0."col1" AS Col1 ' \
+                   f'FROM "table2" U0 ' \
+                   f'INNER JOIN "table1" U1 ON (U0."col1" = U1."col1") ' \
+                   f'WHERE (U1."col2" IN (%s, %s))) ORDER BY {t1c2} DESC'
 
         self.params = [1, 2, 3, 4, 5]
         inner_pipeline = [
@@ -1253,14 +1255,8 @@ class TestQueryNot(TestQuery):
         conn = self.conn
         find = self.find
 
-        t1c1 = '"table"."col1"'
-
-        # Testing for different combinations 'where' syntax
-        # from here on
-
-        where = 'SELECT "table"."col" FROM "table" WHERE'
         find_args = {
-            'projection': ['col'],
+            'projection': ['col1'],
             'filter': {}
         }
 
@@ -1273,7 +1269,7 @@ class TestQueryNot(TestQuery):
             }
         }
         self.params = [1]
-        self.iter.return_value = [{'_id': 'x', 'col': 1}, {'_id': 'x', 'col': 3, }]
+        self.iter.return_value = [{'_id': 'x', 'col1': 1}, {'_id': 'x', 'col1': 3, }]
         self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
@@ -1282,14 +1278,8 @@ class TestQueryNot(TestQuery):
         conn = self.conn
         find = self.find
 
-        t1c1 = '"table"."col1"'
-
-        # Testing for different combinations 'where' syntax
-        # from here on
-
-        where = 'SELECT "table"."col" FROM "table" WHERE'
         find_args = {
-            'projection': ['col'],
+            'projection': ['col1'],
             'filter': {}
         }
 
@@ -1302,7 +1292,7 @@ class TestQueryNot(TestQuery):
             }
         }
         self.params = [1]
-        self.iter.return_value = [{'_id': 'x', 'col': 1}, {'_id': 'x', 'col': 3, }]
+        self.iter.return_value = [{'_id': 'x', 'col1': 1}, {'_id': 'x', 'col1': 3, }]
         self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
@@ -1316,7 +1306,7 @@ class TestQueryNot(TestQuery):
             }
         }
         self.params = []
-        self.iter.return_value = [{'_id': 'x', 'col': 1}, {'_id': 'x', 'col': 3, }]
+        self.iter.return_value = [{'_id': 'x', 'col1': 1}, {'_id': 'x', 'col1': 3, }]
         self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
@@ -1325,14 +1315,8 @@ class TestQueryNot(TestQuery):
         conn = self.conn
         find = self.find
 
-        t1c1 = '"table"."col1"'
-
-        # Testing for different combinations 'where' syntax
-        # from here on
-
-        where = 'SELECT "table"."col" FROM "table" WHERE'
         find_args = {
-            'projection': ['col'],
+            'projection': ['col1'],
             'filter': {}
         }
 
@@ -1345,7 +1329,7 @@ class TestQueryNot(TestQuery):
             }
         }
         self.params = []
-        self.iter.return_value = [{'_id': 'x', 'col': 1}, {'_id': 'x', 'col': 3, }]
+        self.iter.return_value = [{'_id': 'x', 'col1': 1}, {'_id': 'x', 'col1': 3, }]
         self.find_mock()
         find.assert_any_call(**find_args)
         conn.reset_mock()
@@ -1357,14 +1341,8 @@ class TestQueryBasic(TestQuery):
         conn = self.conn
         find = self.find
 
-        t1c1 = '"table"."col1"'
-
-        # Testing for different combinations 'where' syntax
-        # from here on
-
-        where = 'SELECT "table"."col" FROM "table" WHERE'
         find_args = {
-            'projection': ['col'],
+            'projection': ['col1'],
             'filter': {}
         }
 
@@ -1383,14 +1361,8 @@ class TestQueryBasic(TestQuery):
         conn = self.conn
         find = self.find
 
-        t1c1 = '"table"."col1"'
-
-        # Testing for different combinations 'where' syntax
-        # from here on
-
-        where = 'SELECT "table"."col" FROM "table" WHERE'
         find_args = {
-            'projection': ['col'],
+            'projection': ['col1'],
             'filter': {}
         }
 
@@ -1409,14 +1381,8 @@ class TestQueryBasic(TestQuery):
         conn = self.conn
         find = self.find
 
-        t1c1 = '"table"."col1"'
-
-        # Testing for different combinations 'where' syntax
-        # from here on
-
-        where = 'SELECT "table"."col" FROM "table" WHERE'
         find_args = {
-            'projection': ['col'],
+            'projection': ['col1'],
             'filter': {}
         }
 
@@ -1438,12 +1404,8 @@ class TestQueryAndOr(TestQuery):
         conn = self.conn
         find = self.find
 
-        t1c1 = '"table"."col1"'
-        t1c2 = '"table"."col2"'
-
-        where = 'SELECT "table"."col" FROM "table" WHERE'
         find_args = {
-            'projection': ['col'],
+            'projection': ['col1'],
             'filter': {}
         }
 
@@ -1469,12 +1431,8 @@ class TestQueryAndOr(TestQuery):
         conn = self.conn
         find = self.find
 
-        t1c1 = '"table"."col1"'
-        t1c2 = '"table"."col2"'
-
-        where = 'SELECT "table"."col" FROM "table" WHERE'
         find_args = {
-            'projection': ['col'],
+            'projection': ['col1'],
             'filter': {}
         }
 
@@ -1500,12 +1458,8 @@ class TestQueryAndOr(TestQuery):
         conn = self.conn
         find = self.find
 
-        t1c1 = '"table"."col1"'
-        t1c2 = '"table"."col2"'
-
-        where = 'SELECT "table"."col" FROM "table" WHERE'
         find_args = {
-            'projection': ['col'],
+            'projection': ['col1'],
             'filter': {}
         }
 
@@ -1533,12 +1487,8 @@ class TestQueryAndOr(TestQuery):
         conn = self.conn
         find = self.find
 
-        t1c1 = '"table"."col1"'
-        t1c2 = '"table"."col2"'
-
-        where = 'SELECT "table"."col" FROM "table" WHERE'
         find_args = {
-            'projection': ['col'],
+            'projection': ['col1'],
             'filter': {}
         }
 
@@ -1568,12 +1518,8 @@ class TestQueryAndOr(TestQuery):
         conn = self.conn
         find = self.find
 
-        t1c1 = '"table"."col1"'
-        t1c2 = '"table"."col2"'
-
-        where = 'SELECT "table"."col" FROM "table" WHERE'
         find_args = {
-            'projection': ['col'],
+            'projection': ['col1'],
             'filter': {}
         }
 
@@ -1603,12 +1549,8 @@ class TestQueryAndOr(TestQuery):
         conn = self.conn
         find = self.find
 
-        t1c1 = '"table"."col1"'
-        t1c2 = '"table"."col2"'
-
-        where = 'SELECT "table"."col" FROM "table" WHERE'
         find_args = {
-            'projection': ['col'],
+            'projection': ['col1'],
             'filter': {}
         }
 
@@ -1640,12 +1582,8 @@ class TestQueryAndOr(TestQuery):
         conn = self.conn
         find = self.find
 
-        t1c1 = '"table"."col1"'
-        t1c2 = '"table"."col2"'
-
-        where = 'SELECT "table"."col" FROM "table" WHERE'
         find_args = {
-            'projection': ['col'],
+            'projection': ['col1'],
             'filter': {}
         }
 
@@ -1677,12 +1615,8 @@ class TestQueryAndOr(TestQuery):
         conn = self.conn
         find = self.find
 
-        t1c1 = '"table"."col1"'
-        t1c2 = '"table"."col2"'
-
-        where = 'SELECT "table"."col" FROM "table" WHERE'
         find_args = {
-            'projection': ['col'],
+            'projection': ['col1'],
             'filter': {}
         }
 
@@ -1714,12 +1648,8 @@ class TestQueryAndOr(TestQuery):
         conn = self.conn
         find = self.find
 
-        t1c1 = '"table"."col1"'
-        t1c2 = '"table"."col2"'
-
-        where = 'SELECT "table"."col" FROM "table" WHERE'
         find_args = {
-            'projection': ['col'],
+            'projection': ['col1'],
             'filter': {}
         }
 
@@ -1760,12 +1690,8 @@ class TestQueryAndOr(TestQuery):
         conn = self.conn
         find = self.find
 
-        t1c1 = '"table"."col1"'
-        t1c2 = '"table"."col2"'
-
-        where = 'SELECT "table"."col" FROM "table" WHERE'
         find_args = {
-            'projection': ['col'],
+            'projection': ['col1'],
             'filter': {}
         }
 

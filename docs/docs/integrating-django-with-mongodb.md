@@ -101,7 +101,119 @@ To handle such scenarios Djongo comes with the `ENFORCE_SCHEMA` option. When con
 
 `ENFORCE_SCHEMA: False` works by silently setting the missing fields with the value `None`. If your app is programmed to expect this (which means it is not a bug) you can get away by not calling any migrations.
 
-## Migrating an existing MongoDB database to Django using Djongo
+## Use Django Admin to add documents
+
+Let’s say you want to create a blogging platform using Django with MongoDB as your backend.
+In your Blog `app/models.py` file define the `Blog` model:
+
+```python
+from djongo import models
+
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.TextField()
+
+    class Meta:
+        abstract = True
+```
+
+Now ‘embed’ your `Blog` inside a `Entry` using the `EmbeddedField`:
+
+```python
+class Entry(models.Model):
+    blog = models.EmbeddedField(
+        model_container=Blog,
+    )
+    
+    headline = models.CharField(max_length=255)
+```
+
+Register your `Entry` in `admin.py`:
+
+```python
+from django.contrib import admin
+from .models import Entry
+
+admin.site.register(Entry)
+```
+
+That’s it you are set! Fire up Django Admin on localhost:8000/admin/ and this is what you get:
+
+
+![Django Admin](/djongo/assets/images/admin.png)
+
+
+### Querying Embedded fields
+
+In the above example, to query all Entries with Blogs which have names that start with *Beatles*, use the following query:
+
+```python
+entries = Entry.objects.filter(blog__startswith={'name': 'Beatles'})
+```
+
+Refer to [Using Django with MongoDB data fields](/djongo/using-django-with-mongodb-data-fields/) for more details.
+
+## Djongo Manager
+
+Djongo Manager extends the  functionality of the usual [Django Manager](https://docs.djangoproject.com/en/dev/topics/db/managers/). It gives access to  the complete pymongo collection API. Define your manager as Djongo Manager in the model.
+
+ ```python
+class Entry(models.Model):
+    blog = models.EmbeddedField(
+        model_container=Blog,
+    )
+    headline = models.CharField(max_length=255)
+    
+    objects = models.DjongoManager()
+```
+
+Use it like the usual Django manager:
+
+```python
+post = Entry.objects.get(pk=p_key)
+```
+
+Will [get a model object](https://docs.djangoproject.com/en/dev/topics/db/queries/#retrieving-a-single-object-with-get) having primary key `p_key`.
+
+### Tunnel directly to Pymongo 
+
+MongoDB has powerful query syntax and `DjongoManager` lets you exploit it fully.
+
+```python
+class EntryView(DetailView):
+
+    def get_object(self, queryset=None):
+        index = [i for i in Entry.objects.mongo_aggregate([
+            {
+                '$match': {
+                    'headline': self.kwargs['path']
+                }
+            },
+        ])]
+
+        return index
+
+```
+
+You can directly *access any [pymongo](https://api.mongodb.com/python/current/) command* by prefixing `mongo_` to the command name. For example, to perform `aggregate` on the BlogPage collection (BlogPage is stored as a table in SQL or a collection in MongoDB) the function name becomes `mongo_aggregate`. To directly insert a document (instead of `.save()` a model) use `mongo_insert_one()`
+
+## GridFS 
+
+To save files using [GridFS](https://docs.mongodb.com/manual/core/gridfs/) you must create a file storage instance of `GridFSStorage`:
+
+```python
+grid_fs_storage = GridFSStorage(collection='myfiles')
+```
+
+In your model define your field as FileField or ImageField as usual:
+
+```python
+avatar = models.ImageField(storage=grid_fs_storage, upload_to='')
+```
+
+Refer to [Using GridFSStorage](/djongo/using-django-with-mongodb-gridfs/) for more details.
+
+## Migrating your data
 
 There is no concept of an AUTOINCREMENT field in MongoDB. Internally, Djongo creates a `__schema__` collection. This collection is used to track all auto increment fields in different tables. The `__schema__` collection looks like:
 

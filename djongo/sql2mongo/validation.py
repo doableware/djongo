@@ -1,5 +1,8 @@
-from djongo.sql2mongo import NotSupportedError
-from djongo import djongo_access_url
+from djongo.sql2mongo import NotSupportedError, print_warn
 
-print(f'This version of djongo does not support validation. Visit {djongo_access_url}')
-raise NotSupportedError('validation')
+print_warn('validation')
+
+class CollectionSchema:
+
+    def __init__(self):
+        raise NotSupportedError('Collection Schema')

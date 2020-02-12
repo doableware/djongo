@@ -768,6 +768,9 @@ class Result:
     next = __next__
 
     def __iter__(self):
+        if self._query is None:
+            return
+
         try:
             yield from iter(self._query)
 
