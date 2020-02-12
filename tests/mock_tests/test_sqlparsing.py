@@ -216,7 +216,7 @@ class MockTest(TestCase):
 class TestVoidQuery(MockTest):
 
     def exe(self):
-        result = Result(self.db, self.conn, self.conn_prop, self.sql, self.params)
+        result = Result(self.conn, self.db, self.conn_prop, self.sql, self.params)
         self.assertRaises(StopIteration, result.next)
 
 
@@ -234,18 +234,93 @@ class TestCreateTable(TestVoidQuery):
         super().setUpClass()
         cls.base_sql = 'CREATE TABLE "table" '
 
+    def exe(self):
+        super().exe()
+        self.db.create_collection.assert_called_with('table')
+
     def test_notNull_with_pk(self):
         self.sql = self.base_sql + '("col1" NOT NULL PRIMARY KEY)'
         self.exe()
+        self.db['table'].create_index.assert_called_with(
+            'col1', unique=True, name='__primary_key__'
+        )
 
     def test_notNull_with_autoInc(self):
         self.sql = self.base_sql + '("col1" NOT NULL AUTOINCREMENT)'
         self.exe()
+        self.db['__schema__'].update_one.assert_called_with(
+            filter= {
+                'name': 'table'
+            },
+            update= {
+                '$push': {
+                    'auto.field_names':
+                        {'$each': ['col1']}
+                }
+            },
+            upsert=True
+        )
 
     def test_notNull_with_unique(self):
         self.sql = self.base_sql + '("col1" NOT NULL UNIQUE)'
         self.exe()
+        self.db['table'].create_index.assert_called_with(
+            'col1', unique=True
+        )
 
+    def test_pk_with_autoInc(self):
+        self.sql = self.base_sql + '("col1" PRIMARY KEY AUTOINCREMENT)'
+        self.exe()
+        self.db['table'].create_index.assert_called_with(
+            'col1', unique=True, name='__primary_key__'
+        )
+        self.db['__schema__'].update_one.assert_called_with(
+            filter= {
+                'name': 'table'
+            },
+            update= {
+                '$set': {
+                    'auto.seq': 0
+                },
+                '$push': {
+                    'auto.field_names':
+                        {'$each': ['col1']}
+                }
+            },
+            upsert=True
+        )
+
+    def test_pk_with_unique(self):
+        self.sql = self.base_sql + '("col1" PRIMARY KEY UNIQUE)'
+        self.exe()
+        self.db['table'].create_index.assert_called_with(
+            'col1', unique=True, name='__primary_key__'
+        )
+        self.db['table'].create_index.assert_called_with(
+            'col1', unique=True
+        )
+
+    def test_autoInc_with_unique(self):
+        self.sql = self.base_sql + '("col1" AUTOINCREMENT UNIQUE)'
+        self.exe()
+        self.db['table'].create_index.assert_called_with(
+            'col1', unique=True
+        )
+        self.db['__schema__'].update_one.assert_called_with(
+            filter= {
+                'name': 'table'
+            },
+            update= {
+                '$set': {
+                    'auto.seq': 0
+                },
+                '$push': {
+                    'auto.field_names':
+                        {'$each': ['col1']}
+                }
+            },
+            upsert=True
+        )
 
 class TestAlterTable(TestVoidQuery):
     pass

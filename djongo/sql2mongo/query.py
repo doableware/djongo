@@ -872,7 +872,7 @@ class Result:
                 else:
                     return
 
-            logger.debug('Created table {}'.format(table))
+            logger.debug('Created table: {}'.format(table))
 
             tok_id, tok = sm.token_next(tok_id)
             if isinstance(tok, Parenthesis):
