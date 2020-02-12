@@ -252,7 +252,10 @@ class TestCreateTable(TestVoidQuery):
             filter= {
                 'name': 'table'
             },
-            update= {
+            update = {
+                '$set': {
+                    'auto.seq': 0
+                },
                 '$push': {
                     'auto.field_names':
                         {'$each': ['col1']}
