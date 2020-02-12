@@ -5,6 +5,8 @@ from pymongo import ASCENDING, DESCENDING
 from sqlparse import tokens
 from sqlparse.sql import Token, Identifier, Comparison, Parenthesis, IdentifierList
 
+djongo_access_url = 'https://www.patreon.com/nesdis'
+
 
 class SQLDecodeError(ValueError):
 
@@ -22,6 +24,10 @@ class MigrationError(Exception):
 
     def __init__(self, field):
         self.field = field
+
+
+def print_warn(feature):
+    print(f'This version of djongo does not support {feature}. Visit {djongo_access_url}')
 
 
 class SQLFunc:
