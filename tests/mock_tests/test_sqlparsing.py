@@ -293,10 +293,10 @@ class TestCreateTable(TestVoidQuery):
     def test_pk_with_unique(self):
         self.sql = self.base_sql + '("col1" PRIMARY KEY UNIQUE)'
         self.exe()
-        self.db['table'].create_index.assert_called_with(
+        self.db['table'].create_index.assert_any_call(
             'col1', unique=True, name='__primary_key__'
         )
-        self.db['table'].create_index.assert_called_with(
+        self.db['table'].create_index.assert_any_call(
             'col1', unique=True
         )
 
