@@ -39,15 +39,15 @@ Use MongoDB as a backend database for your Django project, without changing the 
 
 [![Djongo Support](/djongo/assets/images/support.png)](https://www.patreon.com/nesdis/)
 
-I am inundated daily with your appreciation, queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. To support the requests, I have decided to follow an organized approach.
+I am inundated daily with your appreciation, queries and feature requests for Djongo. Djongo has grown into a highly complex project. To support the requests, I have decided to follow an organized approach.
 
-Djongo as a project is at a stage where its development must be transformed into a sustained effort. Djongo has more than [100,000 downloads](https://pypistats.org/packages/djongo) on pypi and continues to grow. I am trying to establish a sustainable development model for the project, and would [love to hear your thoughts.](https://www.patreon.com/posts/to-only-take-22611438)
+Djongo as a project is at a stage where its development must be transformed into a sustained effort. Djongo has more than [1,000,000 downloads](https://pypistats.org/packages/djongo) on pypi and continues to grow. I am trying to establish a sustainable development model for the project, and would [love to hear your thoughts.](https://www.patreon.com/posts/to-only-take-22611438)
 
-Visit my [Patreon page](https://www.patreon.com/nesdis/) to make requests and for support.
+Visit my [Patreon page](https://www.patreon.com/nesdis/) to make requests and for support. You can expect immediate answers to your questions.  
 
 ## How it works
 
-Djongo makes minimal changes to the existing Django ORM framework, which means unnecessary bugs do not crop up. It simply translates a SQL query string into a [MongoDB query document](https://docs.mongodb.com/manual/tutorial/query-documents/). As a result, all Django features, models, etc., work as is.
+Djongo makes **zero changes** to the existing Django ORM framework, which means unnecessary bugs and security vulnerabilities do not crop up. It simply translates a SQL query string into a [MongoDB query document](https://docs.mongodb.com/manual/tutorial/query-documents/). As a result, all Django features, models, etc., work as is.
   
 Django contrib modules: 
 

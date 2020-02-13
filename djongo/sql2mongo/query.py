@@ -872,7 +872,7 @@ class Result:
                 else:
                     return
 
-            logger.debug('Created table {}'.format(table))
+            logger.debug('Created table: {}'.format(table))
 
             tok_id, tok = sm.token_next(tok_id)
             if isinstance(tok, Parenthesis):
@@ -886,11 +886,6 @@ class Result:
                 for col in tok.value.strip('()').split(','):
                     props = col.strip().split(' ')
                     field = props[0].strip('"')
-                    type_code = props[1]
-
-                    _set[f'fields.{field}'] = {
-                        'type_code': type_code
-                    }
 
                     if field == '_id':
                         continue
