@@ -132,7 +132,7 @@ class GridFSStorage(Storage):
             raise ValueError("This file is not accessible via a URL.")
         gridfs, filename = self._get_gridfs(name)
         try:
-            file_oid = gridfs.get_last_version(filename=name).__getattr__('_id')
+            file_oid = gridfs.get_last_version(filename=filename).__getattr__('_id')
         except NoFile:
             # In case not found by filename
             try:
