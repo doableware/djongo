@@ -24,9 +24,9 @@ feature_row1:
   - image_path: /assets/images/mongo.jpg
     alt: "Unleash MongoDB on Django"
     title: "Unleash MongoDB On Django"
-    excerpt: "Create MongoDB [embedded documents](/using-django-with-mongodb-data-fields/) 
-    and [embedded arrays](/using-django-with-mongodb-array-field/) in Django Models.
-    Create [MongoDB specific indexes](/djongonxt-indexes/) and [transactions.](/djongonxt-database-transactions/)"
+    excerpt: "Create MongoDB [embedded documents,](/using-django-with-mongodb-data-fields/) 
+    [embedded arrays](/using-django-with-mongodb-array-field/) in Django Models.
+    [MongoDB specific indexes](/djongonxt-indexes/) and [transactions.](/djongonxt-database-transactions/)"
 
   - image_path: /assets/images/feature-admin-mongo.jpg
     alt: "Admin MongoDB"
