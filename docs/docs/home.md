@@ -44,8 +44,8 @@ feature_row2:
   - image_path: /assets/images/djongo-symbol2.jpg
     alt: "Admin MongoDB"
     title: "Rapid App Development"
-    excerpt: "Djongo enables rapid app development with [schema free models](integrating-django-with-mongodb/#enforce-schema), 
-    get rid of migrations, and reduce two query intermediate joins to single query [direct joins.](/using-django-with-mongodb-array-reference-field/)"
+    excerpt: "Speed up app development and execution with [schema free models](integrating-django-with-mongodb/#enforce-schema), 
+    skipping migrations, and reducing two query intermediate joins to single query [direct joins.](/using-django-with-mongodb-array-reference-field/)"
     
   - image_path: /assets/images/drf.jpg
     alt: "Admin MongoDB"
