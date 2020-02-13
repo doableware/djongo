@@ -194,9 +194,11 @@ t3c1 = '"table3"."col1"'
 t3c2 = '"table3"."col2"'
 t4c1 = '"table4"."col1"'
 t4c2 = '"table4"."col2"'
-
 where = 'SELECT "table1"."col1" FROM "table1" WHERE'
 
+logger = getLogger('djongo')
+logger.setLevel(DEBUG)
+logger.addHandler(StreamHandler())
 
 class MockTest(TestCase):
 
@@ -208,15 +210,12 @@ class MockTest(TestCase):
         cls.conn_prop.cached_collections = ['table', '__schema__']
         cls.params_none = mock.MagicMock()
         cls.params: typing.Union[mock.MagicMock, list] = None
-        logger = getLogger('djongo')
-        logger.setLevel(DEBUG)
-        logger.addHandler(StreamHandler())
 
 
 class TestVoidQuery(MockTest):
 
     def exe(self):
-        result = Result(self.db, self.conn, self.conn_prop, self.sql, self.params)
+        result = Result(self.conn, self.db, self.conn_prop, self.sql, self.params)
         self.assertRaises(StopIteration, result.next)
 
 
@@ -234,21 +233,167 @@ class TestCreateTable(TestVoidQuery):
         super().setUpClass()
         cls.base_sql = 'CREATE TABLE "table" '
 
+    def exe(self):
+        super().exe()
+        self.db.create_collection.assert_called_with('table')
+
     def test_notNull_with_pk(self):
-        self.sql = self.base_sql + '("col1" NOT NULL PRIMARY KEY)'
+        self.sql = (self.base_sql +
+                    '("col1" integer NOT NULL PRIMARY KEY, '
+                    '"col2" integer NOT NULL)'
+                    )
         self.exe()
+        self.db['table'].create_index.assert_called_with(
+            'col1', unique=True, name='__primary_key__'
+        )
 
     def test_notNull_with_autoInc(self):
         self.sql = self.base_sql + '("col1" NOT NULL AUTOINCREMENT)'
         self.exe()
+        self.db['__schema__'].update_one.assert_called_with(
+            filter={
+                'name': 'table'
+            },
+            update={
+                '$set': {
+                    'auto.seq': 0
+                },
+                '$push': {
+                    'auto.field_names':
+                        {'$each': ['col1']}
+                }
+            },
+            upsert=True
+        )
 
     def test_notNull_with_unique(self):
         self.sql = self.base_sql + '("col1" NOT NULL UNIQUE)'
         self.exe()
+        self.db['table'].create_index.assert_called_with(
+            'col1', unique=True
+        )
+
+    def test_pk_with_autoInc(self):
+        self.sql = self.base_sql + '("col1" PRIMARY KEY AUTOINCREMENT)'
+        self.exe()
+        self.db['table'].create_index.assert_called_with(
+            'col1', unique=True, name='__primary_key__'
+        )
+        self.db['__schema__'].update_one.assert_called_with(
+            filter={
+                'name': 'table'
+            },
+            update={
+                '$set': {
+                    'auto.seq': 0
+                },
+                '$push': {
+                    'auto.field_names':
+                        {'$each': ['col1']}
+                }
+            },
+            upsert=True
+        )
+
+    def test_pk_with_unique(self):
+        self.sql = self.base_sql + '("col1" PRIMARY KEY UNIQUE)'
+        self.exe()
+        self.db['table'].create_index.assert_any_call(
+            'col1', unique=True, name='__primary_key__'
+        )
+        self.db['table'].create_index.assert_any_call(
+            'col1', unique=True
+        )
+
+    def test_autoInc_with_unique(self):
+        self.sql = self.base_sql + '("col1" AUTOINCREMENT UNIQUE)'
+        self.exe()
+        self.db['table'].create_index.assert_called_with(
+            'col1', unique=True
+        )
+        self.db['__schema__'].update_one.assert_called_with(
+            filter= {
+                'name': 'table'
+            },
+            update= {
+                '$set': {
+                    'auto.seq': 0
+                },
+                '$push': {
+                    'auto.field_names':
+                        {'$each': ['col1']}
+                }
+            },
+            upsert=True
+        )
 
 
 class TestAlterTable(TestVoidQuery):
-    pass
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.base_sql = 'ALTER TABLE "table" '
+
+    def test_flush(self):
+        self.sql = self.base_sql + 'FLUSH'
+        self.exe()
+
+    def test_drop_notNull(self):
+        self.sql = (self.base_sql +
+                    'ALTER COLUMN "c" '
+                    'DROP NOT NULL')
+        self.exe()
+
+    def test_drop_column(self):
+        self.sql = (self.base_sql +
+                    'DROP COLUMN "c" '
+                    'CASCADE')
+        self.exe()
+
+
+class TestAlterTableAdd(TestAlterTable):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.base_sql += 'ADD '
+
+
+class TestAlterTableAddColumn(TestAlterTableAdd):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.base_sql += 'COLUMN "c" '
+
+    def test_default_with_notNull(self):
+        self.sql = (self.base_sql +
+                    'integer DEFAULT %s NOT NULL ')
+        self.params = [2]
+        self.exe()
+
+    def test_notNull_with_unique(self):
+        self.sql = (self.base_sql +
+                    'integer UNIQUE NOT NULL ')
+        self.exe()
+
+
+class TestAlterTableAddConstraint(TestAlterTableAdd):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.base_sql += 'CONSTRAINT "c" '
+
+    def test_fk_refs(self):
+        pass
+
+    def test_index(self):
+        pass
+
+    def test_unique(self):
+        pass
 
 
 class TestVoidQueryDelete(TestVoidQuery):

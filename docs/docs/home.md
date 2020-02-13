@@ -11,27 +11,47 @@ header:
 punchline:
   - excerpt: The only connector that let's you use Django with MongoDB *without* changing the Django ORM.
 
-feature_row:
+feature_row1:
 
   - image_path: /assets/images/support.png
     alt: "Support"
     title: "Support"
-    excerpt: "Get immediate support for queries on using Django with MongoDB"
+    excerpt: "Get immediate support for queries on using Django with MongoDB."
     url: https://www.patreon.com/nesdis/
     btn_label: "Learn More"
     btn_class: "btn--primary"
 
-  - image_path: /assets/images/djongo-symbol2.jpg
-    alt: "MongoDB data fields"
-    title: "Use Django with MongoDB data fields"
-    excerpt: "Use MongoDB embedded documents and embedded arrays in Django Models."
+  - image_path: /assets/images/mongo.jpg
+    alt: "Unleash MongoDB on Django"
+    title: "Unleash MongoDB On Django"
+    excerpt: "Create MongoDB [embedded documents](/using-django-with-mongodb-data-fields/) 
+    and [embedded arrays](/using-django-with-mongodb-array-field/) in Django Models.
+    Create [MongoDB specific indexes](/djongonxt-indexes/) and [transactions.](/djongonxt-database-transactions/)"
 
   - image_path: /assets/images/feature-admin-mongo.jpg
     alt: "Admin MongoDB"
-    title: "Use Django Admin to access MongoDB"
-    excerpt: "Use the Django Admin app to insert, modify and delete documents in MongoDB."
+    title: "Access MongoDB Through Django Admin"
+    excerpt: "Use Django Admin GUI to insert, modify and delete documents in MongoDB."
 
+feature_row2:
 
+  - image_path: /assets/images/django.jpg
+    alt: "Security"
+    title: "Security"
+    excerpt: "Djongo makes **zero modifications** to the Django source code. 
+    This means you get the complete security and reliability that comes with Django."
+    
+  - image_path: /assets/images/djongo-symbol2.jpg
+    alt: "Admin MongoDB"
+    title: "Rapid App Development"
+    excerpt: "Djongo enables rapid app development with [schema free models](integrating-django-with-mongodb/#enforce-schema), 
+    get rid of migrations, and reduce two query intermediate joins to single query [direct joins.](/using-django-with-mongodb-array-reference-field/)"
+    
+  - image_path: /assets/images/drf.jpg
+    alt: "Admin MongoDB"
+    title: "Sweet Third Party Package Support"
+    excerpt: "Extra goodies that help interface MongoDB with Django Rest Framework."        
+    
 addendum_row1:
   - image_path: /assets/images/djongo-Nxt-v1.png
     alt: "Djongo Next"
@@ -45,6 +65,8 @@ addendum_row1:
 
 {% include feature_row id="punchline" type="center" %}
 
-{% include feature_row %}
+{% include feature_row id="feature_row1" %}
+
+{% include feature_row id="feature_row2" %}
 
 {% include feature_row id="addendum_row1" type="center" %}

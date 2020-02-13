@@ -21,7 +21,7 @@ docs/assets/js/*
 !docs/assets/js/jquery.easing.min.js
 
 Gemfile.lock
-minimal-mistakes
+upload.sh
 
 !docs/_includes/footer.html
 !docs/_includes/masthead.html
