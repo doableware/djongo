@@ -5,6 +5,8 @@ permalink: /using-django-with-mongodb-data-fields/
 
 ## EmbeddedField
 
+MongoDB allows the creation of an [embedded document](https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding). By using Djongo as your connector, you can embed any other model into your parent model through the `EmbeddedField`. 
+
 ```python
 class EmbeddedField(Field):
     def __init__(self,
@@ -13,8 +15,6 @@ class EmbeddedField(Field):
                  model_form_kwargs: typing.Optional[dict]=None,
                  *args, **kwargs):
 ```
-MongoDB allows the creation of an [embedded document](https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding). By using Djongo as your connector, you can embed any other model into your parent model through the `EmbeddedField`. 
-
 
 ### Arguments
 
