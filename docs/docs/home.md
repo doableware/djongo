@@ -38,8 +38,8 @@ feature_row2:
   - image_path: /assets/images/django.jpg
     alt: "Security"
     title: "Security"
-    excerpt: "Djongo makes **zero modifications** to the Django source code. 
-    This means you get the complete security and reliability that comes with Django."
+    excerpt: "Since there are **zero modifications** to the Django source code, 
+    you get complete security and reliability of Django."
     
   - image_path: /assets/images/djongo-symbol2.jpg
     alt: "Admin MongoDB"

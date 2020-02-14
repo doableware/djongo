@@ -134,7 +134,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         }
         connection_params = {
             'name': 'djongo_test',
-            'enforce_schema': True
+            'enforce_schema': False
         }
         for setting_name, kwarg in valid_settings.items():
             try:
