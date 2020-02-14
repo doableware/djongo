@@ -229,28 +229,27 @@ There is no concept of an AUTOINCREMENT field in MongoDB. Therefore, Djongo inte
 ```
 For every collection in the DB that has an autoincrement field, there is an corresponding entry in the `__schema__` collection. Running `manage.py migrate` automatically creates these entries. 
 
-There are 2 approaches to setting up your data on MongoDB:
+Now there are 2 approaches to setting up your existing data onto MongoDB:
 
 ### Zero risk
 
-1. Start with a new database name.
-2. If you have not already done so, define your models in the `models.py` file. The model names and model fields have to be exactly the same, as the data you want to setup.
+1. Start with a new database name in `settings.py`.
+2. If you have not already done so, define your models in the `models.py` file. The model names and model fields have to be exactly the same, as the existing data that you want to setup.
 3. Run `manage.py makemigrations <app_name>` followed by `manage.py migrate`. 
 4. Now your empty DB should have a `__schema__` collection, and other collections defined in the `model.py` file.
 5. Copy collection data (of your custom models defined in `model.py`) to the new DB.
 6. In `__schema__` collection make sure that the `seq` number of your AUTOINCREMENT fields is **set to the latest value**. This should correspond to the document count for each model. For example, if your model has 16 entries (16 documents in the DB), then `seq` should be set as 16. Usually the AUTOINCREMENT field is called `id`.
 
-If you do not want to create a new database and copy all data into this new database:
-
+However, if you do not want to create a new database (and copy existing data into this new database), you can try this approach:
 
 ### Medium risk
 
-1. Start with an empty DB. You can always delete this later.
+1. Start with an empty database. You can always delete this later.
 2. Same as before.
 3. Same as before.
-4. Now copy the `__schema__` collection from the new DB (from step1) to the existing DB.
+4. Now copy the `__schema__` collection from the new database (from step1) to the existing database.
 5. Same as step 6 from before.
-6. You can now delete the DB created in step 1.
+6. You can now delete the database created in step 1.
 
 *You are now done setting up Django with MongoDB. Start using Django with MongoDB, like you would with any other database backend.*
 
