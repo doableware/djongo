@@ -5,6 +5,8 @@ permalink: /using-django-with-mongodb-array-field/
 
 ## ArrayField
 
+With Djongo there can be an [array](https://docs.mongodb.com/manual/core/document/#arrays) of embedded documents inside the parent document. You can create an **embed array/list of models inside the parent model** and store it directly into MongoDB.
+
 ```python
 class ArrayField(Field):
     def __init__(self,
@@ -13,7 +15,6 @@ class ArrayField(Field):
                  model_form_kwargs_l: dict=None,
                  *args, **kwargs):
 ```
-With Djongo there can be an [array](https://docs.mongodb.com/manual/core/document/#arrays) of embedded documents inside the parent document. You can create an **embed array/list of models inside the parent model** and store it directly into MongoDB.
 
 ### Arguments
 

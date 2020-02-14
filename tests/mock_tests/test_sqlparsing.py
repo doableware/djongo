@@ -1855,11 +1855,10 @@ class TestDatabaseWrapper(TestCase):
         """Check for returned connection params if empty settings dict is provided"""
         settings_dict = {}
         wrapper = DatabaseWrapper(settings_dict)
-
         params = wrapper.get_connection_params()
 
         self.assertEqual(params['name'], 'djongo_test')
-        self.assertEqual(params['enforce_schema'], True)
+        self.assertEqual(params['enforce_schema'], False)
 
     def test_connection_params(self):
         """Check for returned connection params if filled settings dict is provided"""
