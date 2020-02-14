@@ -3,28 +3,6 @@ title: Integrating Django with MongoDB
 permalink: /integrating-django-with-mongodb/
 ---
 
-## Integrating an existing Django App
-
-When migrating an existing Django app to MongoDB,  it is recommended to start a new database on MongoDB. For example, use `myapp-djongo-db` in your `settings.py` file. 
-
-1. Into `settings.py` file of your project, add:
-
-    ```python
-      DATABASES = {
-          'default': {
-              'ENGINE': 'djongo',
-              'NAME': 'myapp-djongo-db',
-          }
-      }
-    ```
-  
-2. Run `manage.py makemigrations <myapp>` followed by `manage.py migrate`.
-3. Open Django Admin and you should find all Models defined in your app, showing up in the Admin.
-4. While the relevant collections have been created in MongoDB, they have have no data inside.
-5. Continue by inserting data into the collection directly, or from Django Admin. 
-
-You may want to go through the quick [get started](/djongo/get-started) guide for setting up Djongo before proceeding ahead. An introduction to [using MongoDB fields in Django](/djongo/using-django-with-mongodb-data-fields/) can prove useful.
-
 ## Database configuration
 
 The `settings.py` supports (but is not limited to) the following  options:
@@ -62,8 +40,6 @@ The `settings.py` supports (but is not limited to) the following  options:
     }
 ```
 
-All options except `ENGINE` and `ENFORCE_SCHEMA` are the same those listed in the [pymongo documentation](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient).
-
 Attribute | Value | Description
 ---------|------|-------------
 ENGINE | djongo | The MongoDB connection engine for interfacing with Django.
@@ -73,6 +49,7 @@ NAME | your-db-name | Specify your database name. This field cannot be left empt
 LOGGING | dict | A [dictConfig](https://docs.python.org/3.6/library/logging.config.html) for the type of logging to run on djongo.
 CLIENT | dict | A set of key-value pairs that will be passed directly to [`MongoClient`]((http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient)) as kwargs while creating a new client connection.
   
+All options except `ENGINE` and `ENFORCE_SCHEMA` are the same those listed in the [pymongo documentation](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient). You may want to go through the quick [get started](/djongo/get-started) guide for setting up Djongo before proceeding ahead. An introduction to [using MongoDB fields in Django](/djongo/using-django-with-mongodb-data-fields/) can prove useful.
 
 ### Enforce schema
 
@@ -211,11 +188,32 @@ avatar = models.ImageField(storage=grid_fs_storage, upload_to='')
 
 Refer to [Using GridFSStorage](/djongo/using-django-with-mongodb-gridfs/) for more details.
 
+
+## Integrating an existing Django App
+
+When migrating an existing Django app to MongoDB,  it is recommended to start a new database on MongoDB. For example, use `myapp-djongo-db` in your `settings.py` file. 
+
+1. Into `settings.py` file of your project, add:
+
+    ```python
+      DATABASES = {
+          'default': {
+              'ENGINE': 'djongo',
+              'NAME': 'myapp-djongo-db',
+          }
+      }
+    ```
+  
+2. Run `manage.py makemigrations <myapp>` followed by `manage.py migrate`.
+3. Open Django Admin and you should find all Models defined in your app, showing up in the Admin.
+4. While the relevant collections have been created in MongoDB, they have have no data inside.
+5. Continue by inserting data into the collection directly, or from Django Admin. 
+
 ## Setting up existing data on MongoDB
 
 ### The internal `__schema__` collection
 
-There is no concept of an AUTOINCREMENT field in MongoDB. Therefore, internally Djongo creates a `__schema__` collection to track such fields. The `__schema__` collection looks like:
+There is no concept of an AUTOINCREMENT field in MongoDB. Therefore, Djongo internally creates a `__schema__` collection to track such fields. The `__schema__` collection looks like:
 
 ```python
 { 
