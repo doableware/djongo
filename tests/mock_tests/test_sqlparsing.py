@@ -211,15 +211,20 @@ class MockTest(TestCase):
         cls.params_none = mock.MagicMock()
         cls.params: typing.Union[mock.MagicMock, list] = None
 
+    def setUp(self):
+        patcher = patch('djongo.sql2mongo.query.print_warn')
+        self.addCleanup(patcher.stop)
+        self.print_warn = patcher.start()
 
-class TestVoidQuery(MockTest):
+
+class VoidQuery(MockTest):
 
     def exe(self):
         result = Result(self.conn, self.db, self.conn_prop, self.sql, self.params)
         self.assertRaises(StopIteration, result.next)
 
 
-class TestCreateTable(TestVoidQuery):
+class TestCreateTable(VoidQuery):
     """
         'CREATE TABLE "django_migrations" '
         '("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, '
@@ -246,9 +251,10 @@ class TestCreateTable(TestVoidQuery):
         self.db['table'].create_index.assert_called_with(
             'col1', unique=True, name='__primary_key__'
         )
+        self.print_warn.assert_called()
 
     def test_notNull_with_autoInc(self):
-        self.sql = self.base_sql + '("col1" NOT NULL AUTOINCREMENT)'
+        self.sql = self.base_sql + '("col1" integer NOT NULL AUTOINCREMENT)'
         self.exe()
         self.db['__schema__'].update_one.assert_called_with(
             filter={
@@ -256,7 +262,8 @@ class TestCreateTable(TestVoidQuery):
             },
             update={
                 '$set': {
-                    'auto.seq': 0
+                    'auto.seq': 0,
+                    'fields.col1': {'type_code': 'integer'}
                 },
                 '$push': {
                     'auto.field_names':
@@ -265,16 +272,18 @@ class TestCreateTable(TestVoidQuery):
             },
             upsert=True
         )
+        self.print_warn.assert_called()
 
     def test_notNull_with_unique(self):
-        self.sql = self.base_sql + '("col1" NOT NULL UNIQUE)'
+        self.sql = self.base_sql + '("col1" integer NOT NULL UNIQUE)'
         self.exe()
         self.db['table'].create_index.assert_called_with(
             'col1', unique=True
         )
+        self.print_warn.assert_called()
 
     def test_pk_with_autoInc(self):
-        self.sql = self.base_sql + '("col1" PRIMARY KEY AUTOINCREMENT)'
+        self.sql = self.base_sql + '("col1" integer PRIMARY KEY AUTOINCREMENT)'
         self.exe()
         self.db['table'].create_index.assert_called_with(
             'col1', unique=True, name='__primary_key__'
@@ -285,7 +294,8 @@ class TestCreateTable(TestVoidQuery):
             },
             update={
                 '$set': {
-                    'auto.seq': 0
+                    'auto.seq': 0,
+                    'fields.col1': {'type_code': 'integer'}
                 },
                 '$push': {
                     'auto.field_names':
@@ -296,7 +306,7 @@ class TestCreateTable(TestVoidQuery):
         )
 
     def test_pk_with_unique(self):
-        self.sql = self.base_sql + '("col1" PRIMARY KEY UNIQUE)'
+        self.sql = self.base_sql + '("col1" integer PRIMARY KEY UNIQUE)'
         self.exe()
         self.db['table'].create_index.assert_any_call(
             'col1', unique=True, name='__primary_key__'
@@ -306,7 +316,7 @@ class TestCreateTable(TestVoidQuery):
         )
 
     def test_autoInc_with_unique(self):
-        self.sql = self.base_sql + '("col1" AUTOINCREMENT UNIQUE)'
+        self.sql = self.base_sql + '("col1" integer AUTOINCREMENT UNIQUE)'
         self.exe()
         self.db['table'].create_index.assert_called_with(
             'col1', unique=True
@@ -317,7 +327,8 @@ class TestCreateTable(TestVoidQuery):
             },
             update= {
                 '$set': {
-                    'auto.seq': 0
+                    'auto.seq': 0,
+                    'fields.col1': {'type_code': 'integer'}
                 },
                 '$push': {
                     'auto.field_names':
@@ -328,31 +339,67 @@ class TestCreateTable(TestVoidQuery):
         )
 
 
-class TestAlterTable(TestVoidQuery):
+class AlterTable(VoidQuery):
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.base_sql = 'ALTER TABLE "table" '
 
+class TestAlterTable(AlterTable):
+
     def test_flush(self):
         self.sql = self.base_sql + 'FLUSH'
         self.exe()
 
-    def test_drop_notNull(self):
+    def test_alter_column_drop_notNull(self):
         self.sql = (self.base_sql +
                     'ALTER COLUMN "c" '
                     'DROP NOT NULL')
         self.exe()
+        self.print_warn.assert_called()
+
+
+class TestAlterTableDrop(AlterTable):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.base_sql += 'DROP '
 
     def test_drop_column(self):
         self.sql = (self.base_sql +
-                    'DROP COLUMN "c" '
+                    'COLUMN "c" '
                     'CASCADE')
+        self.exe()
+        self.print_warn.assert_called()
+
+    def test_drop_constraint(self):
+        self.sql = (self.base_sql +
+                    'CONSTRAINT "c" '
+                    'INDEX')
         self.exe()
 
 
-class TestAlterTableAdd(TestAlterTable):
+class TestAlterTableRename(AlterTable):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.base_sql += 'RENAME '
+
+    def test_rename_column(self):
+        self.sql = (self.base_sql +
+                    'COLUMN TO "c" ')
+        self.exe()
+
+    def test_rename_table(self):
+        self.sql = (self.base_sql +
+                    'TO "table2" ')
+        self.exe()
+
+
+class AlterTableAdd(AlterTable):
 
     @classmethod
     def setUpClass(cls):
@@ -360,7 +407,7 @@ class TestAlterTableAdd(TestAlterTable):
         cls.base_sql += 'ADD '
 
 
-class TestAlterTableAddColumn(TestAlterTableAdd):
+class TestAlterTableAddColumn(AlterTableAdd):
 
     @classmethod
     def setUpClass(cls):
@@ -372,14 +419,16 @@ class TestAlterTableAddColumn(TestAlterTableAdd):
                     'integer DEFAULT %s NOT NULL ')
         self.params = [2]
         self.exe()
+        self.print_warn.assert_called()
 
     def test_notNull_with_unique(self):
         self.sql = (self.base_sql +
                     'integer UNIQUE NOT NULL ')
         self.exe()
+        self.print_warn.assert_called()
 
 
-class TestAlterTableAddConstraint(TestAlterTableAdd):
+class TestAlterTableAddConstraint(AlterTableAdd):
 
     @classmethod
     def setUpClass(cls):
@@ -387,23 +436,29 @@ class TestAlterTableAddConstraint(TestAlterTableAdd):
         cls.base_sql += 'CONSTRAINT "c" '
 
     def test_fk_refs(self):
-        pass
+        self.sql = (self.base_sql +
+                    'FOREIGN KEY ("fk") ' +
+                    'REFERENCES "r" ("id")')
+        self.exe()
+        self.print_warn.assert_called()
 
     def test_index(self):
-        pass
+        self.sql = self.base_sql + 'INDEX ("a", "b")'
+        self.exe()
 
     def test_unique(self):
-        pass
+        self.sql = self.base_sql + 'UNIQUE ("a", "b")'
+        self.exe()
 
 
-class TestVoidQueryDelete(TestVoidQuery):
+class TestVoidQueryDelete(VoidQuery):
 
     @skip
     def test_delete(self):
         self.sql = 'DELETE FROM "table" WHERE "table"."col" IN (%s)'
 
 
-class TestVoidQueryAlter(TestVoidQuery):
+class TestVoidQueryAlter(VoidQuery):
     """
     sql_command: ALTER TABLE "dummy_arrayentry" ADD COLUMN "n_comments" integer DEFAULT %(0)s NOT NULL
     sql_command: ALTER TABLE "dummy_arrayentry" ALTER COLUMN "n_comments" DROP DEFAULT
@@ -468,7 +523,7 @@ class TestVoidQueryAlter(TestVoidQuery):
         self.exe()
 
 
-class TestQuery(MockTest):
+class Query(MockTest):
     """
     Test the sql2mongo module with all possible SQL statements and check
     if the conversion to a query document is happening properly.
@@ -507,7 +562,7 @@ class TestQuery(MockTest):
         self.conn.reset_mock()
 
 
-class TestQueryDistinct(TestQuery):
+class TestQueryDistinct(Query):
 
     def test_pattern1(self):
         return_value = [{'col1': 'a'}, {'col1': 'b'}]
@@ -589,7 +644,7 @@ class TestQueryDistinct(TestQuery):
         self.aggregate_mock(pipeline, return_value, ans)
 
 
-class TestQueryFunctions(TestQuery):
+class TestQueryFunctions(Query):
 
     def test_pattern1(self):
         self.sql = f'SELECT MIN({t1c1}) AS "m__min1", MAX({t1c2}) AS "m__max1"' \
@@ -601,7 +656,7 @@ class TestQueryFunctions(TestQuery):
         self.aggregate_mock(pipeline, return_value, ans)
 
 
-class TestQueryCount(TestQuery):
+class TestQueryCount(Query):
 
     def test_pattern1(self):
         self.sql = 'SELECT COUNT(*) AS "__count" FROM "table"'
@@ -659,7 +714,7 @@ class TestQueryCount(TestQuery):
         self.aggregate_mock(pipeline, return_value, ans)
 
 
-class TestQueryUpdate(TestQuery):
+class TestQueryUpdate(Query):
 
     def test_pattern1(self):
         um = self.conn.__getitem__.return_value.update_many
@@ -695,7 +750,7 @@ class TestQueryUpdate(TestQuery):
         self.conn.reset_mock()
 
 
-class TestQueryInsert(TestQuery):
+class TestQueryInsert(Query):
 
     def test_pattern1(self):
         io = self.conn.__getitem__.return_value.insert_many
@@ -745,7 +800,7 @@ class TestQueryInsert(TestQuery):
         self.conn.reset_mock()
 
 
-class TestQueryStatement(TestQuery):
+class TestQueryStatement(Query):
 
     @skip
     def test_pattern1(self):
@@ -762,7 +817,7 @@ class TestQueryStatement(TestQuery):
         find = self.find
 
 
-class TestQueryGroupBy(TestQuery):
+class TestQueryGroupBy(Query):
 
     def test_pattern1(self):
         self.sql = (
@@ -953,7 +1008,7 @@ class TestQueryGroupBy(TestQuery):
         self.aggregate_mock(pipeline, return_value, ans)
 
 
-class TestQuerySpecial(TestQuery):
+class TestQuerySpecial(Query):
 
     @skip
     def test_pattern1(self):
@@ -982,7 +1037,7 @@ class TestQuerySpecial(TestQuery):
         self.conn.reset_mock()
 
 
-class TestQueryIn(TestQuery):
+class TestQueryIn(Query):
 
     def test_pattern1(self):
         conn = self.conn
@@ -1146,7 +1201,7 @@ class TestQueryIn(TestQuery):
         conn.reset_mock()
 
 
-class TestQueryJoin(TestQuery):
+class TestQueryJoin(Query):
 
     def test_pattern1(self):
         """
@@ -1249,7 +1304,7 @@ class TestQueryJoin(TestQuery):
         self.aggregate_mock(pipeline, return_value, ans)
 
 
-class TestQueryNestedIn(TestQuery):
+class TestQueryNestedIn(Query):
 
     def test_pattern1(self):
         return_value = [{'col1': 'a1', 'col2': 'a2'}, {'col1': 'b1', 'col2': 'b2'}]
@@ -1394,7 +1449,7 @@ class TestQueryNestedIn(TestQuery):
         self.aggregate_mock(pipeline, return_value, ans)
 
 
-class TestQueryNot(TestQuery):
+class TestQueryNot(Query):
 
     def test_pattern1(self):
         conn = self.conn
@@ -1480,7 +1535,7 @@ class TestQueryNot(TestQuery):
         conn.reset_mock()
 
 
-class TestQueryBasic(TestQuery):
+class TestQueryBasic(Query):
 
     def test_pattern1(self):
         conn = self.conn
@@ -1543,7 +1598,7 @@ class TestQueryBasic(TestQuery):
         conn.reset_mock()
 
 
-class TestQueryAndOr(TestQuery):
+class TestQueryAndOr(Query):
 
     def test_pattern1(self):
         conn = self.conn

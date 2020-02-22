@@ -16,7 +16,23 @@ DATABASES = {
     'default': {
         'ENGINE': 'djongo',
         'NAME': 'test1',
-        'ENFORCE_SCHEMA': True
+        'ENFORCE_SCHEMA': True,
+        'LOGGING': {
+            'version': 1,
+            'loggers': {
+                'djongo': {
+                    'level': 'DEBUG',
+                    'propogate': False,
+                    'handlers': ['console']
+                }
+            },
+            'handlers': {
+                'console': {
+                    'class': 'logging.StreamHandler',
+                    'level': 'DEBUG'
+                }
+            }
+        }
     },
     'other': {
         'ENGINE': 'djongo',
