@@ -18,6 +18,7 @@ DATABASES = {
         'NAME': 'test1',
         'ENFORCE_SCHEMA': True,
         'LOGGING': {
+            'version': 1,
             'loggers': {
                 'djongo': {
                     'level': 'DEBUG',
@@ -28,7 +29,7 @@ DATABASES = {
             'handlers': {
                 'console': {
                     'class': 'logging.StreamHandler',
-                    'level': 'DEBUG'
+                    'level': 'DEBUG',
                 }
             }
         }
