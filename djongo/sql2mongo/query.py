@@ -13,7 +13,7 @@ from pymongo import ReturnDocument
 from pymongo.command_cursor import CommandCursor
 from pymongo.cursor import Cursor as BasicCursor
 from pymongo.database import Database
-from pymongo.errors import OperationFailure, CollectionInvalid
+from pymongo.errors import OperationFailure, CollectionInvalid, PyMongoError
 from sqlparse import parse as sqlparse
 from sqlparse import tokens
 from sqlparse.sql import (
@@ -21,7 +21,7 @@ from sqlparse.sql import (
     Where, Token,
     Statement)
 
-from . import SQLDecodeError, SQLToken, MigrationError
+from . import SQLDecodeError, SQLToken, MigrationError, print_warn
 from .converters import (
     ColumnSelectConverter, AggColumnSelectConverter, FromConverter, WhereConverter,
     AggWhereConverter, InnerJoinConverter, OuterJoinConverter, LimitConverter, AggLimitConverter, OrderConverter,
@@ -88,7 +88,7 @@ class VoidQuery(Query):
         raise NotImplementedError
 
     def count(self):
-        pass
+        raise NotImplementedError
 
 
 class SelectQuery(Query):
@@ -509,6 +509,7 @@ class AlterQuery(VoidQuery):
         self._new_name = None
         self._new_name = None
         self._default = None
+        self._type_code = None
         self._cascade = None
         self._null = None
 
@@ -544,11 +545,10 @@ class AlterQuery(VoidQuery):
         column = False
         to = False
         while tok_id is not None:
-            if tok.match(tokens.Keyword, ('COLUMN'),):
+            if tok.match(tokens.Keyword, 'COLUMN'):
                 self.execute = self._rename_column
                 column = True
-
-            if tok.match(tokens.Keyword, ('TO'),):
+            if tok.match(tokens.Keyword, 'TO'):
                 to = True
             elif isinstance(tok, Identifier):
                 if not to:
@@ -580,6 +580,26 @@ class AlterQuery(VoidQuery):
 
     def _alter(self, tok_id):
         self.execute = lambda: None
+        sm = self.statement
+        tok_id, tok = sm.token_next(tok_id)
+        feature = ''
+
+        while tok_id is not None:
+            if isinstance(tok, Identifier):
+                pass
+            elif tok.match(tokens.Keyword, (
+                    'NOT NULL', 'NULL', 'COLUMN',
+            )):
+                feature += str(tok) + ' '
+            elif tok.match(tokens.Keyword.DDL, 'DROP'):
+                feature += 'DROP '
+            else:
+                raise NotImplementedError
+
+            tok_id, tok = sm.token_next(tok_id)
+
+        print_warn(feature)
+        return tok_id
 
     def _flush(self):
         self.db_ref[self.left_table].delete_many({})
@@ -597,14 +617,14 @@ class AlterQuery(VoidQuery):
         tok_id, tok = sm.token_next(tok_id)
 
         while tok_id is not None:
-            if tok.match(tokens.Keyword, (
-                'CASCADE'
-            )):
-                pass
+            if tok.match(tokens.Keyword, 'CASCADE'):
+                print_warn('DROP CASCADE')
             elif isinstance(tok, Identifier):
                 self._iden_name = tok.get_real_name()
+            elif tok.match(tokens.Keyword, 'INDEX'):
+                self.execute = self._drop_index
             elif tok.match(tokens.Keyword, 'CONSTRAINT'):
-                self.execute = self._drop_constraint
+                pass
             elif tok.match(tokens.Keyword, 'COLUMN'):
                 self.execute = self._drop_column
             else:
@@ -614,7 +634,7 @@ class AlterQuery(VoidQuery):
 
         return tok_id
 
-    def _drop_constraint(self):
+    def _drop_index(self):
         self.db_ref[self.left_table].drop_index(self._iden_name)
 
     def _drop_column(self):
@@ -627,6 +647,14 @@ class AlterQuery(VoidQuery):
             },
             multi=True
         )
+        self.db_ref['__schema__'].update(
+            {'name': self.left_table},
+            {
+                '$unset': {
+                    f'fields.{self._iden_name}': ''
+                }
+            }
+        )
 
     def _add(self, tok_id):
         sm = self.statement
@@ -637,12 +665,13 @@ class AlterQuery(VoidQuery):
                 'CONSTRAINT', 'KEY', 'REFERENCES',
                 'NOT NULL', 'NULL'
             )):
-                pass
+                print_warn(f'schema validation using {tok}')
             elif tok.match(tokens.Name.Builtin, (
                 'integer', 'bool', 'char', 'date', 'boolean',
                 'datetime', 'float', 'time', 'number', 'string'
             )):
-                pass
+                print_warn('column type validation')
+                self._type_code = str(tok)
             elif isinstance(tok, Identifier):
                 self._iden_name = tok.get_real_name()
             elif isinstance(tok, Parenthesis):
@@ -685,6 +714,16 @@ class AlterQuery(VoidQuery):
                 }
             },
             multi=True
+        )
+        self.db_ref['__schema__'].update(
+            {'name': self.left_table},
+            {
+                '$set': {
+                    f'fields.{self._iden_name}': {
+                        'type_code': self._type_code
+                    }
+                }
+            }
         )
 
     def _index(self):
@@ -763,7 +802,9 @@ class Result:
         if self._result_generator is None:
             self._result_generator = iter(self)
 
-        return next(self._result_generator)
+        result = next(self._result_generator)
+        logger.debug(f'Result: {result}')
+        return result
 
     next = __next__
 
@@ -777,7 +818,7 @@ class Result:
         except MigrationError:
             raise
 
-        except OperationFailure as e:
+        except PyMongoError as e:
             import djongo
             exe = SQLDecodeError(
                 f'FAILED SQL: {self._sql}\n' 
@@ -849,7 +890,7 @@ class Result:
         try:
             self._query = AlterQuery(self.db, self.connection_properties, sm, self._params)
         except NotImplementedError:
-            logger.debug('Not implemented alter command for SQL {}'.format(self._sql))
+            logger.warning('Not implemented alter command for SQL {}'.format(self._sql))
         else:
             self._query.execute()
 
@@ -886,6 +927,11 @@ class Result:
                 for col in tok.value.strip('()').split(','):
                     props = col.strip().split(' ')
                     field = props[0].strip('"')
+                    type_code = props[1]
+
+                    _set[f'fields.{field}'] = {
+                        'type_code': type_code
+                    }
 
                     if field == '_id':
                         continue
@@ -905,6 +951,9 @@ class Result:
 
                     if col.find('UNIQUE') != -1:
                         self.db[table].create_index(field, unique=True)
+
+                    if col.find('NOT NULL') != -1:
+                        print_warn('NOT NULL column validation check')
 
                 if _set:
                     update['$set'] = _set
@@ -932,15 +981,15 @@ class Result:
             tok_id, tok = sm.token_next(tok_id)
             table_name = tok.get_name()
             self.db.drop_collection(table_name)
-        elif tok.match(tokens.Keyword, 'INDEX'):
-            tok_id, tok = sm.token_next(tok_id)
-            index_name = tok.get_name()
-            tok_id, tok = sm.token_next(tok_id)
-            if not tok.match(tokens.Keyword, 'ON'):
-                raise SQLDecodeError('statement:{}'.format(sm))
-            tok_id, tok = sm.token_next(tok_id)
-            collection_name = tok.get_name()
-            self.db[collection_name].drop_index(index_name)
+        # elif tok.match(tokens.Keyword, 'INDEX'):
+        #     tok_id, tok = sm.token_next(tok_id)
+        #     index_name = tok.get_name()
+        #     tok_id, tok = sm.token_next(tok_id)
+        #     if not tok.match(tokens.Keyword, 'ON'):
+        #         raise SQLDecodeError('statement:{}'.format(sm))
+        #     tok_id, tok = sm.token_next(tok_id)
+        #     collection_name = tok.get_name()
+        #     self.db[collection_name].drop_index(index_name)
         else:
             raise SQLDecodeError('statement:{}'.format(sm))
 
@@ -967,6 +1016,5 @@ class Result:
         'ALTER': _alter
     }
 
-# TODO: Need to do this
 
 

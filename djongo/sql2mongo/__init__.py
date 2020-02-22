@@ -6,6 +6,7 @@ from sqlparse import tokens
 from sqlparse.sql import Token, Identifier, Comparison, Parenthesis, IdentifierList
 
 djongo_access_url = 'https://www.patreon.com/nesdis'
+_printed_features = set()
 
 
 class SQLDecodeError(ValueError):
@@ -26,8 +27,12 @@ class MigrationError(Exception):
         self.field = field
 
 
-def print_warn(feature):
-    print(f'This version of djongo does not support {feature}. Visit {djongo_access_url}')
+def print_warn(feature=None, message=None):
+    if feature not in _printed_features:
+        message = ((message or f'This version of djongo does not support {feature} fully. ')
+                   + f'Visit {djongo_access_url}')
+        print(message)
+        _printed_features.add(feature)
 
 
 class SQLFunc:

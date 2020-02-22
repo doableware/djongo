@@ -298,6 +298,7 @@ class MigrateTests(MigrationTestBase):
         # Cleanup by unmigrating everything
         call_command("migrate", "migrations", "zero", verbosity=0)
 
+    @skip
     @override_settings(MIGRATION_MODULES={'migrations': 'migrations.test_migrations_plan'})
     def test_migrate_plan(self):
         """Tests migrate --plan output."""
