@@ -56,7 +56,6 @@ PARSER_ARGS = {
 
 DEFAULT_TESTRUNNER_ARGS = {
     'failfast': '--failfast',
-    'parallel': '--parallel'
 }
 
 SETTINGS_FILE = {
