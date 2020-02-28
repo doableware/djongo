@@ -116,41 +116,41 @@ class SelectQuery(Query):
 
         while tok_id is not None:
             if tok.match(tokens.DML, 'SELECT'):
-                c = self.selected_columns = ColumnSelectConverter(self, tok_id)
+                converter = self.selected_columns = ColumnSelectConverter(self, tok_id)
 
             elif tok.match(tokens.Keyword, 'FROM'):
-                c = FromConverter(self, tok_id)
+                converter = FromConverter(self, tok_id)
 
             elif tok.match(tokens.Keyword, 'LIMIT'):
-                c = self.limit = LimitConverter(self, tok_id)
+                converter = self.limit = LimitConverter(self, tok_id)
 
             elif tok.match(tokens.Keyword, 'ORDER'):
-                c = self.order = OrderConverter(self, tok_id)
+                converter = self.order = OrderConverter(self, tok_id)
             
             elif tok.match(tokens.Keyword, 'OFFSET'):
-                c = self.offset = OffsetConverter(self, tok_id)
+                converter = self.offset = OffsetConverter(self, tok_id)
 
             elif tok.match(tokens.Keyword, 'INNER JOIN'):
-                c = InnerJoinConverter(self, tok_id)
-                self.joins.append(c)
+                converter = InnerJoinConverter(self, tok_id)
+                self.joins.append(converter)
 
             elif tok.match(tokens.Keyword, 'LEFT OUTER JOIN'):
-                c = OuterJoinConverter(self, tok_id)
-                self.joins.append(c)
+                converter = OuterJoinConverter(self, tok_id)
+                self.joins.append(converter)
 
             elif tok.match(tokens.Keyword, 'GROUP'):
-                c = self.groupby = GroupbyConverter(self, tok_id)
+                converter = self.groupby = GroupbyConverter(self, tok_id)
 
             elif tok.match(tokens.Keyword, 'HAVING'):
-                c = self.having = HavingConverter(self, tok_id)
+                converter = self.having = HavingConverter(self, tok_id)
 
             elif isinstance(tok, Where):
-                c = self.where = WhereConverter(self, tok_id)
+                converter = self.where = WhereConverter(self, tok_id)
 
             else:
                 raise SQLDecodeError
 
-            tok_id, tok = self.statement.token_next(c.end_id)
+            tok_id, tok = self.statement.token_next(converter.end_id)
 
     def __iter__(self):
 
