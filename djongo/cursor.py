@@ -1,7 +1,7 @@
 from logging import getLogger
 
 from .database import DatabaseError
-from .sql2mongo.query import Result
+from .sql2mongo.query import Query
 
 logger = getLogger(__name__)
 
@@ -48,7 +48,7 @@ class Cursor:
 
     def execute(self, sql, params=None):
         try:
-            self.result = Result(
+            self.result = Query(
                 self.client_conn,
                 self.db_conn,
                 self.connection_properties,

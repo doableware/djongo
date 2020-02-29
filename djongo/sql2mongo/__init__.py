@@ -3,7 +3,7 @@ import typing
 
 from pymongo import ASCENDING, DESCENDING
 from sqlparse import tokens
-from sqlparse.sql import Token, Identifier, Comparison, Parenthesis, IdentifierList
+from sqlparse.sql import Token, Identifier, Comparison, Parenthesis, IdentifierList, Statement
 
 djongo_access_url = 'https://www.patreon.com/nesdis'
 _printed_features = set()
@@ -242,6 +242,25 @@ ORDER_BY_MAP = {
     'ASC': ASCENDING,
     'DESC': DESCENDING
 }
+
+
+class SQLStatement:
+
+    def __init__(self, statement: Statement):
+        self._statement = statement
+        self._tok_id = 0
+
+    def __getattr__(self, item):
+        return getattr(self._statement, item)
+
+    def token_next(self):
+        self._tok_id, token = self._statement.token_next(self._tok_id)
+        return token
+
+    def __iter__(self):
+        while self._tok_id is not None:
+            self._tok_id, token = self._statement.token_next(self._tok_id)
+            yield token
 
 # Fixes some circular import issues
 from . import query
