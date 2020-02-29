@@ -8,7 +8,7 @@ from pymongo.command_cursor import CommandCursor
 from pymongo.cursor import Cursor
 
 from djongo.base import DatabaseWrapper
-from djongo.sql2mongo.query import Result
+from djongo.sql2mongo.query import Query
 
 sqls = [
     'UPDATE "auth_user" '
@@ -220,7 +220,7 @@ class MockTest(TestCase):
 class VoidQuery(MockTest):
 
     def exe(self):
-        result = Result(self.conn, self.db, self.conn_prop, self.sql, self.params)
+        result = Query(self.conn, self.db, self.conn_prop, self.sql, self.params)
         self.assertRaises(StopIteration, result.next)
 
 
@@ -523,7 +523,7 @@ class TestVoidQueryAlter(VoidQuery):
         self.exe()
 
 
-class Query(MockTest):
+class MockQuery(MockTest):
     """
     Test the sql2mongo module with all possible SQL statements and check
     if the conversion to a query document is happening properly.
@@ -545,14 +545,14 @@ class Query(MockTest):
         cls.aggregate.return_value = cursor
 
     def find_mock(self):
-        result = Result(self.db, self.conn, self.conn_prop, self.sql, self.params)
+        result = Query(self.db, self.conn, self.conn_prop, self.sql, self.params)
         return list(result)
 
     def aggregate_mock(self, pipeline, iter_return_value=None, ans=None):
         if iter_return_value:
             self.agg_iter.return_value = iter_return_value
 
-        result = list(Result(self.db, self.conn, self.conn_prop, self.sql, self.params))
+        result = list(Query(self.db, self.conn, self.conn_prop, self.sql, self.params))
         self.aggregate.assert_any_call(pipeline)
         if self.params == self.params_none:
             self.params.assert_not_called()
@@ -562,7 +562,7 @@ class Query(MockTest):
         self.conn.reset_mock()
 
 
-class TestQueryDistinct(Query):
+class TestQueryDistinct(MockQuery):
 
     def test_pattern1(self):
         return_value = [{'col1': 'a'}, {'col1': 'b'}]
@@ -644,7 +644,7 @@ class TestQueryDistinct(Query):
         self.aggregate_mock(pipeline, return_value, ans)
 
 
-class TestQueryFunctions(Query):
+class TestQueryFunctions(MockQuery):
 
     def test_pattern1(self):
         self.sql = f'SELECT MIN({t1c1}) AS "m__min1", MAX({t1c2}) AS "m__max1"' \
@@ -656,7 +656,7 @@ class TestQueryFunctions(Query):
         self.aggregate_mock(pipeline, return_value, ans)
 
 
-class TestQueryCount(Query):
+class TestQueryCount(MockQuery):
 
     def test_pattern1(self):
         self.sql = 'SELECT COUNT(*) AS "__count" FROM "table"'
@@ -714,14 +714,14 @@ class TestQueryCount(Query):
         self.aggregate_mock(pipeline, return_value, ans)
 
 
-class TestQueryUpdate(Query):
+class TestQueryUpdate(MockQuery):
 
     def test_pattern1(self):
         um = self.conn.__getitem__.return_value.update_many
 
         sql = 'UPDATE "table" SET "col1" = %s, "col2" = NULL WHERE "table"."col2" = %s'
         params = [1, 2]
-        result = Result(self.db, self.conn, self.conn_prop, sql, params)
+        result = Query(self.db, self.conn, self.conn_prop, sql, params)
         um.assert_any_call(filter={'col2': {'$eq': 2}}, update={'$set': {'col1': 1, 'col2': None}})
         self.conn.reset_mock()
 
@@ -729,7 +729,7 @@ class TestQueryUpdate(Query):
         um = self.conn.__getitem__.return_value.update_many
         sql = 'UPDATE "table" SET "col" = %s WHERE "table"."col" = %s'
         params = [1, 2]
-        result = Result(self.db, self.conn, self.conn_prop, sql, params)
+        result = Query(self.db, self.conn, self.conn_prop, sql, params)
         um.assert_any_call(filter={'col': {'$eq': 2}}, update={'$set': {'col': 1}})
         self.conn.reset_mock()
 
@@ -737,7 +737,7 @@ class TestQueryUpdate(Query):
         um = self.conn.__getitem__.return_value.update_many
         sql = 'UPDATE "table" SET "col1" = %s WHERE "table"."col2" = %s'
         params = [1, 2]
-        result = Result(self.db, self.conn, self.conn_prop, sql, params)
+        result = Query(self.db, self.conn, self.conn_prop, sql, params)
         um.assert_any_call(filter={'col2': {'$eq': 2}}, update={'$set': {'col1': 1}})
         self.conn.reset_mock()
 
@@ -745,19 +745,19 @@ class TestQueryUpdate(Query):
         um = self.conn.__getitem__.return_value.update_many
         sql = 'UPDATE "table" SET "col1" = %s, "col2" = %s WHERE "table"."col2" = %s'
         params = [1, 2, 3]
-        result = Result(self.db, self.conn, self.conn_prop, sql, params)
+        result = Query(self.db, self.conn, self.conn_prop, sql, params)
         um.assert_any_call(filter={'col2': {'$eq': 3}}, update={'$set': {'col1': 1, 'col2': 2}})
         self.conn.reset_mock()
 
 
-class TestQueryInsert(Query):
+class TestQueryInsert(MockQuery):
 
     def test_pattern1(self):
         io = self.conn.__getitem__.return_value.insert_many
 
         sql = 'INSERT INTO "table" ("col1", "col2") VALUES (%s, %s)'
         params = [1, 2]
-        result = Result(self.db, self.conn, self.conn_prop, sql, params)
+        result = Query(self.db, self.conn, self.conn_prop, sql, params)
         io.assert_any_call([{'col1': 1, 'col2': 2}], ordered=False)
         self.conn.reset_mock()
 
@@ -766,7 +766,7 @@ class TestQueryInsert(Query):
 
         sql = 'INSERT INTO "table" ("col1", "col2") VALUES (%s, NULL)'
         params = [1]
-        result = Result(self.db, self.conn, self.conn_prop, sql, params)
+        result = Query(self.db, self.conn, self.conn_prop, sql, params)
         io.assert_any_call([{'col1': 1, 'col2': None}], ordered=False)
         self.conn.reset_mock()
 
@@ -775,7 +775,7 @@ class TestQueryInsert(Query):
 
         sql = 'INSERT INTO "table" ("col") VALUES (%s)'
         params = [1]
-        result = Result(self.db, self.conn, self.conn_prop, sql, params)
+        result = Query(self.db, self.conn, self.conn_prop, sql, params)
         io.assert_any_call([{'col': 1}], ordered=False)
         self.conn.reset_mock()
 
@@ -794,13 +794,13 @@ class TestQueryInsert(Query):
         }
         self.conn.__getitem__().find_one_and_update.return_value = auto
 
-        result = Result(self.db, self.conn, self.conn_prop, sql, params)
+        result = Query(self.db, self.conn, self.conn_prop, sql, params)
 
         io.assert_any_call([{'id': 1}], ordered=False)
         self.conn.reset_mock()
 
 
-class TestQueryStatement(Query):
+class TestQueryStatement(MockQuery):
 
     @skip
     def test_pattern1(self):
@@ -817,7 +817,7 @@ class TestQueryStatement(Query):
         find = self.find
 
 
-class TestQueryGroupBy(Query):
+class TestQueryGroupBy(MockQuery):
 
     def test_pattern1(self):
         self.sql = (
@@ -1008,7 +1008,7 @@ class TestQueryGroupBy(Query):
         self.aggregate_mock(pipeline, return_value, ans)
 
 
-class TestQuerySpecial(Query):
+class TestQuerySpecial(MockQuery):
 
     @skip
     def test_pattern1(self):
@@ -1037,7 +1037,7 @@ class TestQuerySpecial(Query):
         self.conn.reset_mock()
 
 
-class TestQueryIn(Query):
+class TestQueryIn(MockQuery):
 
     def test_pattern1(self):
         conn = self.conn
@@ -1201,7 +1201,7 @@ class TestQueryIn(Query):
         conn.reset_mock()
 
 
-class TestQueryJoin(Query):
+class TestQueryJoin(MockQuery):
 
     def test_pattern1(self):
         """
@@ -1304,7 +1304,7 @@ class TestQueryJoin(Query):
         self.aggregate_mock(pipeline, return_value, ans)
 
 
-class TestQueryNestedIn(Query):
+class TestQueryNestedIn(MockQuery):
 
     def test_pattern1(self):
         return_value = [{'col1': 'a1', 'col2': 'a2'}, {'col1': 'b1', 'col2': 'b2'}]
@@ -1449,7 +1449,7 @@ class TestQueryNestedIn(Query):
         self.aggregate_mock(pipeline, return_value, ans)
 
 
-class TestQueryNot(Query):
+class TestQueryNot(MockQuery):
 
     def test_pattern1(self):
         conn = self.conn
@@ -1535,7 +1535,7 @@ class TestQueryNot(Query):
         conn.reset_mock()
 
 
-class TestQueryBasic(Query):
+class TestQueryBasic(MockQuery):
 
     def test_pattern1(self):
         conn = self.conn
@@ -1598,7 +1598,7 @@ class TestQueryBasic(Query):
         conn.reset_mock()
 
 
-class TestQueryAndOr(Query):
+class TestQueryAndOr(MockQuery):
 
     def test_pattern1(self):
         conn = self.conn

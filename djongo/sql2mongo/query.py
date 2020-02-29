@@ -21,7 +21,7 @@ from sqlparse.sql import (
     Where, Token,
     Statement)
 
-from . import SQLDecodeError, SQLToken, MigrationError, print_warn
+from . import SQLDecodeError, SQLToken, MigrationError, print_warn, SQLStatement
 from .converters import (
     ColumnSelectConverter, AggColumnSelectConverter, FromConverter, WhereConverter,
     AggWhereConverter, InnerJoinConverter, OuterJoinConverter, LimitConverter, AggLimitConverter, OrderConverter,
@@ -50,7 +50,7 @@ class CountWildcardFunc:
     alias_name: str = None
 
 
-class Query:
+class BaseQuery:
     def __init__(
             self,
             db_ref: Database,
@@ -78,20 +78,28 @@ class Query:
     def parse(self):
         raise NotImplementedError
 
-    def count(self):
-        raise NotImplementedError
-
-
-class VoidQuery(Query):
-
     def execute(self):
         raise NotImplementedError
 
+
+class DMLQuery(BaseQuery):
+    pass
+
+
+class DDLQuery(BaseQuery):
+    pass
+
+
+class DQLQuery(BaseQuery):
+
+    def execute(self):
+        return
+
     def count(self):
         raise NotImplementedError
 
 
-class SelectQuery(Query):
+class SelectQuery(DQLQuery):
 
     def __init__(self, *args):
         self.selected_columns: ColumnSelectConverter = None
@@ -299,20 +307,21 @@ class SelectQuery(Query):
         return tuple(ret)
 
 
-class UpdateQuery(Query):
+class UpdateQuery(DMLQuery):
 
     def __init__(self, *args):
         self.selected_table: ColumnSelectConverter = None
         self.set_columns: SetConverter = None
         self.where: WhereConverter = None
         self.result = None
+        self.kwargs = None
         super().__init__(*args)
 
     def count(self):
         return self.result.matched_count
 
     def parse(self):
-        db = self.db_ref
+
         tok_id = 0
         tok: Token = self.statement[0]
 
@@ -332,19 +341,22 @@ class UpdateQuery(Query):
 
             tok_id, tok = self.statement.token_next(c.end_id)
 
-        kwargs = {}
+        self.kwargs = {}
         if self.where:
-            kwargs.update(self.where.to_mongo())
+            self.kwargs.update(self.where.to_mongo())
 
-        kwargs.update(self.set_columns.to_mongo())
-        self.result = db[self.left_table].update_many(**kwargs)
+        self.kwargs.update(self.set_columns.to_mongo())
+
+    def execute(self):
+        db = self.db_ref
+        self.result = db[self.left_table].update_many(**self.kwargs)
         logger.debug(f'update_many: {self.result.modified_count}, matched: {self.result.matched_count}')
 
 
-class InsertQuery(VoidQuery):
+class InsertQuery(DMLQuery):
     DEFAULT = object()
 
-    def __init__(self, result_ref: 'Result', *args):
+    def __init__(self, result_ref: 'Query', *args):
         self._result_ref = result_ref
         self._cols = None
         self._vals = None
@@ -501,7 +513,7 @@ class InsertQuery(VoidQuery):
     #     logger.debug('insert id {}'.format(result.inserted_id))
 
 
-class AlterQuery(VoidQuery):
+class AlterQuery(DDLQuery):
 
     def __init__(self, *args):
         self._iden_name = None
@@ -741,20 +753,21 @@ class AlterQuery(VoidQuery):
         pass
 
 
-class DeleteQuery(Query):
+class DeleteQuery(DMLQuery):
 
     def __init__(self, *args):
         self.result = None
+        self.kw = None
+        self.collection = None
         super().__init__(*args)
 
     def parse(self):
-        db_con = self.db_ref
         sm = self.statement
-        kw = {'filter': {}}
+        self.kw = kw = {'filter': {}}
 
         tok_id, tok = sm.token_next(2)
         sql_token = SQLToken(tok, None)
-        collection = sql_token.table
+        self.collection = sql_token.table
 
         self.left_table = sql_token.table
 
@@ -763,14 +776,16 @@ class DeleteQuery(Query):
             where = WhereConverter(self, tok_id)
             kw.update(where.to_mongo())
 
-        self.result = db_con[collection].delete_many(**kw)
+    def execute(self):
+        db_con = self.db_ref
+        self.result = db_con[self.collection].delete_many(**self.kw)
         logger.debug('delete_many: {}'.format(self.result.deleted_count))
 
     def count(self):
         return self.result.deleted_count
 
 
-class Result:
+class Query:
 
     def __init__(self,
                  client_connection: MongoClient,
@@ -788,8 +803,7 @@ class Result:
         self.last_row_id = None
         self._result_generator = None
 
-        self._query = None
-        self.parse()
+        self._query = self.parse()
 
     def count(self):
         return self._query.count()
@@ -888,13 +902,15 @@ class Result:
 
     def _alter(self, sm):
         try:
-            self._query = AlterQuery(self.db, self.connection_properties, sm, self._params)
+            query = AlterQuery(self.db, self.connection_properties, sm, self._params)
         except NotImplementedError:
             logger.warning('Not implemented alter command for SQL {}'.format(self._sql))
         else:
-            self._query.execute()
+            query.execute()
+            return query
 
     def _create(self, sm):
+        statement = SQLStatement(sm)
         tok_id, tok = sm.token_next(0)
         if tok.match(tokens.Keyword, 'TABLE'):
             if '__schema__' not in self.connection_properties.cached_collections:
@@ -981,30 +997,26 @@ class Result:
             tok_id, tok = sm.token_next(tok_id)
             table_name = tok.get_name()
             self.db.drop_collection(table_name)
-        # elif tok.match(tokens.Keyword, 'INDEX'):
-        #     tok_id, tok = sm.token_next(tok_id)
-        #     index_name = tok.get_name()
-        #     tok_id, tok = sm.token_next(tok_id)
-        #     if not tok.match(tokens.Keyword, 'ON'):
-        #         raise SQLDecodeError('statement:{}'.format(sm))
-        #     tok_id, tok = sm.token_next(tok_id)
-        #     collection_name = tok.get_name()
-        #     self.db[collection_name].drop_index(index_name)
         else:
             raise SQLDecodeError('statement:{}'.format(sm))
 
     def _update(self, sm):
-        self._query = UpdateQuery(self.db, self.connection_properties, sm, self._params)
+        query = UpdateQuery(self.db, self.connection_properties, sm, self._params)
+        query.execute()
+        return query
 
     def _delete(self, sm):
-        self._query = DeleteQuery(self.db, self.connection_properties, sm, self._params)
+        query = DeleteQuery(self.db, self.connection_properties, sm, self._params)
+        query.execute()
+        return query
 
     def _insert(self, sm):
-        self._query = InsertQuery(self, self.db, self.connection_properties, sm, self._params)
-        self._query.execute()
+        query = InsertQuery(self, self.db, self.connection_properties, sm, self._params)
+        query.execute()
+        return query
 
     def _select(self, sm):
-        self._query = SelectQuery(self.db, self.connection_properties, sm, self._params)
+        return SelectQuery(self.db, self.connection_properties, sm, self._params)
 
     FUNC_MAP = {
         'SELECT': _select,
