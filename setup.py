@@ -3,6 +3,7 @@ from setuptools import find_packages
 import os
 import codecs
 import re
+import sys
 
 LONG_DESCRIPTION = """
 
