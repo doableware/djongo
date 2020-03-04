@@ -100,12 +100,7 @@ setup(
     author_email='nesdis@gmail.com',
     description=(
         'Driver for allowing Django to use MongoDB as the database backend.'),
-    install_requires=[
-        'sqlparse==0.2.4',
-        'pymongo>=3.2.0',
-        'django>=2.0,<3',
-        'six>=1.13.0',
-    ],
+    install_requires=install_requires,
     extras_require=dict(
         json=[
             'jsonfield>=2.0.2',
