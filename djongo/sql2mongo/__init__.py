@@ -2,7 +2,7 @@ import re
 import typing
 
 from pymongo import ASCENDING, DESCENDING
-from sqlparse import tokens
+from sqlparse import tokens, parse as sqlparse
 from sqlparse.sql import Token, Identifier, Comparison, Parenthesis, IdentifierList, Statement
 
 djongo_access_url = 'https://www.patreon.com/nesdis'
@@ -37,18 +37,18 @@ def print_warn(feature=None, message=None):
 
 class SQLFunc:
 
-    def __init__(self, token: Token, alias2op=None):
+    def __init__(self, token: Token, alias2token=None):
         self._token = token
 
         try:
-            self._iden = SQLToken(token[0].get_parameters()[0], alias2op)
+            self._iden = SQLToken(token[0].get_parameters()[0], alias2token)
         except IndexError:
             if token[0].get_name() == 'COUNT':
                 self._iden = None
             else:
                 raise
 
-        self.alias2op: typing.Dict[str, SQLToken] = alias2op
+        self.alias2token: typing.Dict[str, SQLToken] = alias2token
 
     @property
     def alias(self):
@@ -102,9 +102,9 @@ class SQLFunc:
 
 class SQLToken:
 
-    def __init__(self, token: Token, alias2op=None):
+    def __init__(self, token: Token, alias2token=None):
         self._token = token
-        self.alias2op: typing.Dict[str, SQLToken] = alias2op
+        self.alias2token: typing.Dict[str, SQLToken] = alias2token
 
     def has_parent(self):
         return self._token.get_parent_name()
@@ -118,15 +118,15 @@ class SQLToken:
         if name is None:
             name = self._token.get_real_name()
         else:
-            if name in self.alias2op:
-                return self.alias2op[name].table
+            if name in self.alias2token:
+                return self.alias2token[name].table
             return name
 
         if name is None:
             raise SQLDecodeError
 
-        if self.alias2op and name in self.alias2op:
-            return self.alias2op[name].table
+        if self.alias2token and name in self.alias2token:
+            return self.alias2token[name].table
         return name
 
     @property
@@ -162,7 +162,7 @@ class SQLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        lhs = SQLToken(self._token.left, self.alias2op)
+        lhs = SQLToken(self._token.left, self.alias2token)
         return lhs.table
 
     @property
@@ -170,7 +170,7 @@ class SQLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        lhs = SQLToken(self._token.left, self.alias2op)
+        lhs = SQLToken(self._token.left, self.alias2token)
         return lhs.column
 
     @property
@@ -178,7 +178,7 @@ class SQLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        rhs = SQLToken(self._token.right, self.alias2op)
+        rhs = SQLToken(self._token.right, self.alias2token)
         return rhs.table
 
     @property
@@ -186,7 +186,7 @@ class SQLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        rhs = SQLToken(self._token.right, self.alias2op)
+        rhs = SQLToken(self._token.right, self.alias2token)
         return rhs.column
 
     @property
@@ -194,7 +194,7 @@ class SQLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        lhs = SQLToken(self._token.left, self.alias2op)
+        lhs = SQLToken(self._token.left, self.alias2token)
         return lhs.column
 
     @property
@@ -246,21 +246,47 @@ ORDER_BY_MAP = {
 
 class SQLStatement:
 
-    def __init__(self, statement: Statement):
+    @property
+    def current_token(self) -> Token:
+        return self._statement[self._tok_id]
+
+    def __init__(self, statement: typing.Union[Statement, Token]):
         self._statement = statement
         self._tok_id = 0
 
     def __getattr__(self, item):
         return getattr(self._statement, item)
 
-    def token_next(self):
+    def __iter__(self) -> Token:
+        token = self._statement[self._tok_id]
+        while self._tok_id is not None:
+            yield token
+            self._tok_id, token = self._statement.token_next(self._tok_id)
+
+    def __repr__(self):
+        return str(self._statement)
+
+    def __getitem__(self, item: slice):
+        start = (item.start or 0) + self._tok_id
+        stop = item.stop and self._tok_id + item.stop
+        sql = ''.join(str(tok) for tok in self._statement[start:stop])
+        sql = sqlparse(sql)[0]
+        return SQLStatement(sql)
+
+    def next(self) -> Token:
         self._tok_id, token = self._statement.token_next(self._tok_id)
         return token
 
-    def __iter__(self):
-        while self._tok_id is not None:
-            self._tok_id, token = self._statement.token_next(self._tok_id)
-            yield token
+    def skip(self, num):
+        self._tok_id += num
+
+    @property
+    def prev_token(self) -> Token:
+        return self._statement.token_prev(self._tok_id)[1]
+
+    @property
+    def next_token(self) -> Token:
+        return self._statement.token_next(self._tok_id)[1]
 
 # Fixes some circular import issues
 from . import query
