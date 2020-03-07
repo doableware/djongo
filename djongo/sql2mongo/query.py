@@ -53,17 +53,17 @@ class CountWildcardFunc:
 class BaseQuery:
     def __init__(
             self,
-            db_ref: Database,
+            db: Database,
             connection_properties: 'djongo.base.DjongoClient',
             statement: Statement,
             params: list
 
     ):
         self.statement = statement
-        self.db_ref = db_ref
+        self.db = db
         self.connection_properties = connection_properties
         self.params = params
-        self.alias2op: typing.Dict[str, typing.Any] = {}
+        self.alias2token: typing.Dict[str, typing.Any] = {}
         self.nested_query: NestedInQueryConverter = None
 
         self.left_table: typing.Optional[str] = None
@@ -114,51 +114,47 @@ class SelectQuery(DQLQuery):
         self.groupby: GroupbyConverter = None
         self.having: HavingConverter = None
 
-
         self._cursor: typing.Union[BasicCursor, CommandCursor] = None
         super().__init__(*args)
 
     def parse(self):
-        tok_id = 0
-        tok = self.statement[0]
+        statement = SQLStatement(self.statement)
 
-        while tok_id is not None:
+        for tok in statement:
             if tok.match(tokens.DML, 'SELECT'):
-                converter = self.selected_columns = ColumnSelectConverter(self, tok_id)
+                self.selected_columns = ColumnSelectConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'FROM'):
-                converter = FromConverter(self, tok_id)
+                FromConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'LIMIT'):
-                converter = self.limit = LimitConverter(self, tok_id)
+                self.limit = LimitConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'ORDER'):
-                converter = self.order = OrderConverter(self, tok_id)
-            
+                self.order = OrderConverter(self, statement)
+
             elif tok.match(tokens.Keyword, 'OFFSET'):
-                converter = self.offset = OffsetConverter(self, tok_id)
+                self.offset = OffsetConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'INNER JOIN'):
-                converter = InnerJoinConverter(self, tok_id)
+                converter = InnerJoinConverter(self, statement)
                 self.joins.append(converter)
 
             elif tok.match(tokens.Keyword, 'LEFT OUTER JOIN'):
-                converter = OuterJoinConverter(self, tok_id)
+                converter = OuterJoinConverter(self, statement)
                 self.joins.append(converter)
 
             elif tok.match(tokens.Keyword, 'GROUP'):
-                converter = self.groupby = GroupbyConverter(self, tok_id)
+                self.groupby = GroupbyConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'HAVING'):
-                converter = self.having = HavingConverter(self, tok_id)
+                self.having = HavingConverter(self, statement)
 
             elif isinstance(tok, Where):
-                converter = self.where = WhereConverter(self, tok_id)
+                self.where = WhereConverter(self, statement)
 
             else:
-                raise SQLDecodeError
-
-            tok_id, tok = self.statement.token_next(converter.end_id)
+                raise SQLDecodeError(f'Unknown keyword: {tok}')
 
     def __iter__(self):
 
@@ -254,7 +250,7 @@ class SelectQuery(DQLQuery):
     def _get_cursor(self):
         if self._needs_aggregation():
             pipeline = self._make_pipeline()
-            cur = self.db_ref[self.left_table].aggregate(pipeline)
+            cur = self.db[self.left_table].aggregate(pipeline)
             logger.debug(f'Aggregation query: {pipeline}')
         else:
             kwargs = {}
@@ -273,7 +269,7 @@ class SelectQuery(DQLQuery):
             if self.offset:
                 kwargs.update(self.offset.to_mongo())
 
-            cur = self.db_ref[self.left_table].find(**kwargs)
+            cur = self.db[self.left_table].find(**kwargs)
             logger.debug(f'Find query: {kwargs}')
 
         return cur
@@ -322,24 +318,21 @@ class UpdateQuery(DMLQuery):
 
     def parse(self):
 
-        tok_id = 0
-        tok: Token = self.statement[0]
+        statement = SQLStatement(self.statement)
 
-        while tok_id is not None:
+        for tok in statement:
             if tok.match(tokens.DML, 'UPDATE'):
-                c = ColumnSelectConverter(self, tok_id)
+                c = ColumnSelectConverter(self, statement)
                 self.left_table = c.sql_tokens[0].table
 
             elif tok.match(tokens.Keyword, 'SET'):
-                c = self.set_columns = SetConverter(self, tok_id)
+                c = self.set_columns = SetConverter(self, statement)
 
             elif isinstance(tok, Where):
-                c = self.where = WhereConverter(self, tok_id)
+                c = self.where = WhereConverter(self, statement)
 
             else:
                 raise SQLDecodeError
-
-            tok_id, tok = self.statement.token_next(c.end_id)
 
         self.kwargs = {}
         if self.where:
@@ -348,7 +341,7 @@ class UpdateQuery(DMLQuery):
         self.kwargs.update(self.set_columns.to_mongo())
 
     def execute(self):
-        db = self.db_ref
+        db = self.db
         self.result = db[self.left_table].update_many(**self.kwargs)
         logger.debug(f'update_many: {self.result.modified_count}, matched: {self.result.matched_count}')
 
@@ -414,7 +407,7 @@ class InsertQuery(DMLQuery):
         docs = []
         num = len(self._vals)
 
-        auto = self.db_ref['__schema__'].find_one_and_update(
+        auto = self.db['__schema__'].find_one_and_update(
             {
                 'name': self.left_table,
                 'auto': {
@@ -439,7 +432,7 @@ class InsertQuery(DMLQuery):
                 ins[fld] = v
             docs.append(ins)
 
-        res = self.db_ref[self.left_table].insert_many(docs, ordered=False)
+        res = self.db[self.left_table].insert_many(docs, ordered=False)
         if auto:
             self._result_ref.last_row_id = auto['auto']['seq']
         else:
@@ -577,7 +570,7 @@ class AlterQuery(DDLQuery):
         return tok_id
 
     def _rename_column(self):
-        self.db_ref[self.left_table].update(
+        self.db[self.left_table].update(
             {},
             {
                 '$rename': {
@@ -588,7 +581,7 @@ class AlterQuery(DDLQuery):
         )
 
     def _rename_collection(self):
-        self.db_ref[self.left_table].rename(self._new_name)
+        self.db[self.left_table].rename(self._new_name)
 
     def _alter(self, tok_id):
         self.execute = lambda: None
@@ -614,7 +607,7 @@ class AlterQuery(DDLQuery):
         return tok_id
 
     def _flush(self):
-        self.db_ref[self.left_table].delete_many({})
+        self.db[self.left_table].delete_many({})
 
     def _table(self, tok_id):
         sm = self.statement
@@ -647,10 +640,10 @@ class AlterQuery(DDLQuery):
         return tok_id
 
     def _drop_index(self):
-        self.db_ref[self.left_table].drop_index(self._iden_name)
+        self.db[self.left_table].drop_index(self._iden_name)
 
     def _drop_column(self):
-        self.db_ref[self.left_table].update(
+        self.db[self.left_table].update(
             {},
             {
                 '$unset': {
@@ -659,7 +652,7 @@ class AlterQuery(DDLQuery):
             },
             multi=True
         )
-        self.db_ref['__schema__'].update(
+        self.db['__schema__'].update(
             {'name': self.left_table},
             {
                 '$unset': {
@@ -713,7 +706,7 @@ class AlterQuery(DDLQuery):
         return tok_id
 
     def _add_column(self):
-        self.db_ref[self.left_table].update(
+        self.db[self.left_table].update(
             {
                 '$or': [
                     {self._iden_name: {'$exists': False}},
@@ -727,7 +720,7 @@ class AlterQuery(DDLQuery):
             },
             multi=True
         )
-        self.db_ref['__schema__'].update(
+        self.db['__schema__'].update(
             {'name': self.left_table},
             {
                 '$set': {
@@ -739,12 +732,12 @@ class AlterQuery(DDLQuery):
         )
 
     def _index(self):
-        self.db_ref[self.left_table].create_index(
+        self.db[self.left_table].create_index(
             self.field_dir,
             name=self._iden_name)
 
     def _unique(self):
-        self.db_ref[self.left_table].create_index(
+        self.db[self.left_table].create_index(
             self.field_dir,
             unique=True,
             name=self._iden_name)
@@ -777,7 +770,7 @@ class DeleteQuery(DMLQuery):
             kw.update(where.to_mongo())
 
     def execute(self):
-        db_con = self.db_ref
+        db_con = self.db
         self.result = db_con[self.collection].delete_many(**self.kw)
         logger.debug('delete_many: {}'.format(self.result.deleted_count))
 
@@ -911,7 +904,7 @@ class Query:
 
     def _create(self, sm):
         statement = SQLStatement(sm)
-        tok_id, tok = sm.token_next(0)
+        tok = statement.next()
         if tok.match(tokens.Keyword, 'TABLE'):
             if '__schema__' not in self.connection_properties.cached_collections:
                 self.db.create_collection('__schema__')
@@ -919,7 +912,7 @@ class Query:
                 self.db['__schema__'].create_index('name', unique=True)
                 self.db['__schema__'].create_index('auto')
 
-            tok_id, tok = sm.token_next(tok_id)
+            tok = statement.next()
             table = SQLToken(tok, None).table
             try:
                 self.db.create_collection(table)
@@ -931,7 +924,7 @@ class Query:
 
             logger.debug('Created table: {}'.format(table))
 
-            tok_id, tok = sm.token_next(tok_id)
+            tok = statement.next()
             if isinstance(tok, Parenthesis):
                 _filter = {
                     'name': table
@@ -988,13 +981,13 @@ class Query:
             logger.debug('Not supported {}'.format(sm))
 
     def _drop(self, sm):
-        tok_id, tok = sm.token_next(0)
+        tok_id, tok = sm.next(0)
         if tok.match(tokens.Keyword, 'DATABASE'):
-            tok_id, tok = sm.token_next(tok_id)
+            tok_id, tok = sm.next(tok_id)
             db_name = tok.get_name()
             self.cli_con.drop_database(db_name)
         elif tok.match(tokens.Keyword, 'TABLE'):
-            tok_id, tok = sm.token_next(tok_id)
+            tok_id, tok = sm.next(tok_id)
             table_name = tok.get_name()
             self.db.drop_collection(table_name)
         else:
