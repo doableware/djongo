@@ -346,6 +346,7 @@ class AlterTable(VoidQuery):
         super().setUpClass()
         cls.base_sql = 'ALTER TABLE "table" '
 
+
 class TestAlterTable(AlterTable):
 
     def test_flush(self):
@@ -667,6 +668,7 @@ class TestQueryCount(MockQuery):
         ans = [(1,)]
         self.aggregate_mock(pipeline, return_value, ans)
 
+    def test_pattern3(self):
         self.sql = 'SELECT (1) AS "a" FROM "table1" WHERE "table1"."col2" = %s LIMIT 1'
         self.params = [2]
         pipeline = [
