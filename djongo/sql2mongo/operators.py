@@ -70,7 +70,7 @@ class _BinaryOp(_Op):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        identifier = SQLToken(self.statement.prev_token, self.query.alias2token)
+        identifier = SQLToken(self.statement.prev_token, self.query.token_alias)
 
         if identifier.table == self.left_table:
             self._field = identifier.column
@@ -98,7 +98,7 @@ class _InNotInOp(_BinaryOp):
             self.query.nested_query = NestedInQueryConverter(token, self.query, 0)
             return
 
-        for index in SQLToken(token, self.query.alias2token):
+        for index in SQLToken(token, self.query.token_alias):
             if index is not None:
                 self._in.append(self.params[index])
             else:
@@ -350,7 +350,7 @@ class OrOp(_AndOrOp):
             return AndOp
 
 
-class StatementParser:
+class _StatementParser:
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -466,7 +466,7 @@ class StatementParser:
             op.evaluate()
         self._op = op
 
-class WhereOp(_Op, StatementParser):
+class WhereOp(_Op, _StatementParser):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -482,7 +482,7 @@ class WhereOp(_Op, StatementParser):
         return self._op.to_mongo()
 
 
-class ParenthesisOp(_Op, StatementParser):
+class ParenthesisOp(_Op, _StatementParser):
 
     def to_mongo(self):
         return self._op.to_mongo()
@@ -502,7 +502,7 @@ class CmpOp(_Op):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._identifier = SQLToken(self.statement.left, self.query.alias2token)
+        self._identifier = SQLToken(self.statement.left, self.query.token_alias)
 
         if isinstance(self.statement.right, Identifier):
             raise SQLDecodeError('Join using WHERE not supported')

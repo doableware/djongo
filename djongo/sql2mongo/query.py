@@ -50,6 +50,12 @@ class CountWildcardFunc:
     alias_name: str = None
 
 
+class TokenAlias:
+    def __init__(self):
+        self.alias2token: typing.Dict[str, typing.Any] = {}
+        self.token2alias: typing.Dict[SQLToken, str] = {}
+
+
 class BaseQuery:
     def __init__(
             self,
@@ -63,7 +69,7 @@ class BaseQuery:
         self.db = db
         self.connection_properties = connection_properties
         self.params = params
-        self.alias2token: typing.Dict[str, typing.Any] = {}
+        self.token_alias = TokenAlias()
         self.nested_query: NestedInQueryConverter = None
 
         self.left_table: typing.Optional[str] = None
