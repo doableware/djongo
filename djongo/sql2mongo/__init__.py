@@ -3,7 +3,8 @@ import typing
 
 from pymongo import ASCENDING, DESCENDING
 from sqlparse import tokens, parse as sqlparse
-from sqlparse.sql import Token, Identifier, Comparison, Parenthesis, IdentifierList, Statement
+from sqlparse.sql import Token, Identifier, Comparison, Parenthesis, IdentifierList, Statement, Function
+
 
 djongo_access_url = 'https://www.patreon.com/nesdis'
 _printed_features = set()
@@ -49,6 +50,9 @@ class SQLFunc:
                 raise
 
         self.alias2token: typing.Dict[str, SQLToken] = alias2token
+
+    def __repr__(self):
+        return f'{type(self._token)}: {self._token}'
 
     @property
     def alias(self):
@@ -102,12 +106,22 @@ class SQLFunc:
 
 class SQLToken:
 
-    def __init__(self, token: Token, alias2token=None):
+    def __init__(self, token: Token, token_alias=None):
         self._token = token
-        self.alias2token: typing.Dict[str, SQLToken] = alias2token
+        self.token_alias: query.TokenAlias = token_alias
+
+    def __hash__(self):
+        return hash(self._token.value)
+
+    def __repr__(self):
+        return f'{type(self._token)}: {self._token}'
 
     def has_parent(self):
         return self._token.get_parent_name()
+
+    @property
+    def is_function(self):
+        return isinstance(self._token, Function)
 
     @property
     def table(self):
@@ -117,17 +131,15 @@ class SQLToken:
         name = self._token.get_parent_name()
         if name is None:
             name = self._token.get_real_name()
-        else:
-            if name in self.alias2token:
-                return self.alias2token[name].table
-            return name
 
         if name is None:
             raise SQLDecodeError
 
-        if self.alias2token and name in self.alias2token:
-            return self.alias2token[name].table
-        return name
+        alias2token = self.token_alias and self.token_alias.alias2token
+        try:
+            return alias2token[name].table
+        except (KeyError, TypeError):
+            return name
 
     @property
     def column(self):
@@ -162,7 +174,7 @@ class SQLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        lhs = SQLToken(self._token.left, self.alias2token)
+        lhs = SQLToken(self._token.left, self.token_alias)
         return lhs.table
 
     @property
@@ -170,7 +182,7 @@ class SQLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        lhs = SQLToken(self._token.left, self.alias2token)
+        lhs = SQLToken(self._token.left, self.token_alias)
         return lhs.column
 
     @property
@@ -178,7 +190,7 @@ class SQLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        rhs = SQLToken(self._token.right, self.alias2token)
+        rhs = SQLToken(self._token.right, self.token_alias)
         return rhs.table
 
     @property
@@ -186,7 +198,7 @@ class SQLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        rhs = SQLToken(self._token.right, self.alias2token)
+        rhs = SQLToken(self._token.right, self.token_alias)
         return rhs.column
 
     @property
@@ -194,7 +206,7 @@ class SQLToken:
         if not isinstance(self._token, Comparison):
             raise SQLDecodeError
 
-        lhs = SQLToken(self._token.left, self.alias2token)
+        lhs = SQLToken(self._token.left, self.token_alias)
         return lhs.column
 
     @property
