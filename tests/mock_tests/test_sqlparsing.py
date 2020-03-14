@@ -651,7 +651,10 @@ class TestQueryFunctions(MockQuery):
         self.sql = f'SELECT MIN({t1c1}) AS "m__min1", MAX({t1c2}) AS "m__max1"' \
             f' FROM "table1"'
 
-        pipeline = [{'$group': {'_id': None, 'm__min1': {'$min': '$col1'}, 'm__max1': {'$max': '$col2'}}}]
+        pipeline = [
+            {'$group': {'_id': None, 'm__min1': {'$min': '$col1'}, 'm__max1': {'$max': '$col2'}}},
+            {'$project': {'_id': False, 'm__min1': True, 'm__max1': True}}
+        ]
         return_value = [{'m__min1': 1, 'm__max1': 2}]
         ans = [(1, 2)]
         self.aggregate_mock(pipeline, return_value, ans)
@@ -661,10 +664,11 @@ class TestQueryCount(MockQuery):
 
     def test_pattern1(self):
         self.sql = 'SELECT COUNT(*) AS "__count" FROM "table"'
-        pipeline = [{
-            '$count': '_count'
-        }]
-        return_value = [{'_count': 1}]
+        pipeline = [
+            {'$group': {'_id': None, '__count': {'$sum': 1}}},
+            {'$project': {'_id': False, '__count': True}}
+        ]
+        return_value = [{'__count': 1}]
         ans = [(1,)]
         self.aggregate_mock(pipeline, return_value, ans)
 
