@@ -946,6 +946,7 @@ class TestQueryGroupBy(MockQuery):
         ]
         self.aggregate_mock(pipeline, return_value, ans)
 
+    @skip
     def test_pattern3(self):
         """
         SELECT "timezones_session"."id", "timezones_session"."name", MIN("timezones_sessionevent"."dt") AS "dt" FROM "timezones_session" LEFT OUTER JOIN "timezones_sessionevent" ON ("timezones_session"."id" = "timezones_sessionevent"."session_id") GROUP BY "timezones_session"."id", "timezones_session"."name" HAVING MIN("timezones_sessionevent"."dt") < %(0)s
