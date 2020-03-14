@@ -28,6 +28,7 @@ from .converters import (
     SetConverter, AggOrderConverter, DistinctConverter, NestedInQueryConverter, GroupbyConverter, OffsetConverter,
     AggOffsetConverter, HavingConverter)
 
+from djongo import base
 logger = getLogger(__name__)
 
 
@@ -52,7 +53,7 @@ class CountWildcardFunc:
 
 class TokenAlias:
     def __init__(self):
-        self.alias2token: typing.Dict[str, typing.Any] = {}
+        self.alias2token: typing.Dict[str,SQLToken] = {}
         self.token2alias: typing.Dict[SQLToken, str] = {}
 
 
@@ -60,7 +61,7 @@ class BaseQuery:
     def __init__(
             self,
             db: Database,
-            connection_properties: 'djongo.base.DjongoClient',
+            connection_properties: 'base.DjongoClient',
             statement: Statement,
             params: list
 
@@ -176,13 +177,6 @@ class SelectQuery(DQLQuery):
                 yield (doc['_const'],)
             return
 
-        elif self.selected_columns.return_count:
-            if not cursor.alive:
-                yield (0,)
-                return
-            for doc in cursor:
-                yield (doc['_count'],)
-            return
         for doc in cursor:
             yield self._align_results(doc)
         return
@@ -204,7 +198,6 @@ class SelectQuery(DQLQuery):
             or self.distinct
             or self.groupby
             or self.selected_columns.return_const
-            or self.selected_columns.return_count
             or self.selected_columns.has_func
         )
 
@@ -241,17 +234,14 @@ class SelectQuery(DQLQuery):
             self.limit.__class__ = AggLimitConverter
             pipeline.append(self.limit.to_mongo())
 
-        if (
-            not (
-                self.distinct
-                or self.groupby
-            )
-            and self.selected_columns
-        ):
+        if self._needs_column_selection():
             self.selected_columns.__class__ = AggColumnSelectConverter
-            pipeline.append(self.selected_columns.to_mongo())
+            pipeline.extend(self.selected_columns.to_mongo())
 
         return pipeline
+
+    def _needs_column_selection(self):
+        return not(self.distinct or self.groupby) and self.selected_columns
 
     def _get_cursor(self):
         if self._needs_aggregation():
@@ -757,27 +747,23 @@ class DeleteQuery(DMLQuery):
     def __init__(self, *args):
         self.result = None
         self.kw = None
-        self.collection = None
         super().__init__(*args)
 
     def parse(self):
-        sm = self.statement
+        statement = SQLStatement(self.statement)
         self.kw = kw = {'filter': {}}
-
-        tok_id, tok = sm.token_next(2)
-        sql_token = SQLToken(tok, None)
-        self.collection = sql_token.table
-
+        statement.skip(2)
+        sql_token = SQLToken(statement.next(), None)
         self.left_table = sql_token.table
 
-        tok_id, tok = sm.token_next(tok_id)
-        if tok_id and isinstance(tok, Where):
-            where = WhereConverter(self, tok_id)
+        tok = statement.next()
+        if isinstance(tok, Where):
+            where = WhereConverter(self, statement)
             kw.update(where.to_mongo())
 
     def execute(self):
         db_con = self.db
-        self.result = db_con[self.collection].delete_many(**self.kw)
+        self.result = db_con[self.left_table].delete_many(**self.kw)
         logger.debug('delete_many: {}'.format(self.result.deleted_count))
 
     def count(self):
@@ -987,13 +973,14 @@ class Query:
             logger.debug('Not supported {}'.format(sm))
 
     def _drop(self, sm):
-        tok_id, tok = sm.next(0)
+        statement = SQLStatement(sm)
+        tok = statement.next()
         if tok.match(tokens.Keyword, 'DATABASE'):
-            tok_id, tok = sm.next(tok_id)
+            tok = statement.next()
             db_name = tok.get_name()
             self.cli_con.drop_database(db_name)
         elif tok.match(tokens.Keyword, 'TABLE'):
-            tok_id, tok = sm.next(tok_id)
+            tok = statement.next()
             table_name = tok.get_name()
             self.db.drop_collection(table_name)
         else:

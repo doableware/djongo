@@ -3,7 +3,8 @@ from collections import OrderedDict
 from sqlparse import tokens, parse as sqlparse
 from sqlparse.sql import Identifier, IdentifierList, Parenthesis, Function, Comparison, Where
 
-from . import query, SQLFunc, SQLStatement
+from . import query, SQLStatement
+from .functions import SQLFunc
 
 from .operators import WhereOp
 from . import SQLDecodeError, SQLToken
@@ -14,7 +15,7 @@ class Converter:
             self,
             query: typing.Union[
                 'query.SelectQuery',
-                'query.Query'
+                'query.BaseQuery'
             ],
             statement: SQLStatement
     ):
@@ -34,7 +35,6 @@ class ColumnSelectConverter(Converter):
     def __init__(self, query_ref, statement):
         self.select_all = False
         self.return_const = None
-        self.return_count = False
         self.has_func = False
         self.num_columns = 0
 
@@ -68,11 +68,8 @@ class ColumnSelectConverter(Converter):
 
         elif isinstance(tok[0], Function):
             self.has_func = True
-            func = SQLFunc(tok, self.query.token_alias)
-            if func.func == 'COUNT' and not func.column:
-                self.return_count = True
-            else:
-                self.sql_tokens.append(func)
+            func = SQLFunc(tok, self.query, self.query.token_alias)
+            self.sql_tokens.append(func)
 
         else:
             sql = SQLToken(tok, self.query.token_alias)
@@ -93,33 +90,47 @@ class AggColumnSelectConverter(ColumnSelectConverter):
         if self.return_const is not None:
             project['_const'] = {'$literal': self.return_const}
 
-        elif self.return_count:
-            return {'$count': '_count'}
+        elif self.has_func:
+            # A SELECT func without groupby clause still needs a groupby
+            # in MongoDB
+            return self._using_group_by()
 
         else:
-            if self.has_func:
-                # A SELECT func without groupby clause still needs a groupby
-                # in MongoDB
-                return self._group_by_null()
-
             for selected in self.sql_tokens:
                 if selected.table == self.query.left_table:
                     project[selected.column] = True
                 else:
-                    project[selected.table + '.' + selected.column] = True
+                    project[f'{selected.table}.{selected.column}'] = True
 
-        return {'$project': project}
+        return [{'$project': project}]
 
-    def _group_by_null(self):
+    def _using_group_by(self):
         group = {
             '_id': None
         }
-        for func in self.sql_tokens:
-            if not isinstance(func, SQLFunc):
-                raise SQLDecodeError
-            group[func.alias] = func.to_mongo(self.query)
+        project = {
+            '_id': False
+        }
+        for selected in self.sql_tokens:
+            if isinstance(selected, SQLFunc):
+                group[selected.alias] = selected.to_mongo()
+                project[selected.alias] = True
+            else:
+                if selected.table == self.query.left_table:
+                    project[selected.column] = True
+                else:
+                    project[f'{selected.table}.{selected.column}'] = True
 
-        return {'$group': group}
+        pipeline = [
+            {
+                '$group': group
+            },
+            {
+                '$project': project
+            }
+        ]
+
+        return pipeline
 
 
 class FromConverter(Converter):
@@ -547,7 +558,7 @@ class GroupbyConverter(Converter, _Tokens2Id):
                         = f'_id.{selected.table}.{selected.column}'
             else:
                 project[selected.alias] = True
-                group[selected.alias] = selected.to_mongo(self.query)
+                group[selected.alias] = selected.to_mongo()
 
         pipeline = [
             {
