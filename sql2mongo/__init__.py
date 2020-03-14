@@ -3,8 +3,10 @@ import typing
 
 from pymongo import ASCENDING, DESCENDING
 from sqlparse import tokens, parse as sqlparse
-from sqlparse.sql import Token, Identifier, Comparison, Parenthesis, IdentifierList, Statement, Function
-
+from sqlparse.sql import (
+    Token, Identifier, Comparison,
+    Parenthesis, IdentifierList,
+    Statement, Function)
 
 djongo_access_url = 'https://www.patreon.com/nesdis'
 _printed_features = set()
@@ -36,79 +38,11 @@ def print_warn(feature=None, message=None):
         _printed_features.add(feature)
 
 
-class SQLFunc:
-
-    def __init__(self, token: Token, alias2token=None):
-        self._token = token
-
-        try:
-            self._iden = SQLToken(token[0].get_parameters()[0], alias2token)
-        except IndexError:
-            if token[0].get_name() == 'COUNT':
-                self._iden = None
-            else:
-                raise
-
-        self.alias2token: typing.Dict[str, SQLToken] = alias2token
-
-    def __repr__(self):
-        return f'{type(self._token)}: {self._token}'
-
-    @property
-    def alias(self):
-        return self._token.get_alias()
-
-    @property
-    def table(self):
-        return self._iden.table if self._iden else None
-
-    @property
-    def column(self):
-        return self._iden.column if self._iden else None
-
-    @property
-    def func(self):
-        return self._token[0].get_name()
-
-    def to_mongo(self, query):
-        if self.table == query.left_table:
-            field = self.column
-        else:
-            field = f'{self.table}.{self.column}'
-
-        if self.func == 'COUNT':
-            if not self.column:
-                return {'$sum': 1}
-
-            else:
-                return {
-                    '$sum': {
-                        '$cond': {
-                            'if': {
-                                '$gt': ['$' + field, None]
-                            },
-                            'then': 1,
-                            'else': 0
-                        }
-                    }
-                }
-        elif self.func == 'MIN':
-            return {'$min': '$' + field}
-        elif self.func == 'MAX':
-            return {'$max': '$' + field}
-        elif self.func == 'SUM':
-            return {'$sum': '$' + field}
-        elif self.func == 'AVG':
-            return {'$avg': '$' + field}
-        else:
-            raise SQLDecodeError
-
-
 class SQLToken:
 
     def __init__(self, token: Token, token_alias=None):
         self._token = token
-        self.token_alias: query.TokenAlias = token_alias
+        self.token_alias: 'query.TokenAlias' = token_alias
 
     def __hash__(self):
         return hash(self._token.value)
@@ -302,4 +236,3 @@ class SQLStatement:
 
 # Fixes some circular import issues
 from . import query
-from . import converters
