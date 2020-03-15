@@ -17,6 +17,7 @@ TEST_DIR = os.path.join(
     'tests')
 
 django_version = None
+db_type = None
 
 PARSER_ARGS = {
     '--start-index': {
@@ -28,6 +29,11 @@ PARSER_ARGS = {
         'default': '21',
         'type': str,
         'dest': 'django_version'
+    },
+    '--db-type': {
+        'default': 'mongodb',
+        'type': str,
+        'dest': 'db_type'
     },
     '--run-currently-passing': {
         'action': 'store_true',
@@ -49,16 +55,24 @@ PARSER_ARGS = {
 }
 
 DEFAULT_TESTRUNNER_ARGS = {
-    'settings': '--settings=test_mongodb',
     'failfast': '--failfast',
-    'parallel': '--parallel'
+    'parallel': '--parallel=1'
+}
+
+SETTINGS_FILE = {
+    'mongodb': '--settings=test_mongodb',
+    'sqlite': '--settings=test_sqlite',
 }
 
 
 def check_settings():
-    if not os.path.isfile(os.path.join(TEST_DIR, 'test_mongodb.py')):
-        settings_path = os.path.join(MANAGE_DIR, 'settings', 'test_mongodb.py')
-        shutil.copy(settings_path, TEST_DIR)
+    settings_folder = os.path.join(MANAGE_DIR, 'settings', 'test_mongodb.py')
+    test_folder = os.path.join(TEST_DIR, 'test_mongodb.py')
+    shutil.copyfile(settings_folder, test_folder)
+
+    settings_folder = os.path.join(MANAGE_DIR, 'settings', 'test_sqlite.py')
+    test_folder = os.path.join(TEST_DIR, 'test_sqlite.py')
+    shutil.copyfile(settings_folder, test_folder)
 
 
 def get_django_parser():
@@ -87,6 +101,7 @@ def build_args(args: list, parsed_args):
                 or getattr(parsed_args, option) is None):
             uargs.append(DEFAULT_TESTRUNNER_ARGS[option])
 
+    uargs.append(SETTINGS_FILE[db_type])
     path = os.path.join(TEST_DIR, 'runtests.py')
     return [path, 'test_name'] + uargs
 
@@ -111,7 +126,7 @@ def get_tests_list():
     file_contents = get_file_contents()
 
     try:
-        test_list = file_contents[django_version]
+        test_list = file_contents[django_version][db_type]
     except KeyError:
         test_list = {
             'all_tests': [],
@@ -122,7 +137,7 @@ def get_tests_list():
 
 def dump_test_list(test_list):
     file_contents = get_file_contents()
-    file_contents[django_version] = test_list
+    file_contents[django_version][db_type] = test_list
 
     with open(os.path.join(MANAGE_DIR, 'tests_list.json'), 'w') as fp:
         json.dump(file_contents, fp)
@@ -213,6 +228,7 @@ if __name__ == '__main__':
     parser = get_parser()
     parsed = parser.parse_args()
     django_version = 'v' + parsed.django_version
+    db_type = parsed.db_type
 
     TEST_DIR = os.path.join(
         DJANGO_TESTS_ROOT,
