@@ -7,7 +7,8 @@ logger = getLogger(__name__)
 class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
 
     sql_create_index = "ALTER TABLE %(table)s ADD CONSTRAINT %(name)s INDEX (%(columns)s)%(extra)s"
-    sql_delete_index = "DROP INDEX %(name)s ON %(table)s"
+    sql_delete_index = "ALTER TABLE %(table)s DROP CONSTRAINT %(name)s INDEX"
+    sql_delete_index2 = "DROP INDEX %(name)s ON %(table)s"
 
     def quote_value(self, value):
         raise NotImplementedError()

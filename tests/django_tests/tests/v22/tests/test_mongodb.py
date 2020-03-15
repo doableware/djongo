@@ -16,7 +16,23 @@ DATABASES = {
     'default': {
         'ENGINE': 'djongo',
         'NAME': 'test1',
-        'ENFORCE_SCHEMA': True
+        'ENFORCE_SCHEMA': True,
+        'LOGGING': {
+            'version': 1,
+            'loggers': {
+                'djongo': {
+                    'level': 'INFO',
+                    'propogate': False,
+                    'handlers': ['console']
+                }
+            },
+            'handlers': {
+                'console': {
+                    'class': 'logging.StreamHandler',
+                    'level': 'DEBUG',
+                }
+            }
+        }
     },
     'other': {
         'ENGINE': 'djongo',
@@ -31,3 +47,5 @@ SECRET_KEY = "django_tests_secret_key"
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.MD5PasswordHasher',
 ]
+
+DEBUG = False

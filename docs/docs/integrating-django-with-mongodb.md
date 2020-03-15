@@ -13,20 +13,14 @@ The `settings.py` supports (but is not limited to) the following  options:
             'ENGINE': 'djongo',
             'ENFORCE_SCHEMA': True,
             'LOGGING': {
+                'version': 1,
                 'loggers': {
                     'djongo': {
                         'level': 'DEBUG',
-                        'propogate': False,
-                        'handlers': ['console']
+                        'propogate': False,                        
                     }
                 },
-                'handlers': {
-                    'console': {
-                        'class': 'logging.StreamHandler',
-                        'level': 'DEBUG'
-                    }
-                }
-            },
+             },
             'NAME': 'your-db-name',
             'CLIENT': {
                 'host': 'host-name or ip address',
