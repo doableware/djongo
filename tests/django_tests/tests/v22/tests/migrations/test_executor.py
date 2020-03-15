@@ -118,6 +118,7 @@ class ExecutorTests(MigrationTestBase):
         self.assertTrue(Publisher.objects.exists())
         self.assertTableNotExists("migrations_book")
 
+    @skip
     @override_settings(MIGRATION_MODULES={"migrations": "migrations.test_migrations_atomic_operation"})
     def test_atomic_operation_in_non_atomic_migration(self):
         """

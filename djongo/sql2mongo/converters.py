@@ -3,7 +3,8 @@ from collections import OrderedDict
 from sqlparse import tokens, parse as sqlparse
 from sqlparse.sql import Identifier, IdentifierList, Parenthesis, Function, Comparison, Where
 
-from . import query, SQLFunc
+from . import query, SQLStatement
+from .functions import SQLFunc
 
 from .operators import WhereOp
 from . import SQLDecodeError, SQLToken
@@ -12,14 +13,14 @@ from . import SQLDecodeError, SQLToken
 class Converter:
     def __init__(
             self,
-            query_ref: typing.Union[
+            query: typing.Union[
                 'query.SelectQuery',
-                'query.Query'
+                'query.BaseQuery'
             ],
-            begin_id: int
+            statement: SQLStatement
     ):
-        self.query = query_ref
-        self.begin_id = begin_id
+        self.query = query
+        self.statement = statement
         self.end_id = None
         self.parse()
 
@@ -31,20 +32,19 @@ class Converter:
 
 
 class ColumnSelectConverter(Converter):
-    def __init__(self, query_ref, begin_id):
+    def __init__(self, query_ref, statement):
         self.select_all = False
         self.return_const = None
-        self.return_count = False
         self.has_func = False
         self.num_columns = 0
 
         self.sql_tokens: typing.List[
             typing.Union[SQLToken, SQLFunc]
         ]= []
-        super().__init__(query_ref, begin_id)
+        super().__init__(query_ref, statement)
 
     def parse(self):
-        tok_id, tok = self.query.statement.token_next(self.begin_id)
+        tok = self.statement.next()
         if tok.value == '*':
             self.select_all = True
 
@@ -56,13 +56,10 @@ class ColumnSelectConverter(Converter):
                 self._identifier(atok)
 
         elif tok.match(tokens.Keyword, 'DISTINCT'):
-            self.query.distinct = DistinctConverter(self.query, tok_id)
-            tok_id = self.query.distinct.end_id
+            self.query.distinct = DistinctConverter(self.query, self.statement)
 
         else:
             raise SQLDecodeError
-
-        self.end_id = tok_id
 
     def _identifier(self, tok):
         if isinstance(tok[0], Parenthesis):
@@ -71,17 +68,15 @@ class ColumnSelectConverter(Converter):
 
         elif isinstance(tok[0], Function):
             self.has_func = True
-            func = SQLFunc(tok, self.query.alias2op)
-            if func.func == 'COUNT' and not func.column:
-                self.return_count = True
-            else:
-                self.sql_tokens.append(func)
+            func = SQLFunc(tok, self.query, self.query.token_alias)
+            self.sql_tokens.append(func)
 
         else:
-            sql = SQLToken(tok, self.query.alias2op)
+            sql = SQLToken(tok, self.query.token_alias)
             self.sql_tokens.append(sql)
             if sql.alias:
-                self.query.alias2op[sql.alias] = sql
+                self.query.token_alias.alias2token[sql.alias] = sql
+                self.query.token_alias.token2alias[sql] = sql.alias
 
     def to_mongo(self):
         doc = [selected.column for selected in self.sql_tokens]
@@ -95,43 +90,58 @@ class AggColumnSelectConverter(ColumnSelectConverter):
         if self.return_const is not None:
             project['_const'] = {'$literal': self.return_const}
 
-        elif self.return_count:
-            return {'$count': '_count'}
+        elif self.has_func:
+            # A SELECT func without groupby clause still needs a groupby
+            # in MongoDB
+            return self._using_group_by()
 
         else:
-            if self.has_func:
-                # A SELECT func without groupby clause still needs a groupby
-                # in MongoDB
-                return self._group_by_null()
-
             for selected in self.sql_tokens:
                 if selected.table == self.query.left_table:
                     project[selected.column] = True
                 else:
-                    project[selected.table + '.' + selected.column] = True
+                    project[f'{selected.table}.{selected.column}'] = True
 
-        return {'$project': project}
+        return [{'$project': project}]
 
-    def _group_by_null(self):
+    def _using_group_by(self):
         group = {
             '_id': None
         }
-        for func in self.sql_tokens:
-            if not isinstance(func, SQLFunc):
-                raise SQLDecodeError
-            group[func.alias] = func.to_mongo(self.query)
+        project = {
+            '_id': False
+        }
+        for selected in self.sql_tokens:
+            if isinstance(selected, SQLFunc):
+                group[selected.alias] = selected.to_mongo()
+                project[selected.alias] = True
+            else:
+                if selected.table == self.query.left_table:
+                    project[selected.column] = True
+                else:
+                    project[f'{selected.table}.{selected.column}'] = True
 
-        return {'$group': group}
+        pipeline = [
+            {
+                '$group': group
+            },
+            {
+                '$project': project
+            }
+        ]
+
+        return pipeline
+
 
 class FromConverter(Converter):
 
     def parse(self):
-        sm = self.query.statement
-        self.end_id, tok = sm.token_next(self.begin_id)
-        sql = SQLToken(tok, self.query.alias2op)
+        tok = self.statement.next()
+        sql = SQLToken(tok, self.query.token_alias)
         self.query.left_table = sql.table
         if sql.alias:
-            self.query.alias2op[sql.alias] = sql
+            self.query.token_alias.alias2token[sql.alias] = sql
+            self.query.token_alias.token2alias[sql] = sql.alias
 
 
 class WhereConverter(Converter):
@@ -139,15 +149,12 @@ class WhereConverter(Converter):
     op: 'WhereOp' = None
 
     def parse(self):
-        sm = self.query.statement
-        tok = sm[self.begin_id]
+        tok = self.statement.current_token
         self.op = WhereOp(
-            token_id=0,
-            token=tok,
+            statement=SQLStatement(tok),
             query=self.query,
             params=self.query.params
         )
-        self.end_id = self.begin_id
 
     def to_mongo(self):
         return {'filter': self.op.to_mongo()}
@@ -168,22 +175,22 @@ class JoinConverter(Converter):
         super().__init__(*args)
 
     def parse(self):
-        sm = self.query.statement
-        tok_id, tok = sm.token_next(self.begin_id)
-        sql = SQLToken(tok, self.query.alias2op)
+        tok = self.statement.next()
+        sql = SQLToken(tok, self.query.token_alias)
         right_table = self.right_table = sql.table
         if sql.alias:
-            self.query.alias2op[sql.alias] = sql
+            self.query.token_alias.alias2token[sql.alias] = sql
+            self.query.token_alias.token2alias[sql] = sql.alias
 
-        tok_id, tok = sm.token_next(tok_id)
+        tok = self.statement.next()
         if not tok.match(tokens.Keyword, 'ON'):
             raise SQLDecodeError
 
-        tok_id, tok = sm.token_next(tok_id)
+        tok = self.statement.next()
         if isinstance(tok, Parenthesis):
             tok = tok[1]
 
-        sql = SQLToken(tok, self.query.alias2op)
+        sql = SQLToken(tok, self.query.token_alias)
         if right_table == sql.right_table:
             self.left_table = sql.left_table
             self.left_column = sql.left_column
@@ -192,8 +199,6 @@ class JoinConverter(Converter):
             self.left_table = sql.right_table
             self.left_column = sql.right_column
             self.right_column = sql.left_column
-
-        self.end_id = tok_id
 
     def _lookup(self):
         if self.left_table == self.query.left_table:
@@ -281,8 +286,7 @@ class LimitConverter(Converter):
         super().__init__(*args)
 
     def parse(self):
-        sm = self.query.statement
-        self.end_id, tok = sm.token_next(self.begin_id)
+        tok = self.statement.next()
         self.limit = int(tok.value)
 
     def to_mongo(self):
@@ -301,20 +305,21 @@ class OrderConverter(Converter):
         super().__init__(*args)
 
     def parse(self):
-        sm = self.query.statement
-        tok_id, tok = sm.token_next(self.begin_id)
+        tok = self.statement.next()
         if not tok.match(tokens.Keyword, 'BY'):
             raise SQLDecodeError
 
-        tok_id, tok = sm.token_next(tok_id)
+        tok = self.statement.next()
         if isinstance(tok, Identifier):
-            self.columns.append((SQLToken(tok[0], self.query.alias2op), SQLToken(tok, self.query.alias2op)))
+            self.columns.append(
+                (SQLToken(tok[0], self.query.token_alias),
+                 SQLToken(tok, self.query.token_alias)))
 
         elif isinstance(tok, IdentifierList):
             for _id in tok.get_identifiers():
-                self.columns.append((SQLToken(_id[0], self.query.alias2op), SQLToken(_id, self.query.alias2op)))
-
-        self.end_id = tok_id
+                self.columns.append(
+                    (SQLToken(_id[0], self.query.token_alias),
+                     SQLToken(_id, self.query.token_alias)))
 
     def to_mongo(self):
         sort = [(tok.column, tok_ord.order) for tok, tok_ord in self.columns]
@@ -328,19 +333,17 @@ class SetConverter(Converter):
         super().__init__(*args)
 
     def parse(self):
-        tok_id, tok = self.query.statement.token_next(self.begin_id)
+        tok = self.statement.next()
 
         if isinstance(tok, Comparison):
-            self.sql_tokens.append(SQLToken(tok, self.query.alias2op))
+            self.sql_tokens.append(SQLToken(tok, self.query.token_alias))
 
         elif isinstance(tok, IdentifierList):
             for atok in tok.get_identifiers():
-                self.sql_tokens.append((SQLToken(atok, self.query.alias2op)))
+                self.sql_tokens.append((SQLToken(atok, self.query.token_alias)))
 
         else:
             raise SQLDecodeError
-
-        self.end_id = tok_id
 
     def to_mongo(self):
         return {
@@ -370,20 +373,29 @@ class AggOrderConverter(OrderConverter):
         return {'$sort': sort}
 
 
-class DistinctConverter(ColumnSelectConverter):
+class _Tokens2Id:
+
+    def to_id(self):
+        _id = {}
+        for iden in self.sql_tokens:
+            if iden.table == self.query.left_table:
+                _id[iden.column] = f'${iden.column}'
+            else:
+                mongo_field = f'${iden.table}.{iden.column}'
+                try:
+                    _id[iden.table][iden.column] = mongo_field
+                except KeyError:
+                    _id[iden.table] = {iden.column: mongo_field}
+
+        return _id
+
+
+class DistinctConverter(ColumnSelectConverter, _Tokens2Id):
     def __init__(self, *args):
         super().__init__(*args)
 
     def to_mongo(self):
-        _id = {}
-        for selected in self.sql_tokens:
-            if selected.table == self.query.left_table:
-                _id[selected.column] = '$'+selected.column
-            else:
-                try:
-                    _id[selected.table][selected.column] = '$'+selected.table+'.'+selected.column
-                except KeyError:
-                    _id[selected.table] = {selected.column: '$'+selected.table+'.'+selected.column}
+        _id = self.to_id()
 
         return [
             {
@@ -410,7 +422,7 @@ class NestedInQueryConverter(Converter):
         from .query import SelectQuery
 
         self._in_query = SelectQuery(
-            self.query.db_ref,
+            self.query.db,
             self.query.connection_properties,
             sqlparse(self._token.value[1:-1])[0],
             self.query.params
@@ -441,6 +453,22 @@ class NestedInQueryConverter(Converter):
 
 
 class HavingConverter(Converter):
+    nested_op: 'WhereOp' = None
+    op: 'WhereOp' = None
+
+    def parse(self):
+        tok = self.statement[:3]
+        self.op = WhereOp(
+            statement=tok,
+            query=self.query,
+            params=self.query.params
+        )
+        self.statement.skip(2)
+
+    def to_mongo(self):
+        return {'filter': self.op.to_mongo()}
+
+class HavingConverter2(Converter):
 
     def parse(self):
         i = self.query.statement.value.find('HAVING')
@@ -451,11 +479,10 @@ class HavingConverter(Converter):
         having = sqlparse(having)[0][0]
         if not isinstance(having, Where):
             raise SQLDecodeError
-        self.end_id = self.begin_id + len(having.tokens) - 1
+        self.statement.skip(len(having.tokens) - 1)
         self._sub(having)
         having.value = str(having)
         self.op = WhereOp(
-            token_id=0,
             token=having,
             query=self.query,
             params=self.query.params
@@ -495,36 +522,26 @@ class HavingConverter(Converter):
                         raise SQLDecodeError
 
 
-class GroupbyConverter(Converter):
+class GroupbyConverter(Converter, _Tokens2Id):
 
     def __init__(self, *args):
         self.sql_tokens: typing.List[SQLToken] = []
         super().__init__(*args)
 
     def parse(self):
-        tok_id, tok = self.query.statement.token_next(self.begin_id)
+        tok = self.statement.next()
         if not tok.match(tokens.Keyword, 'BY'):
             raise SQLDecodeError
-        tok_id, tok = self.query.statement.token_next(tok_id)
+        tok = self.statement.next()
 
         if isinstance(tok, Identifier):
-            self.sql_tokens.append(SQLToken(tok, self.query.alias2op))
+            self.sql_tokens.append(SQLToken(tok, self.query.token_alias))
         else:
             for atok in tok.get_identifiers():
-                self.sql_tokens.append(SQLToken(atok, self.query.alias2op))
-
-        self.end_id = tok_id
+                self.sql_tokens.append(SQLToken(atok, self.query.token_alias))
 
     def to_mongo(self):
-        _id = {}
-        for iden in self.sql_tokens:
-            if iden.table == self.query.left_table:
-                _id[iden.column] = '$' + iden.column
-            else:
-                try:
-                    _id[iden.table][iden.column] = '$' + iden.table + '.' + iden.column
-                except KeyError:
-                    _id[iden.table] = {iden.column: '$' + iden.table + '.' + iden.column}
+        _id = self.to_id()
 
         group = {
             '_id': _id
@@ -541,7 +558,7 @@ class GroupbyConverter(Converter):
                         = f'_id.{selected.table}.{selected.column}'
             else:
                 project[selected.alias] = True
-                group[selected.alias] = selected.to_mongo(self.query)
+                group[selected.alias] = selected.to_mongo()
 
         pipeline = [
             {
@@ -555,15 +572,13 @@ class GroupbyConverter(Converter):
         return pipeline
 
 
-
 class OffsetConverter(Converter):
     def __init__(self, *args):
         self.offset: int = None
         super().__init__(*args)
 
     def parse(self):
-        sm = self.query.statement
-        self.end_id, tok = sm.token_next(self.begin_id)
+        tok = self.statement.next()
         self.offset = int(tok.value)
 
     def to_mongo(self):

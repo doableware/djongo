@@ -8,7 +8,7 @@ from django.db.migrations.exceptions import (
 from django.db.migrations.loader import MigrationLoader
 from django.db.migrations.recorder import MigrationRecorder
 from django.test import TestCase, modify_settings, override_settings
-
+from unittest import skip
 from .test_base import MigrationTestBase
 
 
@@ -236,6 +236,7 @@ class LoaderTests(TestCase):
         self.assertEqual(migration_loader.migrated_apps, set())
         self.assertEqual(migration_loader.unmigrated_apps, {'migrated_app'})
 
+    @skip
     @override_settings(MIGRATION_MODULES={"migrations": "migrations.test_migrations_squashed"})
     def test_loading_squashed(self):
         "Tests loading a squashed migration"
