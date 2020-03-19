@@ -12,12 +12,6 @@ install:
   - sudo apt-get install -y mongodb-org
   - pip install tox
 
-
-env:
-  - TOX_ENV=py26-django_stable
-  - TOX_ENV=py37-django_stable
-  - TOX_ENV=py38-django_stable
-
 services: mongodb
 
 before_script:
