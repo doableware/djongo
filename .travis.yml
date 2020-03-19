@@ -13,17 +13,10 @@ install:
   - pip install tox
 
 
-matrix:
-  include:
-    - python: 3.6
-      env:
-       - TOX_ENV=py26-django_stable
-    - python: 3.7
-      env:
-        - TOX_ENV=py37-django_stable
-    - python: 3.8
-      env:
-        - TOX_ENV=py38-django_stable
+env:
+  - TOX_ENV=py26-django_stable
+  - TOX_ENV=py37-django_stable
+  - TOX_ENV=py38-django_stable
 
 services: mongodb
 
