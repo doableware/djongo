@@ -2,10 +2,13 @@ import re
 import typing
 from itertools import chain
 
-from sqlparse import tokens, parse as sqlparse
-from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier
+from sqlparse import tokens
+from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier, Function
 
-from . import SQLDecodeError, SQLToken, SQLStatement
+from . import SQLDecodeError
+from .sql_tokens import SQLToken, SQLStatement
+from . import query
+
 
 def re_index(value: str):
     match = re.match(r'%\(([0-9]+)\)s', value, flags=re.IGNORECASE)
@@ -70,12 +73,8 @@ class _BinaryOp(_Op):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        identifier = SQLToken(self.statement.prev_token, self.query.token_alias)
-
-        if identifier.table == self.left_table:
-            self._field = identifier.column
-        else:
-            self._field = '{}.{}'.format(identifier.table, identifier.column)
+        identifier = SQLToken.token2sql(self.statement.prev_token, self.query)
+        self._field = identifier.field
 
     def negate(self):
         raise SQLDecodeError('Negating IN/NOT IN not supported')
@@ -98,7 +97,7 @@ class _InNotInOp(_BinaryOp):
             self.query.nested_query = NestedInQueryConverter(token, self.query, 0)
             return
 
-        for index in SQLToken(token, self.query.token_alias):
+        for index in SQLToken.token2sql(token, self.query):
             if index is not None:
                 self._in.append(self.params[index])
             else:
@@ -501,8 +500,7 @@ class CmpOp(_Op):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self._identifier = SQLToken(self.statement.left, self.query.token_alias)
+        self._identifier = SQLToken.token2sql(self.statement.left, self.query)
 
         if isinstance(self.statement.right, Identifier):
             raise SQLDecodeError('Join using WHERE not supported')
@@ -523,10 +521,7 @@ class CmpOp(_Op):
         pass
 
     def to_mongo(self):
-        if self._identifier.table == self.left_table:
-            field = self._identifier.column
-        else:
-            field = '{}.{}'.format(self._identifier.table, self._identifier.column)
+        field = self._identifier.field
         if self._field_ext:
             field += '.' + self._field_ext
 

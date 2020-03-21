@@ -1,3 +1,4 @@
+import sys
 import typing
 from collections import OrderedDict
 from logging import getLogger, DEBUG, StreamHandler
@@ -200,7 +201,11 @@ logger = getLogger('djongo')
 logger.setLevel(DEBUG)
 logger.addHandler(StreamHandler())
 
+
 class MockTest(TestCase):
+    sql: str
+    base_sql: str
+    conn = None
 
     @classmethod
     def setUpClass(cls):
@@ -688,14 +693,14 @@ class TestQueryCount(MockQuery):
             },
             {
                 '$project': {
-                    '_const': {
+                    'a': {
                         '$literal': 1
                     }
                 }
             },
 
         ]
-        return_value = [{'_const': 1}]
+        return_value = [{'a': 1}]
         ans = [(1,)]
         self.aggregate_mock(pipeline, return_value, ans)
 
@@ -708,14 +713,14 @@ class TestQueryCount(MockQuery):
             },
             {
                 '$project': {
-                    '_const': {
+                    'a': {
                         '$literal': 1
                     }
                 }
             },
 
         ]
-        return_value = [{'_const': 1}]
+        return_value = [{'a': 1}]
         ans = [(1,)]
         self.aggregate_mock(pipeline, return_value, ans)
 
@@ -786,6 +791,14 @@ class TestQueryInsert(MockQuery):
         self.conn.reset_mock()
 
     def test_pattern4(self):
+        io = self.conn.__getitem__.return_value.insert_many
+        sql = 'INSERT INTO "table" ("col1", "col2") VALUES (%s, %s) VALUES (%s, %s)'
+        params = [1, 2, 4, 5]
+        result = Query(self.db, self.conn, self.conn_prop, sql, params)
+        io.assert_any_call([{'col1': 1, 'col2': 2}, {'col1': 4, 'col2': 5}], ordered=False)
+        self.conn.reset_mock()
+
+    def test_pattern5(self):
         """INSERT INTO "m2m_regress_post" ("id") VALUES (DEFAULT)"""
 
         io = self.conn.__getitem__.return_value.insert_many
@@ -799,11 +812,11 @@ class TestQueryInsert(MockQuery):
             }
         }
         self.conn.__getitem__().find_one_and_update.return_value = auto
-
         result = Query(self.db, self.conn, self.conn_prop, sql, params)
-
         io.assert_any_call([{'id': 1}], ordered=False)
         self.conn.reset_mock()
+
+
 
 
 class TestQueryStatement(MockQuery):
@@ -818,7 +831,6 @@ class TestQueryStatement(MockQuery):
 
         self.sql = 'UPDATE "table" SET "col" = %s WHERE "table"."col1" = %s'
         self.params = [1, 2]
-        self.it
         self.find_mock()
         find = self.find
 
@@ -887,7 +899,7 @@ class TestQueryGroupBy(MockQuery):
     def test_pattern2(self):
         self.sql = (
             f'SELECT {t1c1}, {t1c2}, MIN({t2c2}) AS "dt" '
-            f'FROM table1 '
+            f'FROM "table1" '
             f'LEFT OUTER JOIN "table2" ON ({t1c1} = {t2c2})'
             f' GROUP BY {t1c1}, {t2c2} '
             f'ORDER BY "dt" ASC'
@@ -946,7 +958,6 @@ class TestQueryGroupBy(MockQuery):
         ]
         self.aggregate_mock(pipeline, return_value, ans)
 
-    @skip
     def test_pattern3(self):
         """
         SELECT "timezones_session"."id", "timezones_session"."name", MIN("timezones_sessionevent"."dt") AS "dt" FROM "timezones_session" LEFT OUTER JOIN "timezones_sessionevent" ON ("timezones_session"."id" = "timezones_sessionevent"."session_id") GROUP BY "timezones_session"."id", "timezones_session"."name" HAVING MIN("timezones_sessionevent"."dt") < %(0)s
