@@ -667,7 +667,7 @@ class TestQueryFunctions(MockQuery):
 
 class TestQueryCount(MockQuery):
 
-    def test_pattern1(self):
+    def test_count_all(self):
         self.sql = 'SELECT COUNT(*) AS "__count" FROM "table"'
         pipeline = [
             {'$group': {'_id': None, '__count': {'$sum': 1}}},
@@ -677,7 +677,7 @@ class TestQueryCount(MockQuery):
         ans = [(1,)]
         self.aggregate_mock(pipeline, return_value, ans)
 
-    def test_pattern3(self):
+    def test_const(self):
         self.sql = 'SELECT (1) AS "a" FROM "table1" WHERE "table1"."col2" = %s LIMIT 1'
         self.params = [2]
         pipeline = [
@@ -704,7 +704,7 @@ class TestQueryCount(MockQuery):
         ans = [(1,)]
         self.aggregate_mock(pipeline, return_value, ans)
 
-    def test_pattern2(self):
+    def test_const_simple(self):
         self.sql = 'SELECT (1) AS "a" FROM "table1" LIMIT 1'
         self.params = [2]
         pipeline = [
@@ -1024,6 +1024,16 @@ class TestQueryGroupBy(MockQuery):
             }
         ]
         self.aggregate_mock(pipeline, return_value, ans)
+
+    @skip
+    def test_pattern4(self):
+        self.sql = (
+            f'SELECT {t1c1}, {t1c2}, COUNT({t2c2}) AS "dt" '
+            f'FROM "table1" '
+            f'LEFT OUTER JOIN "table2" ON ({t1c1} = {t2c2})'
+            f' GROUP BY {t1c1}, {t2c2} '
+            f'ORDER BY "dt" ASC'
+        )
 
 
 class TestQuerySpecial(MockQuery):
