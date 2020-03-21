@@ -21,7 +21,7 @@ class SQLFunc(AliasableToken):
                          'SimpleFunc']:
         func = token[0].get_name()
         if func == 'COUNT':
-            return CountFunc(token, query)
+            return CountFunc.token2sql(token, query)
         else:
             return SimpleFunc(token, query)
 
@@ -38,34 +38,7 @@ class SQLFunc(AliasableToken):
         raise NotImplementedError
 
 
-class CountFunc(SQLFunc):
-
-    def __init__(self, *args):
-        super().__init__(*args)
-
-    def to_mongo(self):
-        try:
-            iden = SQLToken.token2sql(
-                self._token[0].get_parameters()[0],
-                self.query)
-        except IndexError:
-            return {'$sum': 1}
-
-        field = f'${iden.field}'
-        return {
-            '$sum': {
-                '$cond': {
-                    'if': {
-                        '$gt': [field, None]
-                    },
-                    'then': 1,
-                    'else': 0
-                }
-            }
-        }
-
-
-class SimpleFunc(SQLFunc):
+class SingleParamFunc(SQLFunc):
     def __init__(self, *args):
         super().__init__(*args)
         if self.alias:
@@ -89,12 +62,64 @@ class SimpleFunc(SQLFunc):
         alias = self.query.token_alias.token2alias[self]
         return alias
 
+    @abc.abstractmethod
+    def to_mongo(self) -> dict:
+        raise NotImplementedError
+
+
+class CountFunc(SQLFunc):
+
+    @staticmethod
+    def token2sql(token: Token,
+                  query: 'query_module.BaseQuery'
+                  ) -> U['CountFuncAll',
+                         'CountFuncSingle']:
+        try:
+            token[0].get_parameters()[0]
+        except IndexError:
+            return CountFuncAll(token, query)
+        else:
+            return CountFuncSingle(token, query)
+
+    @abc.abstractmethod
+    def to_mongo(self):
+        raise NotImplementedError
+
+
+class CountFuncAll(CountFunc):
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
+    def to_mongo(self):
+        return {'$sum': 1}
+
+
+class CountFuncSingle(CountFunc, SingleParamFunc):
+
+    def to_mongo(self):
+        field = f'${self.iden.field}'
+        return {
+            '$sum': {
+                '$cond': {
+                    'if': {
+                        '$gt': [field, None]
+                    },
+                    'then': 1,
+                    'else': 0
+                }
+            }
+        }
+
+
+class SimpleFunc(SingleParamFunc):
+
     def to_mongo(self):
         field = f'${self.iden.field}'
         if self.func in ('MIN', 'MAX', 'SUM',
                          'AVG'):
             return {f'${self.func.lower()}': field}
         else:
-            raise SQLDecodeError
+            raise SQLDecodeError(f'Unsupported func: {self.func}')
 
 
