@@ -46,6 +46,18 @@ class Entry(models.Model):
     objects = models.DjongoManager()
 ```
 
+```python
+e = Entry.objects.create(
+    headline='h1',
+    blog=Blog(
+        name='b1',
+        tagline='t1'
+    )
+)
+g = Entry.objects.get(headline='h1')
+assert e == g
+```
+
 ## Embedded Form
 
 While creating a Form for [the ModelForm](https://docs.djangoproject.com/en/dev/topics/forms/modelforms/), the embedded forms **are automatically generated**. Multiple embedded forms get automatically generated when the Model contains an array of embedded models. However, you can still override this by specifying the `model_form_class` argument in the `EmbeddedField`.
@@ -220,7 +232,6 @@ It is a good practice to **define embedded models as abstract models** and this 
 
 ```python
 from djongo import models
-from django import forms
 
 class Blog(models.Model):
     name = models.CharField(max_length=100)
