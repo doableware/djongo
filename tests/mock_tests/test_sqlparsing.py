@@ -3,7 +3,7 @@ import typing
 from collections import OrderedDict
 from logging import getLogger, DEBUG, StreamHandler
 from unittest import TestCase, mock, skip
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, call
 
 from pymongo.command_cursor import CommandCursor
 from pymongo.cursor import Cursor
@@ -225,7 +225,7 @@ class MockTest(TestCase):
 class VoidQuery(MockTest):
 
     def exe(self):
-        result = Query(self.conn, self.db, self.conn_prop, self.sql, self.params)
+        self.result = result = Query(self.conn, self.db, self.conn_prop, self.sql, self.params)
         self.assertRaises(StopIteration, result.next)
 
 
@@ -253,95 +253,145 @@ class TestCreateTable(VoidQuery):
                     '"col2" integer NOT NULL)'
                     )
         self.exe()
-        self.db['table'].create_index.assert_called_with(
-            'col1', unique=True, name='__primary_key__'
-        )
+        calls = [
+            call('table'),
+            call().create_index(
+                'col1', unique=True, name='__primary_key__'
+            ),
+            call('__schema__'),
+            call().update_one(
+                filter={'name': 'table'},
+                update={'$set': {'fields.col1': {'type_code': 'integer'},
+                                 'fields.col2': {'type_code': 'integer'}}},
+                upsert=True
+            )
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
         self.print_warn.assert_called()
 
     def test_notNull_with_autoInc(self):
         self.sql = self.base_sql + '("col1" integer NOT NULL AUTOINCREMENT)'
         self.exe()
-        self.db['__schema__'].update_one.assert_called_with(
-            filter={
-                'name': 'table'
-            },
-            update={
-                '$set': {
-                    'auto.seq': 0,
-                    'fields.col1': {'type_code': 'integer'}
+        calls = [
+            call('__schema__'),
+            call().update_one(
+                filter={
+                    'name': 'table'
                 },
-                '$push': {
-                    'auto.field_names':
-                        {'$each': ['col1']}
-                }
-            },
-            upsert=True
-        )
+                update={
+                    '$set': {
+                        'auto.seq': 0,
+                        'fields.col1': {'type_code': 'integer'}
+                    },
+                    '$push': {
+                        'auto.field_names':
+                            {'$each': ['col1']}
+                    }
+                },
+                upsert=True
+            ),
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
         self.print_warn.assert_called()
 
     def test_notNull_with_unique(self):
         self.sql = self.base_sql + '("col1" integer NOT NULL UNIQUE)'
         self.exe()
-        self.db['table'].create_index.assert_called_with(
-            'col1', unique=True
-        )
+        calls = [
+            call('table'),
+            call().create_index(
+                 'col1', unique=True
+            ),
+            call('__schema__'),
+            call().update_one(
+                filter={'name': 'table'},
+                update={'$set': {
+                    'fields.col1': {'type_code': 'integer'}}},
+                upsert=True
+            )
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
         self.print_warn.assert_called()
 
     def test_pk_with_autoInc(self):
         self.sql = self.base_sql + '("col1" integer PRIMARY KEY AUTOINCREMENT)'
         self.exe()
-        self.db['table'].create_index.assert_called_with(
-            'col1', unique=True, name='__primary_key__'
-        )
-        self.db['__schema__'].update_one.assert_called_with(
-            filter={
-                'name': 'table'
-            },
-            update={
-                '$set': {
-                    'auto.seq': 0,
-                    'fields.col1': {'type_code': 'integer'}
+        calls = [
+            call('table'),
+            call().create_index(
+                'col1', unique=True, name='__primary_key__'
+            ),
+            call('__schema__'),
+            call().update_one(
+                filter={
+                    'name': 'table'
                 },
-                '$push': {
-                    'auto.field_names':
-                        {'$each': ['col1']}
-                }
-            },
-            upsert=True
-        )
+                update={
+                    '$set': {
+                        'auto.seq': 0,
+                        'fields.col1': {'type_code': 'integer'}
+                    },
+                    '$push': {
+                        'auto.field_names':
+                            {'$each': ['col1']}
+                    }
+                },
+                upsert=True
+            )
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
 
     def test_pk_with_unique(self):
         self.sql = self.base_sql + '("col1" integer PRIMARY KEY UNIQUE)'
         self.exe()
-        self.db['table'].create_index.assert_any_call(
-            'col1', unique=True, name='__primary_key__'
-        )
-        self.db['table'].create_index.assert_any_call(
-            'col1', unique=True
-        )
+        calls = [
+            call('table'),
+            call().create_index(
+                'col1', unique=True, name='__primary_key__'
+            ),
+            call('table'),
+            call().create_index(
+                'col1', unique=True
+            ),
+            call('__schema__'),
+            call().update_one(
+                filter={'name': 'table'},
+                update={'$set': {
+                    'fields.col1': {
+                        'type_code': 'integer'}}},
+                upsert=True
+            )
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
 
     def test_autoInc_with_unique(self):
         self.sql = self.base_sql + '("col1" integer AUTOINCREMENT UNIQUE)'
         self.exe()
-        self.db['table'].create_index.assert_called_with(
-            'col1', unique=True
-        )
-        self.db['__schema__'].update_one.assert_called_with(
-            filter= {
-                'name': 'table'
-            },
-            update= {
-                '$set': {
-                    'auto.seq': 0,
-                    'fields.col1': {'type_code': 'integer'}
+
+        calls = [
+            call('table'),
+            call().create_index(
+                'col1', unique=True
+            ),
+            call('__schema__'),
+            call().update_one(
+                filter={
+                    'name': 'table'
                 },
-                '$push': {
-                    'auto.field_names':
-                        {'$each': ['col1']}
-                }
-            },
-            upsert=True
-        )
+                update={
+                    '$set': {
+                        'auto.seq': 0,
+                        'fields.col1': {'type_code': 'integer'}
+                    },
+                    '$push': {
+                        'auto.field_names':
+                            {'$each': ['col1']}
+                    }
+                },
+                upsert=True
+            )
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
 
 
 class AlterTable(VoidQuery):
@@ -357,13 +407,46 @@ class TestAlterTable(AlterTable):
     def test_flush(self):
         self.sql = self.base_sql + 'FLUSH'
         self.exe()
+        self.db['table'].delete_many.assert_called_with({})
 
-    def test_alter_column_drop_notNull(self):
+
+class AlterTableAlterColumn(AlterTable):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.base_sql += 'ALTER COLUMN "c" '
+
+
+class TestAlterTableAlterColumn(AlterTableAlterColumn):
+
+    def test_drop_notNull(self):
         self.sql = (self.base_sql +
-                    'ALTER COLUMN "c" '
                     'DROP NOT NULL')
         self.exe()
         self.print_warn.assert_called()
+        self.assertFalse(self.db.mock_calls)
+
+    def test_drop_default(self):
+        self.sql = (self.base_sql +
+                    'DROP DEFAULT')
+        self.exe()
+        self.print_warn.assert_called()
+        self.assertFalse(self.db.mock_calls)
+
+    def test_set_default(self):
+        self.sql = (self.base_sql +
+                    'SET DEFAULT %s')
+        self.exe()
+        self.print_warn.assert_called()
+        self.assertFalse(self.db.mock_calls)
+
+    def test_set_notNull(self):
+        self.sql = (self.base_sql +
+                    'SET NOT NULL')
+        self.exe()
+        self.print_warn.assert_called()
+        self.assertFalse(self.db.mock_calls)
 
 
 class TestAlterTableDrop(AlterTable):
@@ -378,6 +461,21 @@ class TestAlterTableDrop(AlterTable):
                     'COLUMN "c" '
                     'CASCADE')
         self.exe()
+
+        calls = [
+            call('table'),
+            call().update(
+                {},
+                {'$unset': {'c': ''}},
+                multi=True
+            ),
+            call('__schema__'),
+            call().update(
+                {'name': 'table'},
+                {'$unset': {'fields.c': ''}}
+            )
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
         self.print_warn.assert_called()
 
     def test_drop_constraint(self):
@@ -385,6 +483,11 @@ class TestAlterTableDrop(AlterTable):
                     'CONSTRAINT "c" '
                     'INDEX')
         self.exe()
+        calls = [
+            call('table'),
+            call().drop_index('c')
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
 
 
 class TestAlterTableRename(AlterTable):
@@ -396,13 +499,27 @@ class TestAlterTableRename(AlterTable):
 
     def test_rename_column(self):
         self.sql = (self.base_sql +
-                    'COLUMN TO "c" ')
+                    'COLUMN "b" TO "c" ')
         self.exe()
+        calls = [
+            call('table'),
+            call().update(
+                {},
+                {'$rename': {'b': 'c'}},
+                multi=True
+            )
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
 
     def test_rename_table(self):
         self.sql = (self.base_sql +
                     'TO "table2" ')
         self.exe()
+        calls = [
+            call('table'),
+            call().rename('table2')
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
 
 
 class AlterTableAdd(AlterTable):
@@ -426,11 +543,33 @@ class TestAlterTableAddColumn(AlterTableAdd):
         self.params = [2]
         self.exe()
         self.print_warn.assert_called()
+        calls = [
+            call('table'),
+
+            call().update({'$or': [
+                {'c': {'$exists': False}},
+                {'c': None}]},
+                {'$set': {'c': 2}},
+                multi=True),
+
+            call('__schema__'),
+
+            call().update({'name': 'table'},
+                          {'$set': {
+                              'fields.c': {
+                                  'type_code': 'integer'}}})
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
 
     def test_notNull_with_unique(self):
         self.sql = (self.base_sql +
                     'integer UNIQUE NOT NULL ')
         self.exe()
+        calls = [
+            call('table'),
+            call().create_index([('c', 1)], name='c', unique=True),
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
         self.print_warn.assert_called()
 
 
@@ -446,24 +585,206 @@ class TestAlterTableAddConstraint(AlterTableAdd):
                     'FOREIGN KEY ("fk") ' +
                     'REFERENCES "r" ("id")')
         self.exe()
+        self.assertFalse(self.db.mock_calls)
         self.print_warn.assert_called()
 
     def test_index(self):
         self.sql = self.base_sql + 'INDEX ("a", "b")'
         self.exe()
+        calls = [
+            call('table'),
+            call().create_index([('a', 1), ('b', 1)], name='c'),
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
 
     def test_unique(self):
         self.sql = self.base_sql + 'UNIQUE ("a", "b")'
         self.exe()
+        calls = [
+            call('table'),
+            call().create_index([('a', 1), ('b', 1)], name='c', unique=True),
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
 
 
-class TestVoidQueryDelete(VoidQuery):
+class TestDrop(VoidQuery):
 
-    @skip
-    def test_delete(self):
-        self.sql = 'DELETE FROM "table" WHERE "table"."col" IN (%s)'
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.base_sql = 'DROP '
+
+    def test_drop_db(self):
+        self.sql = self.base_sql + 'DATABASE "db"'
+        self.exe()
+        self.conn.drop_database.assert_called_with('db')
+
+    def test_drop_table(self):
+        self.sql = self.base_sql + 'TABLE "table"'
+        self.exe()
+        self.db.drop_collection.assert_called_with('table')
 
 
+class TestDelete(VoidQuery):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.base_sql = 'DELETE FROM "table" '
+
+    def test_where(self):
+        self.sql = self.base_sql + 'WHERE "table"."col" < %s'
+        self.params = [1]
+        self.exe()
+        calls = [
+            call()('table'),
+            call().delete_many(filter={'col': {'$lt': 1}})
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
+
+
+class TestInsert(VoidQuery):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.base_sql = 'INSERT INTO "table" '
+
+    def test_single(self):
+        self.sql = (self.base_sql +
+                    '("col") VALUES (%s)')
+        self.params = [1]
+        self.exe()
+        calls = [
+            call()('__schema__'),
+            call().find_one_and_update({
+                'name': 'table',
+                'auto': {'$exists': True}},
+                {'$inc': {'auto.seq': 1}},
+                return_document=True),
+
+            call()('table'),
+            call().insert_many(
+                [{'col': 1}],
+                ordered=False)
+        ]
+        self.db.__getitem__.assert_has_calls(calls, any_order=True)
+
+    def test_many(self):
+        self.sql = (self.base_sql +
+                    '("col") VALUES (%s) VALUES (%s)')
+        self.params = [1, 2]
+        self.exe()
+        calls = [
+            call()('__schema__'),
+            call().find_one_and_update({
+                'name': 'table',
+                'auto': {'$exists': True}},
+                {'$inc': {'auto.seq': 2}},
+                return_document=True),
+
+            call()('table'),
+            call().insert_many(
+                [{'col': 1}, {'col': 2}],
+                ordered=False)
+        ]
+        self.db.__getitem__.assert_has_calls(calls, any_order=True)
+
+    def test_multi(self):
+        self.sql = (self.base_sql +
+                    '("col1", "col2") VALUES (%s, %s) VALUES (%s, %s)')
+        self.params = [1, 2, 3, 4]
+        self.db['table'].insert_many.return_value.inserted_ids = [1, 2]
+        self.db['__schema__'].find_one_and_update.return_value = None
+        self.exe()
+        calls = [
+            call()('__schema__'),
+            call().find_one_and_update({
+                'name': 'table',
+                'auto': {'$exists': True}},
+                {'$inc': {'auto.seq': 2}},
+                return_document=True),
+
+            call()('table'),
+            call().insert_many(
+                [{'col1': 1, 'col2': 2},
+                 {'col1': 3, 'col2': 4}],
+                ordered=False)
+        ]
+        self.db.__getitem__.assert_has_calls(calls, any_order=True)
+        self.assertEqual(self.result.last_row_id, 2)
+
+    def test_null(self):
+        self.sql = (self.base_sql +
+                    '("col1", "col2") VALUES (%s, %s) VALUES (%s, NULL)')
+        self.params = [1, 2, 3]
+        self.db['table'].insert_many.return_value.inserted_ids = [1, 2]
+        self.db['__schema__'].find_one_and_update.return_value = None
+        self.exe()
+        calls = [
+            call()('__schema__'),
+            call().find_one_and_update({
+                'name': 'table',
+                'auto': {'$exists': True}},
+                {'$inc': {'auto.seq': 2}},
+                return_document=True),
+
+            call()('table'),
+            call().insert_many(
+                [{'col1': 1, 'col2': 2},
+                 {'col1': 3, 'col2': None}],
+                ordered=False)
+        ]
+        self.db.__getitem__.assert_has_calls(calls, any_order=True)
+        self.assertEqual(self.result.last_row_id, 2)
+
+    def test_default(self):
+        self.sql = (self.base_sql +
+                    '("col1", "col2") VALUES (DEFAULT, %s) VALUES (%s, DEFAULT)')
+        self.params = [1, 2, 3]
+        self.db['table'].insert_many.return_value.inserted_ids = [1, 2]
+        self.db['__schema__'].find_one_and_update.return_value = None
+        self.exe()
+        calls = [
+            call()('__schema__'),
+            call().find_one_and_update({
+                'name': 'table',
+                'auto': {'$exists': True}},
+                {'$inc': {'auto.seq': 2}},
+                return_document=True),
+
+            call()('table'),
+            call().insert_many(
+                [{'col1': 1, 'col2': 2},
+                 {'col1': 3, 'col2': None}],
+                ordered=False)
+        ]
+        self.db.__getitem__.assert_has_calls(calls, any_order=True)
+        self.assertEqual(self.result.last_row_id, 2)
+
+
+class TestUpdate(VoidQuery):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.base_sql = 'UPDATE "table" SET '
+
+    def test_condition(self):
+        self.sql = (self.base_sql +
+                    '"col1" = %s, "col2" = NULL WHERE "table"."col1" = %s')
+        self.params = [1, 2]
+        self.exe()
+        calls = [
+            call()('table'),
+            call().update_many(
+                filter={'col1': {'$eq': 2}},
+                update={'$set': {'col1': 1, 'col2': None}})
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
+
+
+@skip
 class TestVoidQueryAlter(VoidQuery):
     """
     sql_command: ALTER TABLE "dummy_arrayentry" ADD COLUMN "n_comments" integer DEFAULT %(0)s NOT NULL
@@ -510,7 +831,6 @@ class TestVoidQueryAlter(VoidQuery):
         )
         self.exe()
 
-
     def test_pattern6(self):
         self.sql = (
             'ALTER TABLE "table" '
@@ -529,11 +849,12 @@ class TestVoidQueryAlter(VoidQuery):
         self.exe()
 
 
-class MockQuery(MockTest):
+class ResultQuery(MockTest):
     """
     Test the sql2mongo module with all possible SQL statements and check
     if the conversion to a query document is happening properly.
     """
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -568,7 +889,7 @@ class MockQuery(MockTest):
         self.conn.reset_mock()
 
 
-class TestQueryDistinct(MockQuery):
+class TestQueryDistinct(ResultQuery):
 
     def test_pattern1(self):
         return_value = [{'col1': 'a'}, {'col1': 'b'}]
@@ -650,11 +971,11 @@ class TestQueryDistinct(MockQuery):
         self.aggregate_mock(pipeline, return_value, ans)
 
 
-class TestQueryFunctions(MockQuery):
+class TestQueryFunctions(ResultQuery):
 
     def test_pattern1(self):
         self.sql = f'SELECT MIN({t1c1}) AS "m__min1", MAX({t1c2}) AS "m__max1"' \
-            f' FROM "table1"'
+                   f' FROM "table1"'
 
         pipeline = [
             {'$group': {'_id': None, 'm__min1': {'$min': '$col1'}, 'm__max1': {'$max': '$col2'}}},
@@ -665,7 +986,7 @@ class TestQueryFunctions(MockQuery):
         self.aggregate_mock(pipeline, return_value, ans)
 
 
-class TestQueryCount(MockQuery):
+class TestQueryCount(ResultQuery):
 
     def test_count_all(self):
         self.sql = 'SELECT COUNT(*) AS "__count" FROM "table"'
@@ -724,8 +1045,8 @@ class TestQueryCount(MockQuery):
         ans = [(1,)]
         self.aggregate_mock(pipeline, return_value, ans)
 
-
-class TestQueryUpdate(MockQuery):
+@skip
+class TestQueryUpdate(ResultQuery):
 
     def test_pattern1(self):
         um = self.conn.__getitem__.return_value.update_many
@@ -761,7 +1082,7 @@ class TestQueryUpdate(MockQuery):
         self.conn.reset_mock()
 
 
-class TestQueryInsert(MockQuery):
+class TestQueryInsert(ResultQuery):
 
     def test_pattern1(self):
         io = self.conn.__getitem__.return_value.insert_many
@@ -817,9 +1138,7 @@ class TestQueryInsert(MockQuery):
         self.conn.reset_mock()
 
 
-
-
-class TestQueryStatement(MockQuery):
+class TestQueryStatement(ResultQuery):
 
     @skip
     def test_pattern1(self):
@@ -835,7 +1154,7 @@ class TestQueryStatement(MockQuery):
         find = self.find
 
 
-class TestQueryGroupBy(MockQuery):
+class TestQueryGroupBy(ResultQuery):
 
     def test_pattern1(self):
         self.sql = (
@@ -1036,7 +1355,7 @@ class TestQueryGroupBy(MockQuery):
         )
 
 
-class TestQuerySpecial(MockQuery):
+class TestQuerySpecial(ResultQuery):
 
     @skip
     def test_pattern1(self):
@@ -1065,14 +1384,12 @@ class TestQuerySpecial(MockQuery):
         self.conn.reset_mock()
 
 
-class TestQueryIn(MockQuery):
+class TestQueryIn(ResultQuery):
 
     def test_pattern1(self):
         conn = self.conn
         find = self.find
         iter = self.iter
-
-
 
         # Testing for different combinations 'where' syntax
         # from here on
@@ -1101,7 +1418,6 @@ class TestQueryIn(MockQuery):
         find = self.find
         iter = self.iter
 
-
         # Testing for different combinations 'where' syntax
         # from here on
 
@@ -1129,7 +1445,6 @@ class TestQueryIn(MockQuery):
         find = self.find
         iter = self.iter
 
-
         # Testing for different combinations 'where' syntax
         # from here on
 
@@ -1154,7 +1469,6 @@ class TestQueryIn(MockQuery):
         conn = self.conn
         find = self.find
         iter = self.iter
-
 
         # Testing for different combinations 'where' syntax
         # from here on
@@ -1181,7 +1495,6 @@ class TestQueryIn(MockQuery):
         find = self.find
         iter = self.iter
 
-
         # Testing for different combinations 'where' syntax
         # from here on
 
@@ -1207,7 +1520,6 @@ class TestQueryIn(MockQuery):
         find = self.find
         iter = self.iter
 
-
         # Testing for different combinations 'where' syntax
         # from here on
 
@@ -1229,7 +1541,7 @@ class TestQueryIn(MockQuery):
         conn.reset_mock()
 
 
-class TestQueryJoin(MockQuery):
+class TestQueryJoin(ResultQuery):
 
     def test_pattern1(self):
         """
@@ -1332,7 +1644,7 @@ class TestQueryJoin(MockQuery):
         self.aggregate_mock(pipeline, return_value, ans)
 
 
-class TestQueryNestedIn(MockQuery):
+class TestQueryNestedIn(ResultQuery):
 
     def test_pattern1(self):
         return_value = [{'col1': 'a1', 'col2': 'a2'}, {'col1': 'b1', 'col2': 'b2'}]
@@ -1477,7 +1789,7 @@ class TestQueryNestedIn(MockQuery):
         self.aggregate_mock(pipeline, return_value, ans)
 
 
-class TestQueryNot(MockQuery):
+class TestQueryNot(ResultQuery):
 
     def test_pattern1(self):
         conn = self.conn
@@ -1563,7 +1875,7 @@ class TestQueryNot(MockQuery):
         conn.reset_mock()
 
 
-class TestQueryBasic(MockQuery):
+class TestQueryBasic(ResultQuery):
 
     def test_pattern1(self):
         conn = self.conn
@@ -1626,7 +1938,7 @@ class TestQueryBasic(MockQuery):
         conn.reset_mock()
 
 
-class TestQueryAndOr(MockQuery):
+class TestQueryAndOr(ResultQuery):
 
     def test_pattern1(self):
         conn = self.conn
@@ -1950,11 +2262,11 @@ class TestDatabaseWrapper(TestCase):
         host = MagicMock()
 
         settings_dict = {
-                'NAME': name,
-                'CLIENT': {
-                    'port': port,
-                    'host': host
-                },
+            'NAME': name,
+            'CLIENT': {
+                'port': port,
+                'host': host
+            },
         }
 
         wrapper = DatabaseWrapper(settings_dict)
