@@ -441,7 +441,7 @@ class AlterQuery(DDLQuery):
             elif tok.match(tokens.Keyword, 'RENAME'):
                 self._rename(statement)
             else:
-                raise NotImplementedError
+                raise SQLDecodeError(f'Unknown token {tok}')
 
     def _rename(self, statement: SQLStatement):
         column = False
@@ -483,14 +483,20 @@ class AlterQuery(DDLQuery):
         for tok in statement:
             if isinstance(tok, Identifier):
                 pass
+            elif tok.ttype == tokens.Name.Placeholder:
+                pass
             elif tok.match(tokens.Keyword, (
                     'NOT NULL', 'NULL', 'COLUMN',
             )):
                 feature += str(tok) + ' '
             elif tok.match(tokens.Keyword.DDL, 'DROP'):
                 feature += 'DROP '
+            elif tok.match(tokens.Keyword, 'DEFAULT'):
+                feature += 'DEFAULT '
+            elif tok.match(tokens.Keyword, 'SET'):
+                feature += 'SET '
             else:
-                raise NotImplementedError
+                raise SQLDecodeError(f'Unknown token: {tok}')
 
         print_warn(feature)
 
