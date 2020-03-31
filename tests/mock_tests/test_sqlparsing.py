@@ -1,4 +1,3 @@
-import sys
 import typing
 from collections import OrderedDict
 from logging import getLogger, DEBUG, StreamHandler
@@ -195,6 +194,7 @@ t3c1 = '"table3"."col1"'
 t3c2 = '"table3"."col2"'
 t4c1 = '"table4"."col1"'
 t4c2 = '"table4"."col2"'
+t1 = '"table1"'
 where = 'SELECT "table1"."col1" FROM "table1" WHERE'
 
 logger = getLogger('djongo')
@@ -203,9 +203,9 @@ logger.addHandler(StreamHandler())
 
 
 class MockTest(TestCase):
-    sql: str
-    base_sql: str
     conn = None
+    db = None
+    sql: str
 
     @classmethod
     def setUpClass(cls):
@@ -223,6 +223,7 @@ class MockTest(TestCase):
 
 
 class VoidQuery(MockTest):
+    base_sql: str
 
     def exe(self):
         self.result = result = Query(self.conn, self.db, self.conn_prop, self.sql, self.params)
@@ -250,8 +251,7 @@ class TestCreateTable(VoidQuery):
     def test_notNull_with_pk(self):
         self.sql = (self.base_sql +
                     '("col1" integer NOT NULL PRIMARY KEY, '
-                    '"col2" integer NOT NULL)'
-                    )
+                    '"col2" integer NOT NULL)')
         self.exe()
         calls = [
             call('table'),
@@ -738,10 +738,11 @@ class TestInsert(VoidQuery):
         self.db.__getitem__.assert_has_calls(calls, any_order=True)
         self.assertEqual(self.result.last_row_id, 2)
 
+    @skip('Insert Default not implemented yet')
     def test_default(self):
         self.sql = (self.base_sql +
                     '("col1", "col2") VALUES (DEFAULT, %s) VALUES (%s, DEFAULT)')
-        self.params = [1, 2, 3]
+        self.params = [1, 2]
         self.db['table'].insert_many.return_value.inserted_ids = [1, 2]
         self.db['__schema__'].find_one_and_update.return_value = None
         self.exe()
@@ -755,8 +756,8 @@ class TestInsert(VoidQuery):
 
             call()('table'),
             call().insert_many(
-                [{'col1': 1, 'col2': 2},
-                 {'col1': 3, 'col2': None}],
+                [{'col1': 'DEFAULT', 'col2': 1},
+                 {'col1': 2, 'col2': 'DEFAULT'}],
                 ordered=False)
         ]
         self.db.__getitem__.assert_has_calls(calls, any_order=True)
@@ -859,34 +860,52 @@ class ResultQuery(MockTest):
     def setUpClass(cls):
         super().setUpClass()
 
-        cls.find = cls.conn.__getitem__().find
+        cls.find = cls.db.__getitem__().find
         cursor = mock.MagicMock()
         cursor.__class__ = Cursor
         cls.iter = cursor.__iter__
         cls.find.return_value = cursor
 
-        cls.aggregate = cls.conn.__getitem__().aggregate
+        cls.aggregate = cls.db.__getitem__().aggregate
         cursor = mock.MagicMock()
         cursor.__class__ = CommandCursor
         cls.agg_iter = cursor.__iter__
         cls.aggregate.return_value = cursor
 
-    def find_mock(self):
-        result = Query(self.db, self.conn, self.conn_prop, self.sql, self.params)
+    def eval_find(self):
+        result = Query(self.conn, self.db, self.conn_prop, self.sql, self.params)
+        self.db.reset_mock()
         return list(result)
 
     def aggregate_mock(self, pipeline, iter_return_value=None, ans=None):
         if iter_return_value:
             self.agg_iter.return_value = iter_return_value
 
-        result = list(Query(self.db, self.conn, self.conn_prop, self.sql, self.params))
+        result = list(Query(self.conn, self.db, self.conn_prop, self.sql, self.params))
         self.aggregate.assert_any_call(pipeline)
         if self.params == self.params_none:
             self.params.assert_not_called()
         if ans:
             self.assertEqual(result, ans)
 
-        self.conn.reset_mock()
+        self.db.reset_mock()
+
+
+class SelectQuery(ResultQuery):
+    part1 = ''
+    part2 = ''
+
+    @property
+    def sql(self) -> str:
+        return f'SELECT {self.part1} {self.part2}'
+
+
+class TestOrderByAsc(SelectQuery):
+    part1 = f'{t1c1}, {t1c2} FROM {t1}'
+
+    def test_desc(self):
+        self.part2 = f'ORDER BY {t1c1} ASC, {t1c2} DESC'
+        print(self.sql)
 
 
 class TestQueryDistinct(ResultQuery):
@@ -1150,7 +1169,7 @@ class TestQueryStatement(ResultQuery):
 
         self.sql = 'UPDATE "table" SET "col" = %s WHERE "table"."col1" = %s'
         self.params = [1, 2]
-        self.find_mock()
+        self.eval_find()
         find = self.find
 
 
@@ -1378,7 +1397,7 @@ class TestQuerySpecial(ResultQuery):
             'projection': []
         }
         self.params = ['a', 'b']
-        ret = self.find_mock()
+        ret = self.eval_find()
         self.assertEqual(ret, [(1,)])
         self.find.assert_any_call(**find_args)
         self.conn.reset_mock()
@@ -1408,7 +1427,7 @@ class TestQueryIn(ResultQuery):
         }
         self.params = [1]
         iter.return_value = [{'_id': 'x', 'col1': 1, 'col2': 2}, {'_id': 'x', 'col1': 3, 'col2': 4}]
-        ans = self.find_mock()
+        ans = self.eval_find()
         find.assert_any_call(**find_args)
         self.assertEqual(ans, [(1, 2), (3, 4)])
         conn.reset_mock()
@@ -1436,7 +1455,7 @@ class TestQueryIn(ResultQuery):
         }
         self.params = [1]
         iter.return_value = [{'_id': 'x', 'col1': 1, 'col2': 2}, {'_id': 'x', 'col1': 3, 'col2': 4}]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -1461,7 +1480,7 @@ class TestQueryIn(ResultQuery):
             }
         }
         self.params = []
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -1486,7 +1505,7 @@ class TestQueryIn(ResultQuery):
             }
         }
         self.params = [1]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -1511,7 +1530,7 @@ class TestQueryIn(ResultQuery):
             }
         }
         self.params = [1, 2]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -1536,7 +1555,7 @@ class TestQueryIn(ResultQuery):
             }
         }
         self.params = [1]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -1810,7 +1829,7 @@ class TestQueryNot(ResultQuery):
         }
         self.params = [1]
         self.iter.return_value = [{'_id': 'x', 'col1': 1}, {'_id': 'x', 'col1': 3, }]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -1833,7 +1852,7 @@ class TestQueryNot(ResultQuery):
         }
         self.params = [1]
         self.iter.return_value = [{'_id': 'x', 'col1': 1}, {'_id': 'x', 'col1': 3, }]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -1847,7 +1866,7 @@ class TestQueryNot(ResultQuery):
         }
         self.params = []
         self.iter.return_value = [{'_id': 'x', 'col1': 1}, {'_id': 'x', 'col1': 3, }]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -1870,7 +1889,7 @@ class TestQueryNot(ResultQuery):
         }
         self.params = []
         self.iter.return_value = [{'_id': 'x', 'col1': 1}, {'_id': 'x', 'col1': 3, }]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -1893,7 +1912,7 @@ class TestQueryBasic(ResultQuery):
             }
         }
         self.params = [1]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -1913,7 +1932,7 @@ class TestQueryBasic(ResultQuery):
             }
         }
         self.params = [1]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -1933,7 +1952,7 @@ class TestQueryBasic(ResultQuery):
             }
         }
         self.params = []
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -1963,7 +1982,7 @@ class TestQueryAndOr(ResultQuery):
             ]
         }
         self.params = [1, 2]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -1990,7 +2009,7 @@ class TestQueryAndOr(ResultQuery):
             ]
         }
         self.params = [1]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -2019,7 +2038,7 @@ class TestQueryAndOr(ResultQuery):
             ]
         }
         self.params = [1, 2]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -2050,7 +2069,7 @@ class TestQueryAndOr(ResultQuery):
             ]
         }
         self.params = [1, 2]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -2081,7 +2100,7 @@ class TestQueryAndOr(ResultQuery):
             ]
         }
         self.params = [2, 1]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -2114,7 +2133,7 @@ class TestQueryAndOr(ResultQuery):
             ]
         }
         self.params = [2, 1]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -2147,7 +2166,7 @@ class TestQueryAndOr(ResultQuery):
             ]
         }
         self.params = [2, 1]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -2180,7 +2199,7 @@ class TestQueryAndOr(ResultQuery):
             ]
         }
         self.params = [2, 1]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -2222,7 +2241,7 @@ class TestQueryAndOr(ResultQuery):
             ]
         }
         self.params = [2, 1, 0]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
@@ -2238,7 +2257,7 @@ class TestQueryAndOr(ResultQuery):
         self.sql = f'{where} ({t1c1} BETWEEN %s AND %s)'
         find_args['filter'] = {'col1': {'$gte': 1, '$lte': 2}}
         self.params = [1, 2]
-        self.find_mock()
+        self.eval_find()
         find.assert_any_call(**find_args)
         conn.reset_mock()
 
