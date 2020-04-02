@@ -1,9 +1,11 @@
+import json
 import re
 import typing
 from itertools import chain
+from json import JSONDecodeError
 
 from sqlparse import tokens, parse as sqlparse
-from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier
+from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier, Function
 
 from . import SQLDecodeError, SQLToken
 from . import query
@@ -186,6 +188,13 @@ class iLikeOp(LikeOp):
         return {self._field: {
             '$regex': self._regex,
             '$options': 'i'
+        }}
+
+
+class ContainsAnyOp(_IdentifierOp):
+    def to_mongo(self):
+        return {self._field: {
+            '$in': self.rhs.to_mongo()
         }}
 
 
@@ -510,13 +519,19 @@ class CmpOp(_Op):
             raise SQLDecodeError('Join using WHERE not supported')
 
         self._operator = OPERATOR_MAP[self.token.token_next(0)[1].value]
-        index = re_index(self.token.right.value)
 
-        self._constant = self.params[index] if index is not None else None
-        if isinstance(self._constant, dict):
-            self._field_ext, self._constant = next(iter(self._constant.items()))
+        if isinstance(self.token.right, Function):
+            self._routine = RoutineOp(0, self.token.right, self.query, self.params)
+            self._constant = None
         else:
-            self._field_ext = None
+            self._routine = None
+            index = re_index(self.token.right.value)
+
+            self._constant = self.params[index] if index is not None else None
+            if isinstance(self._constant, dict):
+                self._field_ext, self._constant = next(iter(self._constant.items()))
+            else:
+                self._field_ext = None
 
     def negate(self):
         self.is_negated = True
@@ -526,6 +541,10 @@ class CmpOp(_Op):
             field = self._identifier.column
         else:
             field = '{}.{}'.format(self._identifier.table, self._identifier.column)
+
+        if self._routine:
+            return {field: self._routine.to_mongo()}
+
         if self._field_ext:
             field += '.' + self._field_ext
 
@@ -533,6 +552,55 @@ class CmpOp(_Op):
             return {field: {self._operator: self._constant}}
         else:
             return {field: {'$not': {self._operator: self._constant}}}
+
+
+class RoutineOp(_Op):
+
+    def __init__(
+            self,
+            token_id: int,
+            token: Token,
+            query: 'query.SelectQuery',
+            params: tuple = None,
+            name='ROUTINE'):
+        super().__init__(token_id, token, query, params, name)
+
+        tokens = self.token.tokens
+        if len(tokens) != 2 or not isinstance(tokens[0], Identifier) or not isinstance(tokens[1], Parenthesis):
+            # Routines should follow the grammar below
+            # ROUTINE := IDENTIFIER PARENTHESIS
+            raise SQLDecodeError
+
+        routine_name = tokens[0].value
+        index = re_index(tokens[1].tokens[1].value)
+        routine_params = self.params[index] if index is not None else None
+        self._routine = ROUTINE_MAP[routine_name](routine_params)
+
+    def negate(self):
+        raise SQLDecodeError("Negating routines not supported")
+
+    def to_mongo(self):
+        return self._routine.to_mongo()
+
+
+class Routine:
+
+    def __init__(self, params):
+        self.params = params
+
+    def to_mongo(self):
+        raise NotImplementedError
+
+
+class ListContainsAny(Routine):
+
+    def __init__(self, params):
+        super().__init__(params)
+        if not isinstance(self.params, list):
+            raise SQLDecodeError("Parameters for contains_any have to be a list: %s" % self.params)
+
+    def to_mongo(self):
+        return {'$in': self.params}
 
 
 OPERATOR_MAP = {
@@ -543,6 +611,7 @@ OPERATOR_MAP = {
     '<=': '$lte',
 }
 OPERATOR_PRECEDENCE = {
+    'ROUTINE': 9,
     'IS': 8,
     'BETWEEN': 7,
     'LIKE': 6,
@@ -552,4 +621,7 @@ OPERATOR_PRECEDENCE = {
     'AND': 2,
     'OR': 1,
     'generic': 0
+}
+ROUTINE_MAP = {
+    'LIST_CONTAINS_ANY': ListContainsAny
 }

@@ -7,6 +7,10 @@ from .fields import (
     GenericObjectIdField, DictField
 )
 
+from .lookups import (
+    ContainsAny
+)
+
 __all__ = models_all + [
     'DjongoManager', 'ListField', 'ArrayModelField',
     'EmbeddedModelField', 'ArrayReferenceField', 'ObjectIdField',
