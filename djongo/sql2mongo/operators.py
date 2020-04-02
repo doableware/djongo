@@ -511,7 +511,7 @@ class CmpOp(_Op):
 
         self._operator = OPERATOR_MAP[self.statement.token_next(0)[1].value]
 
-        if isinstance(self.token.right, Function):
+        if isinstance(self.statement.right, Function):
             self._routine = RoutineOp(0, self.statement.right, self.query, self.params)
             self._constant = None
         else:
