@@ -13,7 +13,7 @@ from pymongo import ReturnDocument
 from pymongo.command_cursor import CommandCursor
 from pymongo.cursor import Cursor as BasicCursor
 from pymongo.database import Database
-from pymongo.errors import OperationFailure, CollectionInvalid
+from pymongo.errors import OperationFailure, CollectionInvalid, PyMongoError
 from sqlparse import parse as sqlparse
 from sqlparse import tokens
 from sqlparse.sql import (
@@ -21,13 +21,14 @@ from sqlparse.sql import (
     Where, Token,
     Statement)
 
-from . import SQLDecodeError, SQLToken, MigrationError
+from . import SQLDecodeError, SQLToken, MigrationError, print_warn, SQLStatement
 from .converters import (
     ColumnSelectConverter, AggColumnSelectConverter, FromConverter, WhereConverter,
     AggWhereConverter, InnerJoinConverter, OuterJoinConverter, LimitConverter, AggLimitConverter, OrderConverter,
     SetConverter, AggOrderConverter, DistinctConverter, NestedInQueryConverter, GroupbyConverter, OffsetConverter,
     AggOffsetConverter, HavingConverter)
 
+from djongo import base
 logger = getLogger(__name__)
 
 
@@ -50,20 +51,26 @@ class CountWildcardFunc:
     alias_name: str = None
 
 
-class Query:
+class TokenAlias:
+    def __init__(self):
+        self.alias2token: typing.Dict[str,SQLToken] = {}
+        self.token2alias: typing.Dict[SQLToken, str] = {}
+
+
+class BaseQuery:
     def __init__(
             self,
-            db_ref: Database,
-            connection_properties: 'djongo.base.DjongoClient',
+            db: Database,
+            connection_properties: 'base.DjongoClient',
             statement: Statement,
             params: list
 
     ):
         self.statement = statement
-        self.db_ref = db_ref
+        self.db = db
         self.connection_properties = connection_properties
         self.params = params
-        self.alias2op: typing.Dict[str, typing.Any] = {}
+        self.token_alias = TokenAlias()
         self.nested_query: NestedInQueryConverter = None
 
         self.left_table: typing.Optional[str] = None
@@ -78,20 +85,28 @@ class Query:
     def parse(self):
         raise NotImplementedError
 
-    def count(self):
-        raise NotImplementedError
-
-
-class VoidQuery(Query):
-
     def execute(self):
         raise NotImplementedError
 
+
+class DMLQuery(BaseQuery):
+    pass
+
+
+class DDLQuery(BaseQuery):
+    pass
+
+
+class DQLQuery(BaseQuery):
+
+    def execute(self):
+        return
+
     def count(self):
-        pass
+        raise NotImplementedError
 
 
-class SelectQuery(Query):
+class SelectQuery(DQLQuery):
 
     def __init__(self, *args):
         self.selected_columns: ColumnSelectConverter = None
@@ -106,51 +121,47 @@ class SelectQuery(Query):
         self.groupby: GroupbyConverter = None
         self.having: HavingConverter = None
 
-
         self._cursor: typing.Union[BasicCursor, CommandCursor] = None
         super().__init__(*args)
 
     def parse(self):
-        tok_id = 0
-        tok = self.statement[0]
+        statement = SQLStatement(self.statement)
 
-        while tok_id is not None:
+        for tok in statement:
             if tok.match(tokens.DML, 'SELECT'):
-                c = self.selected_columns = ColumnSelectConverter(self, tok_id)
+                self.selected_columns = ColumnSelectConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'FROM'):
-                c = FromConverter(self, tok_id)
+                FromConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'LIMIT'):
-                c = self.limit = LimitConverter(self, tok_id)
+                self.limit = LimitConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'ORDER'):
-                c = self.order = OrderConverter(self, tok_id)
-            
+                self.order = OrderConverter(self, statement)
+
             elif tok.match(tokens.Keyword, 'OFFSET'):
-                c = self.offset = OffsetConverter(self, tok_id)
+                self.offset = OffsetConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'INNER JOIN'):
-                c = InnerJoinConverter(self, tok_id)
-                self.joins.append(c)
+                converter = InnerJoinConverter(self, statement)
+                self.joins.append(converter)
 
             elif tok.match(tokens.Keyword, 'LEFT OUTER JOIN'):
-                c = OuterJoinConverter(self, tok_id)
-                self.joins.append(c)
+                converter = OuterJoinConverter(self, statement)
+                self.joins.append(converter)
 
             elif tok.match(tokens.Keyword, 'GROUP'):
-                c = self.groupby = GroupbyConverter(self, tok_id)
+                self.groupby = GroupbyConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'HAVING'):
-                c = self.having = HavingConverter(self, tok_id)
+                self.having = HavingConverter(self, statement)
 
             elif isinstance(tok, Where):
-                c = self.where = WhereConverter(self, tok_id)
+                self.where = WhereConverter(self, statement)
 
             else:
-                raise SQLDecodeError
-
-            tok_id, tok = self.statement.token_next(c.end_id)
+                raise SQLDecodeError(f'Unknown keyword: {tok}')
 
     def __iter__(self):
 
@@ -166,13 +177,6 @@ class SelectQuery(Query):
                 yield (doc['_const'],)
             return
 
-        elif self.selected_columns.return_count:
-            if not cursor.alive:
-                yield (0,)
-                return
-            for doc in cursor:
-                yield (doc['_count'],)
-            return
         for doc in cursor:
             yield self._align_results(doc)
         return
@@ -194,7 +198,6 @@ class SelectQuery(Query):
             or self.distinct
             or self.groupby
             or self.selected_columns.return_const
-            or self.selected_columns.return_count
             or self.selected_columns.has_func
         )
 
@@ -231,22 +234,19 @@ class SelectQuery(Query):
             self.limit.__class__ = AggLimitConverter
             pipeline.append(self.limit.to_mongo())
 
-        if (
-            not (
-                self.distinct
-                or self.groupby
-            )
-            and self.selected_columns
-        ):
+        if self._needs_column_selection():
             self.selected_columns.__class__ = AggColumnSelectConverter
-            pipeline.append(self.selected_columns.to_mongo())
+            pipeline.extend(self.selected_columns.to_mongo())
 
         return pipeline
+
+    def _needs_column_selection(self):
+        return not(self.distinct or self.groupby) and self.selected_columns
 
     def _get_cursor(self):
         if self._needs_aggregation():
             pipeline = self._make_pipeline()
-            cur = self.db_ref[self.left_table].aggregate(pipeline)
+            cur = self.db[self.left_table].aggregate(pipeline)
             logger.debug(f'Aggregation query: {pipeline}')
         else:
             kwargs = {}
@@ -265,7 +265,7 @@ class SelectQuery(Query):
             if self.offset:
                 kwargs.update(self.offset.to_mongo())
 
-            cur = self.db_ref[self.left_table].find(**kwargs)
+            cur = self.db[self.left_table].find(**kwargs)
             logger.debug(f'Find query: {kwargs}')
 
         return cur
@@ -299,52 +299,53 @@ class SelectQuery(Query):
         return tuple(ret)
 
 
-class UpdateQuery(Query):
+class UpdateQuery(DMLQuery):
 
     def __init__(self, *args):
         self.selected_table: ColumnSelectConverter = None
         self.set_columns: SetConverter = None
         self.where: WhereConverter = None
         self.result = None
+        self.kwargs = None
         super().__init__(*args)
 
     def count(self):
         return self.result.matched_count
 
     def parse(self):
-        db = self.db_ref
-        tok_id = 0
-        tok: Token = self.statement[0]
 
-        while tok_id is not None:
+        statement = SQLStatement(self.statement)
+
+        for tok in statement:
             if tok.match(tokens.DML, 'UPDATE'):
-                c = ColumnSelectConverter(self, tok_id)
+                c = ColumnSelectConverter(self, statement)
                 self.left_table = c.sql_tokens[0].table
 
             elif tok.match(tokens.Keyword, 'SET'):
-                c = self.set_columns = SetConverter(self, tok_id)
+                c = self.set_columns = SetConverter(self, statement)
 
             elif isinstance(tok, Where):
-                c = self.where = WhereConverter(self, tok_id)
+                c = self.where = WhereConverter(self, statement)
 
             else:
                 raise SQLDecodeError
 
-            tok_id, tok = self.statement.token_next(c.end_id)
-
-        kwargs = {}
+        self.kwargs = {}
         if self.where:
-            kwargs.update(self.where.to_mongo())
+            self.kwargs.update(self.where.to_mongo())
 
-        kwargs.update(self.set_columns.to_mongo())
-        self.result = db[self.left_table].update_many(**kwargs)
+        self.kwargs.update(self.set_columns.to_mongo())
+
+    def execute(self):
+        db = self.db
+        self.result = db[self.left_table].update_many(**self.kwargs)
         logger.debug(f'update_many: {self.result.modified_count}, matched: {self.result.matched_count}')
 
 
-class InsertQuery(VoidQuery):
+class InsertQuery(DMLQuery):
     DEFAULT = object()
 
-    def __init__(self, result_ref: 'Result', *args):
+    def __init__(self, result_ref: 'Query', *args):
         self._result_ref = result_ref
         self._cols = None
         self._vals = None
@@ -402,7 +403,7 @@ class InsertQuery(VoidQuery):
         docs = []
         num = len(self._vals)
 
-        auto = self.db_ref['__schema__'].find_one_and_update(
+        auto = self.db['__schema__'].find_one_and_update(
             {
                 'name': self.left_table,
                 'auto': {
@@ -427,7 +428,7 @@ class InsertQuery(VoidQuery):
                 ins[fld] = v
             docs.append(ins)
 
-        res = self.db_ref[self.left_table].insert_many(docs, ordered=False)
+        res = self.db[self.left_table].insert_many(docs, ordered=False)
         if auto:
             self._result_ref.last_row_id = auto['auto']['seq']
         else:
@@ -501,7 +502,7 @@ class InsertQuery(VoidQuery):
     #     logger.debug('insert id {}'.format(result.inserted_id))
 
 
-class AlterQuery(VoidQuery):
+class AlterQuery(DDLQuery):
 
     def __init__(self, *args):
         self._iden_name = None
@@ -509,6 +510,7 @@ class AlterQuery(VoidQuery):
         self._new_name = None
         self._new_name = None
         self._default = None
+        self._type_code = None
         self._cascade = None
         self._null = None
 
@@ -544,11 +546,10 @@ class AlterQuery(VoidQuery):
         column = False
         to = False
         while tok_id is not None:
-            if tok.match(tokens.Keyword, ('COLUMN'),):
+            if tok.match(tokens.Keyword, 'COLUMN'):
                 self.execute = self._rename_column
                 column = True
-
-            if tok.match(tokens.Keyword, ('TO'),):
+            if tok.match(tokens.Keyword, 'TO'):
                 to = True
             elif isinstance(tok, Identifier):
                 if not to:
@@ -565,7 +566,7 @@ class AlterQuery(VoidQuery):
         return tok_id
 
     def _rename_column(self):
-        self.db_ref[self.left_table].update(
+        self.db[self.left_table].update(
             {},
             {
                 '$rename': {
@@ -576,13 +577,33 @@ class AlterQuery(VoidQuery):
         )
 
     def _rename_collection(self):
-        self.db_ref[self.left_table].rename(self._new_name)
+        self.db[self.left_table].rename(self._new_name)
 
     def _alter(self, tok_id):
         self.execute = lambda: None
+        sm = self.statement
+        tok_id, tok = sm.token_next(tok_id)
+        feature = ''
+
+        while tok_id is not None:
+            if isinstance(tok, Identifier):
+                pass
+            elif tok.match(tokens.Keyword, (
+                    'NOT NULL', 'NULL', 'COLUMN',
+            )):
+                feature += str(tok) + ' '
+            elif tok.match(tokens.Keyword.DDL, 'DROP'):
+                feature += 'DROP '
+            else:
+                raise NotImplementedError
+
+            tok_id, tok = sm.token_next(tok_id)
+
+        print_warn(feature)
+        return tok_id
 
     def _flush(self):
-        self.db_ref[self.left_table].delete_many({})
+        self.db[self.left_table].delete_many({})
 
     def _table(self, tok_id):
         sm = self.statement
@@ -597,14 +618,14 @@ class AlterQuery(VoidQuery):
         tok_id, tok = sm.token_next(tok_id)
 
         while tok_id is not None:
-            if tok.match(tokens.Keyword, (
-                'CASCADE'
-            )):
-                pass
+            if tok.match(tokens.Keyword, 'CASCADE'):
+                print_warn('DROP CASCADE')
             elif isinstance(tok, Identifier):
                 self._iden_name = tok.get_real_name()
+            elif tok.match(tokens.Keyword, 'INDEX'):
+                self.execute = self._drop_index
             elif tok.match(tokens.Keyword, 'CONSTRAINT'):
-                self.execute = self._drop_constraint
+                pass
             elif tok.match(tokens.Keyword, 'COLUMN'):
                 self.execute = self._drop_column
             else:
@@ -614,11 +635,11 @@ class AlterQuery(VoidQuery):
 
         return tok_id
 
-    def _drop_constraint(self):
-        self.db_ref[self.left_table].drop_index(self._iden_name)
+    def _drop_index(self):
+        self.db[self.left_table].drop_index(self._iden_name)
 
     def _drop_column(self):
-        self.db_ref[self.left_table].update(
+        self.db[self.left_table].update(
             {},
             {
                 '$unset': {
@@ -626,6 +647,14 @@ class AlterQuery(VoidQuery):
                 }
             },
             multi=True
+        )
+        self.db['__schema__'].update(
+            {'name': self.left_table},
+            {
+                '$unset': {
+                    f'fields.{self._iden_name}': ''
+                }
+            }
         )
 
     def _add(self, tok_id):
@@ -637,12 +666,13 @@ class AlterQuery(VoidQuery):
                 'CONSTRAINT', 'KEY', 'REFERENCES',
                 'NOT NULL', 'NULL'
             )):
-                pass
+                print_warn(f'schema validation using {tok}')
             elif tok.match(tokens.Name.Builtin, (
                 'integer', 'bool', 'char', 'date', 'boolean',
                 'datetime', 'float', 'time', 'number', 'string'
             )):
-                pass
+                print_warn('column type validation')
+                self._type_code = str(tok)
             elif isinstance(tok, Identifier):
                 self._iden_name = tok.get_real_name()
             elif isinstance(tok, Parenthesis):
@@ -672,7 +702,7 @@ class AlterQuery(VoidQuery):
         return tok_id
 
     def _add_column(self):
-        self.db_ref[self.left_table].update(
+        self.db[self.left_table].update(
             {
                 '$or': [
                     {self._iden_name: {'$exists': False}},
@@ -686,14 +716,24 @@ class AlterQuery(VoidQuery):
             },
             multi=True
         )
+        self.db['__schema__'].update(
+            {'name': self.left_table},
+            {
+                '$set': {
+                    f'fields.{self._iden_name}': {
+                        'type_code': self._type_code
+                    }
+                }
+            }
+        )
 
     def _index(self):
-        self.db_ref[self.left_table].create_index(
+        self.db[self.left_table].create_index(
             self.field_dir,
             name=self._iden_name)
 
     def _unique(self):
-        self.db_ref[self.left_table].create_index(
+        self.db[self.left_table].create_index(
             self.field_dir,
             unique=True,
             name=self._iden_name)
@@ -702,36 +742,35 @@ class AlterQuery(VoidQuery):
         pass
 
 
-class DeleteQuery(Query):
+class DeleteQuery(DMLQuery):
 
     def __init__(self, *args):
         self.result = None
+        self.kw = None
         super().__init__(*args)
 
     def parse(self):
-        db_con = self.db_ref
-        sm = self.statement
-        kw = {'filter': {}}
-
-        tok_id, tok = sm.token_next(2)
-        sql_token = SQLToken(tok, None)
-        collection = sql_token.table
-
+        statement = SQLStatement(self.statement)
+        self.kw = kw = {'filter': {}}
+        statement.skip(2)
+        sql_token = SQLToken(statement.next(), None)
         self.left_table = sql_token.table
 
-        tok_id, tok = sm.token_next(tok_id)
-        if tok_id and isinstance(tok, Where):
-            where = WhereConverter(self, tok_id)
+        tok = statement.next()
+        if isinstance(tok, Where):
+            where = WhereConverter(self, statement)
             kw.update(where.to_mongo())
 
-        self.result = db_con[collection].delete_many(**kw)
+    def execute(self):
+        db_con = self.db
+        self.result = db_con[self.left_table].delete_many(**self.kw)
         logger.debug('delete_many: {}'.format(self.result.deleted_count))
 
     def count(self):
         return self.result.deleted_count
 
 
-class Result:
+class Query:
 
     def __init__(self,
                  client_connection: MongoClient,
@@ -749,8 +788,7 @@ class Result:
         self.last_row_id = None
         self._result_generator = None
 
-        self._query = None
-        self.parse()
+        self._query = self.parse()
 
     def count(self):
         return self._query.count()
@@ -763,18 +801,23 @@ class Result:
         if self._result_generator is None:
             self._result_generator = iter(self)
 
-        return next(self._result_generator)
+        result = next(self._result_generator)
+        logger.debug(f'Result: {result}')
+        return result
 
     next = __next__
 
     def __iter__(self):
+        if self._query is None:
+            return
+
         try:
             yield from iter(self._query)
 
         except MigrationError:
             raise
 
-        except OperationFailure as e:
+        except PyMongoError as e:
             import djongo
             exe = SQLDecodeError(
                 f'FAILED SQL: {self._sql}\n' 
@@ -844,14 +887,16 @@ class Result:
 
     def _alter(self, sm):
         try:
-            self._query = AlterQuery(self.db, self.connection_properties, sm, self._params)
+            query = AlterQuery(self.db, self.connection_properties, sm, self._params)
         except NotImplementedError:
-            logger.debug('Not implemented alter command for SQL {}'.format(self._sql))
+            logger.warning('Not implemented alter command for SQL {}'.format(self._sql))
         else:
-            self._query.execute()
+            query.execute()
+            return query
 
     def _create(self, sm):
-        tok_id, tok = sm.token_next(0)
+        statement = SQLStatement(sm)
+        tok = statement.next()
         if tok.match(tokens.Keyword, 'TABLE'):
             if '__schema__' not in self.connection_properties.cached_collections:
                 self.db.create_collection('__schema__')
@@ -859,7 +904,7 @@ class Result:
                 self.db['__schema__'].create_index('name', unique=True)
                 self.db['__schema__'].create_index('auto')
 
-            tok_id, tok = sm.token_next(tok_id)
+            tok = statement.next()
             table = SQLToken(tok, None).table
             try:
                 self.db.create_collection(table)
@@ -869,9 +914,9 @@ class Result:
                 else:
                     return
 
-            logger.debug('Created table {}'.format(table))
+            logger.debug('Created table: {}'.format(table))
 
-            tok_id, tok = sm.token_next(tok_id)
+            tok = statement.next()
             if isinstance(tok, Parenthesis):
                 _filter = {
                     'name': table
@@ -908,6 +953,9 @@ class Result:
                     if col.find('UNIQUE') != -1:
                         self.db[table].create_index(field, unique=True)
 
+                    if col.find('NOT NULL') != -1:
+                        print_warn('NOT NULL column validation check')
+
                 if _set:
                     update['$set'] = _set
                 if push:
@@ -925,13 +973,14 @@ class Result:
             logger.debug('Not supported {}'.format(sm))
 
     def _drop(self, sm):
-        tok_id, tok = sm.token_next(0)
+        statement = SQLStatement(sm)
+        tok = statement.next()
         if tok.match(tokens.Keyword, 'DATABASE'):
-            tok_id, tok = sm.token_next(tok_id)
+            tok = statement.next()
             db_name = tok.get_name()
             self.cli_con.drop_database(db_name)
         elif tok.match(tokens.Keyword, 'TABLE'):
-            tok_id, tok = sm.token_next(tok_id)
+            tok = statement.next()
             table_name = tok.get_name()
             self.db.drop_collection(table_name)
         elif tok.match(tokens.Keyword, 'INDEX'):
@@ -947,17 +996,22 @@ class Result:
             raise SQLDecodeError('statement:{}'.format(sm))
 
     def _update(self, sm):
-        self._query = UpdateQuery(self.db, self.connection_properties, sm, self._params)
+        query = UpdateQuery(self.db, self.connection_properties, sm, self._params)
+        query.execute()
+        return query
 
     def _delete(self, sm):
-        self._query = DeleteQuery(self.db, self.connection_properties, sm, self._params)
+        query = DeleteQuery(self.db, self.connection_properties, sm, self._params)
+        query.execute()
+        return query
 
     def _insert(self, sm):
-        self._query = InsertQuery(self, self.db, self.connection_properties, sm, self._params)
-        self._query.execute()
+        query = InsertQuery(self, self.db, self.connection_properties, sm, self._params)
+        query.execute()
+        return query
 
     def _select(self, sm):
-        self._query = SelectQuery(self.db, self.connection_properties, sm, self._params)
+        return SelectQuery(self.db, self.connection_properties, sm, self._params)
 
     FUNC_MAP = {
         'SELECT': _select,
@@ -969,5 +1023,4 @@ class Result:
         'ALTER': _alter
     }
 
-# TODO: Need to do this
 

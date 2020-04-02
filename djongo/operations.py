@@ -1,8 +1,11 @@
 import pytz
 from django.conf import settings
 from django.db.backends.base.operations import BaseDatabaseOperations
-from django.utils import six, timezone
-import datetime, calendar
+from django.utils import timezone
+import datetime
+import calendar
+import six
+
 
 
 class DatabaseOperations(BaseDatabaseOperations):
@@ -17,9 +20,19 @@ class DatabaseOperations(BaseDatabaseOperations):
             return None
 
         if isinstance(value, datetime.datetime) and timezone.is_aware(value):
-            raise ValueError("Djongo backend does not support timezone-aware dates.")
+            raise ValueError(
+                "Djongo backend does not support timezone-aware dates.")
 
-        return datetime.datetime.utcfromtimestamp(calendar.timegm(value.timetuple()))
+        x = calendar.timegm(value.timetuple())
+        # this is presuming that UTC info is needed; anything after 'replace'
+        # can be deleted for 'dt' if not.
+        dt = datetime.datetime(1970, 1, 1).replace(
+            tzinfo=datetime.timezone.utc)
+        if x < 0:
+            return dt + datetime.timedelta(seconds=x)
+        else:
+            return datetime.datetime.utcfromtimestamp(calendar.timegm(
+                value.timetuple()))
 
     def adapt_datetimefield_value(self, value):
         if value is None:
@@ -29,7 +42,8 @@ class DatabaseOperations(BaseDatabaseOperations):
             if settings.USE_TZ:
                 value = timezone.make_naive(value, self.connection.timezone)
             else:
-                raise ValueError("Djongo backend does not support timezone-aware datetimes when USE_TZ is False.")
+                raise ValueError(
+                    "Djongo backend does not support timezone-aware datetimes when USE_TZ is False.")
         return value
 
     def adapt_timefield_value(self, value):
@@ -40,7 +54,8 @@ class DatabaseOperations(BaseDatabaseOperations):
             return datetime.datetime.strptime(value, '%H:%M:%S')
 
         if timezone.is_aware(value):
-            raise ValueError("Djongo backend does not support timezone-aware times.")
+            raise ValueError(
+                "Djongo backend does not support timezone-aware times.")
 
         return datetime.datetime(1900, 1, 1, value.hour, value.minute,
                                  value.second, value.microsecond)
@@ -66,7 +81,8 @@ class DatabaseOperations(BaseDatabaseOperations):
         return value
 
     def get_db_converters(self, expression):
-        converters = super(DatabaseOperations, self).get_db_converters(expression)
+        converters = super(DatabaseOperations,
+                           self).get_db_converters(expression)
         internal_type = expression.output_field.get_internal_type()
         if internal_type == 'DateField':
             converters.append(self.convert_datefield_value)
@@ -92,3 +108,9 @@ class DatabaseOperations(BaseDatabaseOperations):
             'VALUES (%s)' % ', '.join(row)
             for row in placeholder_rows
         )
+
+    def date_extract_sql(self, lookup_type, field_name):
+        return "EXTRACT('%s' FROM %s)" % (lookup_type, field_name)
+
+    def date_trunc_sql(self, lookup_type, field_name):
+        return "DATE_TRUNC('%s', %s)" % (lookup_type, field_name)

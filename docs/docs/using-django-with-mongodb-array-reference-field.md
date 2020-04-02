@@ -5,11 +5,11 @@ permalink: /using-django-with-mongodb-array-reference-field/
 
 ## Array Reference field
 
-The `ArrayReferenceField` is one of the most powerful features of Djongo. The `ArrayModelField` stores the embedded models within a MongoDB array as embedded documents for each entry. If entries contain duplicate embedded documents, using the `ArrayModelField` would require unnecessary disk space. The `ManyToManyField` on the other hand has a separate table for all the entries. In addition, it also creates an intermediate "through/join" table which records all the mappings.
+The `ArrayField` stores embedded models within a MongoDB array as embedded documents for each entry. However, if entries contain duplicate embedded documents, using the `ArrayField` would result in unnecessary duplication and increased disk space usage. On the other hand, the Django `ManyToManyField`  only refers to a different table of entries. In addition however, it creates an intermediate "through/join" table which records all the mappings.
 
-The `ArrayReferenceField` is a bargain between the `ArrayModelField` and `ManyToManyField`. A separate collection is used for storing all entries (instead of embedding it as an array). This means there is no data duplication. However, the intermediate "through/join" mapping table is completely skipped! This is achieved by storing only a reference to the entries in the embedded array.
+The `ArrayReferenceField` is one of the most powerful features of Djongo. The `ArrayReferenceField` is a bargain between the `ArrayField` and `ManyToManyField`. Similar to the `ManyToManyField` a separate collection is used for storing duplicate entries (instead of embedding them as an array). This means there is no data duplication. However, the intermediate "through/join" mapping table is completely skipped! This is achieved by storing only a reference to the entries in the embedded array.
 
-While the `ManyToManyField` required two queries to fetch data, the `ArrayReferenceField` requires just one query and is much faster. If you have used the `ManyToManyField`, then you know how to use the `ArrayReferenceField`. In fact **it implements the exact same API** as the `ManyToManyField`. You can replace all existing `ManyToManyField` with `ArrayReferenceField` and everything will continue to work as is.
+While the `ManyToManyField` required two queries to fetch data, the `ArrayReferenceField` requires just one query and is much faster. If you have used the `ManyToManyField`, then you know how to use the `ArrayReferenceField`. In fact, **it implements the exact same API** as the `ManyToManyField`. You can replace all existing `ManyToManyField` with `ArrayReferenceField` and everything will continue to work as is.
 
 In the example the `Entry` Model can be rewritten as follows:
 
@@ -22,11 +22,11 @@ class Author(models.Model):
         return self.name
         
 class Entry(models.Model):
-    blog = models.EmbeddedModelField(
+    blog = models.EmbeddedField(
         model_container=Blog,
         model_form_class=BlogForm
     )
-    meta_data = models.EmbeddedModelField(
+    meta_data = models.EmbeddedField(
         model_container=MetaData,
         model_form_class=MetaDataForm
     )
@@ -48,5 +48,12 @@ class Entry(models.Model):
  
  The `ArrayReferenceField` behaves exactly like the `ManyToManyField`. However, underneath only references to the entries are being stored in the array.
  
+## ArrayReferenceField
 
+```python
+class ArrayReferenceField(ForeignKey):
+    def __init__(self, *args, **kwargs):
+```
+### Arguments
 
+Same as the `ForeignKey` Base class

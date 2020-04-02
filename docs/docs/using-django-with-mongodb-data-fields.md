@@ -3,7 +3,116 @@ title: Using Djongo Model fields
 permalink: /using-django-with-mongodb-data-fields/
 ---
 
+## EmbeddedField
 
+MongoDB allows the creation of an [embedded document](https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding). By using Djongo as your connector, you can embed any other model into your parent model through the `EmbeddedField`. 
+
+```python
+class EmbeddedField(Field):
+    def __init__(self,
+                 model_container: typing.Type[Model],
+                 model_form_class: typing.Optional[Type[forms.ModelForm]]=None,
+                 model_form_kwargs: typing.Optional[dict]=None,
+                 *args, **kwargs):
+```
+
+### Arguments
+
+Argument | Type | Description
+---------|------|-------------
+`model_container`| `models.Model` | The child model class type (not instance) that this embedded field will contain.
+`model_form_class` | `models.forms.ModelForm` | The child model form class type of the embedded model.
+`model_form_kwargs` | `dict()` | The kwargs (if any) that must be passed to the embedded model form while instantiating it.
+  
+### Example
+
+```python
+from djongo import models
+from django import forms
+
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.TextField()
+
+    class Meta:
+        abstract = True
+
+class Entry(models.Model):
+    blog = models.EmbeddedField(
+        model_container=Blog
+    )
+    
+    headline = models.CharField(max_length=255)    
+    objects = models.DjongoManager()
+```
+
+```python
+e = Entry.objects.create(
+    headline='h1',
+    blog=Blog(
+        name='b1',
+        tagline='t1'
+    )
+)
+g = Entry.objects.get(headline='h1')
+assert e == g
+```
+
+## Embedded Form
+
+While creating a Form for [the ModelForm](https://docs.djangoproject.com/en/dev/topics/forms/modelforms/), the embedded forms **are automatically generated**. Multiple embedded forms get automatically generated when the Model contains an array of embedded models. However, you can still override this by specifying the `model_form_class` argument in the `EmbeddedField`.
+
+### Example
+
+```python
+from djongo import models
+from django import forms
+
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.TextField()
+
+    class Meta:
+        abstract = True
+
+class BlogForm(forms.ModelForm):
+    class Meta:
+        model = Blog
+        fields = (
+            'name', 'tagline'
+        )
+
+
+class Entry(models.Model):
+    blog = models.EmbeddedField(
+        model_container=Blog,
+        model_form_class=BlogForm
+    )
+    
+    headline = models.CharField(max_length=255)    
+    objects = models.DjongoManager()
+```
+
+## Querying Embedded fields
+
+In the above example to query all BlogPost with content made by authors whose name startswith *Beatles*  use the following query:
+
+```python
+entries = Entry.objects.filter(blog__startswith={'name': 'Beatles'})
+```
+
+Internally Djongo converts this query (for BlogPost collection) to the form:
+
+```python
+filter = {
+    'blog.name': {
+        '$regex': '^Beatles.*$'
+    }
+}
+```
+
+## Using EmbeddedField in Django Admin
+ 
 Django Admin is a powerful tool for managing data used in your app. When your models use Djongo relational fields,  you can create NoSQL "embedded models" directly from the Django Admin. **These fields provide better performance when compared with traditional Django relational fields.**
 
 The Django admin application can use your models to automatically build a site area that you can use to create, view, update, and delete records. This can save you a lot of time during development, making it very easy to test your models and get a feel for whether you have the right data. Most of you already know about Django Admin, but to demonstrate how to use it with Djongo, we start with a simple example. You can ask for [expert support](https://www.patreon.com/nesdis) if your project uses complex models.
@@ -123,7 +232,6 @@ It is a good practice to **define embedded models as abstract models** and this 
 
 ```python
 from djongo import models
-from django import forms
 
 class Blog(models.Model):
     name = models.CharField(max_length=100)
@@ -149,10 +257,10 @@ class Author(models.Model):
         return self.name
 
 class Entry(models.Model):
-    blog = models.EmbeddedModelField(
+    blog = models.EmbeddedField(
         model_container=Blog,
     )
-    meta_data = models.EmbeddedModelField(
+    meta_data = models.EmbeddedField(
         model_container=MetaData,
     )
 
@@ -189,13 +297,11 @@ Only the `Entry` and `Author` model are registered. I click on *Entrys Add* and 
 
 > The `Name` and `Tagline` fields are neatly nested within Blog. `Pub date` `Mod date` `N pingbanks` and `Rating` are neatly nested within Meta data.
 
-## Querying Embedded fields
-
 When a user queries for a blog named ‘Beatles Blog’, the query for filtering an embedded model changes to:
 
 ```python
 entries = Entry.objects.filter(blog={'name': 'Beatles Blog'})
 ```
 
-This query will return all entries having an embedded blog with the name ‘Beatles Blog’. **The query will hit the database just once and there are no JOINs involved. It’s super fast.**
+This query will return all entries having an embedded blog with the name ‘Beatles Blog’. **The query will hit the database just once and there are no JOINs involved.**
 

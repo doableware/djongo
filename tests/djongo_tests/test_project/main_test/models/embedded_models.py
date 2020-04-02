@@ -25,7 +25,7 @@ class EmbeddedDateBlog(models.Model):
 
 
 class EmbeddedEntry(models.Model):
-    blog = models.EmbeddedModelField(
+    blog = models.EmbeddedField(
         model_container=EmbeddedBlog
     )
     headline = models.CharField(max_length=255)
@@ -36,7 +36,7 @@ class EmbeddedEntry(models.Model):
 
 
 class EmbeddedDateEntry(models.Model):
-    blog = models.EmbeddedModelField(
+    blog = models.EmbeddedField(
         model_container=EmbeddedDateBlog
     )
     headline = models.CharField(max_length=255)

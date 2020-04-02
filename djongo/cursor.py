@@ -1,5 +1,7 @@
 from logging import getLogger
-from .sql2mongo.query import Result
+
+from .database import DatabaseError
+from .sql2mongo.query import Query
 
 logger = getLogger(__name__)
 
@@ -45,12 +47,16 @@ class Cursor:
         return self.result.last_row_id
 
     def execute(self, sql, params=None):
-        self.result = Result(
-            self.client_conn,
-            self.db_conn,
-            self.connection_properties,
-            sql,
-            params)
+        try:
+            self.result = Query(
+                self.client_conn,
+                self.db_conn,
+                self.connection_properties,
+                sql,
+                params)
+        except Exception as e:
+            db_exe = DatabaseError()
+            raise db_exe from e
 
     def fetchmany(self, size=1):
         ret = []
@@ -59,6 +65,9 @@ class Cursor:
                 ret.append(self.result.next())
             except StopIteration:
                 break
+            except Exception as e:
+                db_exe = DatabaseError()
+                raise db_exe from e
 
         return ret
 
@@ -66,7 +75,10 @@ class Cursor:
         try:
             return self.result.next()
         except StopIteration:
-            return []
+            return None
+        except Exception as e:
+            db_exe = DatabaseError()
+            raise db_exe from e
 
     def fetchall(self):
         return list(self.result)
