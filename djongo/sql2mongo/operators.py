@@ -513,7 +513,7 @@ class CmpOp(_Op):
         self._operator = OPERATOR_MAP[self.statement.token_next(0)[1].value]
 
         if isinstance(self.statement.right, Function):
-            self._routine = RoutineOp(SQLStatement(self.statement.right), self.query, self.params)
+            self._routine = RoutineOp(self.statement.right, self.query, self.params)
             self._constant = None
         else:
             self._routine = None
@@ -568,7 +568,6 @@ class RoutineOp(_Op):
             if state == 0:
                 if not isinstance(tok, Identifier):
                     raise SQLDecodeError
-                SQLToken(self.statement.right, self.query.token_alias)
                 routine_name = tok.value
             elif state == 1:
                 index = re_index(tok.tokens[1].value)
