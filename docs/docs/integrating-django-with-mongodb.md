@@ -74,7 +74,7 @@ When connecting to Djongo you can set `ENFORCE_SCHEMA: True`. In this case, a `M
 
 ## Use Django Admin to add documents
 
-The Django Admin interface can be used to work with MongoDB. Additionally, several MongoDB specific features are supported using [`EmbeddedField`](/djongo/using-django-with-mongodb-data-fields/), [`ArrayField`](/djongo/using-django-with-mongodb-array-field/) and other fields. Let’s say you want to create a blogging platform using Django with MongoDB as your backend. In your Blog `app/models.py` file define the `Blog` model:
+The Django Admin interface can be used to work with MongoDB. Additionally, several MongoDB specific features are supported using [EmbeddedField](/djongo/using-django-with-mongodb-data-fields/), [ArrayField](/djongo/using-django-with-mongodb-array-field/) and other fields. Let’s say you want to create a blogging platform using Django with MongoDB as your backend. In your Blog `app/models.py` file define the `Blog` model:
 
 ```python
 from djongo import models
