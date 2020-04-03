@@ -607,6 +607,7 @@ class TestAlterTableAddConstraint(AlterTableAdd):
         self.db.__getitem__.assert_has_calls(calls)
 
 
+
 class TestDrop(VoidQuery):
 
     @classmethod
