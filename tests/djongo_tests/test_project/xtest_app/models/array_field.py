@@ -12,7 +12,7 @@ class Author(models.Model):
         abstract = True
 
 
-class Entry(models.Model):
+class ArrayFieldEntry(models.Model):
     headline = models.CharField(max_length=255)
     authors = models.ArrayField(
         model_container=Author
