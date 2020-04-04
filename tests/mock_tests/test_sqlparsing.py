@@ -230,6 +230,18 @@ class VoidQuery(MockTest):
         self.assertRaises(StopIteration, result.next)
 
 
+class TestCreateDatabase(VoidQuery):
+    """
+    CREATE DATABASE "some_name"
+    """
+
+    def test_database(self):
+        self.sql = 'CREATE DATABASE "some_name"'
+        self.exe()
+        self.db.assert_not_called()
+        self.conn.assert_not_called()
+
+
 class TestCreateTable(VoidQuery):
     """
         'CREATE TABLE "django_migrations" '
@@ -605,7 +617,6 @@ class TestAlterTableAddConstraint(AlterTableAdd):
             call().create_index([('a', 1), ('b', 1)], name='c', unique=True),
         ]
         self.db.__getitem__.assert_has_calls(calls)
-
 
 
 class TestDrop(VoidQuery):

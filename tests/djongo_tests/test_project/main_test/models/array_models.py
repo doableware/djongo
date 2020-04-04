@@ -1,7 +1,7 @@
 from djongo import models
 
 
-class ArrayAuthor(models.Model):
+class Author(models.Model):
     name = models.CharField(max_length=200)
     email = models.EmailField()
 
@@ -12,10 +12,10 @@ class ArrayAuthor(models.Model):
         abstract = True
 
 
-class ArrayEntry(models.Model):
+class Entry(models.Model):
     headline = models.CharField(max_length=255)
     authors = models.ArrayField(
-        model_container=ArrayAuthor
+        model_container=Author
     )
     _id = models.ObjectIdField()
 
