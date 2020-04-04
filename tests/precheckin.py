@@ -31,10 +31,10 @@ def run_commands(path):
 
     manage_py = os.path.join(path, "manage.py")
     cmds = [
-        'makemigrations main_test',
+        'makemigrations xtest_app',
         'migrate',
         'inspectdb',
-        'test main_test.tests.test_models'
+        'test xtest_app.tests.test_models'
     ]
 
     settings = '--settings=test_project.settings.settings_precheckin'
@@ -46,7 +46,7 @@ def run_commands(path):
 if __name__ == '__main__':
     run_test_sqlparsing()
     app_root = os.path.join(TEST_DIR, 'djongo_tests', 'test_project')
-    main_test_app = os.path.join(app_root, 'main_test')
+    main_test_app = os.path.join(app_root, 'xtest_app')
     remove_migrations(main_test_app)
     run_commands(app_root)
     print('Precheckin DONE')

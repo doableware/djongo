@@ -38,7 +38,7 @@ DATABASES = {
 # Application definition
 
 INSTALLED_APPS = [
-    'main_test.apps.MainTestConfig',
+    'xtest_app.apps.XtestAppConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
