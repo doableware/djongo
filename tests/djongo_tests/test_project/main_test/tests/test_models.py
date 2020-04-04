@@ -1,8 +1,8 @@
-from main_test.models.array_models import ArrayEntry, ArrayAuthor
+from main_test.models.array_models import Entry as ArrayEntry, Author as ArrayAuthor
 from main_test.models.basic_models import Blog, Entry, Author
-from main_test.models.embedded_models import EmbeddedBlog, EmbeddedEntry
-from main_test.models.misc_models import ListEntry, DictEntry
-from main_test.models.reference_models import ReferenceEntry, ReferenceAuthor
+from main_test.models.embedded_models import EmbeddedBlog as EmbeddedBlog, EmbeddedEntry as EmbeddedEntry
+from main_test.models.misc_models import ListEntry as ListEntry, DictEntry as DictEntry
+from main_test.models.reference_models import ReferenceEntry as ReferenceEntry, ReferenceAuthor as ReferenceAuthor
 from . import TestCase
 
 
@@ -56,23 +56,23 @@ class TestReference(TestCase):
 
 class TestArray(TestCase):
     def test_create1(self):
-        e = ArrayEntry.objects.create(
+        e = Entry.objects.create(
             headline='h1',
-            authors=[ArrayAuthor(
+            authors=[Author(
                 name='n1',
                 email='e1@e1.com'
             )]
         )
-        g = ArrayEntry.objects.get(headline='h1')
+        g = Entry.objects.get(headline='h1')
         self.assertEqual(e, g)
         g.authors.append(
-            ArrayAuthor(
+            Author(
                 name='n2',
                 email='e2@e1.com'
             )
         )
         g.save()
-        g = ArrayEntry.objects.get(
+        g = Entry.objects.get(
             authors={'1.name': 'n2'}
         )
         self.assertEqual(e,g)

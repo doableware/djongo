@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from main_test.models.array_models import ArrayEntry
+from main_test.models.array_models import Entry
 from main_test.models.basic_models import Entry, Author, Blog
 from main_test.models.embedded_models import EmbeddedEntry, EmbeddedDateEntry
 from main_test.models.misc_models import ListEntry, DictEntry
@@ -15,7 +15,7 @@ admin.site.register(Author)
 admin.site.register(Blog)
 admin.site.register(Entry)
 
-admin.site.register(ArrayEntry)
+admin.site.register(Entry)
 admin.site.register(EmbeddedEntry)
 admin.site.register(EmbeddedDateEntry)
 admin.site.register(ReferenceEntry)
