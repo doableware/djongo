@@ -1,26 +1,61 @@
 from djongo import models
 
 
-class Blog(models.Model):
-    name = models.CharField(max_length=100)
-    tagline = models.TextField()
-    # _id = models.ObjectIdField()
-
-    def __str__(self):
-        return self.name
-
-
-class Author(models.Model):
-    name = models.CharField(max_length=200)
-
-    def __str__(self):
-        return self.name
-
-
 class Entry(models.Model):
-    blog = models.ForeignKey(Blog, on_delete=models.CASCADE)
+    _id = models.ObjectIdField()
+
+    class Meta:
+        abstract = True
+
+
+class HeadlinedEntry(Entry):
     headline = models.CharField(max_length=255)
-    authors = models.ManyToManyField(Author)
+
+    class Meta:
+        abstract = True
 
     def __str__(self):
         return self.headline
+
+
+class NamedBlog(models.Model):
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return self.name
+
+
+class NamedAuthor(models.Model):
+    name = models.CharField(max_length=200)
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return self.name
+
+
+class BasicBlog(NamedBlog):
+    tagline = models.TextField()
+
+
+class BasicAuthor(NamedAuthor):
+    pass
+
+
+class BasicHeadlinedEntry(models.Model):
+    headline = models.CharField(max_length=255)
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return self.headline
+
+
+class BasicRelatedEntry(BasicHeadlinedEntry):
+    blog = models.ForeignKey(BasicBlog, on_delete=models.CASCADE)
+    authors = models.ManyToManyField(BasicAuthor)

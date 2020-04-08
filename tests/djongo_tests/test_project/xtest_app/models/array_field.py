@@ -1,24 +1,10 @@
 from djongo import models
+from .basic_field import NamedAuthor, HeadlinedEntry
 
 
-class Author(models.Model):
-    name = models.CharField(max_length=200)
-    email = models.EmailField()
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        abstract = True
-
-
-class ArrayFieldEntry(models.Model):
-    headline = models.CharField(max_length=255)
+class ArrayFieldEntry(HeadlinedEntry):
     authors = models.ArrayField(
-        model_container=Author
+        model_container=NamedAuthor
     )
-    _id = models.ObjectIdField()
 
-    def __str__(self):
-        return self.headline
 

@@ -1,20 +1,12 @@
 from djongo import models
+from .basic_field import NamedAuthor, HeadlinedEntry
 
 
-class ReferenceAuthor(models.Model):
-    name = models.CharField(max_length=200)
+class ReferenceAuthor(NamedAuthor):
     email = models.EmailField()
     _id = models.ObjectIdField()
 
-    def __str__(self):
-        return self.name
 
-
-class ReferenceEntry(models.Model):
-    _id = models.ObjectIdField()
-    headline = models.CharField(max_length=255)
+class ReferenceEntry(HeadlinedEntry):
     authors = models.ArrayReferenceField(ReferenceAuthor)
-
-    def __str__(self):
-        return self.headline
 
