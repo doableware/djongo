@@ -77,6 +77,101 @@ class DjongoManager(Manager):
         )
 
 
+class FormlessMongoField(Field):
+    """
+    Allows for the inclusion of an instance of an abstract model as
+    a field inside a document.
+    """
+    empty_strings_allowed = False
+
+    def __init__(self,
+                 model_container: typing.Type[Model],
+                 model_form_class: typing.Type[forms.ModelForm] = None,
+                 model_form_kwargs: dict = None,
+                 admin=None,
+                 request=None,
+                 *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model_container = model_container
+        self.model_form_class = model_form_class
+        self.null = True
+        self.instance = None
+        self.admin = admin
+        self.request = request
+
+        if model_form_kwargs is None:
+            model_form_kwargs = {}
+        self.model_form_kwargs = model_form_kwargs
+
+    def deconstruct(self):
+        name, path, args, kwargs = super().deconstruct()
+        kwargs['model_container'] = self.model_container
+        if self.model_form_class is not None:
+            kwargs['model_form_class'] = self.model_form_class
+        return name, path, args, kwargs
+
+    def pre_save(self, model_instance, add):
+        value = getattr(model_instance, self.attname)
+        if isinstance(value, ModelSubterfuge):
+            return value
+
+        subterfuge = ModelSubterfuge(value)
+        # setattr(model_instance, self.attname, subterfuge)
+        return subterfuge
+
+    def get_db_prep_value(self, value, connection=None, prepared=False):
+        if isinstance(value, dict):
+            return value
+        if isinstance(value, ModelSubterfuge):
+            value = value.subterfuge
+        if value is None and self.blank:
+            return None
+        if not isinstance(value, Model):
+            raise ValueError(
+                'Value: {value} must be instance of Model: {model}'.format(
+                    value=value,
+                    model=Model))
+
+        mdl_ob = {}
+        for fld in value._meta.get_fields():
+            if not useful_field(fld):
+                continue
+            fld_value = getattr(value, fld.attname)
+            mdl_ob[fld.attname] = fld.get_db_prep_value(fld_value, connection, prepared)
+
+        return mdl_ob
+
+    def from_db_value(self, value, expression, connection, context):
+        return self.to_python(value)
+
+    def to_python(self, value):
+        """
+        Overrides Django's default to_python to allow correct
+        translation to instance.
+        """
+        if value is None or isinstance(value, self.model_container):
+            return value
+        assert isinstance(value, dict)
+
+        instance = make_mdl(self.model_container, value)
+        return instance
+
+
+class MongoField(FormlessMongoField):
+
+    def formfield(self, **kwargs):
+        defaults = {
+            'form_class': EmbeddedFormField,
+            'model_container': self.model_container,
+            'model_form_class': self.model_form_class,
+            'model_form_kw': self.model_form_kwargs,
+            'name': self.attname
+        }
+
+        defaults.update(kwargs)
+        return super().formfield(**defaults)
+
+
 class FormlessField(Field):
     empty_strings_allowed = False
 
@@ -391,126 +486,8 @@ class ArrayFormWidget(forms.Widget):
         return True
 
 
-class EmbeddedField(Field):
-    """
-    Allows for the inclusion of an instance of an abstract model as
-    a field inside a document.
-
-    Example:
-
-    class Blog(models.Model):
-        name = models.CharField(max_length=100)
-        tagline = models.TextField()
-
-        class Meta:
-            abstract = True
-
-
-    class BlogForm(forms.ModelForm):
-        class Meta:
-            model = Blog
-            fields = (
-                'comment', 'author'
-            )
-
-
-    class Entry(models.Model):
-        blog = models.EmbeddedField(
-            model_container=Blog,
-            model_form_class=BlogForm
-        )
-
-        headline = models.CharField(max_length=255)
-        objects = models.DjongoManager()
-
-    """
-    empty_strings_allowed = False
-
-    def __init__(self,
-                 model_container: typing.Type[Model],
-                 model_form_class: typing.Type[forms.ModelForm] = None,
-                 model_form_kwargs: dict = None,
-                 admin=None,
-                 request=None,
-                 *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.model_container = model_container
-        self.model_form_class = model_form_class
-        self.null = True
-        self.instance = None
-        self.admin = admin
-        self.request = request
-
-        if model_form_kwargs is None:
-            model_form_kwargs = {}
-        self.model_form_kwargs = model_form_kwargs
-
-    def deconstruct(self):
-        name, path, args, kwargs = super().deconstruct()
-        kwargs['model_container'] = self.model_container
-        if self.model_form_class is not None:
-            kwargs['model_form_class'] = self.model_form_class
-        return name, path, args, kwargs
-
-    def pre_save(self, model_instance, add):
-        value = getattr(model_instance, self.attname)
-        if isinstance(value, ModelSubterfuge):
-            return value
-
-        subterfuge = ModelSubterfuge(value)
-        # setattr(model_instance, self.attname, subterfuge)
-        return subterfuge
-
-    def get_db_prep_value(self, value, connection=None, prepared=False):
-        if isinstance(value, dict):
-            return value
-        if isinstance(value, ModelSubterfuge):
-            value = value.subterfuge
-        if value is None and self.blank:
-            return None
-        if not isinstance(value, Model):
-            raise ValueError(
-                'Value: {value} must be instance of Model: {model}'.format(
-                    value=value,
-                    model=Model
-                )
-            )
-
-        mdl_ob = {}
-        for fld in value._meta.get_fields():
-            if not useful_field(fld):
-                continue
-            fld_value = getattr(value, fld.attname)
-            mdl_ob[fld.attname] = fld.get_db_prep_value(fld_value, connection, prepared)
-
-        return mdl_ob
-
-    def from_db_value(self, value, expression, connection, context):
-        return self.to_python(value)
-
-    def to_python(self, value):
-        """
-        Overrides Django's default to_python to allow correct
-        translation to instance.
-        """
-        if value is None or isinstance(value, self.model_container):
-            return value
-        assert isinstance(value, dict)
-
-        instance = make_mdl(self.model_container, value)
-        return instance
-
-    def formfield(self, **kwargs):
-        defaults = {
-            'form_class': EmbeddedFormField,
-            'model_container': self.model_container,
-            'model_form_class': self.model_form_class,
-            'model_form_kw': self.model_form_kwargs,
-            'name': self.attname
-        }
-
-        defaults.update(kwargs)
-        return super().formfield(**defaults)
+class EmbeddedField(MongoField):
+    pass
 
 
 class EmbeddedFormField(forms.MultiValueField):
@@ -651,8 +628,6 @@ class ObjectIdField(ObjectIdFieldMixin, AutoField):
 
     def get_prep_value(self, value):
         value = super(AutoField, self).get_prep_value(value)
-        if value is None:
-            return None
         return value
 
 
