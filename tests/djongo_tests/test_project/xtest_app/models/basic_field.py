@@ -39,7 +39,7 @@ class NamedAuthor(models.Model):
 
 
 class BasicBlog(NamedBlog):
-    tagline = models.TextField()
+    tagline = models.TextField(default='##tagline##')
 
 
 class BasicAuthor(NamedAuthor):

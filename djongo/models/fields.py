@@ -14,6 +14,7 @@ These are the main fields for working with MongoDB.
 """
 
 import functools
+import json
 import typing
 
 from bson import ObjectId
@@ -23,13 +24,15 @@ from django.db import connections as pymongo_connections
 from django.db import router, connections, transaction
 from django.db.models import (
     Manager, Model, Field, AutoField,
-    ForeignKey, BigAutoField, ManyToManyField, CASCADE
-)
+    ForeignKey, BigAutoField)
+from django.db.models.fields.related import RelatedField
 from django.forms import modelform_factory
 from django.utils.functional import cached_property
 from django.utils.html import format_html_join, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
+
+from djongo.exceptions import NotSupportedError, print_warn
 
 
 def make_mdl(model, model_dict):
@@ -45,12 +48,6 @@ def make_mdl(model, model_dict):
 
 def useful_field(field):
     return field.concrete and not isinstance(field, (AutoField, BigAutoField))
-
-
-class ModelSubterfuge:
-
-    def __init__(self, embedded_model):
-        self.subterfuge = embedded_model
 
 
 class DjongoManager(Manager):
@@ -70,76 +67,103 @@ class DjongoManager(Manager):
 
     @property
     def _client(self):
-        return (
-            pymongo_connections[self.db]
+        return (pymongo_connections[self.db]
                 .cursor()
-                .db_conn[self.model._meta.db_table]
-        )
+                .db_conn[self.model._meta.db_table])
 
 
-class FormlessMongoField(Field):
+class FormlessField(Field):
     """
     Allows for the inclusion of an instance of an abstract model as
     a field inside a document.
     """
     empty_strings_allowed = False
+    base_type = dict
 
     def __init__(self,
                  model_container: typing.Type[Model],
-                 model_form_class: typing.Type[forms.ModelForm] = None,
-                 model_form_kwargs: dict = None,
-                 admin=None,
-                 request=None,
                  *args, **kwargs):
-        super().__init__(*args, **kwargs)
         self.model_container = model_container
-        self.model_form_class = model_form_class
-        self.null = True
-        self.instance = None
-        self.admin = admin
-        self.request = request
+        self._validate_container()
+        super().__init__(*args, **kwargs)
 
-        if model_form_kwargs is None:
-            model_form_kwargs = {}
-        self.model_form_kwargs = model_form_kwargs
+    def _validate_container(self):
+        for field in self.model_container._meta.get_fields():
+            if isinstance(field, (AutoField,
+                                  BigAutoField,
+                                  RelatedField)):
+                raise TypeError(
+                    f'Field "{field}" of model container:"{self.model_container}" '
+                    f'cannot be of type "{type(field)}"')
+
+            if field.attname != field.column:
+                raise ValueError(
+                    f'Field "{field}"  of model container:"{self.model_container}" '
+                    f'cannot be named as "{field.attname}", different from '
+                    f'column name "{field.column}"')
+
+            if field.db_index:
+                print_warn('Embedded field index')
+                raise NotSupportedError(
+                    f'This version of djongo does not support indexes on embedded fields'
+                )
+
+    def _value_thru_fields(self,
+                           func_name: str,
+                           value: dict,
+                           *other_args):
+        processed_value = {}
+        for field in self.model_container._meta.get_fields():
+            try:
+                field_value = value[field.attname]
+            except KeyError:
+                raise ValueError(f'Value for field "{field}" not supplied')
+            processed_value[field.attname] = getattr(field, func_name)(field_value, *other_args)
+        return processed_value
+
+    def _obj_thru_fields(self,
+                         func_name: str,
+                         obj: Model,
+                         *other_args):
+        processed_value = {}
+        for field in self.model_container._meta.get_fields():
+            processed_value[field.attname] = getattr(field, func_name)(obj, *other_args)
+        return processed_value
+
+    def validate(self, value, model_instance, validate_parent=True):
+        if validate_parent:
+            super().validate(value, model_instance)
+        container_instance = self.model_container(**value)
+        self._value_thru_fields('validate', value, container_instance)
+
+    def value_to_string(self, obj):
+        value = self.value_from_object(obj)
+        container_obj = self.model_container(**value)
+        processed_value = self._obj_thru_fields('value_to_string', container_obj)
+        return json.dumps(processed_value)
+
+    def value_from_object(self, obj):
+        value = super().value_from_object(obj)
+        container_obj = self.model_container(**value)
+        processed_value = self._obj_thru_fields('value_from_object', container_obj)
+        return processed_value
 
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
         kwargs['model_container'] = self.model_container
-        if self.model_form_class is not None:
-            kwargs['model_form_class'] = self.model_form_class
         return name, path, args, kwargs
 
-    def pre_save(self, model_instance, add):
-        value = getattr(model_instance, self.attname)
-        if isinstance(value, ModelSubterfuge):
-            return value
-
-        subterfuge = ModelSubterfuge(value)
-        # setattr(model_instance, self.attname, subterfuge)
-        return subterfuge
-
-    def get_db_prep_value(self, value, connection=None, prepared=False):
-        if isinstance(value, dict):
-            return value
-        if isinstance(value, ModelSubterfuge):
-            value = value.subterfuge
-        if value is None and self.blank:
+    def get_prep_value(self, value):
+        if value is None:
             return None
-        if not isinstance(value, Model):
+
+        if not isinstance(value, self.base_type):
             raise ValueError(
-                'Value: {value} must be instance of Model: {model}'.format(
-                    value=value,
-                    model=Model))
+                f'Value: {value} must be an instance of {self.base_type}')
 
-        mdl_ob = {}
-        for fld in value._meta.get_fields():
-            if not useful_field(fld):
-                continue
-            fld_value = getattr(value, fld.attname)
-            mdl_ob[fld.attname] = fld.get_db_prep_value(fld_value, connection, prepared)
-
-        return mdl_ob
+        processed_value = self._value_thru_fields('get_prep_value',
+                                                  value)
+        return processed_value
 
     def from_db_value(self, value, expression, connection, context):
         return self.to_python(value)
@@ -149,15 +173,42 @@ class FormlessMongoField(Field):
         Overrides Django's default to_python to allow correct
         translation to instance.
         """
-        if value is None or isinstance(value, self.model_container):
-            return value
-        assert isinstance(value, dict)
+        if value is None:
+            return None
 
-        instance = make_mdl(self.model_container, value)
-        return instance
+        if isinstance(value, str):
+            value = json.loads(value)
+
+        if not isinstance(value, self.base_type):
+            raise ValidationError(
+                f'Value: {value} must be an instance of {self.base_type}')
+
+        processed_value = self._value_thru_fields('to_python',
+                                                  value)
+        return processed_value
 
 
-class MongoField(FormlessMongoField):
+class MongoField(FormlessField):
+
+    def __init__(self,
+                 model_container: typing.Type[Model],
+                 model_form_class: typing.Type[forms.ModelForm] = None,
+                 model_form_kwargs: dict = None,
+                 *args, **kwargs):
+        super().__init__(model_container, *args, **kwargs)
+        self.model_form_class = model_form_class
+
+        if model_form_kwargs is None:
+            model_form_kwargs = {}
+        self.model_form_kwargs = model_form_kwargs
+
+    def deconstruct(self):
+        name, path, args, kwargs = super().deconstruct()
+        if self.model_form_class is not None:
+            kwargs['model_form_class'] = self.model_form_class
+        if self.model_form_kwargs:
+            kwargs['model_form_kwargs'] = self.model_form_kwargs
+        return name, path, args, kwargs
 
     def formfield(self, **kwargs):
         defaults = {
@@ -172,60 +223,7 @@ class MongoField(FormlessMongoField):
         return super().formfield(**defaults)
 
 
-class FormlessField(Field):
-    empty_strings_allowed = False
-
-    def formfield(self, **kwargs):
-        raise TypeError(
-            'A Formless Field cannot be modified from Django Admin.'
-        )
-
-
-class ListField(FormlessField):
-    """
-    MongoDB allows the saving of python lists as BSON Array type data. The `ListField` is useful in such cases.
-    """
-    empty_strings_allowed = False
-
-    def get_db_prep_value(self, value, connection, prepared=False):
-        if not isinstance(value, list):
-            raise ValueError(
-                f'Value: {value} must be of type list'
-            )
-        return value
-
-    def to_python(self, value):
-        if not isinstance(value, list):
-            raise ValueError(
-                f'Value: {value} stored in DB must be of type list'
-                'Did you miss any Migrations?'
-            )
-        return value
-
-
-class DictField(FormlessField):
-    """
-    MongoDB allows the saving of python dicts as BSON object type data. The `DictField` is useful in such cases.
-    """
-    empty_strings_allowed = False
-
-    def get_db_prep_value(self, value, connection, prepared=False):
-        if not isinstance(value, dict):
-            raise ValueError(
-                f'Value: {value} must be of type dict'
-            )
-        return value
-
-    def to_python(self, value):
-        if not isinstance(value, dict):
-            raise ValueError(
-                f'Value: {value} stored in DB must be of type list'
-                'Did you miss any Migrations?'
-            )
-        return value
-
-
-class ArrayField(Field):
+class ArrayField(MongoField):
     """
     Implements an array of objects inside the document.
 
@@ -236,106 +234,48 @@ class ArrayField(Field):
     The model of the container must be declared as abstract, thus should
     not be treated as a collection of its own.
     """
-
     empty_strings_allowed = False
+    base_type = list
 
-    def __init__(self,
-                 model_container: typing.Type[Model],
-                 model_form_class: typing.Type[forms.ModelForm] = None,
-                 model_form_kwargs_l: dict = None,
-                 *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.model_container = model_container
-        self.model_form_class = model_form_class
+    def _value_thru_fields(self,
+                           func_name: str,
+                           value: typing.Union[list, dict],
+                           *other_args):
+        if isinstance(value, dict):
+            return super()._value_thru_fields(func_name,
+                                       value,
+                                       *other_args)
 
-        if model_form_kwargs_l is None:
-            model_form_kwargs_l = {}
-        self.model_form_kwargs_l = model_form_kwargs_l
+        processed_value = []
+        for pre_dict in value:
+            post_dict = super()._value_thru_fields(func_name,
+                                                   pre_dict,
+                                                   *other_args)
+            processed_value.append(post_dict)
+        return processed_value
 
-    def deconstruct(self):
-        name, path, args, kwargs = super().deconstruct()
-        kwargs['model_container'] = self.model_container
+    def value_to_string(self, obj):
+        value = self.value_from_object(obj)
+        processed_value = []
+        for _dict in value:
+            container_obj = self.model_container(**_dict)
+            post_dict = self._obj_thru_fields('value_to_string', container_obj)
+            processed_value.append(post_dict)
+        return json.dumps(processed_value)
 
-        if self.model_form_class is not None:
-            kwargs['model_form_class'] = self.model_form_class
+    def value_from_object(self, obj):
+        value = getattr(obj, self.attname)
+        processed_value = []
+        for _dict in value:
+            container_obj = self.model_container(**_dict)
+            post_dict = self._obj_thru_fields('value_from_object', container_obj)
+            processed_value.append(post_dict)
+        return processed_value
 
-        if self.model_form_kwargs_l:
-            kwargs['model_form_kwargs_l'] = self.model_form_kwargs_l
-
-        return name, path, args, kwargs
-
-    def get_db_prep_value(self, value, connection, prepared=False):
-        if prepared:
-            return value
-        if value is None:
-            return None
-        if not isinstance(value, list):
-            raise ValueError(
-                'Expected value to be type list,'
-                f'Got type {type(value)} instead'
-            )
-
-        ret = []
-        for a_mdl in value:
-            mdl_ob = {}
-            if not isinstance(a_mdl, Model):
-                raise ValueError('Array items must be Model instances')
-            for fld in a_mdl._meta.get_fields():
-                if not useful_field(fld):
-                    continue
-                fld_value = getattr(a_mdl, fld.attname)
-                mdl_ob[fld.attname] = fld.get_db_prep_value(fld_value, connection, prepared)
-            ret.append(mdl_ob)
-
-        return ret
-
-    def from_db_value(self, value, expression, connection, context):
-        return self.to_python(value)
-
-    def to_python(self, value):
-        """
-        Overrides standard to_python method from django models to allow
-        correct translation of Mongo array to a python list.
-        """
-        if value is None:
-            return value
-
-        assert isinstance(value, list)
-        ret = []
-        for mdl_dict in value:
-            if isinstance(mdl_dict, self.model_container):
-                ret.append(mdl_dict)
-                continue
-            mdl = make_mdl(self.model_container, mdl_dict)
-            ret.append(mdl)
-
-        return ret
-
-    def formfield(self, **kwargs):
-        """
-        Returns the formfield for the array.
-        """
-        defaults = {
-            'form_class': ArrayFormField,
-            'model_container': self.model_container,
-            'model_form_class': self.model_form_class,
-            'name': self.attname,
-            'mdl_form_kw_l': self.model_form_kwargs_l
-
-        }
-        defaults.update(kwargs)
-        return super().formfield(**defaults)
-
-    def validate(self, value, model_instance):
-        super().validate(value, model_instance)
-        errors = []
-        for mdl in value:
-            try:
-                mdl.full_clean()
-            except ValidationError as e:
-                errors.append(e)
-        if errors:
-            raise ValidationError(errors)
+    def validate(self, value, model_instance, validate_parent=True):
+        super(FormlessField, self).validate(value, model_instance)
+        for _dict in value:
+            super().validate(_dict, model_instance, validate_parent=False)
 
 
 def _get_model_form_class(model_form_class, model_container, admin, request):
