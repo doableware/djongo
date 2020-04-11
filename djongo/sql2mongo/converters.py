@@ -8,7 +8,7 @@ from . import query as query_module
 from .sql_tokens import SQLIdentifier, SQLConstIdentifier, SQLComparison
 from .functions import SQLFunc, CountFuncAll
 from .operators import WhereOp
-from . import SQLDecodeError
+from ..exceptions import SQLDecodeError
 from .sql_tokens import SQLToken, SQLStatement
 
 
