@@ -20,7 +20,7 @@ from sqlparse.sql import (
     Where,
     Statement)
 
-from . import SQLDecodeError, MigrationError, print_warn
+from ..exceptions import SQLDecodeError, MigrationError, print_warn
 from .functions import SQLFunc
 from .sql_tokens import (SQLToken, SQLStatement, SQLIdentifier,
                          AliasableToken, SQLConstIdentifier)
