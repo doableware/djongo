@@ -18,5 +18,5 @@ before_script:
   - mongo --version
 
 script:
-  - tox -e django_stable
+  - tox #-e django_stable
 
