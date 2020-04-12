@@ -92,12 +92,12 @@ class FormlessField(Field):
             if isinstance(field, (AutoField,
                                   BigAutoField,
                                   RelatedField)):
-                raise TypeError(
+                raise ValidationError(
                     f'Field "{field}" of model container:"{self.model_container}" '
                     f'cannot be of type "{type(field)}"')
 
             if field.attname != field.column:
-                raise ValueError(
+                raise ValidationError(
                     f'Field "{field}"  of model container:"{self.model_container}" '
                     f'cannot be named as "{field.attname}", different from '
                     f'column name "{field.column}"')
@@ -113,12 +113,21 @@ class FormlessField(Field):
                            value: dict,
                            *other_args):
         processed_value = {}
+        errors = {}
         for field in self.model_container._meta.get_fields():
             try:
-                field_value = value[field.attname]
-            except KeyError:
-                raise ValueError(f'Value for field "{field}" not supplied')
-            processed_value[field.attname] = getattr(field, func_name)(field_value, *other_args)
+                try:
+                    field_value = value[field.attname]
+                except KeyError:
+                    raise ValidationError(f'Value for field "{field}" not supplied')
+                processed_value[field.attname] = getattr(field, func_name)(field_value, *other_args)
+            except ValidationError as e:
+                errors[field.name] = e.error_list
+
+        if errors:
+            e = ValidationError(errors)
+            raise ValidationError(str(e))
+
         return processed_value
 
     def _obj_thru_fields(self,
@@ -130,20 +139,38 @@ class FormlessField(Field):
             processed_value[field.attname] = getattr(field, func_name)(obj, *other_args)
         return processed_value
 
+    def _value_thru_container(self, value):
+        processed_value = {}
+        inst = self.model_container(**value)
+        for field in self.model_container._meta.get_fields():
+            processed_value[field.attname] = getattr(inst, field.attname)
+        return processed_value
+
     def validate(self, value, model_instance, validate_parent=True):
         if validate_parent:
             super().validate(value, model_instance)
+
+        if value is None:
+            super().validate(value, model_instance)
+            return
+
         container_instance = self.model_container(**value)
         self._value_thru_fields('validate', value, container_instance)
 
     def value_to_string(self, obj):
         value = self.value_from_object(obj)
+        if value is None:
+            raise TypeError(f'Type: {type(value)} cannot be serialized')
+
         container_obj = self.model_container(**value)
         processed_value = self._obj_thru_fields('value_to_string', container_obj)
         return json.dumps(processed_value)
 
     def value_from_object(self, obj):
         value = super().value_from_object(obj)
+        if value is None:
+            return None
+
         container_obj = self.model_container(**value)
         processed_value = self._obj_thru_fields('value_from_object', container_obj)
         return processed_value
@@ -183,8 +210,8 @@ class FormlessField(Field):
             raise ValidationError(
                 f'Value: {value} must be an instance of {self.base_type}')
 
-        processed_value = self._value_thru_fields('to_python',
-                                                  value)
+        value = self._value_thru_container(value)
+        processed_value = self._value_thru_fields('to_python', value)
         return processed_value
 
 
@@ -237,14 +264,20 @@ class ArrayField(MongoField):
     empty_strings_allowed = False
     base_type = list
 
+    def _value_thru_container(self, value):
+        post_value = []
+        for _dict in value:
+            post_value.append(super()._value_thru_container(_dict))
+        return post_value
+
     def _value_thru_fields(self,
                            func_name: str,
                            value: typing.Union[list, dict],
                            *other_args):
         if isinstance(value, dict):
             return super()._value_thru_fields(func_name,
-                                       value,
-                                       *other_args)
+                                              value,
+                                              *other_args)
 
         processed_value = []
         for pre_dict in value:
