@@ -1,3 +1,5 @@
+from unittest import skip
+
 from django.core.exceptions import ValidationError
 
 from djongo.exceptions import NotSupportedError
@@ -5,7 +7,7 @@ from xtest_app.models.basic_field import BasicBlog, BasicRelatedEntry, BasicAuth
 from . import TestCase
 from djongo import models
 from xtest_app.models import basic_field, embedded_field
-from typing import Type, Optional as O, Union as U
+from typing import Type, Optional as O, Union as U, Any
 
 
 class FieldTests(TestCase):
@@ -65,23 +67,21 @@ class MongoFieldTests(FieldTests):
             self.verify()
         self.assertEqual(self.db_entry.blog, proper_value)
 
-    def verify_missing_value(self):
+    def verify_missing_value(self, missing_value):
         self.mut = self.get_model()
-        entry = self.mut(**self.headline_query)
+        entry = self.mut(**missing_value)
         with self.assertRaises(ValidationError) as e:
             entry.clean_fields()
 
     def verify_null_true(self):
         self.mut = self.get_model(null=True, blank=True)
-        self.blog_value = None
         entry = self.mut(**self.entry_values)
         entry.clean_fields()
 
     def verify_null_false(self):
         self.mut = self.get_model(null=False)
-        self.blog_value = None
         entry = self.mut(**self.entry_values)
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(ValidationError) as e:
             entry.clean_fields()
 
     def verify_db_column(self):
@@ -91,13 +91,12 @@ class MongoFieldTests(FieldTests):
             'other_blog': {'$exists': True}})
         self.assertEqual(count, 1)
 
-    def verify_db_default(self, default):
+    def verify_db_default(self, missing_value, default=None):
         self.mut = self.get_model(default=default)
-        entry = self.mut(**self.headline_query)
+        entry = self.mut(**missing_value)
         entry.clean_fields()
         entry.save()
         db_entry = self.mut.objects.get(**self.headline_query)
-        self.assertEqual(db_entry.blog, default)
         self.assertEqual(entry, db_entry)
 
 
@@ -118,43 +117,58 @@ class TestEmbeddedField(MongoFieldTests):
         self.verify_fake_extra_value(proper_value)
 
     def test_missing_value(self):
-        self.verify_missing_value()
+        self.verify_missing_value(self.headline_query)
 
     def test_null_true(self):
+        self.blog_value = None
         self.verify_null_true()
 
     def test_null_false(self):
+        self.blog_value = None
         self.verify_null_false()
 
     def test_db_column(self):
         self.verify_db_column()
 
     def test_db_default(self):
-        self.verify_db_default(default={'name': 'blog_name'})
+        self.verify_db_default(self.headline_query,
+                               default={'name': 'blog_name'})
 
 
-class TestEmbeddedInternalField(FieldTests, TestCase):
-    named_blog_kwargs: dict
+class EmbeddedInternalFieldHelper:
+    name_field_kwargs: dict
     _entry = None
+    module_path: str
+    model_constructor_kwargs = None
 
     @property
     def mongo_field_model_container(self):
-        class Meta:
-            abstract = True
+        if not self.model_constructor_kwargs:
+            class Meta:
+                abstract = True
 
-        kwargs = {
-            'Meta': Meta,
-            '__module__': self.module_path,
-            'name': models.CharField(**self.named_blog_kwargs)
-        }
+            kwargs = {
+                'Meta': Meta,
+                '__module__': self.module_path,
+                'name': models.CharField(**self.name_field_kwargs)
+            }
+        else:
+            kwargs = self.model_constructor_kwargs
+
         NamedBlog = type('NamedBlog',
                          (models.Model,),
                          kwargs)
         return NamedBlog
 
+
+class TestEmbeddedInternalField(EmbeddedInternalFieldHelper, FieldTests):
+
     def setUp(self):
-        super().setUp()
+        self.blog_value = {
+            'name': 'blog_name'
+        }
         self._entry = None
+        super().setUp()
 
     @property
     def entry(self):
@@ -165,33 +179,112 @@ class TestEmbeddedInternalField(FieldTests, TestCase):
         return self._entry
 
     def test_null_false(self):
-        self.named_blog_kwargs = {'null': False,
+        self.name_field_kwargs = {'null': False,
                                   'max_length': 100}
         self.blog_value = {'name': None}
         with self.assertRaises(ValidationError) as e:
             self.entry.clean_fields()
 
+    def test_null_true(self):
+        self.name_field_kwargs = {'null': True,
+                                  'blank': True,
+                                  'max_length': 100}
+        self.blog_value = {'name': None}
+        self.entry.clean_fields()
+
     def test_missing_value(self):
-        self.named_blog_kwargs = {'null': False,
+        self.name_field_kwargs = {'null': False,
                                   'max_length': 100}
         self.blog_value = {}
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(ValidationError) as e:
             self.entry.clean_fields()
 
     def test_db_column(self):
-        self.named_blog_kwargs = {'db_column': 'diff_blog',
+        self.name_field_kwargs = {'db_column': 'diff_blog',
                                   'max_length': 100}
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(ValidationError) as e:
             entry = self.entry
 
     def test_db_index(self):
-        self.named_blog_kwargs = {'db_index': True,
+        self.name_field_kwargs = {'db_index': True,
                                   'max_length': 100}
         with self.assertRaises(NotSupportedError) as e:
             entry = self.entry
 
-class TestNestedEmbeddedField(MongoFieldTests):
-    pass
+
+class TestNestedEmbeddedField(EmbeddedInternalFieldHelper, MongoFieldTests):
+    nested_blog_kwargs = {}
+
+    def setUp(self) -> None:
+        self.blog_value = {'name': 'blog_name',
+                           'nested_blog': {
+                               'name': 'nested_blog_name'
+                           }}
+        super().setUp()
+
+    @property
+    def model_constructor_kwargs(self):
+        class Meta:
+            abstract = True
+
+        kwargs = {
+            'Meta': Meta,
+            '__module__': self.module_path,
+            'name': models.CharField(max_length=100),
+            'nested_blog': self.mongo_field(
+                model_container=basic_field.NamedBlog,
+                **self.nested_blog_kwargs
+            )}
+
+        return kwargs
+
+    def test_default_options(self):
+        self.verify_default_options()
+
+    def test_fake_extra_value(self):
+        proper = {'name': 'blog_name',
+                  'nested_blog': {
+                      'name': 'nested_blog_name'
+                  }}
+        self.blog_value['nested_blog']['fake_name'] = 'fake name' # NoQA
+        self.verify_fake_extra_value(proper)
+
+    def test_missing_inner_value(self):
+        self.blog_value['nested_blog'].pop('name')
+        self.verify_missing_value(self.entry_values)
+
+    def test_missing_value(self):
+        self.blog_value.pop('nested_blog')
+        self.verify_missing_value(self.entry_values)
+
+    def test_null_true(self):
+        self.blog_value['nested_blog'] = None
+        self.nested_blog_kwargs = {
+            'null': True,
+            'blank': True
+        }
+        self.verify_null_true()
+
+    def test_null_false(self):
+        self.blog_value['nested_blog'] = None
+        self.verify_null_false()
+
+    def test_db_column(self):
+        self.nested_blog_kwargs = {
+            'db_column': 'diff_blog'
+        }
+        with self.assertRaises(ValidationError) as e:
+            self.get_model()
+        print(e.exception)
+
+    def test_db_default(self):
+        self.blog_value.pop('nested_blog')
+        self.nested_blog_kwargs = {
+            'default': {
+                'name': 'nested_blog_name'
+            }
+        }
+        self.verify_db_default(self.entry_values)
 
 
 class TestArrayField(MongoFieldTests):
@@ -212,19 +305,22 @@ class TestArrayField(MongoFieldTests):
         self.verify_fake_extra_value(proper_value)
 
     def test_missing_value(self):
-        self.verify_missing_value()
+        self.verify_missing_value(self.headline_query)
 
     def test_null_true(self):
+        self.blog_value = None
         self.verify_null_true()
 
     def test_null_false(self):
+        self.blog_value = None
         self.verify_null_false()
 
     def test_db_column(self):
         self.verify_db_column()
 
     def test_db_default(self):
-        self.verify_db_default(default=[{'name': 'blog_name1'},
+        self.verify_db_default(self.headline_query,
+                               default=[{'name': 'blog_name1'},
                                         {'name': 'blog_name2'}])
 
 
@@ -236,6 +332,7 @@ class TestNestedArrayField(MongoFieldTests):
     pass
 
 
+@skip('Not fully ready')
 class TestReference(TestCase):
 
     def test_create(self):
@@ -284,6 +381,7 @@ class TestReference(TestCase):
         self.assertEqual([a1], list(e1.authors.all()))
 
 
+@skip('Not fully ready')
 class TestBasic(TestCase):
 
     def test_create(self):
@@ -356,34 +454,3 @@ class TestBasic(TestCase):
         bqs = BasicBlog.objects.filter(id__in=eqs).values('name')
         self.assertEquals(list(bqs), [{'name': 'b1'}, {'name': 'b2'}])
 
-
-class TestMisc(TestCase):
-
-    def test_create(self):
-        e1 = ListEntry()
-        e1.authors = ['a1', 'a2']
-        e1.headline = 'h1'
-        e1.save()
-        g = ListEntry.objects.get(
-            headline='h1'
-        )
-        self.assertEqual(e1, g)
-
-        # g = ListEntry.objects.get(
-        #     authors={'0.': 'a1'}
-        # )
-        self.assertEqual(e1, g)
-        e2 = DictEntry()
-        e2.headline = 'h2'
-        e2.blog = {
-            'name': 'b1'
-        }
-        e2.save()
-        g = DictEntry.objects.get(
-            headline='h2'
-        )
-        self.assertEqual(e2, g)
-        g = DictEntry.objects.get(
-            blog={'name': 'b1'}
-        )
-        self.assertEqual(e2, g)
