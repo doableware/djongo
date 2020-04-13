@@ -11,7 +11,7 @@ admin.site.register(BasicBlog)
 admin.site.register(ArrayEntry)
 
 admin.site.register(BasicRelatedEntry)
-admin.site.register(EmbeddedEntry)
+# admin.site.register(EmbeddedEntry)
 # admin.site.register(EmbeddedDateEntry)
 # admin.site.register(ReferenceEntry)
 # admin.site.register(ReferenceAuthor)
