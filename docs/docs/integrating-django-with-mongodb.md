@@ -183,7 +183,7 @@ avatar = models.ImageField(storage=grid_fs_storage, upload_to='')
 Refer to [Using GridFSStorage](/djongo/using-django-with-mongodb-gridfs/) for more details.
 
 
-## Integrating an existing Django App
+## Migrating an existing Django app to MongoDB
 
 When migrating an existing Django app to MongoDB,  it is recommended to start a new database on MongoDB. For example, use `myapp-djongo-db` in your `settings.py` file. 
 
@@ -203,7 +203,7 @@ When migrating an existing Django app to MongoDB,  it is recommended to start a 
 4. While the relevant collections have been created in MongoDB, they have have no data inside.
 5. Continue by inserting data into the collection directly, or from Django Admin. 
 
-## Setting up existing data on MongoDB
+## Setting up an existing MongoDB database on Django
 
 ### The internal `__schema__` collection
 
@@ -247,6 +247,5 @@ However, if you do not want to create a new database (and copy existing data int
 
 *You are now done setting up Django with MongoDB. Start using Django with MongoDB, like you would with any other database backend.*
 
-Finally, you can ask for [expert support](https://www.patreon.com/nesdis) if your project demands complex migrations.
 
 
