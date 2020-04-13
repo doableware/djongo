@@ -31,7 +31,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'djongo',
         'NAME': 'djongo-test',
-        'ENFORCE_SCHEMA': True
+        'ENFORCE_SCHEMA': False
 
     },
 }
