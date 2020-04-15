@@ -1,4 +1,4 @@
-from djongo.sql2mongo import NotSupportedError, print_warn
+from djongo.exceptions import NotSupportedError, print_warn
 
 print_warn('aggregation')
 

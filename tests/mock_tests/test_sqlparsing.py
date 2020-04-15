@@ -230,6 +230,18 @@ class VoidQuery(MockTest):
         self.assertRaises(StopIteration, result.next)
 
 
+class TestCreateDatabase(VoidQuery):
+    """
+    CREATE DATABASE "some_name"
+    """
+
+    def test_database(self):
+        self.sql = 'CREATE DATABASE "some_name"'
+        self.exe()
+        self.db.assert_not_called()
+        self.conn.assert_not_called()
+
+
 class TestCreateTable(VoidQuery):
     """
         'CREATE TABLE "django_migrations" '
@@ -877,7 +889,7 @@ class ResultQuery(MockTest):
         self.db.reset_mock()
         return list(result)
 
-    def aggregate_mock(self, pipeline, iter_return_value=None, ans=None):
+    def eval_aggregate(self, pipeline, iter_return_value=None, ans=None):
         if iter_return_value:
             self.agg_iter.return_value = iter_return_value
 
@@ -936,7 +948,7 @@ class TestQueryDistinct(ResultQuery):
             }
         ]
 
-        self.aggregate_mock(pipeline, return_value, ans)
+        self.eval_aggregate(pipeline, return_value, ans)
 
     def test_pattern2(self):
         return_value = [{'col1': 'a'}, {'col1': 'b'}]
@@ -987,7 +999,7 @@ class TestQueryDistinct(ResultQuery):
             },
         ]
 
-        self.aggregate_mock(pipeline, return_value, ans)
+        self.eval_aggregate(pipeline, return_value, ans)
 
 
 class TestQueryFunctions(ResultQuery):
@@ -1002,7 +1014,7 @@ class TestQueryFunctions(ResultQuery):
         ]
         return_value = [{'m__min1': 1, 'm__max1': 2}]
         ans = [(1, 2)]
-        self.aggregate_mock(pipeline, return_value, ans)
+        self.eval_aggregate(pipeline, return_value, ans)
 
 
 class TestQueryCount(ResultQuery):
@@ -1015,7 +1027,7 @@ class TestQueryCount(ResultQuery):
         ]
         return_value = [{'__count': 1}]
         ans = [(1,)]
-        self.aggregate_mock(pipeline, return_value, ans)
+        self.eval_aggregate(pipeline, return_value, ans)
 
     def test_const(self):
         self.sql = 'SELECT (1) AS "a" FROM "table1" WHERE "table1"."col2" = %s LIMIT 1'
@@ -1042,7 +1054,7 @@ class TestQueryCount(ResultQuery):
         ]
         return_value = [{'a': 1}]
         ans = [(1,)]
-        self.aggregate_mock(pipeline, return_value, ans)
+        self.eval_aggregate(pipeline, return_value, ans)
 
     def test_const_simple(self):
         self.sql = 'SELECT (1) AS "a" FROM "table1" LIMIT 1'
@@ -1062,7 +1074,7 @@ class TestQueryCount(ResultQuery):
         ]
         return_value = [{'a': 1}]
         ans = [(1,)]
-        self.aggregate_mock(pipeline, return_value, ans)
+        self.eval_aggregate(pipeline, return_value, ans)
 
 @skip
 class TestQueryUpdate(ResultQuery):
@@ -1232,7 +1244,7 @@ class TestQueryGroupBy(ResultQuery):
             },
         ]
         ans = [('a1', 'a2', 1, 2), ('b1', 'b2', 3, 4)]
-        self.aggregate_mock(pipeline, return_value, ans)
+        self.eval_aggregate(pipeline, return_value, ans)
 
     def test_pattern2(self):
         self.sql = (
@@ -1294,7 +1306,7 @@ class TestQueryGroupBy(ResultQuery):
             },
             {'$sort': OrderedDict([('dt', 1)])}
         ]
-        self.aggregate_mock(pipeline, return_value, ans)
+        self.eval_aggregate(pipeline, return_value, ans)
 
     def test_pattern3(self):
         """
@@ -1361,7 +1373,7 @@ class TestQueryGroupBy(ResultQuery):
                 '$match': {'dt': {'$lt': 2}}
             }
         ]
-        self.aggregate_mock(pipeline, return_value, ans)
+        self.eval_aggregate(pipeline, return_value, ans)
 
     @skip
     def test_pattern4(self):
@@ -1660,7 +1672,7 @@ class TestQueryJoin(ResultQuery):
                 }
             }
         ]
-        self.aggregate_mock(pipeline, return_value, ans)
+        self.eval_aggregate(pipeline, return_value, ans)
 
 
 class TestQueryNestedIn(ResultQuery):
@@ -1724,7 +1736,7 @@ class TestQueryNestedIn(ResultQuery):
                 }
             },
         ]
-        self.aggregate_mock(pipeline, return_value, ans)
+        self.eval_aggregate(pipeline, return_value, ans)
 
     def test_pattern2(self):
         return_value = [{'col1': 'a1', 'col2': 'a2'}, {'col1': 'b1', 'col2': 'b2'}]
@@ -1805,7 +1817,7 @@ class TestQueryNestedIn(ResultQuery):
                 }
             },
         ]
-        self.aggregate_mock(pipeline, return_value, ans)
+        self.eval_aggregate(pipeline, return_value, ans)
 
 
 class TestQueryNot(ResultQuery):

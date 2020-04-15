@@ -5,7 +5,8 @@ from typing import Union as U, Iterator
 from pymongo import ASCENDING, DESCENDING
 from sqlparse import tokens, parse as sqlparse
 from sqlparse.sql import Token, Identifier, Function, Comparison, Parenthesis, IdentifierList, Statement
-from . import SQLDecodeError, query as query_module
+from . import query as query_module
+from ..exceptions import SQLDecodeError
 
 all_token_types = U['SQLConstIdentifier',
                     'djongo.sql2mongo.functions.CountFunc',

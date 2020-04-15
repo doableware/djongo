@@ -53,7 +53,7 @@ DATABASES = {
 # Application definition
 
 INSTALLED_APPS = [
-    'main_test.apps.MainTestConfig',
+    'xtest_app.apps.XtestAppConfig',
 ]
 
 

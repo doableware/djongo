@@ -2,7 +2,7 @@ import abc
 
 from sqlparse.sql import Token
 
-from . import SQLDecodeError
+from ..exceptions import SQLDecodeError
 from .sql_tokens import AliasableToken, SQLToken
 from . import query as query_module
 from typing import Union as U

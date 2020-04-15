@@ -1,7 +1,7 @@
 from django.test import TransactionTestCase
 from threading import Thread
 
-from main_test.models.canvas_models_id import ForeignKey1, ForeignKey2, DummyObject
+from xtest_app.models.canvas_models_id import ForeignKey1, ForeignKey2, DummyObject
 
 def make_request():
     objects = DummyObject.objects.all()
