@@ -32,6 +32,8 @@ Same as the `Field` Base class
 
 ## The List field
 
+> Note: To be depreciated soon and replaced with a `JSONField`
+
 `ArrayField` and `ArrayReferenceField` require all Models in the list to be of the same type. MongoDB allows the saving of arbitrary data inside it is embedded array. The `ListField` is useful in such cases. The list field cannot be represented in Django Admin though and can only be used in the python script.
 
 ### ListField
