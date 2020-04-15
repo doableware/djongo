@@ -83,6 +83,7 @@ class MongoFieldTests(FieldTests):
         entry = self.mut(**self.entry_values)
         with self.assertRaises(ValidationError) as e:
             entry.clean_fields()
+        print(e)
 
     def verify_db_column(self):
         self.mut = self.get_model(db_column='other_blog')
