@@ -1,7 +1,6 @@
 # This version of Djongo was made possible by
 # the generous contributions from:
 #
-#       * TechDragon
 #       * Zachary Sizemore
 #       * Wayne Van Son
 #       * Norman Niemer

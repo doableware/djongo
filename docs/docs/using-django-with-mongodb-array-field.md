@@ -8,11 +8,11 @@ permalink: /using-django-with-mongodb-array-field/
 With Djongo there can be an [array](https://docs.mongodb.com/manual/core/document/#arrays) of embedded documents inside the parent document. You can create an **embed array/list of models inside the parent model** and store it directly into MongoDB.
 
 ```python
-class ArrayField(Field):
+class ArrayField(MongoField):
     def __init__(self,
                  model_container: typing.Type[Model],
-                 model_form_class: typing.Type[forms.ModelForm]=None,
-                 model_form_kwargs_l: dict=None,
+                 model_form_class: typing.Type[forms.ModelForm] = None,
+                 model_form_kwargs: dict = None,
                  *args, **kwargs):
 ```
 
@@ -22,7 +22,7 @@ Argument | Type | Description
 ---------|------|-------------
 `model_container` | `models.Model` | The child model class type (not the instance) that this array field will contain.
 `model_form_class` | `models.forms.ModelForm` | The child model form class type of the array model. All child models inside the array must be of the same type. Mixing different types of child models inside the embedded array is not supported.
-`model_form_kwargs` | `dict()` | The kwargs (if any) that must be passed to the embedded model form while instantiating it.
+`model_form_kwargs` | `dict()` | The kwargs (if any) that must be passed to the `forms.ModelForm` while instantiating it.
   
 ### Example
 
@@ -78,7 +78,9 @@ A Model with an Array field can be created as follows:
 
 ```python
 entry = Entry()
-entry.authors = [Author()]
+entry.authors = [{'name': 'John', 'email': 'john@mail.com'},
+                {'name': 'Paul', 'email': 'paul@mail.com'}]
+entry.save()
 ```
 
 ### Querying Array fields
@@ -91,7 +93,7 @@ With `ArrayField` the query reduces to a single simple query:
 entries = Entry.objects.filter(authors={'name': 'Paul'})
 ```
 
-Djongo lets you get even more specific with your queries. To query all entries where the third author is *Paul*:
+Djongo lets you get even more specific with your queries. To query all entries where the *third author is Paul*:
 
 ```python
 entries = Entry.objects.filter(authors={'2.name': 'Paul'})
