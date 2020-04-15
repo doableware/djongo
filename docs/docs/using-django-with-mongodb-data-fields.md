@@ -5,14 +5,14 @@ permalink: /using-django-with-mongodb-data-fields/
 
 ## EmbeddedField
 
-MongoDB allows the creation of an [embedded document](https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding). By using Djongo as your connector, you can embed any other model into your parent model through the `EmbeddedField`. 
+MongoDB allows the creation of an [embedded document](https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding). By using Djongo as your connector, you can embed any other 'model' into your parent model through the `EmbeddedField`. 
 
 ```python
-class EmbeddedField(Field):
+class EmbeddedField(MongoField):
     def __init__(self,
                  model_container: typing.Type[Model],
-                 model_form_class: typing.Optional[Type[forms.ModelForm]]=None,
-                 model_form_kwargs: typing.Optional[dict]=None,
+                 model_form_class: typing.Type[forms.ModelForm] = None,
+                 model_form_kwargs: dict = None,
                  *args, **kwargs):
 ```
 
@@ -22,13 +22,10 @@ Argument | Type | Description
 ---------|------|-------------
 `model_container`| `models.Model` | The child model class type (not instance) that this embedded field will contain.
 `model_form_class` | `models.forms.ModelForm` | The child model form class type of the embedded model.
-`model_form_kwargs` | `dict()` | The kwargs (if any) that must be passed to the embedded model form while instantiating it.
+`model_form_kwargs` | `dict()` | The kwargs (if any) that must be passed to the `forms.ModelForm` while instantiating it.
   
-### Example
-
 ```python
 from djongo import models
-from django import forms
 
 class Blog(models.Model):
     name = models.CharField(max_length=100)
@@ -38,31 +35,123 @@ class Blog(models.Model):
         abstract = True
 
 class Entry(models.Model):
+    _id = models.ObjectIdField()
     blog = models.EmbeddedField(
         model_container=Blog
     )
     
     headline = models.CharField(max_length=255)    
     objects = models.DjongoManager()
+
+e = Entry.objects.create(
+    headline='h1',
+    blog={
+        'name': 'b1',
+        'tagline': 't1'
+    })
+
+g = Entry.objects.get(headline='h1')
+assert e == g
+
+e = Entry()
+e.blog = {
+    'name': 'b2'
+    'tagline': 't2'
+}
+e.headline = 'h2'
+e.save()
+
+```
+
+## Validating field data
+
+Djongo automatically validates the value assigned to an EmbeddedField. Validation criteria (`null=True` or `blank=False`) can be applied on the `ÈmbeddedField` or to the internal fields (`CharField`)
+
+```python
+class Entry(models.Model):
+    _id = models.ObjectIdField()
+    blog = models.EmbeddedField(
+        model_container=Blog,
+        null=True
+    )
+    
+    headline = models.CharField(max_length=255)    
+    objects = models.DjongoManager()
+
+e = Entry(headline='h1', blog=None)
+e.clean_fields()
+
+>>>
+# No validation error
 ```
 
 ```python
+class Entry(models.Model):
+    _id = models.ObjectIdField()
+    blog = models.EmbeddedField(
+        model_container=Blog,
+        null=False
+    )
+    
+    headline = models.CharField(max_length=255)    
+    objects = models.DjongoManager()
+
+e = Entry(headline='h1', blog=None)
+e.clean_fields()
+
+>>> 
+    ValidationError({'blog': ['This field cannot be null.']})
+```
+## Nesting Embedded Fields
+
+An `EmbeddedField` or `ArrayField` can be nested inside an `EmbeddedField`. There is no limitation on the depth of nesting.
+
+```python
+from djongo import models
+
+class Tagline(models.Model)
+    title = models.CharField(max_length=100)
+    subtitle = models.CharField(max_length=100)
+    
+    class Meta:
+        abstract = True
+
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.EmbeddedField(model_container=Tagline)
+
+    class Meta:
+        abstract = True
+
+class Entry(models.Model):
+    _id = models.ObjectIdField()
+    blog = models.EmbeddedField(
+        model_container=Blog
+    )
+    
+    headline = models.CharField(max_length=255)    
+    objects = models.DjongoManager()
+
 e = Entry.objects.create(
     headline='h1',
-    blog=Blog(
-        name='b1',
-        tagline='t1'
-    )
-)
+    blog={
+        'name': 'b1',
+        'tagline': {
+            'title': 'Tagline Title'
+            'subtitle': 'Tagline Subtitle'
+        }
+    })
+
 g = Entry.objects.get(headline='h1')
 assert e == g
+
 ```
+
 
 ## Embedded Form
 
 While creating a Form for [the ModelForm](https://docs.djangoproject.com/en/dev/topics/forms/modelforms/), the embedded forms **are automatically generated**. Multiple embedded forms get automatically generated when the Model contains an array of embedded models. However, you can still override this by specifying the `model_form_class` argument in the `EmbeddedField`.
 
-### Example
 
 ```python
 from djongo import models
@@ -95,7 +184,7 @@ class Entry(models.Model):
 
 ## Querying Embedded fields
 
-In the above example to query all BlogPost with content made by authors whose name startswith *Beatles*  use the following query:
+To query all BlogPost with content made by authors whose name startswith *Beatles*  use the following query:
 
 ```python
 entries = Entry.objects.filter(blog__startswith={'name': 'Beatles'})
@@ -110,14 +199,28 @@ filter = {
     }
 }
 ```
+For querying nested embedded fields provide the appropriate dictionary value
+
+```python
+entries = Entry.objects.filter(blog__startswith={'tagline': {'subtitle': 'Artist'})
+```
+Internally Djongo converts this query (for BlogPost collection) to the form:
+
+```python
+filter = {
+    'blog.tagline.subtitle': {
+            '$regex': '^Artist.*$'
+    }
+}
+```
 
 ## Using EmbeddedField in Django Admin
  
-Django Admin is a powerful tool for managing data used in your app. When your models use Djongo relational fields,  you can create NoSQL "embedded models" directly from the Django Admin. **These fields provide better performance when compared with traditional Django relational fields.**
+Django Admin is a powerful tool for managing data used in an app. When the models use Djongo relational fields, NoSQL "embedded models" can be created directly from Django Admin. **These fields provide better performance when compared with traditional Django relational fields.**
 
-The Django admin application can use your models to automatically build a site area that you can use to create, view, update, and delete records. This can save you a lot of time during development, making it very easy to test your models and get a feel for whether you have the right data. Most of you already know about Django Admin, but to demonstrate how to use it with Djongo, we start with a simple example. You can ask for [expert support](https://www.patreon.com/nesdis) if your project uses complex models.
+Django admin can use models to automatically build a site area that can be used to create, view, update, and delete records. This can save a lot of time during development, making it very easy to test the models and get a feel for the right data. Django Admin is already quite well known, but to demonstrate how to use it with Djongo, here is a simple example.
 
-We first define our basic models. In the tutorials, we use the example used in the official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/). The documentation talks about 3 models that interact with each other: **Blog, Author and Entry**. To make the example clearer, few fields from the original models are omitted. 
+First define our basic models. In these tutorials, the same example used in the official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/) is used. The documentation talks about 3 models that interact with each other: **Blog, Author and Entry**. To make the example clearer, few fields from the original models are omitted. 
 
 ```python
 from djongo import models
@@ -151,7 +254,7 @@ class Entry(models.Model):
         return self.headline
 ```
 
-You start with your admin development by *registering* a model. Register the models defined above in the `admin.py` file.
+Start with the admin development by *registering* a model. Register the models defined above in the `admin.py` file.
 
 ```python
 from django.contrib import admin
@@ -169,7 +272,7 @@ The `Entry` model defined in the documentation consists of 3 parts:
 
 **An interesting point of note** is that the `Blog` model consists of just 2 fields. Most of the data is stored in the `Entry` model.
 
-So what happens when a user enters your blog? A user wants to view the ‘Beatles blog’. In your project you could probably do:
+So what happens when a user enters a blog? The user wants to view the ‘Beatles blog’. In the project you could probably do:
 
 ```python
 blog = Blog.objects.get(name='Beatles Blog')
@@ -181,7 +284,7 @@ Next, to retrieve all entries related to the Beatles blog, follow it up with:
 entries = Entry.objects.filter(blog_id=blog.id)
 ```
 
-While it is fine to obtain entries in this fashion, you end up **making 2 trips** to the database. If you are using a SQL based backend this is not the most efficient way. The number of trips can be reduced to one. Django makes the query more efficient:
+While it is fine to obtain entries in this fashion, you end up **making 2 trips** to the database. For SQL based backend this is not the most efficient way. The number of trips can be reduced to one. Django makes the query more efficient:
 
 ```python
 entries = Entry.objects.filter(blog__name='Beatles Blog')
@@ -189,7 +292,7 @@ entries = Entry.objects.filter(blog__name='Beatles Blog')
 
 This query will hit the database just once. All entries associated with a `Blog` having the name ‘Beatles Blog’ will be retrieved. However, this query generates a SQL JOIN. **JOINs are much slower when compared to single table lookups**.
 
-Since a `Blog` model shares a 1-to-many relationship with `Entry` I can rewrite my `Entry` model:
+Since a `Blog` model shares a 1-to-many relationship with `Entry` the `Entry` model can be written as:
 
 ```python
 class Entry(models.Model):
@@ -208,23 +311,21 @@ class Entry(models.Model):
         return self.headline
 ```
 
-I have inserted the `Blog` fields into the `Entry` model. With this new data model the query changes to:
+The `Blog` fields have been inserted into the `Entry` model. With this new data model the query changes to:
 
 ```python
 entries = Entry.objects.filter(blog_name='Beatles Blog')
 ```
 
-There are no JOINs generated with this and queries will be much faster. What you are thinking though is, are we  not duplicating data? Yes we are, but only if the backend database does not use data compression.
+There are no JOINs generated with this and queries will be much faster. There is data duplication, but only if the backend database does not use data compression.
 
-Using compression to mitigate data duplication is fine but take a look at our Entry model, it has 10 columns and is getting unmanageable.
+Using compression to mitigate data duplication is fine but take a look at the Entry model, it has 10 columns and is getting unmanageable.
 
-## The Embedded Model
+## The Embedded Data Model
 
-The hierarchical structure in *Nature* is apparent. For example,  electrons and protons add up to make atoms, which make molecules. There is hierarchy to *data* too.
+A `Blog` contains a `name` and a `tagline`. An `Entry` contains details of the `Blog`, the `Authors`, `body_text` and some `Meta` data. To make the `Entry` model manageable it can be redefined with an `EmbeddedField`.
 
-A `Blog` contains a `name` and a `tagline`. An `Entry` contains details of the `Blog`, the `Authors`, `body_text` and some `Meta` data. To make the `Entry` model manageable let us redefine it:
-
-You should use embedded models when it does not make sense to store a data set as another table in the database and refer to it every time with a foreign key lookup. However, you still want to group the data set in a hierarchical fashion, to isolate its functionality.
+Embedded data models should be used when it does not make sense to store a data set as another table in the database and refer to it every time with a foreign key lookup. However, you still want to group the data set in a hierarchical fashion, to isolate its functionality.
 
 In case you don't plan on using your embedded model as a standalone model (which means it will always be embedded inside a parent model) you should add the `class Meta` and `abstract = True` This way Djongo will never register this model as an [actual model](https://docs.djangoproject.com/en/dev/topics/db/models/#abstract-base-classes).
 
@@ -273,7 +374,7 @@ class Entry(models.Model):
         return self.headline
 ```
 
-To display the embedded models in Django Admin, a `Form` for the embedded fields is required. Since the embedded field is an abstract model, the form for it can be easily created by using a `ModelForm`. The `BlogForm` defines `Blog` as the model with `name` and `tagline` as the form fields. 
+To display the embedded models in Django Admin, a `Form` for the embedded fields is required. Since the embedded field is an abstract model, the form is easily created by using a `ModelForm`. The `BlogForm` defines `Blog` as the model with `name` and `tagline` as the form fields. 
 
 If you do not specify a `ModelForm` for your embedded models, and pass it using the `model_form_class` argument, Djongo will automatically generate a `ModelForm` for you.
 
