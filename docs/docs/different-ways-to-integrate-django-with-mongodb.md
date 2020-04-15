@@ -47,10 +47,6 @@ Object Document Mapping (ODM) is the Object Relational Mapping (ORM) for non-rel
 
 [Django-nonrel](https://github.com/django-nonrel/django) aims to integrate Django and MongoDB but is not up to date with the latest version of Django.
 
-### django-mongo-engine
-
-[MongoEngine](https://github.com/MongoEngine/mongoengine) is a Python Object-Document Mapper for working with MongoDB. [Django support in MongoEngine](https://mongoengine-odm.readthedocs.io/django.html) is split from the main MongoEngine repository for working with Django. 
-
 ## Django SQL to MongoDB transpiler
 
 A different approach is to translate Django SQL query syntax into pymongo commands.
@@ -69,7 +65,7 @@ This has several advantages
  
  As **SQL syntax will never change** regardless of future additions to Django, by using Djongo your code is now future proof!  
   
-### Stop the immigrations
+### Goodbye migrations 
  
 MongoDB is a [schema free](https://docs.mongodb.com/manual/data-modeling/) DB. You no longer need to run <code> manage.py migrate</code> every time you change a model. Making changes to your models is easier.
   
