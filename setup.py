@@ -101,7 +101,6 @@ setup(
     extras_require=dict(
         json=[
             'django-jsonfield>=1.4.0',
-            'jsonfield>=2.0.2',
             'django-jsoneditor>=0.0.12',
         ],
     ),
