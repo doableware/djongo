@@ -4,7 +4,9 @@ permalink: "/djongonxt/"
 toc: false
 ---
 
-DjongoNxt is a Django and MongoDB connector for professional usage. It has all the features of Djongo and much more. It comes with support for:
+> Features supported in DjongoNxt are not a part of the standard Djongo package. Visit the [sponsors page](https://www.patreon.com/nesdis/) for more information.
+
+DjongoNxt is a Django and MongoDB connector for full featured database usage. It provides many features of MongoDB enabled through Django. It comes with support for:
 
 ### Indexes
 

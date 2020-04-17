@@ -1,3 +1,4 @@
+import sys
 from typing import Any
 from unittest.util import safe_repr
 
@@ -6,6 +7,7 @@ from pymongo import MongoClient
 from pymongo.database import Database
 from djongo.models import Model
 from django.test import TestCase as DjangoTestCase
+from logging import getLogger, StreamHandler, DEBUG
 
 
 class TestCase(DjangoTestCase):
@@ -17,6 +19,10 @@ class TestCase(DjangoTestCase):
         cls.client = MongoClient()
         db = settings.DATABASES['default']['NAME']
         cls.db = cls.client[db]
+        logger = getLogger(__name__)
+        logger.addHandler(StreamHandler(sys.stdout))
+        logger.setLevel(DEBUG)
+        cls.logger = logger
 
     @classmethod
     def tearDownClass(cls):

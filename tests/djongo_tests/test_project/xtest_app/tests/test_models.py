@@ -24,8 +24,11 @@ class FieldTests(TestCase):
 
     def get_model(self,
                   **embedded_field_kwargs) -> U[Type[models.Model], type]:
+        if self.mongo_field_model_container:
+            embedded_field_kwargs.update(
+                model_container=self.mongo_field_model_container)
+
         field = self.mongo_field(
-            model_container=self.mongo_field_model_container,
             **embedded_field_kwargs)
         mut = type('ModelUnderTest',
                    self.entry_bases,
@@ -72,6 +75,7 @@ class MongoFieldTests(FieldTests):
         entry = self.mut(**missing_value)
         with self.assertRaises(ValidationError) as e:
             entry.clean_fields()
+        self.logger.debug(e.exception)
 
     def verify_null_true(self):
         self.mut = self.get_model(null=True, blank=True)
@@ -83,7 +87,7 @@ class MongoFieldTests(FieldTests):
         entry = self.mut(**self.entry_values)
         with self.assertRaises(ValidationError) as e:
             entry.clean_fields()
-        print(e)
+        self.logger.debug(e.exception)
 
     def verify_db_column(self):
         self.mut = self.get_model(db_column='other_blog')
@@ -331,6 +335,17 @@ class TestArrayInternalField(MongoFieldTests):
 
 class TestNestedArrayField(MongoFieldTests):
     pass
+
+
+class TestJsonField(MongoFieldTests):
+    mongo_field = models.JSONField
+    mongo_field_model_container = None
+    blog_value = {
+        'name': 'blog_name'
+    }
+
+    def test_default_options(self):
+        self.verify_default_options()
 
 
 @skip('Not fully ready')
