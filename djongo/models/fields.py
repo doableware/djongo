@@ -72,12 +72,32 @@ class DjongoManager(Manager):
                 .db_conn[self.model._meta.db_table])
 
 
-class FormlessField(Field):
+class MongoField(Field):
+    empty_strings_allowed = False
+
+
+class JSONField(MongoField):
+    def get_prep_value(self, value):
+        if not isinstance(value, (dict, list)):
+            raise ValueError(
+                f'Value: {value} must be of type dict/list'
+            )
+        return value
+
+    def to_python(self, value):
+        if not isinstance(value, (dict, list)):
+            raise ValueError(
+                f'Value: {value} stored in DB must be of type dict/list'
+                'Did you miss any Migrations?'
+            )
+        return value
+
+
+class FormlessField(MongoField):
     """
     Allows for the inclusion of an instance of an abstract model as
     a field inside a document.
     """
-    empty_strings_allowed = False
     base_type = dict
 
     def __init__(self,
@@ -215,7 +235,7 @@ class FormlessField(Field):
         return processed_value
 
 
-class MongoField(FormlessField):
+class FormedField(FormlessField):
 
     def __init__(self,
                  model_container: typing.Type[Model],
@@ -250,7 +270,7 @@ class MongoField(FormlessField):
         return super().formfield(**defaults)
 
 
-class ArrayField(MongoField):
+class ArrayField(FormedField):
     """
     Implements an array of objects inside the document.
 
@@ -459,7 +479,7 @@ class ArrayFormWidget(forms.Widget):
         return True
 
 
-class EmbeddedField(MongoField):
+class EmbeddedField(FormedField):
     pass
 
 
