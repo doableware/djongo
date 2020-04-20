@@ -31,7 +31,6 @@ from django.utils.functional import cached_property
 from django.utils.html import format_html_join, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from .lookup import FieldNameTransformFactory
 from djongo.exceptions import NotSupportedError, print_warn
 
 
@@ -75,11 +74,6 @@ class DjongoManager(Manager):
 class MongoField(Field):
     empty_strings_allowed = False
 
-    def get_transform(self, lookup_name):
-        transform = super().get_transform(lookup_name)
-        if transform:
-            return transform
-        return FieldNameTransformFactory(lookup_name)
 
 class JSONField(MongoField):
     def get_prep_value(self, value):
