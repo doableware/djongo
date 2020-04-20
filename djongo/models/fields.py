@@ -31,7 +31,7 @@ from django.utils.functional import cached_property
 from django.utils.html import format_html_join, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-
+from .lookup import FieldNameTransformFactory
 from djongo.exceptions import NotSupportedError, print_warn
 
 
@@ -75,6 +75,11 @@ class DjongoManager(Manager):
 class MongoField(Field):
     empty_strings_allowed = False
 
+    def get_transform(self, lookup_name):
+        transform = super().get_transform(lookup_name)
+        if transform:
+            return transform
+        return FieldNameTransformFactory(lookup_name)
 
 class JSONField(MongoField):
     def get_prep_value(self, value):
@@ -93,7 +98,7 @@ class JSONField(MongoField):
         return value
 
 
-class FormlessField(MongoField):
+class ModelField(MongoField):
     """
     Allows for the inclusion of an instance of an abstract model as
     a field inside a document.
@@ -200,13 +205,19 @@ class FormlessField(MongoField):
         kwargs['model_container'] = self.model_container
         return name, path, args, kwargs
 
-    def get_prep_value(self, value):
+    def get_db_prep_save(self, value, connection):
         if value is None:
             return None
 
         if not isinstance(value, self.base_type):
             raise ValueError(
                 f'Value: {value} must be an instance of {self.base_type}')
+        return self.get_prep_value(value)
+
+    def get_prep_value(self, value):
+        if (value is None or
+                not isinstance(value, self.base_type)):
+            return value
 
         processed_value = self._value_thru_fields('get_prep_value',
                                                   value)
@@ -235,7 +246,7 @@ class FormlessField(MongoField):
         return processed_value
 
 
-class FormedField(FormlessField):
+class FormedField(ModelField):
 
     def __init__(self,
                  model_container: typing.Type[Model],
@@ -326,7 +337,7 @@ class ArrayField(FormedField):
         return processed_value
 
     def validate(self, value, model_instance, validate_parent=True):
-        super(FormlessField, self).validate(value, model_instance)
+        super(ModelField, self).validate(value, model_instance)
         for _dict in value:
             super().validate(_dict, model_instance, validate_parent=False)
 
