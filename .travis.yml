@@ -2,7 +2,6 @@ language: python
 
 python:
   - "3.6"
-  - "3.7"
   - "3.8"
 
 install:
@@ -18,4 +17,4 @@ before_script:
   - mongo --version
 
 script:
-  - tox -e $(echo py$TRAVIS_PYTHON_VERSION | tr -d .)-django_stable
+  - tox -e py36-django_stable,py38-django30
