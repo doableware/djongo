@@ -79,15 +79,15 @@ def find_version(*file_paths):
         return version_match.group(1)
     raise RuntimeError("Unable to find version string.")
 
-install_requires=[
-  'sqlparse==0.2.4',
-  'pymongo>=3.2.0',
-  'django>=2.0,<3',
-  'six>=1.13.0',
+
+install_requires = [
+    'sqlparse==0.2.4',
+    'pymongo>=3.2.0',
+    'django>=2.1,<=3.0.5',
 ]
 
-if sys.version_info.major < 3 or sys.version_info.minor < 7:
-      install_requires.append("dataclasses")
+if sys.version_info.major == 3 and sys.version_info.minor < 7:
+    install_requires.append("dataclasses")
 
 setup(
     name='djongo',

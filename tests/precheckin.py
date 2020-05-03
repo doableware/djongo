@@ -34,13 +34,17 @@ def run_commands(path):
         'makemigrations xtest_app',
         'migrate',
         'inspectdb',
-        'test xtest_app.tests.test_models'
     ]
 
-    settings = '--settings=test_project.settings.settings_precheckin'
+    settings = '--settings=test_project.settings.settings_loaded'
     for cmd in cmds:
         print(f'python {manage_py} {cmd} {settings}')
         subprocess.run(f'python {manage_py} {cmd} {settings}'.split(), check=True)
+
+    settings = '--settings=test_project.settings.settings_lite'
+    cmd = 'test xtest_app.tests.test_models'
+    print(f'python {manage_py} {cmd} {settings}')
+    subprocess.run(f'python {manage_py} {cmd} {settings}'.split(), check=True)
 
 
 if __name__ == '__main__':
