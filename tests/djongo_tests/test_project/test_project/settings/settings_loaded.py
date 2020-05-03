@@ -25,17 +25,18 @@ SECRET_KEY = '5s(0&1x3(963q!xdyt1=$^(5om4(_=_39ys6=bnp7n-h8%7z+('
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost','127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
         'NAME': 'djongo-test',
-        # 'USER': 'user',
-        # 'PASSWORD': 'passpass',
-        # 'AUTH_SOURCE': 'djongo-test',
+        'CLIENT': {
+            'host': '127.0.0.1',
+            'port': 27017,
+            'authSource': 'admin',
+        },
         'ENFORCE_SCHEMA': True
-
     },
 }
 # Application definition
