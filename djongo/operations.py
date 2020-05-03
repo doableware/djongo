@@ -4,8 +4,6 @@ from django.db.backends.base.operations import BaseDatabaseOperations
 from django.utils import timezone
 import datetime
 import calendar
-import six
-
 
 
 class DatabaseOperations(BaseDatabaseOperations):
@@ -50,7 +48,7 @@ class DatabaseOperations(BaseDatabaseOperations):
         if value is None:
             return None
 
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             return datetime.datetime.strptime(value, '%H:%M:%S')
 
         if timezone.is_aware(value):

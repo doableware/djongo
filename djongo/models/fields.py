@@ -25,6 +25,7 @@ from django.db import router, connections, transaction
 from django.db.models import (
     Manager, Model, Field, AutoField,
     ForeignKey, BigAutoField)
+from django.utils import version
 from django.db.models.fields.related import RelatedField
 from django.forms import modelform_factory
 from django.utils.functional import cached_property
@@ -32,6 +33,11 @@ from django.utils.html import format_html_join, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from djongo.exceptions import NotSupportedError, print_warn
+
+django_major = int(version.get_version().split('.')[0])
+
+if django_major >= 3:
+    from django.db.models.fields import AutoFieldMixin, AutoFieldMeta
 
 
 def make_mdl(model, model_dict):
@@ -217,7 +223,7 @@ class ModelField(MongoField):
                                                   value)
         return processed_value
 
-    def from_db_value(self, value, expression, connection, context):
+    def from_db_value(self, value, *args):
         return self.to_python(value)
 
     def to_python(self, value):
@@ -593,6 +599,7 @@ class EmbeddedFormWidget(forms.MultiWidget):
 
 class ObjectIdFieldMixin:
     description = _("ObjectId")
+    empty_strings_allowed = False
 
     def get_db_prep_value(self, value, connection, prepared=False):
         return self.to_python(value)
@@ -605,12 +612,23 @@ class ObjectIdFieldMixin:
     def get_internal_type(self):
         return "ObjectIdField"
 
+    def rel_db_type(self, connection):
+        return self.db_type(connection)
+
 
 class GenericObjectIdField(ObjectIdFieldMixin, Field):
-    empty_strings_allowed = False
+    pass
 
 
-class ObjectIdField(ObjectIdFieldMixin, AutoField):
+if django_major >= 3:
+    class _ObjectIdField(AutoFieldMixin, GenericObjectIdField, metaclass=AutoFieldMeta):
+        pass
+else:
+    class _ObjectIdField(ObjectIdFieldMixin, AutoField):
+        pass
+
+
+class ObjectIdField(_ObjectIdField):
     """
     For every document inserted into a collection MongoDB internally creates an field.
     The field can be referenced from within the Model as _id.
@@ -623,10 +641,6 @@ class ObjectIdField(ObjectIdFieldMixin, AutoField):
         }
         id_field_args.update(kwargs)
         super().__init__(*args, **id_field_args)
-
-    def get_prep_value(self, value):
-        value = super(AutoField, self).get_prep_value(value)
-        return value
 
 
 class ArrayReferenceManagerMixin:
