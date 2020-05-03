@@ -1,6 +1,6 @@
 ---
 title: Other fields
-permalink: /using-django-with-objectid-field/
+permalink: /using-django-with-other-fields/
 ---
 
 ## The ObjectId Field

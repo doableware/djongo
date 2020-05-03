@@ -63,9 +63,9 @@ e.save()
 
 ```
 
-## Validating field data
+## Field data integrity checks
 
-Djongo automatically validates the value assigned to an EmbeddedField. Validation criteria (`null=True` or `blank=False`) can be applied on the `ÈmbeddedField` or to the internal fields (`CharField`)
+Djongo automatically validates the value assigned to an EmbeddedField. Integrity criteria (`null=True` or `blank=False`) can be applied on the `ÈmbeddedField` or to the internal fields (`CharField`)
 
 ```python
 class Entry(models.Model):
@@ -102,6 +102,7 @@ e.clean_fields()
 >>> 
     ValidationError({'blog': ['This field cannot be null.']})
 ```
+
 ## Nesting Embedded Fields
 
 An `EmbeddedField` or `ArrayField` can be nested inside an `EmbeddedField`. There is no limitation on the depth of nesting.
