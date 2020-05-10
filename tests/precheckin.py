@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 import shutil
 import subprocess
@@ -14,7 +15,6 @@ TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 def remove_migrations(path):
     if 'migrations' in os.listdir(path):
         shutil.rmtree(os.path.join(path, 'migrations'))
-        print('Migrations removed')
 
 
 def run_test_sqlparsing():
