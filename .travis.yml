@@ -2,8 +2,6 @@ language: python
 
 python:
   - "3.6"
-  - "3.7"
-  - "3.8"
 
 install:
   - wget -qO - https://www.mongodb.org/static/pgp/server-4.2.asc | sudo apt-key add -
@@ -18,4 +16,4 @@ before_script:
   - mongo --version
 
 script:
-  - tox -e $(echo py$TRAVIS_PYTHON_VERSION | tr -d .)-django_stable
+  - tox -e py36-django_stable

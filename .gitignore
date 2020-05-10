@@ -1,6 +1,7 @@
 dist/
 build/
 venv/
+venv3.8/
 .idea/
 .tox/
 *__pycache__*

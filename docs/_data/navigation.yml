@@ -10,11 +10,10 @@ main:
      url: https://github.com/nesdis/djongo/
 
 docs:
-  - title: "Get started"
-    url: /get-started/
-
   - title: "Using Djongo"
     url: /integrating-django-with-mongodb/
+  - title: "Get started"
+    url: /get-started/
   - title: "Djongo Fields"
     children:
     - title: "Embedded Field"
@@ -24,10 +23,10 @@ docs:
     - title: "Array Reference Field"
       url: /using-django-with-mongodb-array-reference-field/
     - title: "Other fields"
-      url: /using-django-with-objectid-field/
+      url: /using-django-with-other-fields/
 
   - title: "DjongoNxt"
-    url: /djongonxt/
+#    url: /djongonxt/
     children:
     - title: "Indexes"
       url: /djongonxt-indexes/

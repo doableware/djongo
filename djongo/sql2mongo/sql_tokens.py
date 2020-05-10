@@ -1,12 +1,11 @@
 import abc
 import re
-from typing import Union as U, Iterator
-
+from typing import Union as U, Iterator, Optional as O
 from pymongo import ASCENDING, DESCENDING
 from sqlparse import tokens, parse as sqlparse
 from sqlparse.sql import Token, Identifier, Function, Comparison, Parenthesis, IdentifierList, Statement
 from . import query as query_module
-from ..exceptions import SQLDecodeError
+from ..exceptions import SQLDecodeError, NotSupportedError
 
 all_token_types = U['SQLConstIdentifier',
                     'djongo.sql2mongo.functions.CountFunc',
@@ -222,6 +221,7 @@ class SQLPlaceholder(SQLToken):
         else:
             raise SQLDecodeError
 
+
 class SQLStatement:
 
     @property
@@ -249,9 +249,12 @@ class SQLStatement:
         sql = sqlparse(sql)[0]
         return SQLStatement(sql)
 
-    def next(self) -> Token:
+    def next(self) -> O[Token]:
         # self._tok_id, token = self._statement.token_next(self._tok_id)
-        return next(self._gen_inst)
+        try:
+            return next(self._gen_inst)
+        except StopIteration:
+            return None
 
     def skip(self, num):
         self._tok_id += num
@@ -269,6 +272,86 @@ class SQLStatement:
         while self._tok_id is not None:
             yield token
             self._tok_id, token = self._statement.token_next(self._tok_id)
+
+
+class SQLColumnDef:
+
+    not_null = object()
+    unique = object()
+    autoincrement = object()
+    primarykey = object()
+    null = object()
+    _map = {
+        'UNIQUE': unique,
+        'AUTOINCREMENT': autoincrement,
+        'PRIMARY KEY': primarykey,
+        'NOT NULL': not_null,
+        'NULL': null
+    }
+
+    def __init__(self,
+                 name: str = None,
+                 data_type: str = None,
+                 col_constraints: set = None):
+        self.name = name
+        self.data_type = data_type
+        self.col_constraints = col_constraints
+
+    @staticmethod
+    def _get_constraints(others: str):
+        while others:
+            try:
+                name, others = others.split(' ', 1)
+            except ValueError:
+                name = others
+                others = None
+            try:
+                yield SQLColumnDef._map[name]
+            except KeyError:
+                if others:
+                    try:
+                        part2, others = others.split(' ', 1)
+                    except ValueError:
+                        part2 = others
+                        others = None
+
+                    name = f'{name} {part2}'
+                    try:
+                        yield SQLColumnDef._map[name]
+                    except KeyError:
+                        raise SQLDecodeError(f'Unknown column constraint: {name}')
+                else:
+                    raise SQLDecodeError(f'Unknown column constraint: {name}')
+
+    @staticmethod
+    def statement2col_defs(token: Token):
+        from djongo.base import DatabaseWrapper
+        supported_data_types = set(DatabaseWrapper.data_types.values())
+
+        defs = token.value.strip('()').split(',')
+        for col in defs:
+            col = col.strip()
+            name, other = col.split(' ', 1)
+            if name == 'CONSTRAINT':
+                yield SQLColumnConstraint()
+            else:
+                if col[0] != '"':
+                    raise SQLDecodeError('Column identifier not quoted')
+                name, other = col[1:].split('"', 1)
+                other = other.strip()
+
+                data_type, constraint_sql = other.split(' ', 1)
+                if data_type not in supported_data_types:
+                    raise NotSupportedError(f'Data of type: {data_type}')
+
+                col_constraints = set(SQLColumnDef._get_constraints(constraint_sql))
+                yield SQLColumnDef(name=name,
+                                   data_type=data_type,
+                                   col_constraints=col_constraints)
+
+
+class SQLColumnConstraint(SQLColumnDef):
+    pass
 
 
 ORDER_BY_MAP = {
