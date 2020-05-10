@@ -77,34 +77,6 @@ You can contribute to the source code or the documentation by creating a simple 
  
 Please contribute to the continued development and success of Djongo by [making a donation](https://www.patreon.com/nesdis/).
 
-## Data validation and integrity checks
-Djongo allows for checks on data fields before they are saved to the database. Running accurate integrity checks and field value validators before writing data into the database is extremely important. 
-
-
-### Validators
-Apply validators on each of the field values before they are saved.
-
-
-### Integrity checks
-
-```python
-class Entry(models.Model):
-    _id = models.ObjectIdField()
-    blog = models.EmbeddedField(
-        model_container=Blog,
-        null=True
-    )
-```
-## Rapid Prototyping
-
-### Goodbye Migrations
-
-## Using MongoDB fields
-
-## Simplify complex queries
-
-## Django Admin
-
 ## DjongoNxt
 
 > Features supported in DjongoNxt are not a part of the standard Djongo package. Visit the [sponsors page](https://www.patreon.com/nesdis/) for more information.
