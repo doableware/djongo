@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 import shutil
 import subprocess
@@ -14,7 +15,6 @@ TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 def remove_migrations(path):
     if 'migrations' in os.listdir(path):
         shutil.rmtree(os.path.join(path, 'migrations'))
-        print('Migrations removed')
 
 
 def run_test_sqlparsing():
@@ -34,13 +34,17 @@ def run_commands(path):
         'makemigrations xtest_app',
         'migrate',
         'inspectdb',
-        'test xtest_app.tests.test_models'
     ]
 
-    settings = '--settings=test_project.settings.settings_precheckin'
+    settings = '--settings=test_project.settings.settings_loaded'
     for cmd in cmds:
         print(f'python {manage_py} {cmd} {settings}')
         subprocess.run(f'python {manage_py} {cmd} {settings}'.split(), check=True)
+
+    settings = '--settings=test_project.settings.settings_lite'
+    cmd = 'test xtest_app.tests.test_models'
+    print(f'python {manage_py} {cmd} {settings}')
+    subprocess.run(f'python {manage_py} {cmd} {settings}'.split(), check=True)
 
 
 if __name__ == '__main__':

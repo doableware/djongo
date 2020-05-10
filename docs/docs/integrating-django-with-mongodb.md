@@ -3,249 +3,106 @@ title: Integrating Django with MongoDB
 permalink: /integrating-django-with-mongodb/
 ---
 
-## Database configuration
+Use MongoDB as a backend database for your Django project, without changing the Django ORM. Use the Django Admin app to add and modify documents in MongoDB. 
 
-The `settings.py` supports (but is not limited to) the following  options:
+## Usage
 
-```python
-    DATABASES = {
-        'default': {
-            'ENGINE': 'djongo',
-            'ENFORCE_SCHEMA': True,
-            'LOGGING': {
-                'version': 1,
-                'loggers': {
-                    'djongo': {
-                        'level': 'DEBUG',
-                        'propogate': False,                        
-                    }
-                },
-             },
-            'NAME': 'your-db-name',
-            'CLIENT': {
-                'host': 'host-name or ip address',
-                'port': port_number,
-                'username': 'db-username',
-                'password': 'password',
-                'authSource': 'db-name',
-                'authMechanism': 'SCRAM-SHA-1'
-            }
-        }
-    }
-```
+1. pip install djongo
+2. Into `settings.py` file of your project, add:
 
-Attribute | Value | Description
----------|------|-------------
-ENGINE | djongo | The MongoDB connection engine for interfacing with Django.
-ENFORCE_SCHEMA | True | Ensures that the model schema and database schema are exactly the same. Raises `Migration Error` in case of discrepancy.
-ENFORCE_SCHEMA | False | (Default) Implicitly creates collections. Returns missing fields as `None` instead of raising an exception.
-NAME | your-db-name | Specify your database name. This field cannot be left empty.
-LOGGING | dict | A [dictConfig](https://docs.python.org/3.6/library/logging.config.html) for the type of logging to run on djongo.
-CLIENT | dict | A set of key-value pairs that will be passed directly to [`MongoClient`]((http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient)) as kwargs while creating a new client connection.
-  
-All options except `ENGINE` and `ENFORCE_SCHEMA` are the same those listed in the [pymongo documentation](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient). You may want to go through the quick [get started](/djongo/get-started) guide for setting up Djongo before proceeding ahead. An introduction to [using MongoDB fields in Django](/djongo/using-django-with-mongodb-data-fields/) can prove useful.
-
-### Enforce schema
-
-MongoDB is *schemaless*, which means no schema rules are enforced by the database. You can add and exclude fields per entry and MongoDB will not complain. This can make life easier, especially when there are frequent changes to the data model. Take for example the `Blog` Model (version 1).
-
-```python
-class Blog(models.Model):
-    name = models.CharField(max_length=100)
-    tagline = models.TextField()
-```
-
-You can save several entries into the DB and later modify it to version 2:
-
-```python
-class Blog(models.Model):
-    name = models.CharField(max_length=100)
-    tagline = models.TextField()
-    description = models.TextField()
-```
-
-The modified Model can be saved **without running any migrations**. 
-
-This works fine if you know what you are doing. Consider a query that retrieves entries belonging to both the 'older' model (with just 2 fields) and the current model. What will the value of `description` now be? To handle such scenarios Djongo comes with the `ENFORCE_SCHEMA` option. 
-
-When connecting to Djongo you can set `ENFORCE_SCHEMA: True`. In this case, a `MigrationError` will be raised when field values are missing from the retrieved documents. You can then check what went wrong. 
-
-`ENFORCE_SCHEMA: False` works by silently setting the missing fields with the value `None`. If your app is programmed to expect this (which means it is not a bug) you can get away by not calling any migrations.
-
-## Use Django Admin to add documents
-
-The Django Admin interface can be used to work with MongoDB. Additionally, several MongoDB specific features are supported using [EmbeddedField](/djongo/using-django-with-mongodb-data-fields/), [ArrayField](/djongo/using-django-with-mongodb-array-field/) and other fields. Let’s say you want to create a blogging platform using Django with MongoDB as your backend. In your Blog `app/models.py` file define the `Blog` model:
-
-```python
-from djongo import models
-
-class Blog(models.Model):
-    name = models.CharField(max_length=100)
-    tagline = models.TextField()
-
-    class Meta:
-        abstract = True
-```
-
-Now ‘embed’ your `Blog` inside a `Entry` using the `EmbeddedField`:
-
-```python
-class Entry(models.Model):
-    blog = models.EmbeddedField(
-        model_container=Blog,
-    )
-    
-    headline = models.CharField(max_length=255)
-```
-
-Register your `Entry` in `admin.py`:
-
-```python
-from django.contrib import admin
-from .models import Entry
-
-admin.site.register(Entry)
-```
-
-That’s it you are set! Fire up Django Admin on localhost:8000/admin/ and this is what you get:
-
-
-![Django Admin](/djongo/assets/images/admin.png)
-
-
-### Querying Embedded fields
-
-In the above example, to query all Entries with Blogs which have names that start with *Beatles*, use the following query:
-
-```python
-entries = Entry.objects.filter(blog__startswith={'name': 'Beatles'})
-```
-
-Refer to [Using Django with MongoDB data fields](/djongo/using-django-with-mongodb-data-fields/) for more details.
-
-## Djongo Manager
-
-Djongo Manager extends the  functionality of the usual [Django Manager](https://docs.djangoproject.com/en/dev/topics/db/managers/). It gives direct access to the pymongo collection API. To use this manager define your manager as `DjongoManager` in the model.
-
- ```python
-class Entry(models.Model):
-    blog = models.EmbeddedField(
-        model_container=Blog,
-    )
-    headline = models.CharField(max_length=255)    
-    objects = models.DjongoManager()
-```
-
-Use it like the usual Django manager:
-
-```python
-post = Entry.objects.get(pk=p_key)
-```
-
-Will [get a model object](https://docs.djangoproject.com/en/dev/topics/db/queries/#retrieving-a-single-object-with-get) having primary key `p_key`.
-
-### Using Pymongo commands 
-
-MongoDB has powerful query syntax and `DjongoManager` lets you exploit it fully. For the above `Entry` model define a custom query function:
-
-```python
-class EntryView(DetailView):
-
-    def get_object(self, queryset=None):
-        index = [i for i in Entry.objects.mongo_aggregate([
-            {
-                '$match': {
-                    'headline': self.kwargs['path']
-                }
-            },
-        ])]
-
-        return index
-
-```
-
-You can directly *access any [pymongo](https://api.mongodb.com/python/current/) command* by prefixing `mongo_` to the command name. For example, to perform `aggregate` on the BlogPage collection (BlogPage is stored as a table in SQL or a collection in MongoDB) the function name becomes `mongo_aggregate`. To directly insert a document (instead of `.save()` a model) use `mongo_insert_one()`
-
-## GridFS 
-
-To save files using [GridFS](https://docs.mongodb.com/manual/core/gridfs/) you must create a file storage instance of `GridFSStorage`:
-
-```python
-grid_fs_storage = GridFSStorage(collection='myfiles')
-```
-
-In your model define your field as `FileField` or `ImageField` as usual:
-
-```python
-avatar = models.ImageField(storage=grid_fs_storage, upload_to='')
-```
-
-Refer to [Using GridFSStorage](/djongo/using-django-with-mongodb-gridfs/) for more details.
-
-
-## Migrating an existing Django app to MongoDB
-
-When migrating an existing Django app to MongoDB,  it is recommended to start a new database on MongoDB. For example, use `myapp-djongo-db` in your `settings.py` file. 
-
-1. Into `settings.py` file of your project, add:
-
-    ```python
+      ```python
       DATABASES = {
           'default': {
               'ENGINE': 'djongo',
-              'NAME': 'myapp-djongo-db',
+              'NAME': 'your-db-name',
           }
       }
-    ```
+      ```
   
-2. Run `manage.py makemigrations <myapp>` followed by `manage.py migrate`.
-3. Open Django Admin and you should find all Models defined in your app, showing up in the Admin.
-4. While the relevant collections have been created in MongoDB, they have have no data inside.
-5. Continue by inserting data into the collection directly, or from Django Admin. 
+3. Run `manage.py makemigrations <app_name>` followed by `manage.py migrate` (ONLY the first time to create collections in MongoDB)
+4. YOU ARE SET! Have fun!
 
-## Setting up an existing MongoDB database on Django
+## Requirements
 
-### The internal `__schema__` collection
+1. Python 3.6 or higher.
+2. MongoDB 3.4 or higher.
+3. If your models use nested queries or sub querysets like:
+  
+      ```python
+      inner_qs = Blog.objects.filter(name__contains='Ch').values('name')
+      entries = Entry.objects.filter(blog__name__in=inner_qs)
+      ```
+   MongoDB 3.6 or higher is required.
 
-There is no concept of an AUTOINCREMENT field in MongoDB. Therefore, Djongo internally creates a `__schema__` collection to track such fields. The `__schema__` collection looks like:
+## Support
+
+[![Djongo Support](/djongo/assets/images/support.png)](https://www.patreon.com/nesdis/)
+
+I am inundated daily with your appreciation, queries and feature requests for Djongo. Djongo has grown into a highly complex project. To support the requests, I have decided to follow an organized approach.
+
+Djongo as a project is at a stage where its development must be transformed into a sustained effort. Djongo has more than [1,000,000 downloads](https://pypistats.org/packages/djongo) on pypi and continues to grow. I am trying to establish a sustainable development model for the project, and would [love to hear your thoughts.](https://www.patreon.com/posts/to-only-take-22611438)
+
+Visit my [Patreon page](https://www.patreon.com/nesdis/) to make requests and for support. You can expect immediate answers to your questions.  
+
+## How it works
+
+Djongo makes **zero changes** to the existing Django ORM framework, which means unnecessary bugs and security vulnerabilities do not crop up. It simply translates a SQL query string into a [MongoDB query document](https://docs.mongodb.com/manual/tutorial/query-documents/). As a result, all Django features, models, etc., work as is.
+  
+Django contrib modules: 
 
 ```python
-{ 
-    "_id" : ObjectId("5a5c3c87becdd9fe2fb255a9"), 
-    "name" : "django_migrations", 
-    "auto" : {
-        "field_names" : [
-            "id"
-        ], 
-        "seq" : NumberInt(14)
-    }
-}
+'django.contrib.admin',
+'django.contrib.auth',    
+'django.contrib.sessions',
 ```
-For every collection in the DB that has an autoincrement field, there is an corresponding entry in the `__schema__` collection. Running `manage.py migrate` automatically creates these entries. 
+and others... fully supported.
+  
+## What you get
 
-Now there are 2 approaches to setting up your existing data onto MongoDB:
+Djongo ensures that you:
 
-### Zero risk
-
-1. Start with a new database name in `settings.py`.
-2. If you have not already done so, define your models in the `models.py` file. The model names and model fields have to be exactly the same, as the existing data that you want to setup.
-3. Run `manage.py makemigrations <app_name>` followed by `manage.py migrate`. 
-4. Now your empty DB should have a `__schema__` collection, and other collections defined in the `model.py` file.
-5. Copy collection data (of your custom models defined in `model.py`) to the new DB.
-6. In `__schema__` collection make sure that the `seq` number of your AUTOINCREMENT fields is **set to the latest value**. This should correspond to the document count for each model. For example, if your model has 16 entries (16 documents in the DB), then `seq` should be set as 16. Usually the AUTOINCREMENT field is called `id`.
-
-However, if you do not want to create a new database (and copy existing data into this new database), you can try this approach:
-
-### Medium risk
-
-1. Start with an empty database. You can always delete this later.
-2. Same as before.
-3. Same as before.
-4. Now copy the `__schema__` collection from the new database (from step1) to the existing database.
-5. Same as step 6 from before.
-6. You can now delete the database created in step 1.
-
-*You are now done setting up Django with MongoDB. Start using Django with MongoDB, like you would with any other database backend.*
+ * Reuse Django Models/ORM
+ * Work with the original Django variant
+ * Future proof your code
+ * Atomic SQL JOIN operations
+ 
+Get [expert support](https://www.patreon.com/nesdis) for complex projects.
 
 
+## Contribute
+ 
+If you think djongo is useful, **please share it** with the world! Your endorsements and online reviews will help get more support for this project.
+  
+You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](/djongo/django-mongodb-connector-design-document/) is implemented.
+ 
+Please contribute to the continued development and success of Djongo by [making a donation](https://www.patreon.com/nesdis/).
 
+## DjongoNxt
+
+> Features supported in DjongoNxt are not a part of the standard Djongo package. Visit the [sponsors page](https://www.patreon.com/nesdis/) for more information.
+
+DjongoNxt is a Django and MongoDB connector for full featured database usage. It provides many features of MongoDB enabled through Django. It comes with support for:
+
+### Indexes
+
+Support for all indexes provided by MongoDB, for example 2dSphere Index, Text Index and Compound Indexes.
+
+### Model Query
+
+Support for GeoSpatial Queries and Tailable Cursors.
+
+### Model Update
+
+Unordered and Ordered Bulk Writes.
+
+### Database Transactions
+
+Atomic multi document transactions with commit and rollback support.
+
+### Schema Validation and Model Creation
+
+Automatic JSON Schema validation document generation and options to add Read and Write Concerns for the Models.
+
+### Aggregation Operators 
+
+Support for various aggregation operators provided by MongoDB.
