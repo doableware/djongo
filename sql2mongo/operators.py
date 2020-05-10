@@ -465,6 +465,7 @@ class _StatementParser:
             op.evaluate()
         self._op = op
 
+
 class WhereOp(_Op, _StatementParser):
 
     def __init__(self, *args, **kwargs):
