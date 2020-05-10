@@ -2,11 +2,12 @@ from unittest import skip
 
 from django.core.exceptions import ValidationError
 
+import xtest_app.models.basic_field
 from djongo.exceptions import NotSupportedError
 from xtest_app.models.basic_field import BasicBlog, BasicRelatedEntry, BasicAuthor
 from . import TestCase
 from djongo import models
-from xtest_app.models import basic_field, embedded_field
+from xtest_app.models import basic_field
 from typing import Type, Optional as O, Union as U, Any
 
 
@@ -19,8 +20,8 @@ class FieldTests(TestCase):
     headline_query: dict
     blog_query: dict
     mut: U[Type[models.Model], type]
-    entry: embedded_field.EmbeddedFieldEntry
-    db_entry: embedded_field.EmbeddedFieldEntry
+    entry: xtest_app.models.basic_field.EmbeddedFieldEntry
+    db_entry: xtest_app.models.basic_field.EmbeddedFieldEntry
 
     def get_model(self,
                   **embedded_field_kwargs) -> U[Type[models.Model], type]:
@@ -209,12 +210,14 @@ class TestEmbeddedInternalField(EmbeddedInternalFieldHelper, FieldTests):
                                   'max_length': 100}
         with self.assertRaises(ValidationError) as e:
             entry = self.entry
+        self.logger.debug(e.exception)
 
     def test_db_index(self):
         self.name_field_kwargs = {'db_index': True,
                                   'max_length': 100}
         with self.assertRaises(NotSupportedError) as e:
             entry = self.entry
+        self.logger.debug(e.exception)
 
 
 class TestNestedEmbeddedField(EmbeddedInternalFieldHelper, MongoFieldTests):

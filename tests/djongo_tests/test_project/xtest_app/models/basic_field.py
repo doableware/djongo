@@ -59,3 +59,12 @@ class BasicHeadlinedEntry(models.Model):
 class BasicRelatedEntry(BasicHeadlinedEntry):
     blog = models.ForeignKey(BasicBlog, on_delete=models.CASCADE)
     authors = models.ManyToManyField(BasicAuthor)
+
+
+class EmbeddedFieldEntry(HeadlinedEntry):
+    blog = models.EmbeddedField(
+        model_container=NamedBlog
+    )
+
+    class Meta:
+        abstract = True
