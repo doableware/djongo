@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import argparse
 import atexit
 import copy
@@ -22,6 +21,7 @@ from django.utils.deprecation import (
     RemovedInDjango30Warning, RemovedInDjango31Warning,
 )
 from django.utils.log import DEFAULT_LOGGING
+from .test_runner import DiscoverRunner
 
 try:
     import MySQLdb
@@ -138,6 +138,7 @@ def setup(verbosity, test_labels, parallel):
         'STATIC_URL': settings.STATIC_URL,
         'STATIC_ROOT': settings.STATIC_ROOT,
         'MIDDLEWARE': settings.MIDDLEWARE,
+        'TEST_RUNNER': settings.TEST_RUNNER
     }
 
     # Redirect some settings for the duration of these tests.
@@ -176,7 +177,7 @@ def setup(verbosity, test_labels, parallel):
     settings.SILENCED_SYSTEM_CHECKS = [
         'fields.W342',  # ForeignKey(unique=True) -> OneToOneField
     ]
-
+    settings.TEST_RUNNER = 'test_utils.test_runner.DiscoverRunner'
     # Load all the ALWAYS_INSTALLED_APPS.
     django.setup()
 
@@ -264,20 +265,34 @@ class ActionSelenium(argparse.Action):
         setattr(namespace, self.dest, browsers)
 
 
-def django_tests(verbosity, interactive, failfast, keepdb, reverse,
-                 test_labels, debug_sql, parallel, tags, exclude_tags):
-    print(verbosity, interactive, failfast, keepdb, reverse,
-                 test_labels, debug_sql, parallel, tags, exclude_tags)
-    state = setup(verbosity, test_labels, parallel)
-    extra_tests = []
+def get_test_list(options):
+    state = setup(options.verbosity, options.modules, options.parallel)
 
-    # Run the test suite, including the extra validation tests.
-    sys.path.insert(0, '/home/esidsen/projects/djongo/tests/django_tests/test_utils')
+    runner = make_test_runner(
+        verbosity=options.verbosity,
+        interactive=options.interactive,
+        failfast=options.failfast,
+        keepdb=options.keepdb,
+        reverse=options.reverse,
+        debug_sql=options.debug_sql,
+        parallel=options.parallel,
+        tags=options.tags,
+        exclude_tags=options.exclude_tags
+    )
+    suits = runner.build_suite()
+    testlist = []
+    for suit in suits:
+        for test in suit:
+            testlist.append(test.id())
+    teardown(state)
+    return testlist
+
+
+def make_test_runner(verbosity, interactive, failfast, keepdb, reverse,
+                     debug_sql, parallel, tags, exclude_tags):
     if not hasattr(settings, 'TEST_RUNNER'):
         settings.TEST_RUNNER = 'django.test.runner.DiscoverRunner'
-    settings.TEST_RUNNER = 'test_runner.DiscoverRunner'
     TestRunner = get_runner(settings)
-    print(TestRunner)
 
     test_runner = TestRunner(
         verbosity=verbosity,
@@ -290,12 +305,36 @@ def django_tests(verbosity, interactive, failfast, keepdb, reverse,
         tags=tags,
         exclude_tags=exclude_tags,
     )
-    failures = test_runner.run_tests(
+    return test_runner
+
+
+def django_tests(verbosity, interactive, failfast, keepdb, reverse,
+                 test_labels, debug_sql, parallel, tags, exclude_tags):
+    state = setup(verbosity, test_labels, parallel)
+    extra_tests = []
+
+    # Run the test suite, including the extra validation tests.
+    if not hasattr(settings, 'TEST_RUNNER'):
+        settings.TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+
+    test_runner = make_test_runner(
+        verbosity=verbosity,
+        interactive=interactive,
+        failfast=failfast,
+        keepdb=keepdb,
+        reverse=reverse,
+        debug_sql=debug_sql,
+        parallel=parallel,
+        tags=tags,
+        exclude_tags=exclude_tags
+    )
+
+    result = test_runner.run_tests(
         test_labels or get_installed(),
         extra_tests=extra_tests,
     )
     teardown(state)
-    return failures
+    return result
 
 
 def get_subprocess_args(options):
@@ -395,7 +434,7 @@ def paired_tests(paired_test, options, test_labels, parallel):
     teardown(state)
 
 
-if __name__ == "__main__":
+def get_parser():
     parser = argparse.ArgumentParser(description="Run the Django test suite.")
     parser.add_argument(
         'modules', nargs='*', metavar='module',
@@ -468,14 +507,18 @@ if __name__ == "__main__":
         '--exclude-tag', dest='exclude_tags', action='append',
         help='Do not run tests with the specified tag. Can be used multiple times.',
     )
+    return parser
 
-    options = parser.parse_args()
 
+def validate_parsed(options, parser):
     using_selenium_hub = options.selenium and options.selenium_hub
     if options.selenium_hub and not options.selenium:
         parser.error('--selenium-hub and --external-host require --selenium to be used.')
     if using_selenium_hub and not options.external_host:
         parser.error('--selenium-hub and --external-host must be used together.')
+
+
+def test_exec(options):
 
     # Allow including a trailing slash on app_labels for tab completion convenience
     options.modules = [os.path.normpath(labels) for labels in options.modules]
@@ -501,12 +544,10 @@ if __name__ == "__main__":
     elif options.pair:
         paired_tests(options.pair, options, options.modules, options.parallel)
     else:
-        print('##', options)
-        failures = django_tests(
+        result = django_tests(
             options.verbosity, options.interactive, options.failfast,
             options.keepdb, options.reverse, options.modules,
             options.debug_sql, options.parallel, options.tags,
             options.exclude_tags,
         )
-        if failures:
-            sys.exit(1)
+        return result
