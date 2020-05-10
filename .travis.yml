@@ -17,4 +17,4 @@ before_script:
   - mongo --version
 
 script:
-  - tox -e py36-django_stable,py38-django30
+  - tox -e py36-django_stable
