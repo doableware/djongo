@@ -266,13 +266,18 @@ class ActionSelenium(argparse.Action):
 
 def django_tests(verbosity, interactive, failfast, keepdb, reverse,
                  test_labels, debug_sql, parallel, tags, exclude_tags):
+    print(verbosity, interactive, failfast, keepdb, reverse,
+                 test_labels, debug_sql, parallel, tags, exclude_tags)
     state = setup(verbosity, test_labels, parallel)
     extra_tests = []
 
     # Run the test suite, including the extra validation tests.
+    sys.path.insert(0, '/home/esidsen/projects/djongo/tests/django_tests/test_utils')
     if not hasattr(settings, 'TEST_RUNNER'):
         settings.TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+    settings.TEST_RUNNER = 'test_runner.DiscoverRunner'
     TestRunner = get_runner(settings)
+    print(TestRunner)
 
     test_runner = TestRunner(
         verbosity=verbosity,
@@ -496,6 +501,7 @@ if __name__ == "__main__":
     elif options.pair:
         paired_tests(options.pair, options, options.modules, options.parallel)
     else:
+        print('##', options)
         failures = django_tests(
             options.verbosity, options.interactive, options.failfast,
             options.keepdb, options.reverse, options.modules,
