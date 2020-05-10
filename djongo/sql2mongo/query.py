@@ -6,7 +6,7 @@ import abc
 import re
 from logging import getLogger
 from typing import Optional, Dict, List, Union as U, Sequence, Set
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field as dataclass_field
 from pymongo import MongoClient
 from pymongo import ReturnDocument
 from pymongo.command_cursor import CommandCursor
@@ -23,7 +23,7 @@ from sqlparse.sql import (
 from ..exceptions import SQLDecodeError, MigrationError, print_warn
 from .functions import SQLFunc
 from .sql_tokens import (SQLToken, SQLStatement, SQLIdentifier,
-                         AliasableToken, SQLConstIdentifier)
+                         AliasableToken, SQLConstIdentifier, SQLColumnDef, SQLColumnConstraint)
 from .converters import (
     ColumnSelectConverter, AggColumnSelectConverter, FromConverter, WhereConverter,
     AggWhereConverter, InnerJoinConverter, OuterJoinConverter, LimitConverter, AggLimitConverter, OrderConverter,
@@ -33,15 +33,16 @@ from .converters import (
 from djongo import base
 logger = getLogger(__name__)
 
+
 @dataclass
 class TokenAlias:
     alias2token: Dict[str, U[AliasableToken,
                              SQLFunc,
-                             SQLIdentifier]] = field(default_factory=dict)
+                             SQLIdentifier]] = dataclass_field(default_factory=dict)
     token2alias: Dict[U[AliasableToken,
                         SQLFunc,
-                        SQLIdentifier], str] = field(default_factory=dict)
-    aliased_names: Set[str] = field(default_factory=set)
+                        SQLIdentifier], str] = dataclass_field(default_factory=dict)
+    aliased_names: Set[str] = dataclass_field(default_factory=set)
 
 
 class BaseQuery(abc.ABC):
@@ -639,80 +640,89 @@ class CreateQuery(DDLQuery):
     def __init__(self, *args):
         super().__init__(*args)
 
+    def _create_table(self, statement):
+        if '__schema__' not in self.connection_properties.cached_collections:
+            self.db.create_collection('__schema__')
+            self.connection_properties.cached_collections.add('__schema__')
+            self.db['__schema__'].create_index('name', unique=True)
+            self.db['__schema__'].create_index('auto')
+
+        tok = statement.next()
+        table = SQLToken.token2sql(tok, self).table
+        try:
+            self.db.create_collection(table)
+        except CollectionInvalid:
+            if self.connection_properties.enforce_schema:
+                raise
+            else:
+                return
+
+        logger.debug('Created table: {}'.format(table))
+
+        tok = statement.next()
+        if not isinstance(tok, Parenthesis):
+            raise SQLDecodeError(f'Unexpected sql syntax'
+                                 f' for column definition: {statement}')
+
+        if statement.next():
+            raise SQLDecodeError(f'Unexpected sql syntax'
+                                 f' for column definition: {statement}')
+
+        _filter = {
+            'name': table
+        }
+        _set = {}
+        push = {}
+        update = {}
+
+        for col in SQLColumnDef.statement2col_defs(tok):
+            if isinstance(col, SQLColumnConstraint):
+                print_warn('column CONSTRAINTS')
+            else:
+                field = col.name
+                if field == '_id':
+                    continue
+
+                _set[f'fields.{field}'] = {
+                    'type_code': col.data_type
+                }
+
+                if SQLColumnDef.autoincrement in col.col_constraints:
+                    try:
+                        push['auto.field_names']['$each'].append(field)
+                    except KeyError:
+                        push['auto.field_names'] = {
+                            '$each': [field]
+                        }
+                    _set['auto.seq'] = 0
+
+                if SQLColumnDef.primarykey in col.col_constraints:
+                    self.db[table].create_index(field, unique=True, name='__primary_key__')
+
+                if SQLColumnDef.unique in col.col_constraints:
+                    self.db[table].create_index(field, unique=True)
+
+                if (SQLColumnDef.not_null in col.col_constraints or
+                        SQLColumnDef.null in col.col_constraints):
+                    print_warn('NULL, NOT NULL column validation check')
+
+        if _set:
+            update['$set'] = _set
+        if push:
+            update['$push'] = push
+        if update:
+            self.db['__schema__'].update_one(
+                filter=_filter,
+                update=update,
+                upsert=True
+            )
+
     def parse(self):
         statement = SQLStatement(self.statement)
         statement.skip(2)
         tok = statement.next()
         if tok.match(tokens.Keyword, 'TABLE'):
-            if '__schema__' not in self.connection_properties.cached_collections:
-                self.db.create_collection('__schema__')
-                self.connection_properties.cached_collections.add('__schema__')
-                self.db['__schema__'].create_index('name', unique=True)
-                self.db['__schema__'].create_index('auto')
-
-            tok = statement.next()
-            table = SQLToken.token2sql(tok, self).table
-            try:
-                self.db.create_collection(table)
-            except CollectionInvalid:
-                if self.connection_properties.enforce_schema:
-                    raise
-                else:
-                    return
-
-            logger.debug('Created table: {}'.format(table))
-
-            tok = statement.next()
-            if isinstance(tok, Parenthesis):
-                _filter = {
-                    'name': table
-                }
-                _set = {}
-                push = {}
-                update = {}
-
-                for col in tok.value.strip('()').split(','):
-                    props = col.strip().split(' ')
-                    field = props[0].strip('"')
-                    type_code = props[1]
-
-                    _set[f'fields.{field}'] = {
-                        'type_code': type_code
-                    }
-
-                    if field == '_id':
-                        continue
-
-                    if col.find('AUTOINCREMENT') != -1:
-                        try:
-                            push['auto.field_names']['$each'].append(field)
-                        except KeyError:
-                            push['auto.field_names'] = {
-                                '$each': [field]
-                            }
-
-                        _set['auto.seq'] = 0
-
-                    if col.find('PRIMARY KEY') != -1:
-                        self.db[table].create_index(field, unique=True, name='__primary_key__')
-
-                    if col.find('UNIQUE') != -1:
-                        self.db[table].create_index(field, unique=True)
-
-                    if col.find('NOT NULL') != -1:
-                        print_warn('NOT NULL column validation check')
-
-                if _set:
-                    update['$set'] = _set
-                if push:
-                    update['$push'] = push
-                if update:
-                    self.db['__schema__'].update_one(
-                        filter=_filter,
-                        update=update,
-                        upsert=True
-                    )
-
+            self._create_table(statement)
         elif tok.match(tokens.Keyword, 'DATABASE'):
             pass
         else:

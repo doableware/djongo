@@ -230,6 +230,12 @@ class VoidQuery(MockTest):
         self.assertRaises(StopIteration, result.next)
 
 
+class TestCanvasVoidQuery(VoidQuery):
+
+    def test_query(self):
+        self.sql = 'CREATE TABLE "introspection_comment" ("id" int NOT NULL PRIMARY KEY AUTOINCREMENT, "ref" string NOT NULL UNIQUE, "article_id" int NOT NULL, "email" string NOT NULL, "pub_date" date NOT NULL, "up_votes" long NOT NULL, "body" string NOT NULL, CONSTRAINT "up_votes_gte_0_check" CHECK ("up_votes" >= 0), CONSTRAINT "article_email_pub_date_uniq" UNIQUE ("article_id", "email", "pub_date"))'
+        self.exe()
+
 class TestCreateDatabase(VoidQuery):
     """
     CREATE DATABASE "some_name"
@@ -260,10 +266,25 @@ class TestCreateTable(VoidQuery):
         super().exe()
         self.db.create_collection.assert_called_with('table')
 
+    def test_whitespace(self):
+        self.sql = (self.base_sql +
+                    '("col 1" int NOT NULL)')
+        self.exe()
+        calls = [
+            call('__schema__'),
+            call().update_one(
+                filter={'name': 'table'},
+                update={'$set': {'fields.col 1': {'type_code': 'int'}}},
+                upsert=True
+            )
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
+        self.print_warn.assert_called()
+
     def test_notNull_with_pk(self):
         self.sql = (self.base_sql +
-                    '("col1" integer NOT NULL PRIMARY KEY, '
-                    '"col2" integer NOT NULL)')
+                    '("col1" int NOT NULL PRIMARY KEY, '
+                    '"col2" int NOT NULL)')
         self.exe()
         calls = [
             call('table'),
@@ -273,8 +294,8 @@ class TestCreateTable(VoidQuery):
             call('__schema__'),
             call().update_one(
                 filter={'name': 'table'},
-                update={'$set': {'fields.col1': {'type_code': 'integer'},
-                                 'fields.col2': {'type_code': 'integer'}}},
+                update={'$set': {'fields.col1': {'type_code': 'int'},
+                                 'fields.col2': {'type_code': 'int'}}},
                 upsert=True
             )
         ]
@@ -282,7 +303,7 @@ class TestCreateTable(VoidQuery):
         self.print_warn.assert_called()
 
     def test_notNull_with_autoInc(self):
-        self.sql = self.base_sql + '("col1" integer NOT NULL AUTOINCREMENT)'
+        self.sql = self.base_sql + '("col1" int NOT NULL AUTOINCREMENT)'
         self.exe()
         calls = [
             call('__schema__'),
@@ -293,7 +314,7 @@ class TestCreateTable(VoidQuery):
                 update={
                     '$set': {
                         'auto.seq': 0,
-                        'fields.col1': {'type_code': 'integer'}
+                        'fields.col1': {'type_code': 'int'}
                     },
                     '$push': {
                         'auto.field_names':
@@ -307,7 +328,7 @@ class TestCreateTable(VoidQuery):
         self.print_warn.assert_called()
 
     def test_notNull_with_unique(self):
-        self.sql = self.base_sql + '("col1" integer NOT NULL UNIQUE)'
+        self.sql = self.base_sql + '("col1" int NOT NULL UNIQUE)'
         self.exe()
         calls = [
             call('table'),
@@ -318,7 +339,7 @@ class TestCreateTable(VoidQuery):
             call().update_one(
                 filter={'name': 'table'},
                 update={'$set': {
-                    'fields.col1': {'type_code': 'integer'}}},
+                    'fields.col1': {'type_code': 'int'}}},
                 upsert=True
             )
         ]
@@ -326,7 +347,7 @@ class TestCreateTable(VoidQuery):
         self.print_warn.assert_called()
 
     def test_pk_with_autoInc(self):
-        self.sql = self.base_sql + '("col1" integer PRIMARY KEY AUTOINCREMENT)'
+        self.sql = self.base_sql + '("col1" int PRIMARY KEY AUTOINCREMENT)'
         self.exe()
         calls = [
             call('table'),
@@ -341,7 +362,7 @@ class TestCreateTable(VoidQuery):
                 update={
                     '$set': {
                         'auto.seq': 0,
-                        'fields.col1': {'type_code': 'integer'}
+                        'fields.col1': {'type_code': 'int'}
                     },
                     '$push': {
                         'auto.field_names':
@@ -354,7 +375,7 @@ class TestCreateTable(VoidQuery):
         self.db.__getitem__.assert_has_calls(calls)
 
     def test_pk_with_unique(self):
-        self.sql = self.base_sql + '("col1" integer PRIMARY KEY UNIQUE)'
+        self.sql = self.base_sql + '("col1" int PRIMARY KEY UNIQUE)'
         self.exe()
         calls = [
             call('table'),
@@ -370,14 +391,14 @@ class TestCreateTable(VoidQuery):
                 filter={'name': 'table'},
                 update={'$set': {
                     'fields.col1': {
-                        'type_code': 'integer'}}},
+                        'type_code': 'int'}}},
                 upsert=True
             )
         ]
         self.db.__getitem__.assert_has_calls(calls)
 
     def test_autoInc_with_unique(self):
-        self.sql = self.base_sql + '("col1" integer AUTOINCREMENT UNIQUE)'
+        self.sql = self.base_sql + '("col1" int AUTOINCREMENT UNIQUE)'
         self.exe()
 
         calls = [
@@ -393,7 +414,7 @@ class TestCreateTable(VoidQuery):
                 update={
                     '$set': {
                         'auto.seq': 0,
-                        'fields.col1': {'type_code': 'integer'}
+                        'fields.col1': {'type_code': 'int'}
                     },
                     '$push': {
                         'auto.field_names':
@@ -404,6 +425,23 @@ class TestCreateTable(VoidQuery):
             )
         ]
         self.db.__getitem__.assert_has_calls(calls)
+
+    @skip('Test Not ready')
+    def test_constraint_notNull(self):
+        pass
+
+    @skip('Test Not ready')
+    def test_constraint_pk(self):
+        pass
+
+    @skip('Test Not ready')
+    def test_constraint_autoInc(self):
+        pass
+
+    @skip('Test Not ready')
+    def test_constraint_unique(self):
+        pass
+
 
 
 class AlterTable(VoidQuery):
@@ -651,6 +689,15 @@ class TestDelete(VoidQuery):
         calls = [
             call()('table'),
             call().delete_many(filter={'col': {'$lt': 1}})
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
+
+    def test_delete_all(self):
+        self.sql = self.base_sql
+        self.exe()
+        calls = [
+            call()('table'),
+            call().delete_many(filter={})
         ]
         self.db.__getitem__.assert_has_calls(calls)
 
