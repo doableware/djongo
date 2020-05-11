@@ -288,6 +288,7 @@ class SQLColumnDef:
         'NOT NULL': not_null,
         'NULL': null
     }
+    supported_data_types = None
 
     def __init__(self,
                  name: str = None,
@@ -324,7 +325,59 @@ class SQLColumnDef:
                     raise SQLDecodeError(f'Unknown column constraint: {name}')
 
     @staticmethod
-    def statement2col_defs(token: Token):
+    def sql2col_defs(sql: str):
+        sql = sql[1:-1]
+        while sql:
+            if sql[0] == '"':
+                try:
+                    def_str, sql = sql.split(',', 1)
+                except ValueError:
+                    def_str = sql
+                    sql = None
+                else:
+                    sql = sql.strip()
+                yield SQLColumnDef.def_str2col_def(def_str)
+            elif sql.startswith('CONSTRAINT'):
+                # Temporary hack
+                indexes = [None]
+                i = 0
+                for i, c in enumerate(sql):
+                    if c == '(':
+                        if indexes[0] is None:
+                            indexes.pop()
+                        indexes.append(i)
+                    elif c == ')':
+                        indexes.pop()
+                    if not indexes:
+                        break
+                if len(sql[i:]) > 1:
+                    sql = sql[i+3:]
+                else:
+                    sql = None
+                yield SQLColumnConstraint()
+            else:
+                raise SQLDecodeError(f'Syntax Error: {sql}')
+
+    @classmethod
+    def def_str2col_def(cls, def_str: str):
+        if not cls.supported_data_types:
+            from djongo.base import DatabaseWrapper
+            cls.supported_data_types = set(DatabaseWrapper.data_types.values())
+
+        name, other = def_str[1:].split('"', 1)
+        other = other.strip()
+
+        data_type, constraint_sql = other.split(' ', 1)
+        if data_type not in cls.supported_data_types:
+            raise NotSupportedError(f'Data of type: {data_type}')
+
+        col_constraints = set(SQLColumnDef._get_constraints(constraint_sql))
+        return SQLColumnDef(name=name,
+                            data_type=data_type,
+                            col_constraints=col_constraints)
+
+    @classmethod
+    def statement2col_defs(cls, token: Token):
         from djongo.base import DatabaseWrapper
         supported_data_types = set(DatabaseWrapper.data_types.values())
 
