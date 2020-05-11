@@ -591,8 +591,12 @@ class AlterQuery(DDLQuery):
             elif tok.match(tokens.Keyword, 'COLUMN'):
                 self.execute = self._add_column
 
+            elif isinstance(tok, Where):
+                print_warn('partial indexes')
+
             else:
-                raise SQLDecodeError
+                raise SQLDecodeError(err_key=tok.value,
+                                     err_sub_sql=statement)
 
     def _add_column(self):
         self.db[self.left_table].update(
@@ -675,7 +679,7 @@ class CreateQuery(DDLQuery):
         push = {}
         update = {}
 
-        for col in SQLColumnDef.statement2col_defs(tok):
+        for col in SQLColumnDef.sql2col_defs(tok.value):
             if isinstance(col, SQLColumnConstraint):
                 print_warn('column CONSTRAINTS')
             else:
@@ -857,19 +861,25 @@ class Query:
             except OperationFailure as e:
                 import djongo
                 exe = SQLDecodeError(
-                    f'FAILED SQL: {self._sql}\n'
-                    f'Params: {self._params}\n'
-                    f'Pymongo error: {e.details}\n'
-                    f'Version: {djongo.__version__}'
+                    err_sql=self._sql,
+                    params=self._params,
+                    version=djongo.__version__
                 )
                 raise exe from e
+
+            except SQLDecodeError as e:
+                import djongo
+                e.err_sql = self._sql,
+                e.params = self._params,
+                e.version = djongo.__version__
+                raise e
 
             except Exception as e:
                 import djongo
                 exe = SQLDecodeError(
-                    f'FAILED SQL: {self._sql}\n'
-                    f'Params: {self._params}\n'
-                    f'Version: {djongo.__version__}'
+                    err_sql=self._sql,
+                    params=self._params,
+                    version=djongo.__version__
                 )
                 raise exe from e
 
