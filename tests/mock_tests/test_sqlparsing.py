@@ -232,10 +232,10 @@ class VoidQuery(MockTest):
 
 class TestCanvasVoidQuery(VoidQuery):
 
-    @skip
     def test_query(self):
-        self.sql = 'CREATE TABLE "introspection_comment" ("id" int NOT NULL PRIMARY KEY AUTOINCREMENT, "ref" string NOT NULL UNIQUE, "article_id" int NOT NULL, "email" string NOT NULL, "pub_date" date NOT NULL, "up_votes" long NOT NULL, "body" string NOT NULL, CONSTRAINT "up_votes_gte_0_check" CHECK ("up_votes" >= 0), CONSTRAINT "article_email_pub_date_uniq" UNIQUE ("article_id", "email", "pub_date"))'
+        self.sql = 'ALTER TABLE "table" ADD CONSTRAINT "index" UNIQUE INDEX ("col1") WHERE "col2" IS NULL'
         self.exe()
+
 
 class TestCreateDatabase(VoidQuery):
     """

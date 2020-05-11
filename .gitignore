@@ -2,6 +2,7 @@ dist/
 build/
 venv/
 venv3.8/
+venv_py38_dj30/
 .idea/
 .tox/
 *__pycache__*

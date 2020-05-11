@@ -14,28 +14,39 @@ class TextTestResult(BaseTextTestResult):
         super().__init__(*args, **kwargs)
         self.passed = []
         self.handler = StreamHandler(sys.stdout)
+        self.stopped = False
 
     def addSuccess(self, test: TestCase):
         super().addSuccess(test)
+        self.stream.writeln('## Ending Test ##')
         self.passed.append(test)
-        self.stream.write('\n## Ending Test ##')
         logger = getLogger('djongo')
         logger.setLevel(INFO)
 
     def startTest(self, test):
-        self.stream.write('## Starting Test ##\n')
+        self.stream.writeln('## Starting Test ##')
         super().startTest(test)
         logger = getLogger('djongo')
-        logger.setLevel(DEBUG)
+        logger.setLevel(INFO)
         if logger.hasHandlers():
             logger.removeHandler(self.handler)
         self.handler = StreamHandler(sys.stdout)
         logger.addHandler(self.handler)
 
+    def stopTest(self, test):
+        super().stopTest(test)
+
+    def addError(self, test, err):
+        self.errors.append((test, ''))
+        self.stream.writeln("ERROR")
+        self.stream.writeln('## Ending Test ##')
+    # def _exc_info_to_string(self, err, test):
+    #     if self.buffer and hasattr(sys.stdout, 'getvalue'):
+    #         super()._exc_info_to_string(err, test)
 
 class TextTestRunnerFactory:
 
-    def __init__(self, buffer=True):
+    def __init__(self, buffer=False):
         self.buffer = buffer
 
     def __call__(self, *args, **kwargs):
