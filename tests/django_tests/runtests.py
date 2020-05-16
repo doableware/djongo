@@ -4,7 +4,6 @@ import json
 import os
 import sys
 from itertools import chain
-from json import JSONDecodeError
 # from typing import Literal
 
 from test_utils import setup_tests
@@ -30,10 +29,12 @@ DB_VERSIONS = ('sqlite', 'mongodb')
 #     passing: List[str]
 #     failing: List[str]
 #
+# class TestName(TypedDict):
+#     migrations: TestResult
 #
 # class DbVersions(TypedDict):
-#     sqlite: TestResult
-#     mongodb: TestResult
+#     sqlite: TestName
+#     mongodb: TestName
 #
 #
 # class PyVersions(TypedDict):
@@ -59,11 +60,6 @@ PARSER_ARGS = {
         'type': int,
         'choices': [21, 22, 30]
     },
-    '--python-version': {
-        'default': 38,
-        'type': int,
-        'choices': [36, 38]
-    },
     '--db-type': {
         'default': 'mongodb',
         'type': str,
@@ -83,6 +79,20 @@ PARSER_ARGS = {
     },
 }
 
+check_tests = [
+    'bulk_create',
+    'migrations',
+    'inspectdb',
+    'indexes',
+    'dbshell',
+    'db_utils',
+    'db_typecasts',
+    'db_functions',
+    'datetimes',
+    'dates',
+    'datatypes',
+    'aggregation']
+
 
 class TestManager:
 
@@ -94,7 +104,7 @@ class TestManager:
         setup_tests.validate_parsed(parsed, parser)
 
         django_version = f'v{parsed.django_version}'
-        python_version = f'p{parsed.python_version}'
+        python_version = f'p{sys.version_info.major}{sys.version_info.minor}'
         self.selected_test_dir = os.path.join(
             TEST_REPO_DIR,
             django_version,
@@ -121,29 +131,40 @@ class TestManager:
         testlist.sort()
         self.repo_tests_list.extend(testlist)
 
+    @staticmethod
+    def to_result_dict(test_result):
+        res_dict = {}
+        for test, trace in test_result:
+            _id = test.id()
+            name, _ = _id.split('.', 1)
+            try:
+                res_dict[name].append(_id)
+            except KeyError:
+                res_dict[name] = [_id]
+        for ids in res_dict.values():
+            ids.sort()
+        return res_dict
+
     def discover_passing(self):
         if not self.repo_tests_list:
             self.discover_tests()
-        self.parsed.modules = [
-            'bulk_create', 'migrations', 'inspectdb',
-            'indexes', 'dbshell', 'db_utils', 'db_typecasts',
-            'db_functions', 'datetimes', 'dates', 'datatypes',
-            'backends', 'aggregation']
+        self.parsed.modules = self.parsed.modules or check_tests
         result = setup_tests.test_exec(self.parsed)
+        res_dict = self.to_result_dict(chain(result.failures,
+                                             result.errors,
+                                             result.unexpectedSuccesses))
+        self.result_list['failing'].update(res_dict)
+        res_dict = self.to_result_dict(result.passed)
+        self.result_list['passing'].update(res_dict)
 
-        self.result_list['failing'].clear()
-        for test, trace in chain(result.failures, result.errors, result.unexpectedSuccesses):
-            self.result_list['failing'].append(test.id())
-        self.result_list['failing'].sort()
-        print('failing')
-        print(self.result_list['failing'])
-
-        self.result_list['passing'].clear()
-        for test in result.passed:
-            self.result_list['passing'].append(test.id())
-        self.result_list['passing'].sort()
-        print('passing')
-        print(self.result_list['passing'])
+        # for test, trace in chain(result.failures, result.errors, result.unexpectedSuccesses):
+        #     self.result_list['failing'].append(test.id())
+        # self.result_list['failing'].sort()
+        #
+        # self.result_list['passing'].clear()
+        # for test in result.passed:
+        #     self.result_list['passing'].append(test.id())
+        # self.result_list['passing'].sort()
 
     def check_specific(self):
         result = setup_tests.test_exec(self.parsed)
@@ -186,33 +207,11 @@ class TestManager:
                     test_list[tv][pv] = {}
                     for dbv in DB_VERSIONS:
                         test_list[tv][pv][dbv] = {}
-                        test_list[tv][pv][dbv]['passing'] = []
-                        test_list[tv][pv][dbv]['failing'] = []
+                        test_list[tv][pv][dbv]['passing'] = {}
+                        test_list[tv][pv][dbv]['failing'] = {}
             return test_list
-
 
 
 if __name__ == '__main__':
     tm = TestManager()
     exit(tm.run())
-
-    # parser = get_parser()
-    # parsed = parser.parse_args()
-    # django_version = 'v' + parsed.django_version
-    # db_type = parsed.db_type
-    #
-    # TEST_REPO_DIR = os.path.join(
-    #     ROOT_DIR,
-    #     'django_tests/tests',
-    #     django_version,
-    #     'tests')
-    # check_settings()
-    #
-    # if parsed.discover_tests:
-    #     discover_tests()
-    # if parsed.discover_passing:
-    #     discover_passing(parsed)
-    # if parsed.run_currently_passing:
-    #     exit(check_passing(parsed))
-    # if parsed.run_specific:
-    #     exit(check_specific(parsed, parsed.run_specific))
