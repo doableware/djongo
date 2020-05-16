@@ -124,7 +124,13 @@ class TestManager:
         self.result_list = self.test_list[django_version][python_version][parsed.db_type]
 
     def check_passing(self):
-        pass
+        passing = self.result_list['passing']
+        tests = []
+        for test in passing.values():
+            tests.extend(test)
+
+        self.parsed.modules = tests
+        return self.check_specific()
 
     def discover_tests(self):
         testlist = setup_tests.get_test_list(self.parsed)
@@ -156,15 +162,6 @@ class TestManager:
         self.result_list['failing'].update(res_dict)
         res_dict = self.to_result_dict(result.passed)
         self.result_list['passing'].update(res_dict)
-
-        # for test, trace in chain(result.failures, result.errors, result.unexpectedSuccesses):
-        #     self.result_list['failing'].append(test.id())
-        # self.result_list['failing'].sort()
-        #
-        # self.result_list['passing'].clear()
-        # for test in result.passed:
-        #     self.result_list['passing'].append(test.id())
-        # self.result_list['passing'].sort()
 
     def check_specific(self):
         result = setup_tests.test_exec(self.parsed)
