@@ -20,7 +20,7 @@ before_script:
   - mongod --version
 
 script:
-  - tox -e py36-django_stable
+  - tox -e py38-django_stable
 
 after_script:
   - pkill mongod
