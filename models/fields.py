@@ -113,7 +113,7 @@ class ModelField(MongoField):
         super().__init__(*args, **kwargs)
 
     def _validate_container(self):
-        for field in self.model_container._meta.get_fields():
+        for field in self.model_container._meta._get_fields(reverse=False):
             if isinstance(field, (AutoField,
                                   BigAutoField,
                                   RelatedField)):
