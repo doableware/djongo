@@ -105,6 +105,34 @@ class Entry(models.Model):
 
 ## Django Admin
 
+## Data security and integrity checks
+Djongo allows for checks on data fields before they are saved to the database. Running accurate integrity checks and field value validators before writing data into the database is extremely important. 
+
+
+### Validators
+Apply validators on each of the field values before they are saved.
+
+
+### Integrity checks
+
+```python
+class Entry(models.Model):
+    _id = models.ObjectIdField()
+    blog = models.EmbeddedField(
+        model_container=Blog,
+        null=True
+    )
+```
+## Rapid Prototyping
+
+### Goodbye Migrations
+
+## Using MongoDB fields
+
+## Simplify complex queries
+
+## Django Admin
+
 ## DjongoNxt
 
 > Features supported in DjongoNxt are not a part of the standard Djongo package. Visit the [sponsors page](https://www.patreon.com/nesdis/) for more information.
