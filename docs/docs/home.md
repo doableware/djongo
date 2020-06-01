@@ -3,13 +3,13 @@ permalink: /
 layout: splash
 title: "Django MongoDB connector"
 excerpt: "Djongo"
-description: "Djongo is specifically meant to be used with the original Django ORM and MongoDB. Using the Django admin app one can directly add and modify documents stored in MongoDB. Other contrib modules such as Auth and Sessions work without any changes"
+description: "Djongo is a python Object Document Mapper (ODM) to be used with Django and MongoDB. Use Django Admin to directly add and modify documents stored in MongoDB. Use other contrib modules such as Auth and Sessions without any changes"
 
 header:
     overlay_image: /assets/images/landing-banner3.jpg
 
 punchline:
-  - excerpt: The only connector that let's you use Django with MongoDB *without* changing the Django ORM.
+  - excerpt: A python Object Document Mapper (ODM) that let's you use Django with MongoDB *without* changing the Django ORM.
 
 feature_row1:
 
