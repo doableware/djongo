@@ -1,7 +1,7 @@
 # main links
 main:
    - title: "Get Started"
-     url: /get-started/
+     url: /integrating-django-with-mongodb/
    - title: "Sponsor"
      url: https://www.patreon.com/nesdis/
    - title: "Discuss"
@@ -10,10 +10,10 @@ main:
      url: https://github.com/nesdis/djongo/
 
 docs:
-  - title: "Using Djongo"
+  - title: "Get Started"
     url: /integrating-django-with-mongodb/
-  - title: "Get started"
-    url: /get-started/
+  - title: "Djongo Deep Dive"
+    url: /djongo-deep-dive/
   - title: "Djongo Fields"
     children:
     - title: "Embedded Field"
@@ -47,9 +47,9 @@ docs:
 
   - title: "Side stuff"
     children:
-    - title: "Other ways to integrate Django with MongoDBs"
-      url: /different-ways-to-integrate-django-with-mongodb/
-    - title: "Djongo design documentation"
+    - title: "Djongo vs Others"
+      url: /djongo-comparison/
+    - title: "Djongo Design"
       url: /django-mongodb-connector-design-document/
 #      - title: "Roadmap"
 #        url: /roadmap/
