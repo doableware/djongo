@@ -1,9 +1,9 @@
 ---
-title: Different ways to integrate Django with MongoDB
-permalink: /different-ways-to-integrate-django-with-mongodb/
+title: Djongo vs Others
+permalink: /djongo-comparison/
 ---
 
-This page describes how to integrate MongoDB with Django with focus on Djongo. It describes the Django ORM internal implementation that is not covered by the [Django documentation](https://docs.djangoproject.com/en/dev/). If you have not yet checked out the [introduction to Djongo](https://nesdis.github.io/djongo/), be sure to do so! 
+This page describes how to integrate MongoDB with Django with focus on Djongo. It describes the Django ORM internal implementation that is not covered by the [Django documentation](https://docs.djangoproject.com/en/dev/). If you have not yet checked out the [introduction to Djongo](https://nesdis.github.io/djongo/), be sure to do so first! 
 
 There are different ways to integrate MongoDB with Django, each with positives and negatives. Insights into the Django ORM design will help understand ways to integrate MongoDB and Django. 
 
