@@ -5,7 +5,11 @@ from unittest.runner import (
     TextTestResult as BaseTextTestResult,
     TextTestRunner)
 
-from django.test.runner import DiscoverRunner as BaseDiscoverRunner
+from django.test.runner import (
+    DiscoverRunner as BaseDiscoverRunner,
+    ParallelTestSuite as ParallelSuite,
+    RemoteTestRunner as RemoteRunner,
+    RemoteTestResult as RemoteResult)
 
 
 class TextTestResult(BaseTextTestResult):
@@ -14,42 +18,76 @@ class TextTestResult(BaseTextTestResult):
         super().__init__(*args, **kwargs)
         self.passed = []
         self.handler = StreamHandler(sys.stdout)
+        self.stopped = False
 
     def addSuccess(self, test: TestCase):
         super().addSuccess(test)
-        self.passed.append(test)
-        self.stream.write('\n## Ending Test ##')
+        self.stream.writeln('## Ending Test ##')
+        self.passed.append((test, ''))
         logger = getLogger('djongo')
         logger.setLevel(INFO)
 
     def startTest(self, test):
-        self.stream.write('## Starting Test ##\n')
+        self.stream.writeln('## Starting Test ##')
         super().startTest(test)
         logger = getLogger('djongo')
-        logger.setLevel(DEBUG)
+        logger.setLevel(INFO)
         if logger.hasHandlers():
             logger.removeHandler(self.handler)
         self.handler = StreamHandler(sys.stdout)
         logger.addHandler(self.handler)
 
+    def stopTest(self, test):
+        super().stopTest(test)
+
+    def addError(self, test, err):
+        self.errors.append((test, ''))
+        self.stream.writeln("ERROR")
+        self.stream.writeln('## Ending Test ##')
+
+    def addSubTest(self, test, subtest, err):
+        if err is not None:
+            self.errors.append((test, ''))
+
+
+class RemoteTestResult(RemoteResult):
+    def addSubTest(self, test, subtest, err):
+        if err is not None:
+            self.events.append(('addSubTest', self.test_index, object(), object()))
+
+    def addError(self, test, err):
+        self.events.append(('addError', self.test_index, ''))
+
+
+class RemoteTestRunner(RemoteRunner):
+    resultclass = RemoteTestResult
+
+
+class ParallelTestSuite(ParallelSuite):
+    runner_class = RemoteTestRunner
+
 
 class TextTestRunnerFactory:
 
-    def __init__(self, buffer=True):
+    def __init__(self,
+                 buffer=False,
+                 result_class=TextTestResult):
+
         self.buffer = buffer
+        self.result_class = result_class
 
     def __call__(self, *args, **kwargs):
-        kwargs['resultclass'] = TextTestResult
+        kwargs['resultclass'] = self.result_class
         return TextTestRunner(buffer=self.buffer,
                               *args,
                               **kwargs)
-
 
 TestRunner = TextTestRunnerFactory()
 
 
 class DiscoverRunner(BaseDiscoverRunner):
     test_runner = TestRunner
+    parallel_test_suite = ParallelTestSuite
 
     def run_tests(self, test_labels, extra_tests=None, **kwargs):
         self.setup_test_environment()
