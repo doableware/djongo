@@ -1,5 +1,5 @@
 ---
-title: Django MongoDB connector design document
+title: Django and MongoDB Connector Design
 permalink: /django-mongodb-connector-design-document/
 ---
 

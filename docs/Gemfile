@@ -1,9 +1,9 @@
 source 'https://rubygems.org'
 # run locally
-gem 'github-pages', group: :jekyll_plugins
-gem "jekyll-include-cache"
+# gem 'github-pages', group: :jekyll_plugins
+# gem "jekyll-include-cache"
 
 # run server
-# gem "minimal-mistakes-jekyll" "4.15.2"
-# gem "jekyll", "~> 3.5"
+gem "minimal-mistakes-jekyll"
+gem "jekyll", "~> 3.5"
 gem 'wdm'
