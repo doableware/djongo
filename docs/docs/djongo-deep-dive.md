@@ -21,13 +21,13 @@ The `settings.py` supports (but is not limited to) the following  options:
                 'password': 'password',
                 'authSource': 'db-name',
                 'authMechanism': 'SCRAM-SHA-1'
-            }
+            },
             'LOGGING': {
                 'version': 1,
                 'loggers': {
                     'djongo': {
                         'level': 'DEBUG',
-                        'propogate': False,                        
+                        'propagate': False,                        
                     }
                 },
              },
