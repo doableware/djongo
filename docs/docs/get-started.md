@@ -110,9 +110,54 @@ class Entry(models.Model):
 
 By setting `null=False, blank=False` in `EmbeddedField`, missing values are never stored.
 
-<!--
-## Using MongoDB fields
 
+## Using MongoDB fields
+ Nest a `dict` inside a model with the `EmbeddedField`. The `model_container` is used to describe the structure of the 
+ data being stored.
+
+```python
+from djongo import models
+
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        abstract = True
+
+class Entry(models.Model):
+    blog = models.EmbeddedField(
+        model_container=Blog
+    )    
+    headline = models.CharField(max_length=255)    
+
+e = Entry()
+e.blog = {
+    'name': 'Djongo'
+}
+e.headline = 'The Django MongoDB connector'
+e.save()
+```
+
+Nest a `list` of `dict` inside a model for more complex data.
+
+```python
+from djongo import models
+
+class Entry(models.Model):
+    blog = models.ArrayField(
+        model_container=Blog
+    )    
+    headline = models.CharField(max_length=255)    
+
+e = Entry()
+e.blog = [
+    {'name': 'Djongo'}, {'name': 'Django'}, {'name': 'MongoDB'}
+]
+e.headline = 'Djongo is the best Django and MongoDB connector'
+e.save()
+```
+
+<!--
 ## Simplify complex queries
 
 ## Django Admin
