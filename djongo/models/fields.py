@@ -615,6 +615,9 @@ class ObjectIdFieldMixin:
     def rel_db_type(self, connection):
         return self.db_type(connection)
 
+    def get_prep_value(self, value):
+        return value
+
 
 class GenericObjectIdField(ObjectIdFieldMixin, Field):
     pass
