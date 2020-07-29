@@ -5,7 +5,7 @@ permalink: /using-django-with-mongodb-data-fields/
 
 ## EmbeddedField
 
-MongoDB allows the creation of an [embedded document](https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding). By using Djongo as your connector, you can embed any other 'model' into your parent model through the `EmbeddedField`. 
+MongoDB allows the creation of an [embedded document](https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding). By using Djongo as your connector, you can embed any other 'model' into your parent model through the `EmbeddedField`.
 
 ```python
 class EmbeddedField(MongoField):
@@ -23,7 +23,7 @@ Argument | Type | Description
 `model_container`| `models.Model` | The child model class type (not instance) that this embedded field will contain.
 `model_form_class` | `models.forms.ModelForm` | The child model form class type of the embedded model.
 `model_form_kwargs` | `dict()` | The kwargs (if any) that must be passed to the `forms.ModelForm` while instantiating it.
-  
+
 ```python
 from djongo import models
 
@@ -39,16 +39,16 @@ class Entry(models.Model):
     blog = models.EmbeddedField(
         model_container=Blog
     )
-    
-    headline = models.CharField(max_length=255)    
+
+    headline = models.CharField(max_length=255)
     objects = models.DjongoManager()
 
 e = Entry.objects.create(
     headline='h1',
-    blog={
+    blog=Blog(**{
         'name': 'b1',
         'tagline': 't1'
-    })
+    }))
 
 g = Entry.objects.get(headline='h1')
 assert e == g
@@ -74,8 +74,8 @@ class Entry(models.Model):
         model_container=Blog,
         null=True
     )
-    
-    headline = models.CharField(max_length=255)    
+
+    headline = models.CharField(max_length=255)
     objects = models.DjongoManager()
 
 e = Entry(headline='h1', blog=None)
@@ -92,14 +92,14 @@ class Entry(models.Model):
         model_container=Blog,
         null=False
     )
-    
-    headline = models.CharField(max_length=255)    
+
+    headline = models.CharField(max_length=255)
     objects = models.DjongoManager()
 
 e = Entry(headline='h1', blog=None)
 e.clean_fields()
 
->>> 
+>>>
     ValidationError({'blog': ['This field cannot be null.']})
 ```
 
@@ -113,7 +113,7 @@ from djongo import models
 class Tagline(models.Model)
     title = models.CharField(max_length=100)
     subtitle = models.CharField(max_length=100)
-    
+
     class Meta:
         abstract = True
 
@@ -129,19 +129,19 @@ class Entry(models.Model):
     blog = models.EmbeddedField(
         model_container=Blog
     )
-    
-    headline = models.CharField(max_length=255)    
+
+    headline = models.CharField(max_length=255)
     objects = models.DjongoManager()
 
 e = Entry.objects.create(
     headline='h1',
-    blog={
+    blog=Blog(**{
         'name': 'b1',
         'tagline': {
             'title': 'Tagline Title'
             'subtitle': 'Tagline Subtitle'
         }
-    })
+    }))
 
 g = Entry.objects.get(headline='h1')
 assert e == g
@@ -178,8 +178,8 @@ class Entry(models.Model):
         model_container=Blog,
         model_form_class=BlogForm
     )
-    
-    headline = models.CharField(max_length=255)    
+
+    headline = models.CharField(max_length=255)
     objects = models.DjongoManager()
 ```
 
@@ -216,12 +216,12 @@ filter = {
 ```
 
 ## Using EmbeddedField in Django Admin
- 
+
 Django Admin is a powerful tool for managing data used in an app. When the models use Djongo relational fields, NoSQL "embedded models" can be created directly from Django Admin. **These fields provide better performance when compared with traditional Django relational fields.**
 
 Django admin can use models to automatically build a site area that can be used to create, view, update, and delete records. This can save a lot of time during development, making it very easy to test the models and get a feel for the right data. Django Admin is already quite well known, but to demonstrate how to use it with Djongo, here is a simple example.
 
-First define our basic models. In these tutorials, the same example used in the official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/) is used. The documentation talks about 3 models that interact with each other: **Blog, Author and Entry**. To make the example clearer, few fields from the original models are omitted. 
+First define our basic models. In these tutorials, the same example used in the official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/) is used. The documentation talks about 3 models that interact with each other: **Blog, Author and Entry**. To make the example clearer, few fields from the original models are omitted.
 
 ```python
 from djongo import models
@@ -375,11 +375,11 @@ class Entry(models.Model):
         return self.headline
 ```
 
-To display the embedded models in Django Admin, a `Form` for the embedded fields is required. Since the embedded field is an abstract model, the form is easily created by using a `ModelForm`. The `BlogForm` defines `Blog` as the model with `name` and `tagline` as the form fields. 
+To display the embedded models in Django Admin, a `Form` for the embedded fields is required. Since the embedded field is an abstract model, the form is easily created by using a `ModelForm`. The `BlogForm` defines `Blog` as the model with `name` and `tagline` as the form fields.
 
 If you do not specify a `ModelForm` for your embedded models, and pass it using the `model_form_class` argument, Djongo will automatically generate a `ModelForm` for you.
 
-Register the new models in `admin.py`. 
+Register the new models in `admin.py`.
 
 ```python
 from django.contrib import admin
@@ -389,7 +389,7 @@ admin.site.register([Author, Entry])
 ```
 
 The number of fields in the `Entry` model is reduce to 6. Fire up Django Admin to check what is up!
- 
+
 ![Django Admin](/djongo/assets/images/embedded-admin.png)
 
 Only the `Entry` and `Author` model are registered. I click on *Entrys Add* and get:
@@ -406,4 +406,3 @@ entries = Entry.objects.filter(blog={'name': 'Beatles Blog'})
 ```
 
 This query will return all entries having an embedded blog with the name ‘Beatles Blog’. **The query will hit the database just once and there are no JOINs involved.**
-
