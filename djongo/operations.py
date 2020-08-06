@@ -90,7 +90,7 @@ class DatabaseOperations(BaseDatabaseOperations):
             converters.append(self.convert_datetimefield_value)
         return converters
 
-    def sql_flush(self, style, tables, sequences, allow_cascade=False):
+    def sql_flush(self, style, tables, reset_sequences, allow_cascade=False):
         # TODO: Need to implement this fully
         return [f'ALTER TABLE "{table}" FLUSH'
                 for table in tables]
