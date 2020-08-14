@@ -138,6 +138,19 @@ class ModelField(MongoField):
                            value: dict,
                            *other_args):
         processed_value = {}
+        for field in self.model_container._meta.get_fields():
+            try:
+                field_value = value[field.attname]
+            except KeyError:
+                continue
+            processed_value[field.attname] = getattr(field, func_name)(field_value, *other_args)
+        return processed_value
+    
+    def _save_value_thru_fields(self,
+                                func_name: str,
+                                value: dict,
+                                *other_args):
+        processed_value = {}
         errors = {}
         for field in self.model_container._meta.get_fields():
             try:
@@ -212,8 +225,12 @@ class ModelField(MongoField):
         if not isinstance(value, self.base_type):
             raise ValueError(
                 f'Value: {value} must be an instance of {self.base_type}')
-        return self.get_prep_value(value)
 
+        processed_value = self._save_value_thru_fields('get_db_prep_save',
+                                                       value, 
+                                                       connection)
+        return processed_value
+     
     def get_prep_value(self, value):
         if (value is None or
                 not isinstance(value, self.base_type)):
@@ -315,6 +332,18 @@ class ArrayField(FormedField):
             post_dict = super()._value_thru_fields(func_name,
                                                    pre_dict,
                                                    *other_args)
+            processed_value.append(post_dict)
+        return processed_value
+
+    def _save_value_thru_fields(self,
+                                func_name: str,
+                                value: typing.Union[list, dict],
+                                *other_args):
+        processed_value = []
+        for pre_dict in value:
+            post_dict = super()._save_value_thru_fields(func_name,
+                                                        pre_dict,
+                                                        *other_args)
             processed_value.append(post_dict)
         return processed_value
 
