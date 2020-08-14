@@ -1,8 +1,5 @@
 from unittest import skip
-
 from django.core.exceptions import ValidationError
-
-import xtest_app.models.basic_field
 from djongo.exceptions import NotSupportedError
 from xtest_app.models.basic_field import BasicBlog, BasicRelatedEntry, BasicAuthor
 from . import TestCase
@@ -20,8 +17,8 @@ class FieldTests(TestCase):
     headline_query: dict
     blog_query: dict
     mut: U[Type[models.Model], type]
-    entry: xtest_app.models.basic_field.EmbeddedFieldEntry
-    db_entry: xtest_app.models.basic_field.EmbeddedFieldEntry
+    entry: basic_field.EmbeddedFieldEntry
+    db_entry: basic_field.EmbeddedFieldEntry
 
     def get_model(self,
                   **embedded_field_kwargs) -> U[Type[models.Model], type]:
