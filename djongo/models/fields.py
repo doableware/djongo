@@ -335,6 +335,18 @@ class ArrayField(FormedField):
             processed_value.append(post_dict)
         return processed_value
 
+    def _save_value_thru_fields(self,
+                                func_name: str,
+                                value: typing.Union[list, dict],
+                                *other_args):
+        processed_value = []
+        for pre_dict in value:
+            post_dict = super()._save_value_thru_fields(func_name,
+                                                        pre_dict,
+                                                        *other_args)
+            processed_value.append(post_dict)
+        return processed_value
+
     def value_to_string(self, obj):
         value = self.value_from_object(obj)
         processed_value = []
