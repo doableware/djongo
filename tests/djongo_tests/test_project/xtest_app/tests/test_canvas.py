@@ -1,44 +1,32 @@
-from django.test import TransactionTestCase
-from threading import Thread
+from django.db.models import QuerySet
 
-from xtest_app.models.canvas_models_id import ForeignKey1, ForeignKey2, DummyObject
+from . import TestCase
+from djongo import models
 
-def make_request():
-    objects = DummyObject.objects.all()
+class Team(models.Model):
+    id = models.TextField()
+    extra = models.JSONField(null=True)
 
-    print(objects)
+    class Meta:
+        abstract = True
 
-class MetaScanConcurrencyTest(TransactionTestCase):
-    def setUp(self):
-        foreign_key_1 = ForeignKey1.create(**{
-            "name": "foreign_key_1"
-        })
+class DocumentQuerySet(QuerySet):
+    def from_team(self, team_id: str):
+        return self.filter(team={'id': team_id})
 
-        foreign_key_2 = ForeignKey2.create(**{
-            "name": "foreign_key_2"
-        })
+class Document(models.Model):
+    team = models.EmbeddedField(model_container=Team)
+    objects = models.DjongoManager.from_queryset(DocumentQuerySet)()
 
-        foreign_key_1.save()
-        foreign_key_2.save()
+class Document2(models.Model):
+    team = models.CharField(max_length=10)
+    objects = models.DjongoManager.from_queryset(DocumentQuerySet)()
 
-        for i in range(0, 1):
-            dummy = DummyObject.create(**{
-                "foreign_key_1": foreign_key_1,
-                "foreign_key_2": foreign_key_2
-            })
+class TestCanvas(TestCase):
 
-            dummy.save()
-
-    def test_concurrency_test(self):
-        threads = []
-        for i in range(0, 100):
-            t = Thread(target=make_request)
-            threads.append(t)
-            t.start()
-            # Thread(target=make_request).start()
-
-        for thread in threads:
-            thread.join()
-        # objects = DummyObject.objects.all()
-        #
-        # print(objects)
+    def test_canvas(self):
+        entry = Document.objects.create(
+            team={'id': 'an id', 'extra': {'a': 1}}
+        )
+        b_entry = Document.objects.from_team('an id')
+        print(b_entry)
