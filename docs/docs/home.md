@@ -13,14 +13,12 @@ punchline:
 
 feature_row1:
 
-  - image_path: /assets/images/support.png
-    alt: "Support"
-    title: "Support"
-    excerpt: "Get immediate support for queries on using Django with MongoDB."
-    url: https://www.patreon.com/nesdis/
-    btn_label: "Learn More"
-    btn_class: "btn--primary"
-
+  - image_path: /assets/images/django.jpg
+    alt: "Security"
+    title: "Security"
+    excerpt: "Since there are **zero modifications** to the Django source code, 
+    you get complete security and reliability of Django."
+    
   - image_path: /assets/images/mongo.jpg
     alt: "Unleash MongoDB on Django"
     title: "Unleash MongoDB On Django"
@@ -35,22 +33,27 @@ feature_row1:
 
 feature_row2:
 
-  - image_path: /assets/images/django.jpg
-    alt: "Security"
-    title: "Security"
-    excerpt: "Since there are **zero modifications** to the Django source code, 
-    you get complete security and reliability of Django."
+  - image_path: /assets/images/support.png
+    alt: "Support"
+    title: "Support"
+    excerpt: "Get immediate support for queries on using Django with MongoDB."
+    url: https://www.patreon.com/nesdis/
+    btn_label: "Learn More"
+    btn_class: "btn--primary"
     
   - image_path: /assets/images/djongo-symbol2.jpg
     alt: "Admin MongoDB"
     title: "Rapid App Development"
     excerpt: "Speed up app development and execution with [schema free models](integrating-django-with-mongodb/#enforce-schema), 
-    skipping migrations, and reducing two query intermediate joins to single query [direct joins.](/using-django-with-mongodb-array-reference-field/)"
+    skip migrations, autogenerate complex [MongoDB queries.](/using-django-with-mongodb-array-reference-field/)"
     
   - image_path: /assets/images/drf.jpg
     alt: "Admin MongoDB"
     title: "Sweet Third Party Package Support"
     excerpt: "Extra goodies that help interface MongoDB with Django Rest Framework."        
+
+feature_row2:
+
     
 addendum_row1:
   - image_path: /assets/images/djongo-Nxt-v1.png
