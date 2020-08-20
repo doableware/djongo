@@ -1,6 +1,6 @@
 ---
 title: DjongoNxt Indexes
-permalink: "/djongonxt-indexes/"
+permalink: /djongonxt-indexes/
 ---
 
 ## Compound Index

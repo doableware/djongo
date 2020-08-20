@@ -1,6 +1,6 @@
 ---
 title: DjongoNxt Model Query
-permalink: "/djongonxt-model-query/"
+permalink: /djongonxt-model-query/
 ---
 
 ## Text Search

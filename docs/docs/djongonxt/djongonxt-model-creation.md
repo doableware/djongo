@@ -1,6 +1,6 @@
 ---
 title: DjongoNxt Model Creation
-permalink: "/djongonxt-model-creation/"
+permalink: /djongonxt-model-creation/
 ---
 
 
