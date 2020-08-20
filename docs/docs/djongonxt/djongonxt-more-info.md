@@ -1,6 +1,6 @@
 ---
 title: More Information
-permalink: "/djongonxt-more-info/"
+permalink: /djongonxt-more-info/
 toc: false
 ---
 

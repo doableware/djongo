@@ -31,3 +31,4 @@ upload.sh
 !docs/_includes/nav_list
 !docs/_layouts/single.html
 
+/docs/.jekyll-metadata

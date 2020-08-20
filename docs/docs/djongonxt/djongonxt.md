@@ -1,10 +1,10 @@
 ---
 title: DjongoNxt
-permalink: "/djongonxt/"
+permalink: /djongonxt/
 toc: false
 ---
 
-> Features supported in DjongoNxt are not a part of the standard Djongo package. Visit the [sponsors page](https://www.patreon.com/nesdis/) for more information.
+> Features supported in DjongoNxt are not a part of the standard Djongo package. Visit the [sponsors page][sponsor_page] for more information.
 
 DjongoNxt is a Django and MongoDB connector for full featured database usage. It provides many features of MongoDB enabled through Django. It comes with support for:
 
@@ -31,3 +31,5 @@ Automatic JSON Schema validation document generation and options to add Read and
 ### Aggregation Operators 
 
 Support for various aggregation operators provided by MongoDB.
+
+{% include links %}

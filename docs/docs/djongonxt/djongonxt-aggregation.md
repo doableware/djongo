@@ -1,6 +1,6 @@
 ---
 title: DjongoNxt Aggregation
-permalink: "/djongonxt-aggregation/"
+permalink: /djongonxt-aggregation/
 ---
 
 ## Using Aggregation Operators

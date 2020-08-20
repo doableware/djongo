@@ -1,6 +1,6 @@
 ---
 title: Discussion Board
-permalink: "/discuss/"
+permalink: /discuss/
 toc: false
 ---
 Djongo groups is where you can watch for:

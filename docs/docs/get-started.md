@@ -1,8 +1,10 @@
 ---
 title: Integrating Django with MongoDB
-permalink: /integrating-django-with-mongodb/
+permalink: /get-started/
 description: "Djongo is a python connector for using the Django ORM with MongoDB. Use MongoDB as a backend database for your Django project, without changing the Django ORM. Start using Django with MongoDB by adding just one line of code"
 ---
+
+{{ page.notice.sponsor }}
 
 Use MongoDB as a backend database for your Django project, without changing the Django ORM. Use Django Admin to add and modify documents in MongoDB. Start using Django with MongoDB by adding just one line of code. 
 
@@ -27,19 +29,21 @@ Use MongoDB as a backend database for your Django project, without changing the 
 3. If your models use nested queries or sub querysets like:
   
       ```python
-      inner_qs = Blog.objects.filter(name__contains='Ch').values('name')
-      entries = Entry.objects.filter(blog__name__in=inner_qs)
+      inner_query = Blog.objects.filter(name__contains='Ch').values('name')
+      entries = Entry.objects.filter(blog__name__in=inner_query)
       ```
    MongoDB 3.6 or higher is required.
 
 ## Support
-[![Djongo Support](/djongo/assets/images/support.png)](https://www.patreon.com/nesdis/)
+<!--
+[![Djongo Support](/djongo/assets/images/support.png)][sponsor_page]
+-->
 
 I am inundated daily with your appreciation, queries and feature requests for Djongo. Djongo has grown into a highly complex project. To support the requests, I have decided to follow an organized approach.
 
 Djongo as a project is at a stage where its development must be transformed into a sustained effort. Djongo has more than [1,000,000 downloads](https://pypistats.org/packages/djongo) on pypi and continues to grow. I am trying to establish a sustainable development model for the project, and would [love to hear your thoughts.](https://www.patreon.com/posts/to-only-take-22611438)
 
-Visit my [Patreon page](https://www.patreon.com/nesdis/) to make requests and for support. You can expect immediate answers to your questions.  
+Visit my [Patreon page][sponsor_page] to make requests and for support. You can expect immediate answers to your questions.  
 
 ## How it works
 Djongo makes **zero changes** to the existing Django ORM framework, which means unnecessary bugs and security vulnerabilities do not crop up. It simply translates a SQL query string into a [MongoDB query document](https://docs.mongodb.com/manual/tutorial/query-documents/). As a result, all Django features, models, etc., work as is.
@@ -69,7 +73,7 @@ Djongo lets you rapidly develop and evolve your app models. Modifying your model
 ### Goodbye Migrations
 With Djongo you **permanently  say goodbye** to Django Migrations. To enable migration free model evolution simply set `ENFORCE_SCHEMA: False` in your database configuration. Djongo no longer interprets SQL DDL statements (example CREATE TABLE) to emit pymongo `create_collection` commands. With `ENFORCE_SCHEMA: False` collections are created implicitly, on the fly.
 
-## Data security and integrity checks
+## Security and Integrity Checks
 Djongo allows for checks on data fields before they are saved to the database. Running the correct integrity checks and field value validators before writing data into the database is important. 
 
 
@@ -110,8 +114,13 @@ class Entry(models.Model):
 
 By setting `null=False, blank=False` in `EmbeddedField`, missing values are never stored.
 
+<!--
+## Structured Data vs Flexibility
+-->
 
-## Using MongoDB fields
+## Using MongoDB Fields
+
+### EmbeddedField
  Nest a `dict` inside a model with the `EmbeddedField`. The `model_container` is used to describe the structure of the 
  data being stored.
 
@@ -138,6 +147,7 @@ e.headline = 'The Django MongoDB connector'
 e.save()
 ```
 
+### ArrayField
 Nest a `list` of `dict` inside a model for more complex data.
 
 ```python
@@ -156,8 +166,10 @@ e.blog = [
 e.headline = 'Djongo is the best Django and MongoDB connector'
 e.save()
 ```
-
 <!--
+### JSONField
+
+
 ## Simplify complex queries
 
 ## Django Admin
@@ -166,7 +178,8 @@ e.save()
 
 ## DjongoNxt
 
-> Features supported in DjongoNxt are not a part of the standard Djongo package. Visit the [sponsors page](https://www.patreon.com/nesdis/) for more information.
+Features supported in DjongoNxt are not a part of the standard Djongo package. Visit the [sponsors page][sponsor_page] for more information.
+{: .notice--info}
 
 DjongoNxt is a Django and MongoDB connector for full featured database usage. It provides many features of MongoDB enabled through Django. It comes with support for:
 
@@ -200,4 +213,6 @@ If you think djongo is useful, **please share it** with the world! Your endorsem
   
 You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](/djongo/django-mongodb-connector-design-document/) is implemented.
  
-Please contribute to the continued development and success of Djongo by [making a donation](https://www.patreon.com/nesdis/).
+Please contribute to the continued development and success of Djongo by [making a donation][sponsor_page].
+
+{% include links %}

@@ -1,6 +1,6 @@
 ---
 title: DjongoNxt Database Transactions
-permalink: "/djongonxt-database-transactions/"
+permalink: /djongonxt-database-transactions/
 ---
 
 
