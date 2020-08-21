@@ -1,6 +1,6 @@
 ---
 title: DjongoNxt Model Update
-permalink: "/djongonxt-model-update/"
+permalink: /djongonxt-model-update/
 ---
 
 ## Bulk Write
