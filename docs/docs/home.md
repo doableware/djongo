@@ -34,7 +34,7 @@ feature_row1:
     alt: "Support"
     title: "Support"
     excerpt: "Get immediate support for queries on using Django with MongoDB."
-    url: https://www.patreon.com/nesdis/
+    url: https://nesdis.github.io/djongo/sponsor/
     btn_label: "Learn More"
     btn_class: "btn--primary"
     
@@ -54,7 +54,7 @@ addendum_row1:
     alt: "Djongo Next"
     title: "Djongo Next"
     excerpt: "The next generation connector. Ships with binary extensions for professional usage."
-    url: https://www.patreon.com/nesdis
+    url: https://nesdis.github.io/djongo/sponsor/
     btn_label: "Learn More"
     btn_class: "btn--primary"
     
