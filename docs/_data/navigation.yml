@@ -45,7 +45,7 @@ docs:
     - title: "Contact"
       url: /djongonxt-more-info/
   - title: "Get DjongoNxt"
-    url: https://www.patreon.com/nesdis
+    url: /sponsor/
 
   - title: "Side stuff"
     children:
