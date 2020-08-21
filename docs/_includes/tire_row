@@ -1,0 +1,21 @@
+
+<div class="tire__banner"></div>
+
+<div class="tire__wrapper">
+  {% for s in page.sponsor_row %}
+      <div class="tire_item__box">
+        <div class="tire_item__title">{{ s.title }}</div>
+        <div class="tire_item__price">${{ s.price }}</div>
+        <div class="tire_item__period">PER MONTH</div>
+        <button id="{{ s.btn_id }}" class="btn btn--success btn--large">Pay</button>
+        <div class="tire_item__benefit">
+          <ul>
+            {% for b in s.benefits %}
+              <li>{{ b | markdownify | remove: "<p>" | remove: "</p>" }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+  {% endfor %}
+
+</div>
