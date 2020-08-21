@@ -10,8 +10,6 @@ venv_py38_dj30/
 
 
 docs/.sass-cache/*
-docs/_includes/*
-!docs/_includes/head/
 docs/_apidocs/_build/
 docs/_apidocs/doctrees/
 docs/_layouts/*
@@ -25,10 +23,5 @@ tests/logs
 
 Gemfile.lock
 upload.sh
-
-!docs/_includes/footer.html
-!docs/_includes/masthead.html
-!docs/_includes/nav_list
-!docs/_layouts/single.html
 
 /docs/.jekyll-metadata
