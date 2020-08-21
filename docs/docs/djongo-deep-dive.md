@@ -1,12 +1,25 @@
 ---
 title: Django and MongoDB connector
-permalink: "/djongo-deep-dive/"
+permalink: /djongo-deep-dive/
 ---
 
+{{ page.notice.sponsor }}
 
 ## Database configuration
 
 The `settings.py` supports (but is not limited to) the following  options:
+
+Attribute | Value | Description
+---------|------|-------------
+ENGINE | djongo | The MongoDB connection engine for interfacing with Django.
+ENFORCE_SCHEMA | True | Ensures that the model schema and database schema are exactly the same. Raises `Migration Error` in case of discrepancy.
+ENFORCE_SCHEMA | False | (Default) Implicitly creates collections. Returns missing fields as `None` instead of raising an exception.
+NAME | your-db-name | Specify your database name. This field cannot be left empty.
+LOGGING | dict | A [dictConfig](https://docs.python.org/3.6/library/logging.config.html) for the type of logging to run on djongo.
+CLIENT | dict | A set of key-value pairs that will be passed directly to [`MongoClient`]((http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient)) as kwargs while creating a new client connection.
+  
+All options except `ENGINE` and `ENFORCE_SCHEMA` are the same those listed in the [pymongo documentation](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient).
+
 
 ```python
     DATABASES = {
@@ -34,17 +47,6 @@ The `settings.py` supports (but is not limited to) the following  options:
         }
     }
 ```
-
-Attribute | Value | Description
----------|------|-------------
-ENGINE | djongo | The MongoDB connection engine for interfacing with Django.
-ENFORCE_SCHEMA | True | Ensures that the model schema and database schema are exactly the same. Raises `Migration Error` in case of discrepancy.
-ENFORCE_SCHEMA | False | (Default) Implicitly creates collections. Returns missing fields as `None` instead of raising an exception.
-NAME | your-db-name | Specify your database name. This field cannot be left empty.
-LOGGING | dict | A [dictConfig](https://docs.python.org/3.6/library/logging.config.html) for the type of logging to run on djongo.
-CLIENT | dict | A set of key-value pairs that will be passed directly to [`MongoClient`]((http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient)) as kwargs while creating a new client connection.
-  
-All options except `ENGINE` and `ENFORCE_SCHEMA` are the same those listed in the [pymongo documentation](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient).
 
 ### Enforce schema
 
@@ -165,7 +167,10 @@ class EntryView(DetailView):
 
 ```
 
-You can directly *access any [pymongo](https://api.mongodb.com/python/current/) command* by prefixing `mongo_` to the command name. For example, to perform `aggregate` on the BlogPage collection (BlogPage is stored as a table in SQL or a collection in MongoDB) the function name becomes `mongo_aggregate`. To directly insert a document (instead of `.save()` a model) use `mongo_insert_one()`
+You can directly **access any** [pymongo command](https://api.mongodb.com/python/current/) by prefixing `mongo_` to the command name. 
+{: .notice}
+
+For example, to perform `aggregate` on the BlogPage collection (BlogPage is stored as a table in SQL or a collection in MongoDB) the function name becomes `mongo_aggregate`. To directly insert a document (instead of `.save()` a model) use `mongo_insert_one()`
 
 ## GridFS 
 
@@ -248,3 +253,4 @@ However, if you do not want to create a new database (and copy existing data int
 
 *You are now done setting up Django with MongoDB. Start using Django with MongoDB, like you would with any other database backend.*
 
+{% include links %}

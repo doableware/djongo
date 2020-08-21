@@ -1,6 +1,6 @@
 ---
 title: MongoDB Field Reference
-permalink: "/mongodb-field-reference/"
+permalink: /mongodb-field-reference/
 ---
 
 ## ObjectIdField

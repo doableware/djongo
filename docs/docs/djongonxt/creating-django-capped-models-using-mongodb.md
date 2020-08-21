@@ -45,6 +45,6 @@ python -m djongo.manage migrate
 
 This will result in all Models having `capped == True` to being recreated as Capped collections. Use this command only if such a collection doesn't already exists or is empty, as `djongo.manage` will drop all collections marked as capped in the model but are not capped in the DB and create a new empty capped collection.
 
-{{page.not_ready}}
+{{page.notice.not_ready}}
 
 [capped]: https://docs.mongodb.com/manual/core/capped-collections/

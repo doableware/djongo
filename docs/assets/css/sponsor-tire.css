@@ -1,0 +1,57 @@
+.tire__wrapper {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.tire_item__box {
+  border-style: solid;
+  border-width: 1px;
+  border-color: rgb(229, 227, 221);
+  border-radius: 4px;
+
+  margin-bottom: 2em;
+  margin-left: 1em;
+  margin-right: 1em;
+
+  padding: 1em;
+  width: 29%;
+
+  text-align: center;
+}
+
+.tire_item__box ul {
+  text-align: left;
+}
+
+.tire_item__title {
+  font-weight: bold;
+  margin-bottom: 1.5em;
+}
+
+.tire_item__price {
+  font-weight: bold;
+  font-size: 2.5em;
+}
+
+.tire_item__period {
+  font-size: 0.9em;
+  font-weight: lighter;
+  margin-bottom: 1em;
+}
+
+@media (max-width: 650px) {
+  .tire__wrapper {
+    display: block;
+  }
+  .tire_item__box {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+.tire__banner {
+  height: 100px;
+}
