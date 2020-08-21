@@ -65,7 +65,7 @@ Djongo ensures that you:
  * Future proof your code.
  * Atomic SQL JOIN operations.
  
-Get [expert support](https://www.patreon.com/nesdis) for complex projects.
+Get [expert support][sponsor_page] for complex projects.
 
 ## Rapid Prototyping
 Djongo lets you rapidly develop and evolve your app models. Modifying your models is **much faster** with Djongo compared to traditional Django ORM. Since MongoDB is a schema-less database, every time you redefine a model, MongoDB does not expect you to redefine the schema. 
