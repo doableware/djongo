@@ -13,7 +13,6 @@ docs/.sass-cache/*
 docs/_apidocs/_build/
 docs/_apidocs/doctrees/
 docs/_layouts/*
-docs/_sass/*
 docs/_site/*
 docs/assets/js/*
 !docs/assets/js/jquery.liquid-slider.min.js
