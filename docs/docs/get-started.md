@@ -1,6 +1,7 @@
 ---
 title: Integrating Django with MongoDB
 permalink: /get-started/
+redirect_from: /integrating-django-with-mongodb/
 description: "Djongo is a python connector for using the Django ORM with MongoDB. Use MongoDB as a backend database for your Django project, without changing the Django ORM. Start using Django with MongoDB by adding just one line of code"
 ---
 
