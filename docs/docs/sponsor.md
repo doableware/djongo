@@ -12,13 +12,13 @@ sponsor_row:
     btn_id: price_3
     benefits:
       - You use Djongo and you LOVE IT.
-      - You want to tip me! Thanks!
+      - You want to tip the project! Thanks!
   
   - title: Q&A
     price: 4
     btn_id: price_4
     benefits:
-      - I will take a look at your **one question**.
+      - Take a look at your **one question**.
       - You support the long term sustainability of the project.
       - Your token of appreciation will help me continue maintain the repository.
 
@@ -26,9 +26,9 @@ sponsor_row:
     price: 7
     btn_id: price_7
     benefits:
-      - I answer your questions within 24 hours on Discord priority-support.
+      - Your questions are answered within 24 hours on Discord priority-support.
       - You support the long term sustainability of the project.
-      - I mention your name in the source code.
+      - Your name is mentioned in the source code.
   
   - title: Evangelist Supporter
     price: 15
