@@ -26,7 +26,7 @@ sponsor_row:
     price: 7
     btn_id: price_7
     benefits:
-      - I answer **your questions** within 24 hours.
+      - I answer your questions within 24 hours on Discord priority-support.
       - You support the long term sustainability of the project.
       - I mention your name in the source code.
   
@@ -34,9 +34,9 @@ sponsor_row:
     price: 15
     btn_id: price_15
     benefits:
-      - Your questions are **immediately** taken up for consideration and a resolution guaranteed.
+      - You **get access to the djongoNxt** repository.
+      - Your questions are **immediately** taken up for consideration on Discord priority-support.
       - You support the long term sustainability of the project.
-      - Your name is permanently mentioned as part of the source code.
   
   - title: Advertise on Djongo
     price: 50
@@ -48,6 +48,9 @@ sponsor_row:
 ---
 
 {% include tire_row %}
+
+ * *Subscriptions are not binding and can be canceled any time.*
+ * *Upon successful checkout you are provided with an option to submit additional details required to deliver your benefits.*
 
 <script>
   // Replace with your own publishable key: https://dashboard.stripe.com/test/apikeys

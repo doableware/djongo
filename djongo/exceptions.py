@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Sequence, Any
 
-djongo_access_url = 'https://www.patreon.com/nesdis'
+djongo_access_url = 'https://nesdis.github.io/djongo/sponsor/'
 _printed_features = set()
 
 
