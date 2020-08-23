@@ -2,8 +2,9 @@
 title: Discussion Board
 permalink: /discuss/
 toc: false
+layout: splash
 ---
-Djongo groups is where you can watch for:
+Djongo forum is where you can watch for:
 
 * New release announcements.
 * Suggest improvements.
