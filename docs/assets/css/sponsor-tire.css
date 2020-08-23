@@ -17,6 +17,7 @@
 
   padding: 1em;
   width: 29%;
+  min-width: 16em;
 
   text-align: center;
 }
