@@ -1,0 +1,37 @@
+<script>
+  // Replace with your own publishable key: https://dashboard.stripe.com/test/apikeys
+  var PUBLISHABLE_KEY = "pk_live_eEfW8XjO4oZUPRFaYASLCWqn";
+  // Replace with the domain you want your users to be redirected back to after payment
+  var DOMAIN = "https://nesdis.github.io";
+
+  var stripe = Stripe(PUBLISHABLE_KEY);
+
+  // Handle any errors from Checkout
+  var handleResult = function (result) {
+    if (result.error) {
+      var displayError = document.getElementById("error-message");
+      displayError.textContent = result.error.message;
+    }
+  };
+
+  var redirectToCheckout = function (priceId) {
+    // Make the call to Stripe.js to redirect to the checkout page
+    // with the current quantity
+    stripe
+      .redirectToCheckout({
+        lineItems: [{ price: priceId, quantity: 1 }],
+        successUrl:
+          DOMAIN + "/djongo?session_id={CHECKOUT_SESSION_ID}",
+        cancelUrl: DOMAIN + "/sponsor",
+        mode: 'subscription',
+      })
+      .then(handleResult);
+  };
+{% for t in page.tires %}
+  document
+  .getElementById("{{ t.btn_id }}")
+  .addEventListener("click", function (evt) {
+    redirectToCheckout("{{ t.price_id }}");
+  });
+{% endfor %}
+</script>

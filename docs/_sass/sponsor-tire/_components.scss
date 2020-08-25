@@ -1,0 +1,16 @@
+@import "variables";
+
+.tire__container {
+  display: flex;
+  justify-content: left;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.tire__disclaimer {
+  margin-left: $box-side-margin;
+  display: inline-block;
+  .notice--warning li {
+    margin-left: $box-side-margin;
+  }
+}
