@@ -10,8 +10,6 @@ venv_py38_dj30/
 
 
 docs/.sass-cache/*
-docs/_apidocs/_build/
-docs/_apidocs/doctrees/
 docs/_layouts/*
 docs/_site/*
 docs/assets/js/*

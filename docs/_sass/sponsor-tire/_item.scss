@@ -1,13 +1,4 @@
-.tire__wrapper {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.tire__banner {
-  height: 100px;
-}
+@import "variables";
 
 %box-border {
   border-style: solid;
@@ -18,18 +9,22 @@
 
 %box-spacing {
   margin-bottom: 2em;
-  margin-left: 1em;
-  margin-right: 1em;
+  margin-left: $box-side-margin;
+  margin-right: $box-side-margin;
 
   padding: 1em;
+}
+
+%box-size {
+  min-width: $min-box-width;
+  width: calc(33% - #{$box-side-margin}*2);
 }
 
 .tire_item__box {
   @extend %box-border;
   @extend %box-spacing;
+  @extend %box-size;
 
-  width: 29%;
-  min-width: 16em;
   text-align: center;
 
   ul {
@@ -51,6 +46,13 @@
   font-size: 0.9em;
   font-weight: lighter;
   margin-bottom: 1em;
+}
+
+
+@media (max-width: $min-box-width-px*3 + $box-side-margin-px*6 + 2*$base-font-size-px) {
+  %box-size {
+    width: calc(50% - #{$box-side-margin}*2);
+  }
 }
 
 @media (max-width: 650px) {
