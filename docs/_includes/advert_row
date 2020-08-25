@@ -1,7 +1,7 @@
 
 <div class="feature__wrapper">
 
-  {% for f in page.sponsor_row %}
+  {% for f in page.advert_row %}
     <div class="feature__item">
       <div class="archive__item">
         {% if f.image_path %}

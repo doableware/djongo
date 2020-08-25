@@ -4,6 +4,9 @@ permalink: /discuss/
 toc: false
 layout: splash
 ---
+
+{% include empty_banner %}
+
 Djongo forum is where you can watch for:
 
 * New release announcements.
@@ -15,9 +18,10 @@ Djongo forum is where you can watch for:
   src="javascript:void(0)"
   scrolling="no"
   frameborder="0"
-  width="900"
+  width="100%"
   height="700">
 </iframe>
+
 <script type="text/javascript">
   document.getElementById('forum_embed').src =
      'https://groups.google.com/forum/embed/?place=forum/djongo'

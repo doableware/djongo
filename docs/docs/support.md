@@ -1,6 +1,6 @@
 ---
 title: Support
-permalink: /support/
+permalink: 
 layout: splash
 
 row1:

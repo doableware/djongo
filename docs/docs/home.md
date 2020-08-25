@@ -58,7 +58,7 @@ addendum_row1:
     btn_label: "Learn More"
     btn_class: "btn--primary"
     
-sponsor_row:
+advert_row:
   - image_path: /assets/images/e2e.png
     alt: "Admin MongoDB"
     image_link: http://www.e2eprojects.com/
@@ -74,7 +74,7 @@ sponsor_row:
 
 {% include feature_row id="punchline" type="center" %}
 
-{% include sponsor_row %}
+{% include advert_row %}
 
 {% include feature_row id="feature_row1" %}
 
