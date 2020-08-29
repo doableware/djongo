@@ -1,6 +1,7 @@
 ---
 title: Djongo vs Others
 permalink: /djongo-comparison/
+description: This page describes how to integrate MongoDB with Django with focus on Djongo. It describes the Django ORM internal implementation that is not covered by the Django documentation.
 ---
 
 This page describes how to integrate MongoDB with Django with focus on Djongo. It describes the Django ORM internal implementation that is not covered by the [Django documentation](https://docs.djangoproject.com/en/dev/). If you have not yet checked out the [introduction to Djongo](https://nesdis.github.io/djongo/), be sure to do so first! 

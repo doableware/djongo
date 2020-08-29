@@ -1,6 +1,7 @@
 
   <div class="tire__container">
     {% for s in page.tires %}
+      {% unless s.invisible %}
         <div class="tire_item__box">
           <div class="tire_item__title">{{ s.title }}</div>
           <div class="tire_item__price">${{ s.price }}</div>
@@ -14,6 +15,7 @@
             </ul>
           </div>
         </div>
+      {% endunless %}
     {% endfor %}
   </div>
   <div class="tire__disclaimer">

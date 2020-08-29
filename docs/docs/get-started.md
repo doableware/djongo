@@ -179,7 +179,7 @@ e.save()
 
 ## DjongoNxt
 
-Features supported in DjongoNxt are not a part of the standard Djongo package. Visit the [sponsors page][sponsor_page] for more information.
+Features under development at DjongoNxt are not a part of the standard Djongo package. Visit the [sponsors page][sponsor_page] for more information.
 {: .notice--info}
 
 DjongoNxt is a Django and MongoDB connector for full featured database usage. It provides many features of MongoDB enabled through Django. It comes with support for:

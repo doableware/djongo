@@ -20,7 +20,7 @@ tires:
     btn_id: price_4
     price_id: price_1HIKi6LbyDBUaJVj7FvgB3gx
     benefits:
-      - Take a look at your **one question**.
+      - Your questions are answered as soon as possible.
       - You support the long term sustainability of the project.
 
   - title: Generous Supporter
@@ -28,7 +28,7 @@ tires:
     btn_id: price_7
     price_id: price_1HIKkyLbyDBUaJVj8XbaHS8O
     benefits:
-      - Your questions are answered within 24 hours on Discord priority-support.
+      - Your questions are answered within 24 hours.
       - Your name is mentioned in the source code.
       - You support the long term sustainability of the project.
   
@@ -38,7 +38,7 @@ tires:
     price_id: price_1HIKphLbyDBUaJVjQylkb7QE
     benefits:
       - You **get access to the djongoNxt** repository.
-      - Your questions are **immediately** taken up for consideration on Discord priority-support.
+      - Your questions are **immediately** taken up for consideration as priority-support.
       - You support the long term sustainability of the project.
   
   - title: Advertise on Djongo
@@ -58,8 +58,5 @@ disclaimer:
 {% include empty_banner %}
 
 {% include tire_column %}
-
-
-
 
 {% include vendors/stripe.html %}
