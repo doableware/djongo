@@ -1,13 +1,15 @@
 <div class="toc feedback">
 <header><h4 class="nav__title"><i class="fas fa-{{ page.toc_icon | default: 'file-alt' }}"></i> Rate the Docs</h4></header>
 <form action="https://formspree.io/nesdis@gmail.com" method="POST">
-  <select name="rating">
-    <option value="1">1 (Sucks)</option>
-    <option value="2">2</option>
-    <option value="3" selected>3</option>
-    <option value="4">4</option>
-    <option value="4">5 (Awesome)</option>
-  </select>
+  <label>
+    <select name="rating">
+      <option value="1">1 (Sucks)</option>
+      <option value="2">2</option>
+      <option value="3" selected>3</option>
+      <option value="4">4</option>
+      <option value="4">5 (Awesome)</option>
+    </select>
+  </label>
   <textarea name="feedback" rows="5" cols="30">Feedback</textarea>
   <input type="submit" value="Send">
 </form>

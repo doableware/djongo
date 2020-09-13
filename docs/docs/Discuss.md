@@ -3,9 +3,9 @@ title: Discussion Board
 permalink: /discuss/
 toc: false
 layout: splash
+classes:
+  - empty-header
 ---
-
-{% include empty_banner %}
 
 Djongo forum is where you can watch for:
 
