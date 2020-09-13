@@ -1,0 +1,51 @@
+<section itemprop="text">
+  <div class="tire">
+    {% for tire in page.tire_column.tires %}
+      {% if tire.invisible != true %}
+        <div class="tire-item">
+          <div class="tire-item__title">{{ tire.title }}</div>
+          <div class="tire-item__price">${{ tire.price }}</div>
+          <div class="tire-item__period">PER MONTH</div>
+          <button id="{{ tire.btn_id }}" class="btn btn--success btn--large">Join</button>
+          <div>
+            <ul>
+              {% for b in tire.benefits %}
+                <li>{{ b | markdownify | remove: "<p>" | remove: "</p>" }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+  <div class="tire__disclaimer">
+    <ul>
+      {% for d in page.tire_column.disclaimer %}
+        <li>{{ d }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h1>Submit Your Request</h1>
+  <form action="https://formsubmit.co/33919e9d29564dc506a8852cd076c24a" method="POST">
+    <label>Subject:
+      <select name="Subject">
+        <option value="Commercial Licensing">Request a commercial license</option>
+        <option value="Unsubscribe">Unsubscribe from a tire</option>
+      </select>
+    </label>
+    <label>Name or Organization:
+      <input name="Name" type="text" required>
+    </label>
+    <label>Email:
+      <input name="Email" type="email" placeholder="name@organization.com" required>
+    </label>
+    <input class="btn btn--primary" type="submit" value="Send">
+    <input type="hidden" name="_subject" value="sponsor-page">
+    <input type="hidden" name="_next" value="https://nesdis.github.io/djongo/sponsor/request-success">
+  </form>
+</section>
+
+

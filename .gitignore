@@ -10,12 +10,7 @@ venv_py38_dj30/
 
 
 docs/.sass-cache/*
-docs/_layouts/*
 docs/_site/*
-docs/assets/js/*
-!docs/assets/js/jquery.liquid-slider.min.js
-!docs/assets/js/jquery.touchSwipe.min.js
-!docs/assets/js/jquery.easing.min.js
 tests/logs
 
 Gemfile.lock

@@ -1,0 +1,34 @@
+.empty-header {
+  .initial-content {
+    margin-top: 100px;
+  }
+}
+
+.custom-splash {
+  .page__content {
+    section {
+      border-bottom-style: solid;
+      border-bottom-width: 1px;
+      border-bottom-color: rgb(229, 227, 221);
+    }
+
+    section:last-of-type {
+      border-bottom-style: none;
+    }
+  }
+
+  h1 {
+    margin: 1.5em 0 .75em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    text-align: center;
+  }
+}
+
+form {
+  width: 50%;
+  margin: 0 auto 5px auto;
+  min-width: 30em;
+}
+

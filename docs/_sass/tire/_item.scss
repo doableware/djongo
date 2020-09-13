@@ -1,0 +1,42 @@
+@import "box";
+
+.tire-item {
+  @include box--col-2();
+  text-align: center;
+
+  ul {
+      text-align: left;
+  }
+}
+
+.tire-item__title {
+  font-weight: bold;
+  margin-bottom: 1.5em;
+}
+
+.tire-item__price {
+  font-weight: bold;
+  font-size: 2.5em;
+}
+
+.tire-item__period {
+  font-size: 0.9em;
+  font-weight: lighter;
+  margin-bottom: 1em;
+}
+
+$tire-col-3-min-width: $box-min-width-px*3 + $box-side-margin-px*6 + $container-padding;
+$break-margin:  10px;
+
+@media screen and (max-width: $tire-col-3-min-width + $break-margin) {
+  .tire-item {
+    @include box--col-2();
+  }
+}
+@media screen and (max-width: $media-small) {
+  .tire-item {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
