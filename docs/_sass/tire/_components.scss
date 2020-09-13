@@ -1,16 +1,21 @@
-@import "variables";
+@import "box";
 
-.tire__container {
+.tire {
   display: flex;
   justify-content: left;
   flex-direction: row;
   flex-wrap: wrap;
 }
 
-.tire__disclaimer {
+.tire__disclaimer2 {
   margin-left: $box-side-margin;
   display: inline-block;
   .notice--warning li {
     margin-left: $box-side-margin;
   }
+}
+
+.tire__disclaimer {
+  @include box--row();
+  margin-bottom: 3em;
 }

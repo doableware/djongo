@@ -10,7 +10,7 @@ description: "Djongo is a python connector for using the Django ORM with MongoDB
 Use MongoDB as a backend database for your Django project, without changing the Django ORM. Use Django Admin to add and modify documents in MongoDB. Start using Django with MongoDB by adding just one line of code. 
 
 ## Usage
-1. pip install djongo
+1. `pip install djongo`
 2. Into `settings.py` file of your project, add:
 
       ```python
@@ -35,16 +35,18 @@ Use MongoDB as a backend database for your Django project, without changing the 
       ```
    MongoDB 3.6 or higher is required.
 
-## Support
 <!--
+## Support
+
 [![Djongo Support](/djongo/assets/images/support.png)][sponsor_page]
--->
+
 
 I am inundated daily with your appreciation, queries and feature requests for Djongo. Djongo has grown into a highly complex project. To support the requests, I have decided to follow an organized approach.
 
 Djongo as a project is at a stage where its development must be transformed into a sustained effort. Djongo has more than [1,000,000 downloads](https://pypistats.org/packages/djongo) on pypi and continues to grow. I am trying to establish a sustainable development model for the project, and would [love to hear your thoughts.](https://www.patreon.com/posts/to-only-take-22611438)
 
 Visit my [Patreon page][sponsor_page] to make requests and for support. You can expect immediate answers to your questions.  
+-->
 
 ## How it works
 Djongo makes **zero changes** to the existing Django ORM framework, which means unnecessary bugs and security vulnerabilities do not crop up. It simply translates a SQL query string into a [MongoDB query document](https://docs.mongodb.com/manual/tutorial/query-documents/). As a result, all Django features, models, etc., work as is.
