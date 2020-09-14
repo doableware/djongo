@@ -27,7 +27,7 @@
       })
       .then(handleResult);
   };
-{% for t in page.tires %}
+{% for t in page.tire_column.tires %}
   document
   .getElementById("{{ t.btn_id }}")
   .addEventListener("click", function (evt) {
