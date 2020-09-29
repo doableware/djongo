@@ -1,6 +1,6 @@
 ---
 title: Sponsor Djongo
-permalink: /sponsor/request-success 
+permalink: /support/request-success 
 layout: splash
 classes:
   - empty-header

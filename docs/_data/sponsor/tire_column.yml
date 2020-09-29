@@ -1,33 +1,38 @@
----
-title: Sponsor Djongo
-permalink: /sponsor/ 
-layout: splash
-classes:
-  - empty-header
-  - custom-splash
+form:
+  classes:
+    - tire-item__form
+  subject: Enterprise
+  next: "https://nesdis.github.io/djongo/support/request-success"
+  fields:
+    - type: submit
+      value: Enquire
 
-excerpt: "If you are a company that uses Djongo in your products, consider enrolling in a subscription plan. You get long term support and advertisement space"
-description: "If you are a company that uses Djongo in your products, consider enrolling in a subscription plan. You get long term support and advertisement space."
+    - type: text
+      name: Name
+      label: "Organization:"
 
-tire_column:
-  tires:
-  - title: Evangelist User
+    - type: email
+      name: Email
+      label: "Email:"
+      placeholder: "name@org.com"
+
+tires:
+  - title: All Feature Access
     price: 15
     btn_id: price_15
     price_id: price_1HIKphLbyDBUaJVjQylkb7QE
     benefits:
       - You get access to the djongoNxt repository.
-      - Tickets raised under djongoNxt are triaged faster and have a higher priority.
       - You get access to the *priority discussion board* on GitHub.
-      - Your questions are answered immediately.
+      - Get a response within 24 hours.
 
-  - title: Priority discussion
+  - title: Priority Discussion
     price: 7
     btn_id: price_7
     price_id: price_1HIKkyLbyDBUaJVj8XbaHS8O
     benefits:
       - You get access to the *priority discussion board* on GitHub.
-      - Your questions are answered immediately.
+      - Get a response within 24 hours.
 
   - title: A Sweet Tip
     price: 4
@@ -65,28 +70,6 @@ tire_column:
       - Your feature requests and support queries to be given top priority.
     invisible: true
 
-  disclaimer:
-    - Subscriptions are not binding and can be canceled any time.
-    - Upon successful checkout you requested to submit additional details required to deliver your benefits.
-
-form:
-  subject: sponsor-page
-  fields:
-    - type: text
-      name: Name
-      label: "Name:"
-    - type: email
-      name: Email
-      label: "Email:"
-    - type: select
-      name: Subject
-      label: "Subject:"
-      options:
-        - Request a commercial license
-        - Unsubscribe from a tire
-
----
-
-{% include sponsor.html %}
-
-{% include vendors/stripe.html %}
+disclaimer:
+  - Subscriptions are not binding and can be canceled any time.
+  - Upon successful checkout you requested to submit additional details required to deliver your benefits.
