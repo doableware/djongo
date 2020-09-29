@@ -13,7 +13,7 @@ There are different ways to integrate MongoDB with Django, each with positives a
 The Django ORM can be broadly thought of as multiple Abstraction Layers stacked on top of each other.
 
 <div style="max-width: 150px; margin-left: auto; margin-right: auto">
-    <img src="/djongo/assets/images/layers.svg" alt="Abstraction Layers">
+    <img src="/djongo/assets/images/layers.png" alt="Abstraction Layers">
 </div>
 
 
@@ -41,7 +41,7 @@ The Database only accepts SQL query string specific to its type.
 Object Document Mapping (ODM) is the Object Relational Mapping (ORM) for non-relational document oriented databases (like MongoDB). In an ODM, python objects (or group of them) are stored as documents instead of tables. Implementing an ODM for Django would entail rewriting several Django modules.
 
 <div style="max-width: 400px; margin-left: auto; margin-right: auto">
-    <img src="/djongo/assets/images/orm2odm.svg" alt="Abstraction Layers">
+    <img src="/djongo/assets/images/orm2odm.png" alt="Abstraction Layers">
 </div>
 
 ### Django-nonrel
@@ -53,7 +53,7 @@ Object Document Mapping (ODM) is the Object Relational Mapping (ORM) for non-rel
 A different approach is to translate Django SQL query syntax into pymongo commands.
 
  <div style="max-width: 400px; margin-left: auto; margin-right: auto">
-    <img src="/djongo/assets/images/sql2mongodb.svg" alt="Abstraction Layers">
+    <img src="/djongo/assets/images/sql2mongodb.png" alt="Abstraction Layers">
 </div>
 
 This has several advantages

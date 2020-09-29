@@ -2,8 +2,8 @@
 main:
    - title: "Get Started"
      url: /get-started/
-   - title: "Sponsor"
-     url: /sponsor/
+   - title: "Support"
+     url: /support/
    - title: "Discuss"
      url: /discuss/
    - title: "Source"
@@ -45,7 +45,7 @@ docs:
     - title: "Contact"
       url: /djongonxt-more-info/
   - title: "Get DjongoNxt"
-    url: /sponsor/
+    url: /support/
 
   - title: "Side stuff"
     children:
