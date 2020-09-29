@@ -155,6 +155,7 @@ defaults:
     values:
       notice:
         not_ready: "Parts of this feature are still under development.\n{: .notice--warning}"
+
         sponsor: "**Note:** If you are a company that uses Djongo in your products, contact us for long term support and [licensing options][sponsor_page].\n{: .notice--danger}"
       layout: single
       read_time: false

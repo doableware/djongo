@@ -1,0 +1,23 @@
+subject: sponsor-page
+next: "https://nesdis.github.io/djongo/support/request-success"
+classes:
+  - form--splash
+fields:
+  - type: select
+    name: Subject
+    label: "Subject:"
+    options:
+      - Commercial License
+      - Cancel Subscription
+
+  - type: text
+    name: Name
+    label: "Name or Organization:"
+
+  - type: email
+    name: Email
+    label: "Email:"
+    placeholder: "name@org.com"
+
+  - type: submit
+    value: Send

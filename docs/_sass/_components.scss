@@ -1,34 +1,82 @@
+@import "const";
+
 .empty-header {
   .initial-content {
     margin-top: 100px;
   }
 }
 
+$title-font-size: 2.44em;
+$title-font-size-small: 1.95em;
+$overlay-padding: 3em;
+
+$banner-max-height: $overlay-padding*2 + $title-font-size;
+$banner-max-height-small: $overlay-padding*2 + $title-font-size-small;
+$banner-aspect-ratio: 2.48;
+$banner-max-width: $banner-max-height * $banner-aspect-ratio/2.44;
+$banner-max-width-small: $banner-max-height-small * $banner-aspect-ratio/2.0;
+
+.landing-page {
+  .page__hero--overlay {
+    background-position: right bottom;
+    background-color: #092d1f;
+    background-size: auto $banner-max-height;
+
+    @include break-max(600px) {
+      background-size: auto $banner-max-height-small;
+    }
+  }
+
+  .page__title {
+    max-width: calc(100% - #{$banner-max-width});
+
+    @include break-max(600px) {
+        max-width: calc(100% - #{$banner-max-width-small});
+    }
+  }
+}
+
+
 .custom-splash {
   .page__content {
     section {
-      border-bottom-style: solid;
-      border-bottom-width: 1px;
-      border-bottom-color: rgb(229, 227, 221);
-    }
+      border-bottom: 1px solid gainsboro;
+      padding: 3em 0;
 
-    section:last-of-type {
-      border-bottom-style: none;
+      &:last-of-type {
+        border-bottom-style: none;
+      }
     }
   }
 
   h1 {
     margin: 1.5em 0 .75em;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
     text-align: center;
+
+    @include break(x-small) {
+      text-align: left;
+    }
+  }
+
+  h2 {
+    margin-bottom: 1em;
+  }
+
+  form {
+    width: 50%;
+    margin: 0 auto 5px auto;
+
+    @include break(x-small) {
+      margin: 0;
+      width: 100%;
+    }
+  }
+
+  .text-content {
+    margin: 0 1em;
+
+    @include break(x-small) {
+      margin: 0;
+    }
   }
 }
-
-form {
-  width: 50%;
-  margin: 0 auto 5px auto;
-  min-width: 30em;
-}
-

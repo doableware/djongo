@@ -7,15 +7,6 @@
   flex-wrap: wrap;
 }
 
-.tire__disclaimer2 {
-  margin-left: $box-side-margin;
-  display: inline-block;
-  .notice--warning li {
-    margin-left: $box-side-margin;
-  }
-}
-
 .tire__disclaimer {
-  @include box--row();
-  margin-bottom: 3em;
+  @include box--row(2em);
 }

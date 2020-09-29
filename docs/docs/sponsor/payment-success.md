@@ -1,5 +1,5 @@
 ---
 title: Sponsor Djongo
-permalink: /sponsor/payment-success 
+permalink: /support/payment-success 
 layout: splash
 ---

@@ -1,11 +1,31 @@
 @import "box";
 
+$tire-3-col-total-width: $box-min-width-px*3 + $box-side-margin-px*6 + $container-padding-px;
 .tire-item {
-  @include box--col-2();
+  @include box--3-col;
   text-align: center;
 
   ul {
-      text-align: left;
+    text-align: left;
+  }
+
+  form {
+    text-align: left;
+    input[type='submit'] {
+      text-align: center;
+      margin: 0 auto 1.75em auto;
+      display: block;
+    }
+    width: 100%;
+
+  }
+
+  @include break-max($tire-3-col-total-width) {
+    @include box--2-col;
+  }
+
+  @include break(x-small) {
+    @include box--1-col;
   }
 }
 
@@ -25,18 +45,4 @@
   margin-bottom: 1em;
 }
 
-$tire-col-3-min-width: $box-min-width-px*3 + $box-side-margin-px*6 + $container-padding;
-$break-margin:  10px;
 
-@media screen and (max-width: $tire-col-3-min-width + $break-margin) {
-  .tire-item {
-    @include box--col-2();
-  }
-}
-@media screen and (max-width: $media-small) {
-  .tire-item {
-    width: 100%;
-    margin-left: 0;
-    margin-right: 0;
-  }
-}

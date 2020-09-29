@@ -184,11 +184,11 @@ e.save()
 Features under development at DjongoNxt are not a part of the standard Djongo package. Visit the [sponsors page][sponsor_page] for more information.
 {: .notice--info}
 
-DjongoNxt is a Django and MongoDB connector for full featured database usage. It provides many features of MongoDB enabled through Django. It comes with support for:
+DjongoNxt brings support to all features of MongoDB features including:
 
 ### Indexes
 
-Support for all indexes provided by MongoDB, for example 2dSphere Index, Text Index and Compound Indexes.
+Support for indexes provided by MongoDB, for example 2dSphere Index, Text Index and Compound Indexes.
 
 ### Model Query
 

@@ -22,16 +22,18 @@
         lineItems: [{ price: priceId, quantity: 1 }],
         successUrl:
           DOMAIN + "/djongo?session_id={CHECKOUT_SESSION_ID}",
-        cancelUrl: DOMAIN + "/sponsor",
+        cancelUrl: DOMAIN + "/djongo/support",
         mode: 'subscription',
       })
       .then(handleResult);
   };
-{% for t in page.tire_column.tires %}
+{% for t in site.data.sponsor.tire_column.tires %}
+    {% if t.invisible != true %}
   document
   .getElementById("{{ t.btn_id }}")
   .addEventListener("click", function (evt) {
     redirectToCheckout("{{ t.price_id }}");
   });
+    {% endif %}
 {% endfor %}
 </script>
