@@ -29,6 +29,33 @@ DATABASES = {
     }
 }
 ```
+If you want to connect to a cloud instance of MongoDB such as MongoDB Atlas, then you need to add these additional parameters.
+
+**Step 1**: Install PythonDNS library
+```bash
+  pip install dnspython
+```
+This will be used to connect to *mongodb+srv://* URIs
+
+**Step 2**: Replace the DATABASES variable in settings.py file with this.
+```python 
+  DATABASE = {
+    'default': {
+        'ENGINE': 'djongo',
+        "CLIENT": {
+           "name": <your_database_name>,
+           "host": <your_connection_string>,
+           "username": <your_database_username>,
+           "password": <your_database_password>,
+           "authMechanism": "SCRAM-SHA-1",
+        }, 
+      }
+    }
+```
+Where *host* attribute is the *mongodb+srv://* provided by MongoDB, for example:
+```bash
+mongodb+srv://<username>:<password>@<cluster>.dwj2r.mongodb.net/<dbname>?retryWrites=true&w=majority
+```
 </li>   
    <li> Run <code>manage.py makemigrations &ltapp_name&gt </code> followed by <code>manage.py migrate</code> (ONLY the first time to create collections in mongoDB) </li>
    <li> YOUR ARE SET! HAVE FUN! </li>
