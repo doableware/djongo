@@ -18,6 +18,7 @@ import json
 import typing
 
 from bson import ObjectId
+from collections import OrderedDict
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db import connections as pymongo_connections
@@ -145,7 +146,7 @@ class ModelField(MongoField):
                 continue
             processed_value[field.attname] = getattr(field, func_name)(field_value, *other_args)
         return processed_value
-    
+
     def _save_value_thru_fields(self,
                                 func_name: str,
                                 value: dict,
@@ -227,10 +228,10 @@ class ModelField(MongoField):
                 f'Value: {value} must be an instance of {self.base_type}')
 
         processed_value = self._save_value_thru_fields('get_db_prep_save',
-                                                       value, 
+                                                       value,
                                                        connection)
         return processed_value
-     
+
     def get_prep_value(self, value):
         if (value is None or
                 not isinstance(value, self.base_type)):
@@ -254,7 +255,7 @@ class ModelField(MongoField):
         if isinstance(value, str):
             value = json.loads(value)
 
-        if not isinstance(value, self.base_type):
+        if not isinstance(value, self.base_type) and not isinstance(value, OrderedDict):
             raise ValidationError(
                 f'Value: {value} must be an instance of {self.base_type}')
 
@@ -314,8 +315,8 @@ class ArrayField(FormedField):
 
     def _value_thru_container(self, value):
         post_value = []
-        for _dict in value:
-            post_value.append(super()._value_thru_container(_dict))
+        for k, v in value.items():
+            post_value.append(super()._value_thru_container({k: v}))
         return post_value
 
     def _value_thru_fields(self,
