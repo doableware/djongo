@@ -13,7 +13,7 @@ Use MongoDB as a backend database for your Django project, without changing the 
 <li> Install djongo:
 
 ``` 
-pip install djongo
+pip install git+https://github.com/johndoe434/djongo
 ```
 </li>
 <li> Into settings.py file of your project, add: 
@@ -48,7 +48,7 @@ DATABASES = {
 
 ## Dear Supporter
 
-I am inundated daily with your love, appreciation, queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. Visit my [Patreon page](https://www.patreon.com/nesdis) to understand the different levels of support and services you can get.
+I am inundated daily with your love, appreciation, queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. Visit nesdis's [Patreon page](https://www.patreon.com/nesdis) to understand the different levels of support and services you can get.
 
 ## How it works
 
@@ -70,13 +70,13 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
   * Embedded Array.
   * Embedded Form Fields.
   
-  Read the [full documentation](https://nesdis.github.io/djongo/)
+  Read the [full documentation](https://johndoe434.github.io/djongo/)
   
 ## Contribute
  
  If you think djongo is useful, **please share it** with the world! Your endorsements and online reviews will help get more support for this project.
   
- Take a look at the [Enhancements project](https://github.com/nesdis/djongo/projects/1) that contains a list of features that must be implemented in future versions of Djongo. You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](https://nesdis.github.io/djongo/django-mongodb-connector-design-document/) is implemented.
+ Take a look at the [Enhancements project](https://github.com/johndoe434/djongo/projects/1) that contains a list of features that must be implemented in future versions of Djongo. You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](https://johndoe434.github.io/djongo/django-mongodb-connector-design-document/) is implemented.
  
  Add a star, show some love :) 
 
@@ -85,4 +85,5 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
  * [Djongo groups](https://groups.google.com/d/forum/djongo) is where you can watch for new release announcements, suggest improvements, and discuss topics pertaining to Django and MongoDB.
  * Issues, where things are not working as expected, please raise a git-hub issue ticket. 
  * For questions and clarifications regarding usage, please put it up on stackoverflow instead. 
+ # Credit to nesdis, plz visit https://github.com/nesdis/djongo
    
