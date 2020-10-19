@@ -14,7 +14,7 @@ baseurl                  : "/djongo"
 repository               : "nesdis/djongo"
 teaser                   : # path of fallback teaser image, e.g. "/assets/images/500x300.png"
 # breadcrumbs            : false # true, false (default)
-logo                     : "/assets/images/djongo-logo.png"
+logo                     : "/assets/images/djongo-logo-new.png"
 words_per_minute         : 200
 comments:
   provider               : # false (default), "disqus", "discourse", "facebook", "google-plus", "staticman", "staticman_v2" "custom"
@@ -28,10 +28,10 @@ comments:
     num_posts            : # 5 (default)
     colorscheme          : # "light" (default), "dark"
 
-footer:
-  links:
-    - label: By continuing to use this site, you consent to our use of cookies for tracking site usage.
-      url: "/privacy-policy"
+#footer:
+#  links:
+#    - label: By continuing to use this site, you consent to our use of cookies for tracking site usage.
+#      url: "/privacy-policy"
 
 # SEO Related
 google_site_verification :
@@ -48,10 +48,13 @@ analytics:
 #footer_scripts:
 #  - /assets/js/jquery.easing.min.js
 #  - /assets/js/jquery.touchSwipe.min.js
-#  - /assets/js/jquery.liquid-slider.min.js
+#  - /assets/js/jquery.liquid-slider.min.js   - "https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"
 
 head_scripts:
   - "https://js.stripe.com/v3/"
+  - "https://code.jquery.com/jquery-3.5.1.slim.min.js"
+  - "https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"
+  - "/assets/js/cookie-consent.js"
 
 # Reading Files
 include: [_static, _sources]
