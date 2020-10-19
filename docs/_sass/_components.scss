@@ -6,36 +6,23 @@
   }
 }
 
-$title-font-size: 2.44em;
-$title-font-size-small: 1.95em;
-$overlay-padding: 3em;
+.cookie-notice {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  color: #646769;
+  background-color: #f2f3f3;
+  width: 100%;
 
-$banner-max-height: $overlay-padding*2 + $title-font-size;
-$banner-max-height-small: $overlay-padding*2 + $title-font-size-small;
-$banner-aspect-ratio: 2.48;
-$banner-max-width: $banner-max-height * $banner-aspect-ratio/2.44;
-$banner-max-width-small: $banner-max-height-small * $banner-aspect-ratio/2.0;
-
-.landing-page {
-  .page__hero--overlay {
-    background-position: right bottom;
-    background-color: #092d1f;
-    background-size: auto $banner-max-height;
-
-    @include break-max(600px) {
-      background-size: auto $banner-max-height-small;
-    }
+  p {
+    margin: 1.3em auto;
+    text-align: center;
   }
 
-  .page__title {
-    max-width: calc(100% - #{$banner-max-width});
-
-    @include break-max(600px) {
-        max-width: calc(100% - #{$banner-max-width-small});
-    }
+  button {
+    margin-left: 0.5em;
   }
 }
-
 
 .custom-splash {
   .page__content {
