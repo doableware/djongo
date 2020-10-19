@@ -3,30 +3,89 @@ from django.db.models import QuerySet
 from . import TestCase
 from djongo import models
 
-class Team(models.Model):
-    id = models.TextField()
-    extra = models.JSONField(null=True)
 
-    class Meta:
-        abstract = True
+class Blog(models.Model):
+    title = models.CharField(max_length=100)
 
-class DocumentQuerySet(QuerySet):
-    def from_team(self, team_id: str):
-        return self.filter(team={'id': team_id})
 
-class Document(models.Model):
-    team = models.EmbeddedField(model_container=Team)
-    objects = models.DjongoManager.from_queryset(DocumentQuerySet)()
+class Author(models.Model):
+    name = models.CharField(max_length=100)
 
-class Document2(models.Model):
-    team = models.CharField(max_length=10)
-    objects = models.DjongoManager.from_queryset(DocumentQuerySet)()
+
+class Entry(models.Model):
+    blog = models.ForeignKey(Blog,
+                             on_delete=models.CASCADE,
+                             null=True)
+    author = models.ForeignKey(Author,
+                               on_delete=models.CASCADE,
+                               null=True)
+    content = models.CharField(max_length=100)
+
 
 class TestCanvas(TestCase):
 
     def test_canvas(self):
-        entry = Document.objects.create(
-            team={'id': 'an id', 'extra': {'a': 1}}
-        )
-        b_entry = Document.objects.from_team('an id')
-        print(b_entry)
+        qs = Entry.objects.filter(author__name='hi')\
+            .select_related('blog')
+        print(qs.query)
+        L = list(qs)
+        l = [{
+                '$match': {
+                    'author_id': {
+                        '$ne': None,
+                        '$exists': True
+                    }
+                }
+            },
+            {
+                '$lookup': {
+                    'from': 'xtest_app_author',
+                    'localField': 'author_id',
+                    'foreignField': 'id',
+                    'as': 'xtest_app_author'
+                }
+            },
+            {
+                '$unwind': '$xtest_app_author'
+            },
+            {
+                '$lookup': {
+                    'from': 'xtest_app_blog',
+                    'localField': 'blog_id',
+                    'foreignField': 'id',
+                    'as': 'xtest_app_blog'
+                }
+            },
+            {
+                '$unwind': {
+                    'path': '$xtest_app_blog',
+                    'preserveNullAndEmptyArrays': True
+                }
+            },
+            {
+                '$addFields': {
+                    'xtest_app_blog': {
+                        '$ifNull': ['$xtest_app_blog', {
+                            'id': None,
+                            'title': None
+                        }]
+                    }
+                }
+            },
+            {
+                '$match': {
+                    'xtest_app_author.name': {
+                        '$eq': 'hi'
+                    }
+                }
+            },
+            {
+                '$project': {
+                    'id': True,
+                    'blog_id': True,
+                    'author_id': True,
+                    'content': True,
+                    'xtest_app_blog.id': True,
+                    'xtest_app_blog.title': True
+                }
+            }]
