@@ -10,3 +10,4 @@ classes:
 # Great! Your request has been recorded
 
 ### We will get back to you soon
+{: text-center}
