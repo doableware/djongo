@@ -390,11 +390,11 @@ admin.site.register([Author, Entry])
 
 The number of fields in the `Entry` model is reduce to 6. Fire up Django Admin to check what is up!
  
-![Django Admin](/djongo/assets/images/embedded-admin.png)
+![Django Admin](/assets/images/embedded-admin.png)
 
 Only the `Entry` and `Author` model are registered. I click on *Entrys Add* and get:
 
-![Django Admin](/djongo/assets/images/embedded-nested.png)
+![Django Admin](/assets/images/embedded-nested.png)
 
 
 > The `Name` and `Tagline` fields are neatly nested within Blog. `Pub date` `Mod date` `N pingbanks` and `Rating` are neatly nested within Meta data.
