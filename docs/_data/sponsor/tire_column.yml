@@ -2,7 +2,7 @@ form:
   classes:
     - tire-item__form
   subject: Enterprise
-  next: "https://nesdis.github.io/djongo/support/request-success"
+  next: "https://djongo.doableware.com/support/request-success"
   fields:
     - type: submit
       value: Enquire
