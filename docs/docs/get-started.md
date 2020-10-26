@@ -38,7 +38,7 @@ Use MongoDB as a backend database for your Django project, without changing the 
 <!--
 ## Support
 
-[![Djongo Support](/djongo/assets/images/support.png)][sponsor_page]
+[![Djongo Support](/assets/images/support.png)][sponsor_page]
 
 
 I am inundated daily with your appreciation, queries and feature requests for Djongo. Djongo has grown into a highly complex project. To support the requests, I have decided to follow an organized approach.
