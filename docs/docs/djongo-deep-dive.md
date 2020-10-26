@@ -113,7 +113,7 @@ admin.site.register(Entry)
 That’s it you are set! Fire up Django Admin on localhost:8000/admin/ and this is what you get:
 
 
-![Django Admin](/djongo/assets/images/admin.png)
+![Django Admin](/assets/images/admin.png)
 
 
 ### Querying Embedded fields

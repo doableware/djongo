@@ -94,7 +94,7 @@ Easily create and query [embedded documents](/djongo/using-django-with-mongodb-d
 {% include feature_row id="value_row_first" %}
 
 
-![Djongo](/djongo/assets/images/landing/djongo-symbol.png){: .align-right .djongo-symbol}
+![Djongo](/assets/images/landing/djongo-symbol.png){: .align-right .djongo-symbol}
 Djongo is an extension to the traditional Django ORM framework. It maps python objects to MongoDB documents, a technique popularly referred to as Object Document Mapping or ODM.
 
 Constructing queries using Djongo is much easier compared to writing lengthy Pymongo query documents.
@@ -209,7 +209,7 @@ and generates the pymongo query document on the right.
 
 ## Rapid Prototyping
 
-![Djongo](/djongo/assets/images/landing/rapid-levels.png){: .align-right .djongo-symbol}
+![Djongo](/assets/images/landing/rapid-levels.png){: .align-right .djongo-symbol}
 
 As your data evolves you may wish to enforce a structure to it. The `JSONField` represents documents with no structure, while setting `enforce_schema = True` in the `settings.py` file enables checks to the data. 
 
