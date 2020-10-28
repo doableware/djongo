@@ -94,10 +94,12 @@ Easily create and query [embedded documents](/djongo/using-django-with-mongodb-d
 {% include feature_row id="value_row_first" %}
 
 
+
 ![Djongo](/assets/images/landing/djongo-symbol.png){: .align-right .djongo-symbol}
 Djongo is an extension to the traditional Django ORM framework. It maps python objects to MongoDB documents, a technique popularly referred to as Object Document Mapping or ODM.
 
 Constructing queries using Djongo is much easier compared to writing lengthy Pymongo query documents.
+
 Storing raw `JSON` emitted by the frontend directly into the database is scary. Djongo ensures that only clean data gets through. 
 
 You no longer need to use the shell to inspect your data. By using the `Admin` package, you can access and modify data directly from the web browser. Djongo carries handy UI elements that help represent MongoDB documents on the browser. 
@@ -209,6 +211,7 @@ and generates the pymongo query document on the right.
 
 ## Rapid Prototyping
 
+
 ![Djongo](/assets/images/landing/rapid-levels.png){: .align-right .djongo-symbol}
 
 As your data evolves you may wish to enforce a structure to it. The `JSONField` represents documents with no structure, while setting `enforce_schema = True` in the `settings.py` file enables checks to the data. 
@@ -216,6 +219,7 @@ As your data evolves you may wish to enforce a structure to it. The `JSONField` 
 Next, the `EmbeddedField` lets you describe the structure which triggers automatic validations at the application level.
 
 Finally, you can enable schema checks at the database level. MongoDB schema documents are created inside a `model`. Setting `enforce_schema = True` in the `settings.py` file enables schema checks on the stored collections.
+
 
 [Get Started](/djongo/get-started){: .btn .btn--primary .btn--large}
 {: .text-center}

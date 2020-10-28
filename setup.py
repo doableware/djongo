@@ -15,7 +15,7 @@ Usage
 
 1. Install djongo::
 
-      pip install djongo
+      pip install git+https://github.com/johndoe434/djongo
 
 2. Into settings.py file of your project, add::
 
@@ -83,7 +83,7 @@ def find_version(*file_paths):
 install_requires = [
     'sqlparse>=0.2.4',
     'pymongo>=3.2.0',
-    'django>=2.1,<=3.1.2',
+    'django>=2.1',
 ]
 
 if sys.version_info.major == 3 and sys.version_info.minor < 7:
@@ -94,10 +94,10 @@ setup(
     version=find_version("djongo", "__init__.py"),
     include_package_data=True,
     packages=packages,
-    url='https://nesdis.github.io/djongo/',
+    url='https://github.com/johndoe434/djongo',
     license='AGPL',
-    author='nesdis',
-    author_email='nesdis@gmail.com',
+    author='nesdis, johndoe434',
+    author_email='njohndo3@repl.email',
     description=(
         'Driver for allowing Django to use MongoDB as the database backend.'),
     install_requires=install_requires,

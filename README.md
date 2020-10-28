@@ -13,7 +13,7 @@ Use MongoDB as a backend database for your Django project, without changing the 
 <li> Install djongo:
 
 ``` 
-pip install djongo
+pip install git+https://github.com/johndoe434/djongo
 ```
 </li>
 <li> Into settings.py file of your project, add: 
@@ -48,7 +48,7 @@ DATABASES = {
 
 ## Dear Supporter
 
-I am inundated daily with your love, appreciation, queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. Visit my [Patreon page](https://www.patreon.com/nesdis) to understand the different levels of support and services you can get.
+I am inundated daily with your love, appreciation, queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. Visit nesdis's [Patreon page](https://www.patreon.com/nesdis) to understand the different levels of support and services you can get.
 
 ## How it works
 
@@ -85,4 +85,5 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
  * [Djongo groups](https://groups.google.com/d/forum/djongo) is where you can watch for new release announcements, suggest improvements, and discuss topics pertaining to Django and MongoDB.
  * Issues, where things are not working as expected, please raise a git-hub issue ticket. 
  * For questions and clarifications regarding usage, please put it up on stackoverflow instead. 
+ # Credit to nesdis, plz visit https://github.com/nesdis/djongo
    
