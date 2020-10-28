@@ -227,7 +227,7 @@ There is no concept of an AUTOINCREMENT field in MongoDB. Therefore, Djongo inte
     }
 }
 ```
-For every collection in the DB that has an autoincrement field, there is an corresponding entry in the `__schema__` collection. Running `manage.py migrate` automatically creates these entries. 
+For every collection in the DB that has an autoincrement field, there is a corresponding entry in the `__schema__` collection. Running `manage.py migrate` automatically creates these entries. 
 
 Now there are 2 approaches to setting up your existing data onto MongoDB:
 
