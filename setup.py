@@ -81,7 +81,7 @@ def find_version(*file_paths):
 
 
 install_requires = [
-    'sqlparse>=2.4',
+    'sqlparse==2.4',
     'pymongo>=3.2.0',
     'django>=2.1',
 ]
