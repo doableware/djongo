@@ -560,6 +560,10 @@ class AlterQuery(DDLQuery):
                 print_warn('column type validation')
                 self._type_code = str(tok)
 
+            elif tok.match(tokens.Keyword, 'double'):
+                print_warn('column type validation')
+                self._type_code = str(tok)
+
             elif isinstance(tok, Identifier):
                 self._iden_name = tok.get_real_name()
 
