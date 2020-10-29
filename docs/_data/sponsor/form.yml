@@ -18,6 +18,7 @@ fields:
     name: Email
     label: "Email:"
     placeholder: "name@org.com"
+    required: true
 
   - type: submit
     value: Send

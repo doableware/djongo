@@ -10,11 +10,13 @@ form:
     - type: text
       name: Name
       label: "Organization:"
+      required: true
 
     - type: email
       name: Email
       label: "Email:"
       placeholder: "name@org.com"
+      required: true
 
 tires:
   - title: All Feature Access
