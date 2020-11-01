@@ -3,6 +3,7 @@ permalink: /
 layout: splash
 title: "MongoDB Document Mapper"
 excerpt: 
+tagline: An Easier Alternative To Pymongo
 
 description: "Djongo is a smarter approach to pymongo programming. It maps python objects to MongoDB documents. It is popularly referred to as an Object Document Mapper or ODM. It is an extension to the traditional Django object relational modeling framework. Use Django Admin to directly add and modify documents stored in MongoDB. Use other contrib modules such as Auth and Sessions without any changes."
 
@@ -10,12 +11,14 @@ classes:
     - landing-page
     
 header:
-    overlay_image: /assets/images/landing/landing-banner-narrow-2.png
-    overlay_color: #092e20
-
+    overlay_image: /assets/images/landing/banner-rand-dark-many6.png
+    overlay_color_dark: #092e20
+    overlay_color: #09411f
+    cta_url: /get-started/
+    cta_label: "Get Started"
         
 punchline:
-  - excerpt: Python Object to MongoDB Document Mapping Framework
+  - excerpt: A Python Object to MongoDB Document Mapper
 
 value_row_first:
   - image_path: /assets/images/landing/security-green.png
@@ -27,11 +30,12 @@ value_row_first:
     alt: "Simplify Query Creation"
     title: "Simplify Query Creation"
     excerpt: "Writing query documents can get out of control. Djongo does the heavy lifting of creating query documents for you." 
-
-  - image_path: /assets/images/landing/webpage.png
-    alt: "Web Interface"
-    title: "Web Interface"
-    excerpt: "Access and modify MongoDB through the web browser."
+    
+  - image_path: /assets/images/landing/rapid.png
+    alt: "Rapid Prototyping"
+    title: "Rapid Prototyping"
+    excerpt: "Speed up app development and execution with schema free models. Enforce different levels of 
+              schema protection based on your data evolution." 
 
   - image_path: /assets/images/landing/support-new.png
     alt: "Support"
@@ -40,13 +44,12 @@ value_row_first:
     url: /support/
     btn_label: "Learn More"
     btn_class: "btn--primary"
-    
-  - image_path: /assets/images/landing/rapid.png
-    alt: "Rapid Prototyping"
-    title: "Rapid Prototyping"
-    excerpt: "Speed up app development and execution with schema free models. Enforce different levels of 
-              schema protection based on your data evolution." 
-      
+
+  - image_path: /assets/images/landing/webpage.png
+    alt: "Web Interface"
+    title: "Web Interface"
+    excerpt: "Access and modify MongoDB through the web browser."
+          
   - image_path: /assets/images/landing/third-party-thin.png
     alt: "Admin MongoDB"
     title: "Third Party Packages"

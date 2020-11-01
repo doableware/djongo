@@ -31,3 +31,9 @@ $media-large: 1280px;
     @content
   }
 }
+
+@mixin break-min($size) {
+  @media (min-width: $size) {
+    @content
+  }
+}
