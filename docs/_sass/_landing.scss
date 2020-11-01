@@ -29,8 +29,7 @@ $banner-max-width-small: $banner-max-height-small * $banner-aspect-ratio/2.0;
   }
 }
 
-
-.landing-page {
+@mixin banner--symbol {
   .page__hero--overlay {
     background-position: right bottom;
     background-color: #092d1f;
@@ -49,6 +48,51 @@ $banner-max-width-small: $banner-max-height-small * $banner-aspect-ratio/2.0;
         max-width: calc(100% - #{$banner-max-width-small});
     }
   }
+}
+
+@mixin banner--map-flex {
+  .page__hero--overlay {
+    background-position: center;
+    //min-height: 15em;
+  }
+
+  .wrapper {
+    margin-left: 1em;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: max-content;
+    background-color: rgba(9, 65, 31, 0.38);
+
+    @include break(small) {
+      margin-left: auto;
+      display: block;
+    }
+
+    p {
+      margin-top: 0;
+    }
+  }
+}
+
+@mixin banner--map {
+  .wrapper {
+    background-color: rgba(9, 65, 31, 0.38);
+    width: max-content;
+    margin-left: 0;
+
+    @include break-min(80em) {
+      margin-left: calc((100% - 1280px)/2);
+    }
+
+    @include break(x-small) {
+      width: 100%;
+    }
+  }
+}
+
+.landing-page {
+  @include banner--map;
 
   .djongo-symbol {
     margin-left: 1.5em;
