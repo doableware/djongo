@@ -2,7 +2,7 @@ form:
   classes:
     - tire-item__form
   subject: Enterprise
-  next: "https://djongo.doableware.com/support/request-success"
+  next: "https://www.djongomapper.com/support/request-success"
   fields:
     - type: submit
       value: Enquire
