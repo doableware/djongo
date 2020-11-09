@@ -1,12 +1,12 @@
 ---
-title: Get Started
-permalink: /getting-started/
-description: "Djongo overcomes common pitfalls of PyMongo programming. It maps python objects to MongoDB documents. Setting up the mapping documents to python objects is easy with Djongo."
+title: Integrating Django with MongoDB
+permalink: /integrating-django-with-mongodb/
+redirect_from: /get-started/
+description: "Djongo is a python connector for using the Django ORM with MongoDB. Use MongoDB as a backend database for your Django project, without changing the Django ORM. Start using Django with MongoDB by adding just one line of code"
 ---
 
 {{ page.notice.sponsor }}
 
-## Installation and Setup.
 Use MongoDB as a backend database for your Django project, without changing the Django ORM. Use Django Admin to add and modify documents in MongoDB. Start using Django with MongoDB by adding just one line of code. 
 
 ## Usage
