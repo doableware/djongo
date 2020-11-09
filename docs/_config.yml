@@ -8,6 +8,8 @@ minimal_mistakes_skin    : "default" # "air", "aqua", "contrast", "dark", "dirt"
 locale                   : "en-US"
 title_separator          : "-"
 name                     : "Doableware AB"
+title                    : "Djongo"
+subtitle                 : "MongoDB Document Mapper"
 description              : "Djongo is a smarter approach to pymongo programming. It maps python objects to MongoDB documents.
                             It is popularly referred to as an Object Document Mapper or ODM. It is an extension to the traditional
                             Django object relational modeling framework. Use Django Admin to directly add and modify
@@ -17,7 +19,7 @@ baseurl                  : ""
 repository               : "nesdis/djongo"
 teaser                   : # path of fallback teaser image, e.g. "/assets/images/500x300.png"
 # breadcrumbs            : false # true, false (default)
-logo                     : "/assets/images/djongo-logo-new.png"
+logo                     : "/assets/images/djongo-logo-small.png"
 words_per_minute         : 200
 comments:
   provider               : # false (default), "disqus", "discourse", "facebook", "google-plus", "staticman", "staticman_v2" "custom"

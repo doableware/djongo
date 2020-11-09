@@ -3,7 +3,7 @@ permalink: /
 layout: splash
 title: "MongoDB Document Mapper"
 excerpt: 
-tagline: An Easier Alternative To Pymongo
+tagline: An Easier Alternative To PyMongo
 
 description: "Djongo is a smarter approach to pymongo programming. It maps python objects to MongoDB documents. It is popularly referred to as an Object Document Mapper or ODM. It is an extension to the traditional Django object relational modeling framework. Use Django Admin to directly add and modify documents stored in MongoDB. Use other contrib modules such as Auth and Sessions without any changes."
 
@@ -15,7 +15,7 @@ header:
     overlay_color_dark: #092e20
     overlay_color: #09411f
     cta_url: /get-started/
-    cta_label: "Get Started"
+    cta_label: "Download"
         
 punchline:
   - excerpt: A Python Object to MongoDB Document Mapper
