@@ -2,7 +2,7 @@
 title: Integrating Django with MongoDB
 permalink: /integrating-django-with-mongodb/
 redirect_from: /get-started/
-description: "Djongo is a python connector for using the Django ORM with MongoDB. Use MongoDB as a backend database for your Django project, without changing the Django ORM. Start using Django with MongoDB by adding just one line of code"
+description: "Djongo is an extension to the Django ORM. Use MongoDB as the backend for your Django project, without changing the Django ORM. Use Django Admin to directly add and modify documents stored in MongoDB. Use other contrib modules such as Auth and Sessions without any changes. Start using Django with MongoDB by adding just one line of code"
 ---
 
 {{ page.notice.sponsor }}
@@ -214,7 +214,7 @@ Support for various aggregation operators provided by MongoDB.
  
 If you think djongo is useful, **please share it** with the world! Your endorsements and online reviews will help get more support for this project.
   
-You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](/djongo/django-mongodb-connector-design-document/) is implemented.
+You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](/django-mongodb-connector-design-document/) is implemented.
  
 Please contribute to the continued development and success of Djongo by [making a donation][sponsor_page].
 

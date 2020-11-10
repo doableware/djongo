@@ -5,7 +5,7 @@ title: "MongoDB Document Mapper"
 excerpt: 
 tagline: An Easier Alternative To PyMongo
 
-description: "Djongo is a smarter approach to pymongo programming. It maps python objects to MongoDB documents. It is popularly referred to as an Object Document Mapper or ODM. It is an extension to the traditional Django object relational modeling framework. Use Django Admin to directly add and modify documents stored in MongoDB. Use other contrib modules such as Auth and Sessions without any changes."
+description: "Djongo is a smarter approach to pymongo programming. It maps python objects to MongoDB documents. It is popularly referred to as an Object Document Mapper or ODM."
 
 classes:
     - landing-page
@@ -79,23 +79,20 @@ advert_row:
 
 ---
 
-{% include feature_row id="punchline" type="center" %}
+  {% include feature_row id="punchline" type="center" %}
+
+  {% include feature_row id="value_row_first" %}
 
 {% comment %}
-{% include advert_row %}
-
 query
-Easily create and query [embedded documents](/djongo/using-django-with-mongodb-data-fields/) 
-     and [arrays](/djongo/using-django-with-mongodb-array-field/). Add
-    MongoDB specific [indexes](/djongo/djongonxt-indexes/), [transactions](djongonxt-database-transactions/),
+Easily create and query [embedded documents](/using-django-with-mongodb-data-fields/) 
+     and [arrays](/using-django-with-mongodb-array-field/). Add
+    MongoDB specific [indexes](/djongonxt-indexes/), [transactions](djongonxt-database-transactions/),
     and much more."
 
     skip migrations, and [autogenerate complex queries](/djongo/using-django-with-mongodb-array-reference-field/)."  
 
 {% endcomment %}
-
-{% include feature_row id="value_row_first" %}
-
 
 ![Djongo](/assets/images/landing/djongo-symbol.png){: .align-right .djongo-symbol}
 Djongo is an extension to the traditional Django ORM framework. It maps python objects to MongoDB documents, a technique popularly referred to as Object Document Mapping or ODM.
@@ -104,6 +101,7 @@ Constructing queries using Djongo is much easier compared to writing lengthy Pym
 Storing raw `JSON` emitted by the frontend directly into the database is scary. Djongo ensures that only clean data gets through. 
 
 You no longer need to use the shell to inspect your data. By using the `Admin` package, you can access and modify data directly from the web browser. Djongo carries handy UI elements that help represent MongoDB documents on the browser. 
+
 
 ## Security and Integrity Checks
 
@@ -220,11 +218,11 @@ Next, the `EmbeddedField` lets you describe the structure which triggers automat
 
 Finally, you can enable schema checks at the database level. MongoDB schema documents are created inside a `model`. Setting `enforce_schema = True` in the `settings.py` file enables schema checks on the stored collections.
 
-[Get Started](/djongo/get-started){: .btn .btn--primary .btn--large}
+[Get Started](/get-started){: .btn .btn--primary .btn--large}
 {: .text-center}
-
 
 {% comment %}
     {% include feature_row id="djongonxt_row" type="center" %}
+    {% include landing/home-page.html pymongo=pymongo djongo=djongo %}
 {% endcomment %}
 
