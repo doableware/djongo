@@ -11,7 +11,7 @@ description: "If you are a company that uses Djongo in your products, consider e
 ## Enterprise
 If you are an enterprise that uses Djongo for commercial purposes, you need to buy a commercial license in order to use Djongo. 
 
-You get access to the DjongoNxt source code, under commercial terms and conditions. To know more [send us a message](/djongo/support/#contact-us). 
+You get access to the DjongoNxt source code, under commercial terms and conditions. To know more [send us a message](/support/#contact-us). 
 
 Your organization gets a private [team discussion board][board] that is visible to only members of your organization. There is no limit to the number of members who have access.
 
