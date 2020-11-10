@@ -77,7 +77,7 @@ When connecting to Djongo you can set `ENFORCE_SCHEMA: True`. In this case, a `M
 
 ## Use Django Admin to add documents
 
-The Django Admin interface can be used to work with MongoDB. Additionally, several MongoDB specific features are supported using [EmbeddedField](/djongo/using-django-with-mongodb-data-fields/), [ArrayField](/djongo/using-django-with-mongodb-array-field/) and other fields. Let’s say you want to create a blogging platform using Django with MongoDB as your backend. In your Blog `app/models.py` file define the `Blog` model:
+The Django Admin interface can be used to work with MongoDB. Additionally, several MongoDB specific features are supported using [EmbeddedField](/using-django-with-mongodb-data-fields/), [ArrayField](/djongo/using-django-with-mongodb-array-field/) and other fields. Let’s say you want to create a blogging platform using Django with MongoDB as your backend. In your Blog `app/models.py` file define the `Blog` model:
 
 ```python
 from djongo import models
@@ -124,7 +124,7 @@ In the above example, to query all Entries with Blogs which have names that star
 entries = Entry.objects.filter(blog__startswith={'name': 'Beatles'})
 ```
 
-Refer to [Using Django with MongoDB data fields](/djongo/using-django-with-mongodb-data-fields/) for more details.
+Refer to [Using Django with MongoDB data fields](/using-django-with-mongodb-data-fields/) for more details.
 
 ## Djongo Manager
 
@@ -186,7 +186,7 @@ In your model define your field as `FileField` or `ImageField` as usual:
 avatar = models.ImageField(storage=grid_fs_storage, upload_to='')
 ```
 
-Refer to [Using GridFSStorage](/djongo/using-django-with-mongodb-gridfs/) for more details.
+Refer to [Using GridFSStorage](/using-django-with-mongodb-gridfs/) for more details.
 
 
 ## Migrating an existing Django app to MongoDB

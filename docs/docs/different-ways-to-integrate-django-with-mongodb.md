@@ -84,6 +84,6 @@ Relations between objects and subsequent joins can be done in non relational dat
  
 Unstructured data is a super set of structured data. Specifying the data structure to MongoDB will only be ignored by it.  
 
-More details on [implementing Django MongoDB connector](/djongo/django-mongodb-connector-design-document/) can be found in the design document.
+More details on [implementing Django MongoDB connector](/django-mongodb-connector-design-document/) can be found in the design document.
    
 

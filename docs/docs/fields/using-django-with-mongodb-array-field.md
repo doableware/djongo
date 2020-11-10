@@ -102,7 +102,7 @@ Note: In MongoDB the first element in the array starts at index 0.
 
 ## Using ArrayField in Django Admin
 
-The official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/) exemplifies 3 models that interact with each other: **Blog, Author and Entry**. This tutorial considers the same 3 models. The `blog`; `ForeignKey` of the `Entry` model was optimized in the [other tutorial](/djongo/using-django-with-mongodb-data-fields/), here we optimize the `authors`; `ManyToManyField`.
+The official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/) exemplifies 3 models that interact with each other: **Blog, Author and Entry**. This tutorial considers the same 3 models. The `blog`; `ForeignKey` of the `Entry` model was optimized in the [other tutorial](/using-django-with-mongodb-data-fields/), here we optimize the `authors`; `ManyToManyField`.
 
 ```python
 from djongo import models

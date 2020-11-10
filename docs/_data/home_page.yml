@@ -1,9 +1,64 @@
-page:
-  excerpt:
-  tagline: An Easier Alternative To Pymongo
-  header:
-    overlay_image: /assets/images/landing/banner-rand-dark-many6.png
-    overlay_color_dark: "#092e20"
-    overlay_color: "#09411f"
-    cta_url: /get-started/
-    cta_label: "Get Started"
+punchline:
+  - excerpt: A Python Object to MongoDB Document Mapper
+
+first_row:
+  - image_path: /assets/images/landing/security-green.png
+    alt: "Security"
+    title: "Security"
+    excerpt: "Directly saving raw `JSON` into the database is scary. Djongo secures and validates the `JSON` document before saving."
+
+  - image_path: /assets/images/landing/query-green-own.png
+    alt: "Simplify Query Creation"
+    title: "Simplify Query Creation"
+    excerpt: "Writing query documents can get out of control. Djongo does the heavy lifting of creating query documents for you."
+
+  - image_path: /assets/images/landing/rapid.png
+    alt: "Rapid Prototyping"
+    title: "Rapid Prototyping"
+    excerpt: "Speed up app development and execution with schema free models. Enforce different levels of
+              schema protection based on your data evolution."
+    url: "#rapid-prototyping"
+    btn_label: "More"
+    btn_class: "btn--primary"
+    btn_id: "rapid-prototyping"
+
+  - image_path: /assets/images/landing/support-new.png
+    alt: "Support"
+    title: "Support"
+    excerpt: "Get support for queries on MongoDB document modeling."
+    url: /support/
+    btn_label: "More"
+    btn_class: "btn--primary"
+    btn_id: "support"
+
+  - image_path: /assets/images/landing/webpage.png
+    alt: "Web Interface"
+    title: "Web Interface"
+    excerpt: "Access and modify MongoDB through the web browser."
+
+  - image_path: /assets/images/landing/third-party-thin.png
+    alt: "Admin MongoDB"
+    title: "Third Party Packages"
+    excerpt: "Modules that help interface your MongoDB data with other popular packages."
+
+djongonxt_row:
+  - image_path: /assets/images/landing/djongo-Nxt-v1.png
+    alt: "Djongo Next"
+    title: "Djongo Next"
+    excerpt: "The advanced modeling framework. Ships with extra features for professional usage."
+    url: /support/
+    btn_label: "Learn More"
+    btn_class: "btn--primary"
+
+
+advert_row:
+  - image_path: /assets/images/landing/e2e.png
+    alt: "Admin MongoDB"
+    image_link: http://www.e2eprojects.com/
+
+  - image_path: /assets/images/white.jpg
+    alt: "Admin MongoDB"
+
+  - image_path: /assets/images/landing/sumeru.png
+    alt: "Admin MongoDB"
+    image_link: https://www.sumerusolutions.com/

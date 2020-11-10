@@ -21,8 +21,8 @@
       .redirectToCheckout({
         lineItems: [{ price: priceId, quantity: 1 }],
         successUrl:
-          DOMAIN + "/djongo?session_id={CHECKOUT_SESSION_ID}",
-        cancelUrl: DOMAIN + "/djongo/support",
+          DOMAIN + "?session_id={CHECKOUT_SESSION_ID}",
+        cancelUrl: DOMAIN + "/support/",
         mode: 'subscription',
       })
       .then(handleResult);
