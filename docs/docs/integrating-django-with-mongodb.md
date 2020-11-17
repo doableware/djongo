@@ -5,7 +5,7 @@ redirect_from: /get-started/
 description: "Djongo is an extension to the Django ORM. Use MongoDB as the backend for your Django project, without changing the Django ORM. Use Django Admin to directly add and modify documents stored in MongoDB. Use other contrib modules such as Auth and Sessions without any changes. Start using Django with MongoDB by adding just one line of code"
 ---
 
-{{ page.notice.sponsor }}
+{{ page.notice.support }}
 
 Use MongoDB as a backend database for your Django project, without changing the Django ORM. Use Django Admin to add and modify documents in MongoDB. Start using Django with MongoDB by adding just one line of code. 
 
@@ -38,14 +38,14 @@ Use MongoDB as a backend database for your Django project, without changing the 
 <!--
 ## Support
 
-[![Djongo Support](/assets/images/support.png)][sponsor_page]
+[![Djongo Support](/assets/images/support.png)][support_page]
 
 
 I am inundated daily with your appreciation, queries and feature requests for Djongo. Djongo has grown into a highly complex project. To support the requests, I have decided to follow an organized approach.
 
 Djongo as a project is at a stage where its development must be transformed into a sustained effort. Djongo has more than [1,000,000 downloads](https://pypistats.org/packages/djongo) on pypi and continues to grow. I am trying to establish a sustainable development model for the project, and would [love to hear your thoughts.](https://www.patreon.com/posts/to-only-take-22611438)
 
-Visit my [Patreon page][sponsor_page] to make requests and for support. You can expect immediate answers to your questions.  
+Visit my [Patreon page][support_page] to make requests and for support. You can expect immediate answers to your questions.  
 -->
 
 ## How it works
@@ -68,7 +68,7 @@ Djongo ensures that you:
  * Future proof your code.
  * Atomic SQL JOIN operations.
  
-Get [expert support][sponsor_page] for complex projects.
+Get [expert support][support_page] for complex projects.
 
 ## Rapid Prototyping
 Djongo lets you rapidly develop and evolve your app models. Modifying your models is **much faster** with Djongo compared to traditional Django ORM. Since MongoDB is a schema-less database, every time you redefine a model, MongoDB does not expect you to redefine the schema. 
@@ -181,7 +181,7 @@ e.save()
 
 ## DjongoNxt
 
-Features under development at DjongoNxt are not a part of the standard Djongo package. Visit the [sponsors page][sponsor_page] for more information.
+Features under development at DjongoNxt are not a part of the standard Djongo package. Visit the [support page][support_page] for more information.
 {: .notice--info}
 
 DjongoNxt brings support to all features of MongoDB features including:
@@ -216,6 +216,6 @@ If you think djongo is useful, **please share it** with the world! Your endorsem
   
 You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](/django-mongodb-connector-design-document/) is implemented.
  
-Please contribute to the continued development and success of Djongo by [making a donation][sponsor_page].
+Please contribute to the continued development and success of Djongo by [making a donation][support_page].
 
 {% include links %}

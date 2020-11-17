@@ -91,7 +91,7 @@ $banner-max-width-small: $banner-max-height-small * $banner-aspect-ratio/2.0;
   }
 }
 
-.landing-page {
+.home {
   @include banner--map;
 
   .djongo-symbol {
@@ -161,5 +161,9 @@ $banner-max-width-small: $banner-max-height-small * $banner-aspect-ratio/2.0;
 
   h2 {
     margin-bottom: 1em;
+  }
+
+  .bg--grey {
+    background-color: #f2f3f3;
   }
 }
