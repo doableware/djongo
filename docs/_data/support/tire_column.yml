@@ -19,7 +19,7 @@ form:
       required: true
 
 tires:
-  - title: All Feature Access
+  - title: Priority Access
     price: 15
     btn_id: price_15
     price_id: price_1HIKphLbyDBUaJVjQylkb7QE

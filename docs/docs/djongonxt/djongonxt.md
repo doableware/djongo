@@ -4,7 +4,7 @@ permalink: /djongonxt/
 toc: false
 ---
 
-> Features supported in DjongoNxt are not a part of the standard Djongo package. Visit the [sponsors page][sponsor_page] for more information.
+> Features supported in DjongoNxt are not a part of the standard Djongo package. Visit the [support page][support_page] for more information.
 
 DjongoNxt is a Django and MongoDB connector for full featured database usage. It provides many features of MongoDB enabled through Django. It comes with support for:
 

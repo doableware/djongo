@@ -3,7 +3,7 @@ title: Django and MongoDB connector
 permalink: /djongo-deep-dive/
 ---
 
-{{ page.notice.sponsor }}
+{{ page.notice.support }}
 
 ## Database configuration
 
