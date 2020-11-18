@@ -1,6 +1,8 @@
 ---
 title: DjongoNxt Aggregation
 permalink: /djongonxt-aggregation/
+layout: djongoNxt
+
 ---
 
 ## Using Aggregation Operators
