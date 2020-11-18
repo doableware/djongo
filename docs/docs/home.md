@@ -3,7 +3,7 @@ permalink: /
 layout: splash
 title: "MongoDB Document Mapper"
 excerpt: 
-tagline: An Easier Alternative To PyMongo
+tagline: Easy PyMongo Programming
 
 description: "Djongo is a smarter approach to pymongo programming. It maps python objects to MongoDB documents. It is popularly referred to as an Object Document Mapper or ODM."
 

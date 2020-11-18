@@ -17,10 +17,7 @@ granted are:
 * Similar to a [MIT](https://opensource.org/licenses/MIT) style license.
 * To use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software.
 
-Your organization gets a [team discussion board](https://docs.github.com/en/free-pro-team@latest/github/building-a-strong-community/about-team-discussions)
- for raising queries. 
-
-**Send us a message** for more information.
+Your organization gets **dedicated video, chat, and email support**. Send us a message for more information.
 {% endcapture %}
 
 
