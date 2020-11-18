@@ -1,5 +1,6 @@
 ---
 title: DjongoNxt Model Update
+layout: djongoNxt
 permalink: /djongonxt-model-update/
 ---
 

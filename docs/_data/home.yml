@@ -1,15 +1,7 @@
 punchline:
-  - excerpt: A Python Object to MongoDB Document Mapper
+  - excerpt: A Python Object to MongoDB Document and Relational Database Mapper
 
 first_row:
-  - image_path: /assets/images/home/security-green.png
-    alt: "Security"
-    title: "Security"
-    excerpt: "Directly saving raw `JSON` into the database is scary. Djongo secures and validates the `JSON` document before saving."
-    url: "#security-and-integrity-checks"
-    btn_label: "More"
-    btn_class: "btn--primary"
-    btn_id: "btn-security"
 
   - image_path: /assets/images/home/query-green-own.png
     alt: "Simplify Query Creation"
@@ -19,6 +11,33 @@ first_row:
     btn_label: "More"
     btn_class: "btn--primary"
     btn_id: "btn-query"
+
+  - image_path: /assets/images/home/noSql.png
+    alt: "SQL <> No SQL"
+    title: "SQL <=> No SQL"
+    excerpt: "Switch between MongoDB and other SQL databases. Limit the impact to your Models and business logic."
+    url: "/integrating-django-with-mongodb/#how-it-works"
+    btn_label: "More"
+    btn_class: "btn--primary"
+    btn_id: "btn-no-sql"
+
+  - image_path: /assets/images/home/security-green.png
+    alt: "Security"
+    title: "Security"
+    excerpt: "Directly saving raw `JSON` into the database is scary. Djongo secures and validates the `JSON` document before saving."
+    url: "#security-and-integrity-checks"
+    btn_label: "More"
+    btn_class: "btn--primary"
+    btn_id: "btn-security"
+
+  - image_path: /assets/images/home/support-new.png
+    alt: "Support"
+    title: "Support"
+    excerpt: "Phone, Chat and Email support. Including commercial licensing for enterprises."
+    url: /support/
+    btn_label: "More"
+    btn_class: "btn--primary"
+    btn_id: "btn-support"
 
   - image_path: /assets/images/home/rapid.png
     alt: "Rapid Prototyping"
@@ -30,20 +49,11 @@ first_row:
     btn_class: "btn--primary"
     btn_id: "btn-rapid-prototyping"
 
-  - image_path: /assets/images/home/support-new.png
-    alt: "Support"
-    title: "Support"
-    excerpt: "Get support for queries on MongoDB document modeling."
-    url: /support/
-    btn_label: "More"
-    btn_class: "btn--primary"
-    btn_id: "btn-support"
-
   - image_path: /assets/images/home/webpage.png
     alt: "Web Interface"
     title: "Web Interface"
     excerpt: "Access and modify MongoDB through the web browser."
-    url: /djongo-deep-dive/#use-django-admin-to-add-documents
+    url: /integrating-django-with-mongodb/#use-django-admin-to-add-documents
     btn_label: "More"
     btn_class: "btn--primary"
     btn_id: "btn-webpage"
@@ -52,6 +62,7 @@ first_row:
     alt: "Admin MongoDB"
     title: "Third Party Packages"
     excerpt: "Modules that help interface your MongoDB data with other popular packages."
+    hidden: true
 
 djongonxt_row:
   - image_path: /assets/images/home/djongo-Nxt-v1.png

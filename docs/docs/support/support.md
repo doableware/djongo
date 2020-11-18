@@ -11,16 +11,13 @@ classes:
 ---
 
 {% capture enterprise %}
-If you are an enterprise that uses Djongo for commercial purposes, you need a commercial license to use Djongo. Rights 
+If you are an enterprise that uses Djongo for commercial purposes, you need a license to use Djongo. Rights 
 granted are: 
 
 * Similar to a [MIT](https://opensource.org/licenses/MIT) style license.
 * To use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software.
 
-Your organization gets a [team discussion board](https://docs.github.com/en/free-pro-team@latest/github/building-a-strong-community/about-team-discussions)
- for raising queries. 
-
-**Send us a message** for more information.
+Get **phone, chat, and email support**. Send us a message for more information.
 {% endcapture %}
 
 
