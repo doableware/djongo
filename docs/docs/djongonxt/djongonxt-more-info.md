@@ -1,6 +1,7 @@
 ---
 title: More Information
 permalink: /djongonxt-more-info/
+layout: djongoNxt
 toc: false
 ---
 

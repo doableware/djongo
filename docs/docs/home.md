@@ -1,11 +1,11 @@
 ---
 permalink: /
 layout: splash
-title: "MongoDB Document Mapper"
+title: "Object Database Mapper"
 excerpt: 
-tagline: An Easier Alternative To PyMongo
+tagline: Python Object to Database Mapper
 
-description: "Djongo is a smarter approach to pymongo programming. It maps python objects to MongoDB documents. It is popularly referred to as an Object Document Mapper or ODM."
+description: "Djongo is a MongoDB Document Mapper. A smarter approach to pymongo programming by mapping python objects to MongoDB documents. It can be used with relational SQL databases as well."
 
 classes:
     - home
@@ -33,12 +33,43 @@ Easily create and query [embedded documents](/using-django-with-mongodb-data-fie
 
 {% capture introduction %}
 ![Djongo](/assets/images/home/djongo-symbol.png){: .align-right .djongo-symbol}
-Djongo is an extension to the traditional Django ORM framework. It maps python objects to MongoDB documents, a technique popularly referred to as Object Document Mapping or ODM.
+Djongo is a smarter approach to pymongo programming. It is an extension to the traditional [Django ORM](https://www.djangoproject.com/) framework. It maps python objects to MongoDB documents, a technique popularly referred to as Object Document Mapping or ODM.
 
 Constructing queries using Djongo is **much easier** compared to writing lengthy Pymongo query documents.
 Storing raw `JSON` emitted by the frontend directly into the database is scary. Djongo ensures that **only clean data** gets through. 
 
 **You no longer** need to use the shell to inspect your data. By using the `Admin` package, you can access and modify data directly from the web browser. Djongo carries handy UI elements that help represent MongoDB documents on the browser. 
+{% endcapture %}
+
+{% capture setup %}
+## Installation and Setup
+
+1. Download and install the latest version of Djongo by running:
+
+    ```
+    pip install djongo
+    ```
+   
+
+2. The project directory is where all Djongo settings live. Auto generate the required files by running:
+
+    ```
+    django-admin startproject mysite
+    ```
+
+3. You can replace *mysite* with a name of your choosing.
+Go into the root of *mysite* directory to find the `settings.py` file. Add:
+
+    ```python
+      DATABASES = {
+          'default': {
+              'ENGINE': 'djongo',
+              'NAME': 'your-db-name',
+          }
+      }
+    ```
+
+4. YOU ARE SET! Have fun!
 {% endcapture %}
 
 
@@ -148,10 +179,9 @@ qs = Entry.objects.filter(author__name='Paul')\
 
 {% include home/query.html pymongo=pymongo djongo=djongo %}
 
-Djongo generates complex, error free, aggregation queries automatically. 
-
+Djongo generates complex, error free, aggregation queries automatically.
 It takes the relatively simple query on the right 
-and generates the pymongo query document on the left.
+and **automatically generates** the pymongo query document on the left.
 {% endcapture %}
 
 
@@ -173,6 +203,7 @@ Finally, you can enable schema **checks at the database level**. MongoDB schema 
 
 {% include home/home.html 
     introduction=introduction
+    setup=setup
     security=security
     query=query
     rapid_prototyping=rapid_prototyping %}
