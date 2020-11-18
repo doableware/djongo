@@ -1,5 +1,6 @@
 ---
 title: DjongoNxt Database Transactions
+layout: djongoNxt
 permalink: /djongonxt-database-transactions/
 ---
 

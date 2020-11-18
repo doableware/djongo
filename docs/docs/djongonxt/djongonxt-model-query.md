@@ -1,5 +1,6 @@
 ---
 title: DjongoNxt Model Query
+layout: djongoNxt
 permalink: /djongonxt-model-query/
 ---
 
