@@ -165,6 +165,10 @@ class GridFSStorage(Storage):
             from django.db import connections
             self._db = connections[self.database].connection
 
+        if self._db is None: 
+            connections[self.database].connect()                                       
+            self._db = connections[self.database].connection             
+
         return GridFS(self._db, collection_name), filename
 
     def get_accessed_time(self, name):
