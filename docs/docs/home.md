@@ -1,110 +1,79 @@
 ---
 permalink: /
 layout: splash
-title: "MongoDB Document Mapper"
+title: "Object Database Mapper"
 excerpt: 
-tagline: An Easier Alternative To Pymongo
+tagline: Python Object to Database Mapper
 
-description: "Djongo is a smarter approach to pymongo programming. It maps python objects to MongoDB documents. It is popularly referred to as an Object Document Mapper or ODM. It is an extension to the traditional Django object relational modeling framework. Use Django Admin to directly add and modify documents stored in MongoDB. Use other contrib modules such as Auth and Sessions without any changes."
+description: "Djongo is a MongoDB Document Mapper. A smarter approach to pymongo programming by mapping python objects to MongoDB documents. It can be used with relational SQL databases as well."
 
 classes:
-    - landing-page
+    - home
     
 header:
-    overlay_image: /assets/images/landing/banner-rand-dark-many6.png
+    overlay_image: /assets/images/home/banner-rand-dark-many6.png
     overlay_color_dark: #092e20
     overlay_color: #09411f
     cta_url: /get-started/
-    cta_label: "Get Started"
-        
-punchline:
-  - excerpt: A Python Object to MongoDB Document Mapper
-
-value_row_first:
-  - image_path: /assets/images/landing/security-green.png
-    alt: "Security"
-    title: "Security"
-    excerpt: "Directly saving raw `JSON` into the database is scary. Djongo secures and validates the `JSON` document before saving."
-    
-  - image_path: /assets/images/landing/query-green-own.png
-    alt: "Simplify Query Creation"
-    title: "Simplify Query Creation"
-    excerpt: "Writing query documents can get out of control. Djongo does the heavy lifting of creating query documents for you." 
-    
-  - image_path: /assets/images/landing/rapid.png
-    alt: "Rapid Prototyping"
-    title: "Rapid Prototyping"
-    excerpt: "Speed up app development and execution with schema free models. Enforce different levels of 
-              schema protection based on your data evolution." 
-
-  - image_path: /assets/images/landing/support-new.png
-    alt: "Support"
-    title: "Support"
-    excerpt: "Get support for queries on MongoDB document modeling."
-    url: /support/
-    btn_label: "Learn More"
-    btn_class: "btn--primary"
-
-  - image_path: /assets/images/landing/webpage.png
-    alt: "Web Interface"
-    title: "Web Interface"
-    excerpt: "Access and modify MongoDB through the web browser."
-          
-  - image_path: /assets/images/landing/third-party-thin.png
-    alt: "Admin MongoDB"
-    title: "Third Party Packages"
-    excerpt: "Modules that help interface your MongoDB data with other popular packages."
-
-djongonxt_row:
-  - image_path: /assets/images/landing/djongo-Nxt-v1.png
-    alt: "Djongo Next"
-    title: "Djongo Next"
-    excerpt: "The advanced modeling framework. Ships with extra features for professional usage."
-    url: /support/
-    btn_label: "Learn More"
-    btn_class: "btn--primary"
-  
-    
-advert_row:
-  - image_path: /assets/images/landing/e2e.png
-    alt: "Admin MongoDB"
-    image_link: http://www.e2eprojects.com/
-    
-  - image_path: /assets/images/white.jpg
-    alt: "Admin MongoDB"
-
-  - image_path: /assets/images/landing/sumeru.png
-    alt: "Admin MongoDB"
-    image_link: https://www.sumerusolutions.com/
+    cta_label: "Get Started"       
 
 ---
 
-{% include feature_row id="punchline" type="center" %}
 
 {% comment %}
-{% include advert_row %}
-
 query
-Easily create and query [embedded documents](/djongo/using-django-with-mongodb-data-fields/) 
-     and [arrays](/djongo/using-django-with-mongodb-array-field/). Add
-    MongoDB specific [indexes](/djongo/djongonxt-indexes/), [transactions](djongonxt-database-transactions/),
+Easily create and query [embedded documents](/using-django-with-mongodb-data-fields/) 
+     and [arrays](/using-django-with-mongodb-array-field/). Add
+    MongoDB specific [indexes](/djongonxt-indexes/), [transactions](djongonxt-database-transactions/),
     and much more."
 
     skip migrations, and [autogenerate complex queries](/djongo/using-django-with-mongodb-array-reference-field/)."  
 
 {% endcomment %}
 
-{% include feature_row id="value_row_first" %}
+{% capture introduction %}
+![Djongo](/assets/images/home/djongo-symbol.png){: .align-right .djongo-symbol}
+Djongo is an extension to the traditional [Django ORM](https://www.djangoproject.com/) framework. It maps python objects to MongoDB documents, a technique popularly referred to as Object Document Mapping or ODM.
+
+Constructing queries using Djongo is **much easier** compared to writing lengthy Pymongo query documents.
+Storing raw `JSON` emitted by the frontend directly into the database is scary. Djongo ensures that **only clean data** gets through. 
+
+**You no longer** need to use the shell to inspect your data. By using the `Admin` package, you can access and modify data directly from the web browser. Djongo carries handy UI elements that help represent MongoDB documents on the browser. 
+{% endcapture %}
+
+{% capture setup %}
+## Installation and Setup
+
+1. Download and install the latest version of Djongo by running:
+
+    ```
+    pip install djongo
+    ```
+   
+
+2. The project directory is where all Djongo settings live. Auto generate the required files by running:
+
+    ```
+    django-admin startproject mysite
+    ```
+
+3. You can replace *mysite* with a name of your choosing.
+Go into the root of *mysite* directory to find the `settings.py` file. Add:
+
+    ```python
+      DATABASES = {
+          'default': {
+              'ENGINE': 'djongo',
+              'NAME': 'your-db-name',
+          }
+      }
+    ```
+
+4. YOU ARE SET! Have fun!
+{% endcapture %}
 
 
-![Djongo](/assets/images/landing/djongo-symbol.png){: .align-right .djongo-symbol}
-Djongo is an extension to the traditional Django ORM framework. It maps python objects to MongoDB documents, a technique popularly referred to as Object Document Mapping or ODM.
-
-Constructing queries using Djongo is much easier compared to writing lengthy Pymongo query documents.
-Storing raw `JSON` emitted by the frontend directly into the database is scary. Djongo ensures that only clean data gets through. 
-
-You no longer need to use the shell to inspect your data. By using the `Admin` package, you can access and modify data directly from the web browser. Djongo carries handy UI elements that help represent MongoDB documents on the browser. 
-
+{% capture security %}
 ## Security and Integrity Checks
 
 ```python
@@ -119,15 +88,18 @@ class Entry(models.Model):
 ```
 {: .code-block--left }
 
-Djongo performs checks on data fields before they are saved to the database. 
+Djongo performs **checks on data fields** before they are saved to the database. 
 {: .text-left}
 
-Define custom validators or use builtin validators to check the data. Validation is triggered prior to writing to the database.
+Define **custom validators** or use builtin validators to check the data. Validation is triggered prior to writing to the database.
 {: .text-left}
 
-Running integrity checks and field value validators ensures protect from garbage data. 
+Running **integrity checks** and field value validators ensures protect from garbage data. 
 {: .text-left}
+{% endcapture %}
 
+
+{% capture query %}
 ## Query Creation
 
 {% capture pymongo %}
@@ -205,26 +177,33 @@ qs = Entry.objects.filter(author__name='Paul')\
 {: .query__code .code-small}
 {% endcapture %}
 
-{% include landing/query.html pymongo=pymongo djongo=djongo %}
+{% include home/query.html pymongo=pymongo djongo=djongo %}
 
-Djongo generates complex, error free, aggregation queries automatically. It takes the relatively simple query on the left 
-and generates the pymongo query document on the right.
+Djongo generates complex, error free, aggregation queries automatically.
+It takes the relatively simple query on the right 
+and **automatically generates** the pymongo query document on the left.
+{% endcapture %}
 
+
+{% capture rapid_prototyping %}
 ## Rapid Prototyping
 
-![Djongo](/assets/images/landing/rapid-levels.png){: .align-right .djongo-symbol}
+![Djongo](/assets/images/home/rapid-levels.png){: .align-right .djongo-symbol}
 
 As your data evolves you may wish to enforce a structure to it. The `JSONField` represents documents with no structure, while setting `enforce_schema = True` in the `settings.py` file enables checks to the data. 
 
-Next, the `EmbeddedField` lets you describe the structure which triggers automatic validations at the application level.
+Next, the `EmbeddedField` lets you describe the structure which **triggers automatic validations** at the application level.
 
-Finally, you can enable schema checks at the database level. MongoDB schema documents are created inside a `model`. Setting `enforce_schema = True` in the `settings.py` file enables schema checks on the stored collections.
+Finally, you can enable schema **checks at the database level**. MongoDB schema documents are created inside a `model`. Setting `enforce_schema = True` in the `settings.py` file enables schema checks on the stored collections.
 
-[Get Started](/djongo/get-started){: .btn .btn--primary .btn--large}
+[Get Started](/get-started){: .btn .btn--primary .btn--large}
 {: .text-center}
+{% endcapture %}
 
 
-{% comment %}
-    {% include feature_row id="djongonxt_row" type="center" %}
-{% endcomment %}
-
+{% include home/home.html 
+    introduction=introduction
+    setup=setup
+    security=security
+    query=query
+    rapid_prototyping=rapid_prototyping %}

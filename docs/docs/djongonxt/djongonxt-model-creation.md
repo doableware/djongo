@@ -1,5 +1,6 @@
 ---
 title: DjongoNxt Model Creation
+layout: djongoNxt
 permalink: /djongonxt-model-creation/
 ---
 

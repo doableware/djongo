@@ -1,8 +1,63 @@
-@import "const";
+@mixin splash {
+  .page__content {
+    section {
+    }
+  }
+
+  h1 {
+    margin: 1.5em 0 1em;
+
+    @include break(x-small) {
+      text-align: left;
+    }
+  }
+
+  h2 {
+    margin-bottom: 1em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    text-align: center;
+  }
+
+  form {
+    width: 50%;
+    margin: 0 auto 5px auto;
+
+    @include break(x-small) {
+      margin: 0;
+      width: 100%;
+    }
+  }
+}
+
+@mixin text-content {
+    margin: 0 1em;
+
+    @include break(x-small) {
+      margin: 0;
+    }
+  }
+
+@mixin splash--with-border {
+  @include splash;
+
+  .page__content {
+    section {
+      border-bottom: 1px solid #f2f3f3;
+      padding-bottom: 3em;
+      margin-bottom: 4.5em;
+
+      &:last-of-type {
+        border-bottom-style: none;
+      }
+    }
+  }
+}
 
 .empty-header {
-  .initial-content {
-    margin-top: 100px;
+  .masthead {
+    margin-bottom: 3em;
   }
 }
 
@@ -25,45 +80,10 @@
 }
 
 .custom-splash {
-  .page__content {
-    section {
-      border-bottom: 1px solid gainsboro;
-      padding: 3em 0;
-
-      &:last-of-type {
-        border-bottom-style: none;
-      }
-    }
-  }
-
-  h1 {
-    margin: 1.5em 0 .75em;
-    text-align: center;
-
-    @include break(x-small) {
-      text-align: left;
-    }
-  }
-
-  h2 {
-    margin-bottom: 1em;
-  }
-
-  form {
-    width: 50%;
-    margin: 0 auto 5px auto;
-
-    @include break(x-small) {
-      margin: 0;
-      width: 100%;
-    }
-  }
-
-  .text-content {
-    margin: 0 1em;
-
-    @include break(x-small) {
-      margin: 0;
-    }
-  }
+  @include splash--with-border;
 }
+
+.splash--support {
+
+}
+

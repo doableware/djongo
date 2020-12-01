@@ -1,0 +1,23 @@
+
+<section>
+  {% include feature_id_row row=site.data.home.punchline type="center" %}
+  {% include feature_id_row row=site.data.home.first_row %}
+</section>
+<section>
+  {{ include.introduction | markdownify }}
+</section>
+<section>
+  {{ include.setup | markdownify }}
+</section>
+<section>
+  {{ include.query | markdownify }}
+</section>
+<section>
+  {{ include.security | markdownify }}
+</section>
+<section>
+  {{ include.rapid_prototyping | markdownify }}
+</section>
+{% comment %}
+    {% include feature_row id="djongonxt_row" type="center" %}
+{% endcomment %}

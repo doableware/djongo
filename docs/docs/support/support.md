@@ -1,20 +1,27 @@
 ---
 title: Djongo Support Services
 permalink: /support/
-layout: sponsor
+layout: splash
 excerpt: "If you are a company that uses Djongo in your products, consider enrolling in a subscription plan. You get long term support"
 description: "If you are a company that uses Djongo in your products, consider enrolling in a subscription plan. You get long term support."
+
+classes:
+  - custom-splash
+  - empty-header
 ---
 
-# Support
+{% capture enterprise %}
+If you are an enterprise that uses Djongo for commercial purposes, you need a license to use Djongo. Rights 
+granted are: 
 
-## Enterprise
-If you are an enterprise that uses Djongo for commercial purposes, you need to buy a commercial license in order to use Djongo. 
+* Similar to a [MIT](https://opensource.org/licenses/MIT) style license.
+* To use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software.
 
-You get access to the DjongoNxt source code, under commercial terms and conditions. To know more [send us a message](/djongo/support/#contact-us). 
+Get **phone, chat, and email support**. Send us a message for more information.
+{% endcapture %}
 
-Your organization gets a private [team discussion board][board] that is visible to only members of your organization. There is no limit to the number of members who have access.
 
+{% capture other_benefits %}
 ## DjongoNxt
 DjongoNxt brings support to more features of MongoDB. It is hosted as a private repository on Github. Issues raised here have a higher priority versus those raised on the public repository. 
 
@@ -24,3 +31,10 @@ Critical bug fixes and maintenance patches are first published to DjongoNxt.
 The priority [discussion board][board] is hosted on github and members with a subscription have access to it. Questions posted get a response within 24 hours.
 
 [board]: https://docs.github.com/en/free-pro-team@latest/github/building-a-strong-community/about-team-discussions
+
+{% endcapture %}
+
+{% include support.html
+ enterprise=enterprise
+ enterprise_title=enterprise_title
+ other_benefits=other_benefits %}

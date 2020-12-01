@@ -21,13 +21,13 @@
       .redirectToCheckout({
         lineItems: [{ price: priceId, quantity: 1 }],
         successUrl:
-          DOMAIN + "/djongo?session_id={CHECKOUT_SESSION_ID}",
-        cancelUrl: DOMAIN + "/djongo/support",
+          DOMAIN + "?session_id={CHECKOUT_SESSION_ID}",
+        cancelUrl: DOMAIN + "/support/",
         mode: 'subscription',
       })
       .then(handleResult);
   };
-{% for t in site.data.sponsor.tire_column.tires %}
+{% for t in site.data.support.tire_column.tires %}
     {% if t.invisible != true %}
   document
   .getElementById("{{ t.btn_id }}")

@@ -3,6 +3,9 @@ title: DjongoNxt Indexes
 permalink: /djongonxt-indexes/
 ---
 
+{{ page.notice.not_standard }}
+
+
 ## Compound Index
 ```python
 class CompoundIndex(

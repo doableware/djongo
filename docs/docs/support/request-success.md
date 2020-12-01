@@ -1,5 +1,5 @@
 ---
-title: Sponsor Djongo
+title: Djongo Support
 permalink: /support/request-success 
 layout: splash
 classes:
@@ -10,4 +10,3 @@ classes:
 # Great! Your request has been recorded
 
 ### We will get back to you soon
-{: text-center}
