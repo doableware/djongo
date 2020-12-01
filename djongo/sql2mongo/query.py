@@ -558,7 +558,7 @@ class AlterQuery(DDLQuery):
 
             elif tok.match(tokens.Name.Builtin, (
                 'integer', 'bool', 'char', 'date', 'boolean',
-                'datetime', 'float', 'time', 'number', 'string', 'int'
+                'datetime', 'float', 'time', 'number', 'string', 'int', 'long'
             )):
                 print_warn('column type validation')
                 self._type_code = str(tok)
