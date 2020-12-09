@@ -557,8 +557,9 @@ class AlterQuery(DDLQuery):
                 print_warn(f'schema validation using {tok}')
 
             elif tok.match(tokens.Name.Builtin, (
-                'integer', 'bool', 'char', 'date', 'boolean',
-                'datetime', 'float', 'time', 'number', 'string'
+                'int','float','integer', 'bool', 'char', 'date',
+                'boolean','datetime', 'float', 'time', 'number',
+                'string'
             )):
                 print_warn('column type validation')
                 self._type_code = str(tok)
