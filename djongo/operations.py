@@ -110,7 +110,7 @@ class DatabaseOperations(BaseDatabaseOperations):
     def date_extract_sql(self, lookup_type, field_name):
         return "EXTRACT('%s' FROM %s)" % (lookup_type, field_name)
     
-    def datetime_extract_sql(self, lookup_type, field_name):
+    def datetime_extract_sql(self, lookup_type, field_name, tzname):
         return "EXTRACT('%s' FROM %s)" % (lookup_type, field_name)
 
     def date_trunc_sql(self, lookup_type, field_name):
