@@ -3,9 +3,9 @@ permalink: /
 layout: splash
 title: "Object Database Mapper"
 excerpt: 
-tagline: Python Object to Database Mapper
+tagline: Easy Safe Database Programming
 
-description: "Djongo is a MongoDB Document Mapper. A smarter approach to pymongo programming by mapping python objects to MongoDB documents. It can be used with relational SQL databases as well."
+description: "Djongo is a smarter approach to pymongo programming. It maps python objects to MongoDB documents. It can be used with relational SQL databases as well."
 
 classes:
     - home
