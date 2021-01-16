@@ -83,7 +83,9 @@
   @include splash--with-border;
 }
 
-.splash--support {
-
+.center-box {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
