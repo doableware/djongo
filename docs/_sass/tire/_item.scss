@@ -2,7 +2,7 @@
 
 $tire-3-col-total-width: $box-min-width-px*3 + $box-side-margin-px*6 + $container-padding-px;
 .tire-item {
-  @include box--2-col;
+  @include box--3-col;
   text-align: center;
 
   ul {

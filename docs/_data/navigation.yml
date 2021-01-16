@@ -4,8 +4,6 @@ main:
      url: /get-started/
    - title: "Support"
      url: /support/
-   - title: "Discuss"
-     url: /discuss/
    - title: "Source"
      url: https://github.com/nesdis/djongo/
 
