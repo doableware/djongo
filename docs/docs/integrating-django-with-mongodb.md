@@ -39,7 +39,7 @@ With Djongo you **permanently  say goodbye** to Django Migrations. To enable mig
 
 ## Use Django Admin to add documents
 
-The Django Admin interface can be used to work with MongoDB. Additionally, several MongoDB specific features are supported using [EmbeddedField](/using-django-with-mongodb-data-fields/), [ArrayField](/djongo/using-django-with-mongodb-array-field/) and other fields. Let’s say you want to create a blogging platform using Django with MongoDB as your backend. In your Blog `app/models.py` file define the `Blog` model:
+The Django Admin interface can be used to work with MongoDB. Additionally, several MongoDB specific features are supported using [EmbeddedField](/using-django-with-mongodb-data-fields/), [ArrayField](/using-django-with-mongodb-array-field/) and other fields. Let’s say you want to create a blogging platform using Django with MongoDB as your backend. In your Blog `app/models.py` file define the `Blog` model:
 
 ```python
 from djongo import models
