@@ -34,7 +34,20 @@ The priority [discussion board][board] is hosted on github and members with a su
 
 {% endcapture %}
 
-{% include support.html
+{% capture discuss %}
+# Discuss
+
+[Djongo forum](https://groups.google.com/forum/#!forum/djongo) is where you can watch for:
+
+* New release announcements.
+* Suggest improvements.
+* Ask questions.
+* Discuss topics pertaining to Django and MongoDB.
+
+{% endcapture %}
+
+{% include support/support.html
  enterprise=enterprise
  enterprise_title=enterprise_title
- other_benefits=other_benefits %}
+ other_benefits=other_benefits
+ discuss=discuss %}

@@ -1,6 +1,6 @@
 
 subject: Enterprise
-next: "https://www.djongomapper.com/support/request-success"
+next: "/support/request-success"
 fields:
   - type: text
     name: Name

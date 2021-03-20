@@ -1,5 +1,5 @@
 subject: support-page
-next: "https://www.djongomapper.com/support/request-success"
+next: "/support/request-success"
 classes:
   - form--splash
 fields:

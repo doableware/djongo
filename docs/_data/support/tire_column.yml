@@ -2,7 +2,7 @@ form:
   classes:
     - tire-item__form
   subject: Enterprise
-  next: "https://www.djongomapper.com/support/request-success"
+  next: "/support/request-success"
   fields:
     - type: submit
       value: Enquire
@@ -19,22 +19,26 @@ form:
       required: true
 
 tires:
-  - title: Priority Access
+  - title: Book A Debug
+    price: 149
+    per_hour: true
+    url: book-a-debug
+    benefits:
+      - Issue resolved within the next day.
+      - Email support.
+
+  - title: Discord Support
+    price: 59
+    url: discord-support
+    benefits:
+      - You get access to the *priority discussion board* on Discord.
+      - Resolution time within 2 - 4 weeks.
+
+  - title: DjongoNxt Access
     price: 15
-    btn_id: price_15
-    price_id: price_1HIKphLbyDBUaJVjQylkb7QE
+    url: djongonxt
     benefits:
       - You get access to the djongoNxt repository.
-      - You get access to the *priority discussion board* on GitHub.
-      - Get a response within 24 hours.
-
-  - title: Priority Discussion
-    price: 7
-    btn_id: price_7
-    price_id: price_1HIKkyLbyDBUaJVj8XbaHS8O
-    benefits:
-      - You get access to the *priority discussion board* on GitHub.
-      - Get a response within 24 hours.
 
   - title: A Sweet Tip
     price: 4

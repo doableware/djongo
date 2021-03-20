@@ -15,7 +15,7 @@ first_row:
   - image_path: /assets/images/home/noSql.png
     alt: "SQL <> No SQL"
     title: "SQL <=> No SQL"
-    excerpt: "Switch between MongoDB and other Django supported SQL databases. Limit the impact to your Models and business logic."
+    excerpt: "Switch between MongoDB and other SQL databases. Limit the impact to your Models and business logic."
     url: "/integrating-django-with-mongodb/#how-it-works"
     btn_label: "More"
     btn_class: "btn--primary"

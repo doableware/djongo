@@ -3,9 +3,9 @@ permalink: /
 layout: splash
 title: "Object Database Mapper"
 excerpt: 
-tagline: Python Object to Database Mapper
+tagline: Easy Safe Database Programming
 
-description: "Djongo is a MongoDB Document Mapper. A smarter approach to pymongo programming by mapping python objects to MongoDB documents. It can be used with relational SQL databases as well."
+description: "Djongo is a smarter approach to pymongo programming. It maps python objects to MongoDB documents. It can be used with relational SQL databases as well."
 
 classes:
     - home
@@ -33,7 +33,7 @@ Easily create and query [embedded documents](/using-django-with-mongodb-data-fie
 
 {% capture introduction %}
 ![Djongo](/assets/images/home/djongo-symbol.png){: .align-right .djongo-symbol}
-Djongo is an extension to the traditional [Django ORM](https://www.djangoproject.com/) framework. It maps python objects to MongoDB documents, a technique popularly referred to as Object Document Mapping or ODM.
+Djongo is a smarter approach to pymongo programming. It is an extension to the traditional [Django ORM](https://www.djangoproject.com/) framework. It maps python objects to MongoDB documents, a technique popularly referred to as Object Document Mapping or ODM.
 
 Constructing queries using Djongo is **much easier** compared to writing lengthy Pymongo query documents.
 Storing raw `JSON` emitted by the frontend directly into the database is scary. Djongo ensures that **only clean data** gets through. 

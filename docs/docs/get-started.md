@@ -146,7 +146,7 @@ ENFORCE_SCHEMA | True | Ensures that the model schema and database schema are ex
 ENFORCE_SCHEMA | False | (Default) Implicitly creates collections. Returns missing fields as `None` instead of raising an exception.
 NAME | your-db-name | Specify your database name. This field cannot be left empty.
 LOGGING | dict | A [dictConfig](https://docs.python.org/3.6/library/logging.config.html) for the type of logging to run on djongo.
-CLIENT | dict | A set of key-value pairs that will be passed directly to [`MongoClient`]((http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient)) as kwargs while creating a new client connection.
+CLIENT | dict | A set of key-value pairs that will be passed directly to [`MongoClient`](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient) as kwargs while creating a new client connection.
   
 All options except `ENGINE` and `ENFORCE_SCHEMA` are the same those listed in the [pymongo documentation](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient).
 

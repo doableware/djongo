@@ -1,0 +1,30 @@
+
+fields:
+  - type: text
+    name: First Name
+    label: "First Name:"
+    required: true
+
+  - type: text
+    name: Last Name
+    label: "Last Name:"
+    required: true
+
+  - type: email
+    name: Email
+    label: "Email:"
+    placeholder: "name@org.com"
+    required: true
+
+  - type: text
+    name: GitHub User Name
+    label: "GitHub User Name:"
+    required: true
+
+  - type: text
+    name: Organization
+    label: "Organization:"
+    required: true
+
+  - type: submit
+    value: Apply
