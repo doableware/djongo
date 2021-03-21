@@ -780,8 +780,8 @@ class Query:
         self._sql = re.sub(r'%s', self._param_index, sql)
         self.last_row_id = None
         self._result_generator = None
-        print(self._query)
         self._query = self.parse()
+        print(self._query)
 
     def count(self):
         return self._query.count()
