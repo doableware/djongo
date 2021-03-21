@@ -839,6 +839,8 @@ class Query:
             f'params: {self._params}'
         )
         statement = sqlparse(self._sql)
+        print(statement)
+        print(self._sql)
 
         if len(statement) > 1:
             raise SQLDecodeError(self._sql)
