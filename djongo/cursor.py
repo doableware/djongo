@@ -16,6 +16,7 @@ class Cursor:
         self.client_conn = client_conn
         self.connection_properties = connection_properties
         self.result = None
+        print("HOLAAAAA CURSOR")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
