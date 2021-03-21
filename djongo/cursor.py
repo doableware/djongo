@@ -49,7 +49,8 @@ class Cursor:
 
     def execute(self, sql, params=None):
         print(sql)
-        print(f"params: {params}")
+        print("OTRA COSA")
+        print(params)
         try:
             self.result = Query(
                 self.client_conn,
