@@ -16,7 +16,6 @@ class Cursor:
         self.client_conn = client_conn
         self.connection_properties = connection_properties
         self.result = None
-        print("HOLAAAAA CURSOR")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
@@ -48,9 +47,9 @@ class Cursor:
         return self.result.last_row_id
 
     def execute(self, sql, params=None):
-        print(sql)
-        print("OTRA COSA")
-        print(params)
+        print("SQL >>>>>", sql)
+        print("PARAMS >>", params)
+        print('- * - * - * - * - * - * - * - * - * - * -')
         try:
             self.result = Query(
                 self.client_conn,
