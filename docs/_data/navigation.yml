@@ -1,11 +1,9 @@
 # main links
 main:
-   - title: "Get Started"
+   - title: "Docs"
      url: /get-started/
-   - title: "Sponsor"
-     url: /sponsor/
-   - title: "Discuss"
-     url: /discuss/
+   - title: "Support"
+     url: /support/
    - title: "Source"
      url: https://github.com/nesdis/djongo/
 
@@ -14,8 +12,8 @@ docs:
     children:
     - title: "Get Started"
       url: /get-started/
-    - title: "Djongo Deep Dive"
-      url: /djongo-deep-dive/
+    - title: "Integrating Django"
+      url: /integrating-django-with-mongodb/
   - title: "Djongo Fields"
     children:
     - title: "Embedded Field"
@@ -42,10 +40,10 @@ docs:
       url: /djongonxt-database-transactions/
 #    - title: "Aggregation"
 #      url: /djongonxt-aggregation/
-    - title: "Contact"
-      url: /djongonxt-more-info/
+#    - title: "Contact"
+#      url: /djongonxt-more-info/
   - title: "Get DjongoNxt"
-    url: /sponsor/
+    url: /support/
 
   - title: "Side stuff"
     children:
@@ -58,4 +56,4 @@ docs:
 
 #  - title: "Donate"
 #    url: /donate/
-#    thumbnail: /djongo/assets/images/heart.png
+#    thumbnail: /assets/images/heart.png

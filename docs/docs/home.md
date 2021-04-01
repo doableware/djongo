@@ -1,86 +1,209 @@
 ---
 permalink: /
 layout: splash
-title: "Django MongoDB connector"
+title: "Object Database Mapper"
 excerpt: 
-description: "Djongo is a python connector for using the Django ORM with MongoDB. Use Django Admin to directly add and modify documents stored in MongoDB. Use other contrib modules such as Auth and Sessions without any changes"
+tagline: Easy Safe Database Programming
 
+description: "Djongo is a smarter approach to pymongo programming. It maps python objects to MongoDB documents. It can be used with relational SQL databases as well."
+
+classes:
+    - home
+    
 header:
-    overlay_image: /assets/images/landing-banner3.jpg
-
-punchline:
-  - excerpt: A python Object Document Mapper (ODM) that let's you use Django with MongoDB *without* changing the Django ORM.
-
-feature_row1:
-  - image_path: /assets/images/django.jpg
-    alt: "Security"
-    title: "Security"
-    excerpt: "Since there are **zero modifications** to the Django source code, 
-    you get complete security and reliability of Django."
-    
-  - image_path: /assets/images/mongo.jpg
-    alt: "Unleash MongoDB on Django"
-    title: "Unleash MongoDB"
-    excerpt: "Create MongoDB [embedded documents,](/djongo/using-django-with-mongodb-data-fields/) 
-    [embedded arrays](/djongo/using-django-with-mongodb-array-field/) in Django Models,
-    [MongoDB specific indexes](/djongo/djongonxt-indexes/) and [transactions.](djongonxt-database-transactions/)"
-
-  - image_path: /assets/images/feature-admin-mongo.jpg
-    alt: "Admin MongoDB"
-    title: "Use Django Admin"
-    excerpt: "Use Django Admin GUI to insert, modify and delete documents in MongoDB."
-
-  - image_path: /assets/images/support.png
-    alt: "Support"
-    title: "Support"
-    excerpt: "Get immediate support for queries on using Django with MongoDB."
-    url: https://nesdis.github.io/djongo/sponsor/
-    btn_label: "Learn More"
-    btn_class: "btn--primary"
-    
-  - image_path: /assets/images/djongo-symbol2.jpg
-    alt: "Admin MongoDB"
-    title: "Rapid App Development"
-    excerpt: "Speed up app development and execution with [schema free models](/djongo/get-started/#enforce-schema), 
-    skip migrations, autogenerate [complex queries.](/djongo/using-django-with-mongodb-array-reference-field/)"
-    
-  - image_path: /assets/images/drf.jpg
-    alt: "Admin MongoDB"
-    title: "Third Party Support"
-    excerpt: "Extra goodies that help interface MongoDB with Django Rest Framework."            
-
-addendum_row1:
-  - image_path: /assets/images/djongo-Nxt-v1.png
-    alt: "Djongo Next"
-    title: "Djongo Next"
-    excerpt: "The next generation connector. Ships with binary extensions for professional usage."
-    url: https://nesdis.github.io/djongo/sponsor/
-    btn_label: "Learn More"
-    btn_class: "btn--primary"
-    
-sponsor_row:
-  - image_path: /assets/images/e2e.png
-    alt: "Admin MongoDB"
-    image_link: http://www.e2eprojects.com/
-    
-  - image_path: /assets/images/white.jpg
-    alt: "Admin MongoDB"
-
-  - image_path: /assets/images/sumeru.png
-    alt: "Admin MongoDB"
-    image_link: https://www.sumerusolutions.com/
+    overlay_image: /assets/images/home/banner-rand-dark-many6.png
+    overlay_color_dark: #092e20
+    overlay_color: #09411f
+    cta_url: /get-started/
+    cta_label: "Get Started"       
 
 ---
 
-{% include feature_row id="punchline" type="center" %}
 
-{% include sponsor_row %}
+{% comment %}
+query
+Easily create and query [embedded documents](/using-django-with-mongodb-data-fields/) 
+     and [arrays](/using-django-with-mongodb-array-field/). Add
+    MongoDB specific [indexes](/djongonxt-indexes/), [transactions](djongonxt-database-transactions/),
+    and much more."
 
-{% include feature_row id="feature_row1" %}
+    skip migrations, and [autogenerate complex queries](/djongo/using-django-with-mongodb-array-reference-field/)."  
 
-{% include feature_row id="addendum_row1" type="center" %}
+{% endcomment %}
+
+{% capture introduction %}
+![Djongo](/assets/images/home/djongo-symbol.png){: .align-right .djongo-symbol}
+Djongo is a smarter approach to pymongo programming. It is an extension to the traditional [Django ORM](https://www.djangoproject.com/) framework. It maps python objects to MongoDB documents, a technique popularly referred to as Object Document Mapping or ODM.
+
+Constructing queries using Djongo is **much easier** compared to writing lengthy Pymongo query documents.
+Storing raw `JSON` emitted by the frontend directly into the database is scary. Djongo ensures that **only clean data** gets through. 
+
+**You no longer** need to use the shell to inspect your data. By using the `Admin` package, you can access and modify data directly from the web browser. Djongo carries handy UI elements that help represent MongoDB documents on the browser. 
+{% endcapture %}
+
+{% capture setup %}
+## Installation and Setup
+
+1. Download and install the latest version of Djongo by running:
+
+    ```
+    pip install djongo
+    ```
+   
+
+2. The project directory is where all Djongo settings live. Auto generate the required files by running:
+
+    ```
+    django-admin startproject mysite
+    ```
+
+3. You can replace *mysite* with a name of your choosing.
+Go into the root of *mysite* directory to find the `settings.py` file. Add:
+
+    ```python
+      DATABASES = {
+          'default': {
+              'ENGINE': 'djongo',
+              'NAME': 'your-db-name',
+          }
+      }
+    ```
+
+4. YOU ARE SET! Have fun!
+{% endcapture %}
 
 
+{% capture security %}
+## Security and Integrity Checks
+
+```python
+def script_injection(value):
+    if value.find('<script>') != -1:
+        raise ValidationError(_('Script injection in %(value)s'),
+                              params={'value': value})
+
+class Entry(models.Model):
+    homepage = models.URLField(validators=[URLValidator,
+                                           script_injection])
+```
+{: .code-block--left }
+
+Djongo performs **checks on data fields** before they are saved to the database. 
+{: .text-left}
+
+Define **custom validators** or use builtin validators to check the data. Validation is triggered prior to writing to the database.
+{: .text-left}
+
+Running **integrity checks** and field value validators ensures protect from garbage data. 
+{: .text-left}
+{% endcapture %}
 
 
+{% capture query %}
+## Query Creation
 
+{% capture pymongo %}
+```python
+self.db['entry'].aggregate(
+    [{
+        '$match': {
+          'author_id': {
+            '$ne': None,
+            '$exists': True
+          }
+        }
+      },
+      {
+        '$lookup': {
+          'from': 'author',
+          'localField': 'author_id',
+          'foreignField': 'id',
+          'as': 'author'
+        }
+      },
+      {
+        '$unwind': '$author'
+      },
+      {
+        '$lookup': {
+          'from': 'blog',
+          'localField': 'blog_id',
+          'foreignField': 'id',
+          'as': 'blog'
+        }
+      },
+      {
+        '$unwind': {
+          'path': '$blog',
+          'preserveNullAndEmptyArrays': True
+        }
+      },
+      {
+        '$addFields': {
+          'blog': {
+            '$ifNull': ['$blog', {
+              'id': None,
+              'title': None
+            }]
+          }
+        }
+      },
+      {
+        '$match': {
+          'author.name': {
+            '$eq': 'Paul'
+          }
+        }
+      }, 
+      {
+        '$project': {
+          'id': True,
+          'blog_id': True,
+          'author_id': True,
+          'content': True,
+          'blog.id': True,
+          'blog.title': True
+        }
+      }]
+```
+{: .query__code }
+{% endcapture %}
+
+{% capture djongo %}
+```python
+qs = Entry.objects.filter(author__name='Paul')\
+                  .select_related('blog')
+```
+{: .query__code .code-small}
+{% endcapture %}
+
+{% include home/query.html pymongo=pymongo djongo=djongo %}
+
+Djongo generates complex, error free, aggregation queries automatically.
+It takes the relatively simple query on the right 
+and **automatically generates** the pymongo query document on the left.
+{% endcapture %}
+
+
+{% capture rapid_prototyping %}
+## Rapid Prototyping
+
+![Djongo](/assets/images/home/rapid-levels.png){: .align-right .djongo-symbol}
+
+As your data evolves you may wish to enforce a structure to it. The `JSONField` represents documents with no structure, while setting `enforce_schema = True` in the `settings.py` file enables checks to the data. 
+
+Next, the `EmbeddedField` lets you describe the structure which **triggers automatic validations** at the application level.
+
+Finally, you can enable schema **checks at the database level**. MongoDB schema documents are created inside a `model`. Setting `enforce_schema = True` in the `settings.py` file enables schema checks on the stored collections.
+
+[Get Started](/get-started){: .btn .btn--primary .btn--large}
+{: .text-center}
+{% endcapture %}
+
+
+{% include home/home.html 
+    introduction=introduction
+    setup=setup
+    security=security
+    query=query
+    rapid_prototyping=rapid_prototyping %}

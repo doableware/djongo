@@ -1,0 +1,91 @@
+@mixin splash {
+  .page__content {
+    section {
+    }
+  }
+
+  h1 {
+    margin: 1.5em 0 1em;
+
+    @include break(x-small) {
+      text-align: left;
+    }
+  }
+
+  h2 {
+    margin-bottom: 1em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    text-align: center;
+  }
+
+  form {
+    width: 50%;
+    margin: 0 auto 5px auto;
+
+    @include break(x-small) {
+      margin: 0;
+      width: 100%;
+    }
+  }
+}
+
+@mixin text-content {
+    margin: 0 1em;
+
+    @include break(x-small) {
+      margin: 0;
+    }
+  }
+
+@mixin splash--with-border {
+  @include splash;
+
+  .page__content {
+    section {
+      border-bottom: 1px solid #f2f3f3;
+      padding-bottom: 3em;
+      margin-bottom: 4.5em;
+
+      &:last-of-type {
+        border-bottom-style: none;
+      }
+    }
+  }
+}
+
+.empty-header {
+  .masthead {
+    margin-bottom: 3em;
+  }
+}
+
+.cookie-notice {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  color: #646769;
+  background-color: #f2f3f3;
+  width: 100%;
+
+  p {
+    margin: 1.3em auto;
+    text-align: center;
+  }
+
+  button {
+    margin-left: 0.5em;
+  }
+}
+
+.custom-splash {
+  @include splash--with-border;
+}
+
+.center-box {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+

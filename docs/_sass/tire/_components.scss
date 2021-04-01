@@ -1,0 +1,12 @@
+@import "box";
+
+.tire {
+  display: flex;
+  justify-content: left;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.tire__disclaimer {
+  @include box--row(2em);
+}

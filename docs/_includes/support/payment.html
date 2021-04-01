@@ -1,0 +1,6 @@
+<h1>Great! We have the information required to help you</h1>
+<p>
+  <button id="button" class="btn btn--success btn--large center-box">Proceed to payment</button>
+  <a class="center-box text-center" style="font-size: 0.8em" href="https://www.patreon.com/nesdis">Pay on Patreon</a>
+</p>
+{% include vendors/stripe.html btn_id="button" price_id=include.price_id %}

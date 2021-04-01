@@ -84,7 +84,7 @@ class DDLQuery(BaseQuery):
         super().__init__(*args)
 
     def execute(self):
-        return 
+        return
 
 
 class DQLQuery(BaseQuery):
@@ -248,7 +248,7 @@ class SelectQuery(DQLQuery):
 
             if self.order:
                 kwargs.update(self.order.to_mongo())
-            
+
             if self.offset:
                 kwargs.update(self.offset.to_mongo())
 
@@ -557,6 +557,10 @@ class AlterQuery(DDLQuery):
                 print_warn(f'schema validation using {tok}')
 
             elif tok.match(tokens.Name.Builtin, '.*', regex=True):
+                print_warn('column type validation')
+                self._type_code = str(tok)
+
+            elif tok.match(tokens.Keyword, 'double'):
                 print_warn('column type validation')
                 self._type_code = str(tok)
 
