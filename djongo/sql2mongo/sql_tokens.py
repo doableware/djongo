@@ -38,7 +38,7 @@ class SQLToken:
                 try:
                     int(token[0][1].value)
                 except ValueError:
-                    raise
+                    yield SQLIdentifier(token[0][1], query)
                 else:
                     yield SQLConstIdentifier(token, query)
             elif isinstance(token[0], Function):

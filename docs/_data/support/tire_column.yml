@@ -1,0 +1,81 @@
+form:
+  classes:
+    - tire-item__form
+  subject: Enterprise
+  next: "/support/request-success"
+  fields:
+    - type: submit
+      value: Enquire
+
+    - type: text
+      name: Name
+      label: "Organization:"
+      required: true
+
+    - type: email
+      name: Email
+      label: "Email:"
+      placeholder: "name@org.com"
+      required: true
+
+tires:
+  - title: Book A Debug
+    price: 149
+    per_hour: true
+    url: book-a-debug
+    benefits:
+      - Issue resolved within the next day.
+      - Email support.
+
+  - title: Discord Support
+    price: 59
+    url: discord-support
+    benefits:
+      - You get access to the *priority discussion board* on Discord.
+      - Resolution time within 2 - 4 weeks.
+
+  - title: DjongoNxt Access
+    price: 15
+    url: djongonxt
+    benefits:
+      - You get access to the djongoNxt repository.
+
+  - title: A Sweet Tip
+    price: 4
+    btn_id: price_4
+    price_id: price_1HIKi6LbyDBUaJVj7FvgB3gx
+    benefits:
+      - You use Djongo and you LOVE IT.
+      - You want to tip the project! Thanks!
+    invisible: true
+
+  - title: Q&A
+    price: 4
+    btn_id: price_4
+    price_id: price_1HIKi6LbyDBUaJVj7FvgB3gx
+    benefits:
+      - Your questions are answered as soon as possible.
+      - You support the long term sustainability of the project.
+    invisible: true
+
+  - title: A Sweet Tip
+    price: 3
+    btn_id: price_3
+    price_id: price_1HIKfSLbyDBUaJVjuc3i3YEW
+    benefits:
+      - You use Djongo and you LOVE IT.
+      - You want to tip the project! Thanks!
+    invisible: true
+
+  - title: Advertise on Djongo
+    price: 50
+    btn_id: price_50
+    price_id: price_1HHwbOLbyDBUaJVjYnDESotB
+    benefits:
+      - Your name or company logo will be displayed on the home page.
+      - Your feature requests and support queries to be given top priority.
+    invisible: true
+
+disclaimer:
+  - Subscriptions are not binding and can be canceled any time.
+  - Upon successful checkout you requested to submit additional details required to deliver your benefits.

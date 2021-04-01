@@ -180,7 +180,7 @@ class iLikeOp(LikeOp):
     def to_mongo(self):
         return {self._field: {
             '$regex': self._regex,
-            '$options': 'i'
+            '$options': 'im'
         }}
 
 

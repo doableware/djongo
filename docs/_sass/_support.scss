@@ -1,0 +1,24 @@
+.enterprise {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+
+  form {
+    width: 15em;
+    margin-left: 1em;
+
+    @include break(x-small) {
+      margin: 0;
+      width: 100%;
+    }
+  }
+
+  .enterprise__text-box {
+    width: calc(100% - 16em);
+
+    @include break(x-small) {
+      margin: 0;
+      width: 100%;
+    }
+  }
+}

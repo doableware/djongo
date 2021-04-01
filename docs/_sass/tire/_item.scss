@@ -1,0 +1,48 @@
+@import "box";
+
+$tire-3-col-total-width: $box-min-width-px*3 + $box-side-margin-px*6 + $container-padding-px;
+.tire-item {
+  @include box--3-col;
+  text-align: center;
+
+  ul {
+    text-align: left;
+  }
+
+  form {
+    text-align: left;
+    input[type='submit'] {
+      text-align: center;
+      margin: 0 auto 1.75em auto;
+      display: block;
+    }
+    width: 100%;
+
+  }
+
+  @include break-max($tire-3-col-total-width) {
+    @include box--2-col;
+  }
+
+  @include break(x-small) {
+    @include box--1-col;
+  }
+}
+
+.tire-item__title {
+  font-weight: bold;
+  margin-bottom: 1.5em;
+}
+
+.tire-item__price {
+  font-weight: bold;
+  font-size: 2.5em;
+}
+
+.tire-item__period {
+  font-size: 0.9em;
+  font-weight: lighter;
+  margin-bottom: 1em;
+}
+
+

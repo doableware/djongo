@@ -1,0 +1,24 @@
+subject: support-page
+next: "/support/request-success"
+classes:
+  - form--splash
+fields:
+  - type: select
+    name: Subject
+    label: "Subject:"
+    options:
+      - Commercial License
+      - Cancel Subscription
+
+  - type: text
+    name: Name
+    label: "Name or Organization:"
+
+  - type: email
+    name: Email
+    label: "Email:"
+    placeholder: "name@org.com"
+    required: true
+
+  - type: submit
+    value: Send

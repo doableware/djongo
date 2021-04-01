@@ -1043,7 +1043,7 @@ class ArrayReferenceField(ForeignKey):
             for obj in sub_objs:
                 getattr(obj, field.name).db_manager(using).remove(*instances)
 
-    def from_db_value(self, value, expression, connection, context):
+    def from_db_value(self, value, expression, connection, context=None):
         return self.to_python(value)
 
     def to_python(self, value):

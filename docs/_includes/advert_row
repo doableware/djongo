@@ -1,0 +1,27 @@
+
+<div class="feature__wrapper">
+
+  {% for f in page.advert_row %}
+    <div class="feature__item">
+      <div class="archive__item">
+        {% if f.image_path %}
+          <div class="archive__item-teaser" style="margin-bottom: 2em">
+            {% if f.image_link %}
+              <a href="{{ f.image_link | relative_url }}">
+                <img src="{{ f.image_path | relative_url }}"
+                 alt="{% if f.alt %}{{ f.alt }}{% endif %}">
+              </a>
+            {% else %}
+              <img src="{{ f.image_path | relative_url }}"
+                 alt="{% if f.alt %}{{ f.alt }}{% endif %}">
+            {% endif %}
+            {% if f.image_caption %}
+              <span class="archive__item-caption">{{ f.image_caption | markdownify | remove: "<p>" | remove: "</p>" }}</span>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+
+</div>

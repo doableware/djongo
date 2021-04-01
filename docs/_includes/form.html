@@ -1,0 +1,44 @@
+{% if include.subject %}
+  {% assign subject = include.subject %}
+{% else %}
+    {% assign subject = include.form.subject %}
+{% endif %}
+
+{% if include.next %}
+  {% assign next = include.next %}
+{% else %}
+    {% assign next = include.form.next %}
+{% endif %}
+
+<form action="https://formsubmit.co/33919e9d29564dc506a8852cd076c24a"
+    method="POST"
+    {% if include.form.classes %}
+      class="{{ include.form.classes | join: ' ' }}"
+    {% endif %}>
+  {% for field in include.form.fields %}
+    {% if field.type == 'text' %}
+      <label>{{ field.label }}
+        <input name="{{ field.name }}" type="text" {% if field.required %}required{% endif %}>
+      </label>
+    {% elsif field.type == 'email' %}
+      <label>{{ field.label }}
+        <input name="{{ field.name }}"
+               type="email"
+               {% if field.required %}required{% endif %}
+               {% if field.placeholder %}placeholder="{{ field.placeholder }}" {% endif %}>
+      </label>
+    {% elsif field.type == 'select' %}
+      <label>{{ field.label }}
+        <select name="{{ field.name }}">
+          {% for opt in field.options %}
+            <option value="{{ opt }}">{{ opt }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    {% elsif field.type == 'submit' %}
+      <input class="btn btn--primary btn--large" type="submit" value="{{ field.value }}">
+    {% endif %}
+  {% endfor %}
+  <input type="hidden" name="_subject" value="{{ subject }}">
+  <input type="hidden" name="_next" value="{{ site.url }}{{ next }}">
+</form>

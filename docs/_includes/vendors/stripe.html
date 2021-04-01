@@ -1,0 +1,37 @@
+<script>
+  // Replace with your own publishable key: https://dashboard.stripe.com/test/apikeys
+  var PUBLISHABLE_KEY = "pk_live_eEfW8XjO4oZUPRFaYASLCWqn";
+  // Replace with the domain you want your users to be redirected back to after payment
+  var DOMAIN = "{{ site.url }}";
+
+  var stripe = Stripe(PUBLISHABLE_KEY);
+
+  // Handle any errors from Checkout
+  var handleResult = function (result) {
+    if (result.error) {
+      var displayError = document.getElementById("error-message");
+      displayError.textContent = result.error.message;
+    }
+  };
+
+  var redirectToCheckout = function (priceId) {
+    // Make the call to Stripe.js to redirect to the checkout page
+    // with the current quantity
+    stripe
+      .redirectToCheckout({
+        lineItems: [{ price: priceId, quantity: 1 }],
+        successUrl:
+          DOMAIN + "?session_id={CHECKOUT_SESSION_ID}",
+        cancelUrl: DOMAIN + "/support/",
+        mode: 'subscription',
+      })
+      .then(handleResult);
+  };
+
+  document
+  .getElementById("{{ include.btn_id }}")
+  .addEventListener("click", function (evt) {
+    redirectToCheckout("{{ include.price_id }}");
+  });
+
+</script>

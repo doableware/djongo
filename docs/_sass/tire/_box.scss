@@ -1,0 +1,35 @@
+
+$box-min-width: 16em;
+$box-side-margin: 1em;
+$box-min-width-px: 16 * $base-font-size-px;
+$box-side-margin-px: 1 * $base-font-size-px;
+
+@mixin box($margin-bottom: 2em) {
+  border: 1px solid gainsboro;
+  border-radius: 4px;
+
+  margin: 0 $box-side-margin $margin-bottom;
+  padding: 1em;
+}
+
+@mixin box--3-col {
+  @include box();
+  width: calc(33% - #{$box-side-margin}*2);
+}
+
+@mixin box--2-col {
+  @include box();
+  width: calc(50% - #{$box-side-margin}*2);
+}
+
+@mixin box--1-col {
+  @include box();
+  width: calc(100% - #{$box-side-margin});
+  margin-left: 0;
+  margin-right: 0;
+}
+
+
+@mixin box--row($margin-bottom: 0) {
+  @include box($margin-bottom);
+}

@@ -7,14 +7,19 @@ minimal_mistakes_skin    : "default" # "air", "aqua", "contrast", "dark", "dirt"
 # Site Settings
 locale                   : "en-US"
 title_separator          : "-"
-name                     : "Nesdis"
-description              : "Djongo is specifically meant to be used with the original Django ORM and MongoDB. Using the Django admin app one can directly add and modify documents stored in MongoDB. Other contrib modules such as Auth and Sessions work without any changes"
-url                      : "https://nesdis.github.io"
-baseurl                  : "/djongo"
+name                     : "Doableware AB"
+title                    : "Djongo"
+subtitle                 : "Object Database Mapper"
+description              : "Djongo is a smarter approach to pymongo programming. It maps python objects to MongoDB documents.
+                            It is popularly referred to as an Object Document Mapper or ODM. It is an extension to the traditional
+                            Django object relational modeling framework. Use Django Admin to directly add and modify
+                            documents stored in MongoDB. Use other contrib modules such as Auth and Sessions without any changes."
+url                      : "https://www.djongomapper.com"
+baseurl                  : ""
 repository               : "nesdis/djongo"
 teaser                   : # path of fallback teaser image, e.g. "/assets/images/500x300.png"
 # breadcrumbs            : false # true, false (default)
-logo                     : "/assets/images/djongo-logo.png"
+logo                     : "/assets/images/djongo-logo-small.png"
 words_per_minute         : 200
 comments:
   provider               : # false (default), "disqus", "discourse", "facebook", "google-plus", "staticman", "staticman_v2" "custom"
@@ -28,13 +33,13 @@ comments:
     num_posts            : # 5 (default)
     colorscheme          : # "light" (default), "dark"
 
-footer:
-  links:
-    - label: By continuing to use this site, you consent to our use of cookies for tracking site usage.
-      url: "/privacy-policy"
+#footer:
+#  links:
+#    - label: By continuing to use this site, you consent to our use of cookies for tracking site usage.
+#      url: "/privacy-policy"
 
 # SEO Related
-google_site_verification :
+google_site_verification : "tFNu7Nc9hzKF9v7f6kYaoMbBCNyGREchcKMVdxJuyJo"
 bing_site_verification   :
 yandex_site_verification :
 naver_site_verification  :
@@ -48,10 +53,13 @@ analytics:
 #footer_scripts:
 #  - /assets/js/jquery.easing.min.js
 #  - /assets/js/jquery.touchSwipe.min.js
-#  - /assets/js/jquery.liquid-slider.min.js
+#  - /assets/js/jquery.liquid-slider.min.js   - "https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"
 
 head_scripts:
   - "https://js.stripe.com/v3/"
+  - "https://code.jquery.com/jquery-3.5.1.slim.min.js"
+  - "https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"
+  - "/assets/js/cookie-consent.js"
 
 # Reading Files
 include: [_static, _sources]
@@ -155,7 +163,8 @@ defaults:
     values:
       notice:
         not_ready: "Parts of this feature are still under development.\n{: .notice--warning}"
-        sponsor: "**Note:** If you are a company that uses Djongo in your products, consider enrolling in a subscription plan. You get long term support and [advertisement space][sponsor_page].\n{: .notice--danger}"
+        support: "**Note:** If you are an enterprise that uses Djongo in your products, contact us for long term support and [licensing options](/support/).\n{: .notice--danger}"
+        not_standard: "**Note:** Features under development in this section are not part of the standard djongo package. Visit the [support page](/support/) for more information.\n{: .notice--danger}"
       layout: single
       read_time: false
       author_profile: false

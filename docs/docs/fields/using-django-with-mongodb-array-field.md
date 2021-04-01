@@ -102,7 +102,7 @@ Note: In MongoDB the first element in the array starts at index 0.
 
 ## Using ArrayField in Django Admin
 
-The official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/) exemplifies 3 models that interact with each other: **Blog, Author and Entry**. This tutorial considers the same 3 models. The `blog`; `ForeignKey` of the `Entry` model was optimized in the [other tutorial](/djongo/using-django-with-mongodb-data-fields/), here we optimize the `authors`; `ManyToManyField`.
+The official [Django documentation](https://docs.djangoproject.com/en/2.0/topics/db/queries/) exemplifies 3 models that interact with each other: **Blog, Author and Entry**. This tutorial considers the same 3 models. The `blog`; `ForeignKey` of the `Entry` model was optimized in the [other tutorial](/using-django-with-mongodb-data-fields/), here we optimize the `authors`; `ManyToManyField`.
 
 ```python
 from djongo import models
@@ -196,7 +196,7 @@ class Entry(models.Model):
 
 **Notice** how the `ManyToManyField` is now replaced by the `ArrayField`. To display the Array field in Django Admin, a `Form` for the field must be present. Since the array is made up of abstract `Author` models, the form can be easily created by using a `ModelForm`.  If you do not specify a `ModelForm` for your array  models in the `model_form_class` argument, Djongo will automatically generate a `ModelForm` for you.
 
-![Array-model-field](/djongo/assets/images/array-model-field.png)
+![Array-model-field](/assets/images/array-model-field.png)
 
 > Django Admin reveals multiple neatly nested `Name` and `Email` fields under a single Author label.
 
