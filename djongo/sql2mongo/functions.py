@@ -75,7 +75,12 @@ class CountFunc(SQLFunc):
                   ) -> U['CountFuncAll',
                          'CountFuncSingle']:
         try:
-            token[0].get_parameters()[0]
+            ## FIX: COUNT(DISTINCT COL)
+            ## TODO: This just gets the parser through the token, but distinct logic is not actually handled yet.
+            if isinstance(token[0], Identifier):
+                p = token.get_parameters()[0]
+            else:
+                token[0].get_parameters()[0]
         except IndexError:
             return CountFuncAll(token, query)
         else:
