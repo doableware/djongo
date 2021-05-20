@@ -110,7 +110,8 @@ class _InNotInOp(_BinaryOp):
         raise NotImplementedError
 
     def _to_mongo(self, op):
-        if self.query.nested_query is not None:
+        ## FIX: incorrectly resolving to $_nested_in for all ops instead of the relevant one only.
+        if self.query.nested_query is not None and not self._in:
             return {
                 '$expr': {
                     op: ['$' + self._field, '$_nested_in']
