@@ -85,8 +85,12 @@ class AggColumnSelectConverter(ColumnSelectConverter):
         }
         for selected in self.sql_tokens:
             if isinstance(selected, SQLFunc):
-                group[selected.alias] = selected.to_mongo()
-                project[selected.alias] = True
+                ## FIX: issue occurs when there's no explicit alias and we're dealing with FROM(subquery)
+                alias = str(selected.__hash__())
+                if selected.alias:  # has explicit alias
+                    alias = selected.alias
+                group[alias] = selected.to_mongo()
+                project[alias] = True
             else:
                 project[selected.field] = True
 
@@ -328,7 +332,10 @@ class _Tokens2Id:
     def to_id(self):
         _id = {}
         for iden in self.sql_tokens:
-            if iden.column == iden.field:
+            ## FIX: FUNC('__col1')...FROM(SUBQUERY) syntax (fields weren't being renamed for outer query to refer)
+            if iden.alias:
+                _id[iden.alias] = f'${iden.field}'
+            elif iden.column == iden.field:
                 _id[iden.field] = f'${iden.field}'
             else:
                 try:
@@ -481,8 +488,12 @@ class GroupbyConverter(Converter, _Tokens2Id):
             if isinstance(selected, SQLIdentifier):
                 project[selected.field] = f'$_id.{selected.field}'
             else:
-                project[selected.alias] = True
-                group[selected.alias] = selected.to_mongo()
+                ## FIX: issue occurs when there's no explicit alias and we're dealing with FROM(subquery)
+                alias = str(selected.__hash__())
+                if selected.alias:  # has explicit alias
+                    alias = selected.alias
+                project[alias] = True
+                group[alias] = selected.to_mongo()
 
         pipeline = [
             {

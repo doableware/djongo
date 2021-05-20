@@ -103,7 +103,12 @@ class CountFuncAll(CountFunc):
 class CountFuncSingle(CountFunc, SingleParamFunc):
 
     def to_mongo(self):
-        field = f'${self.iden.field}'
+        ## FIX: FUNC('__col1')...FROM(SUBQUERY) syntax (field becomes '__col1.__col1')
+        if self.iden.column == self.iden.table:
+            field = f'${self.iden.column}'
+        else:
+            field = f'${self.iden.field}'
+
         return {
             '$sum': {
                 '$cond': {
@@ -120,7 +125,12 @@ class CountFuncSingle(CountFunc, SingleParamFunc):
 class SimpleFunc(SingleParamFunc):
 
     def to_mongo(self):
-        field = f'${self.iden.field}'
+        ## FIX: FUNC('__col1')...FROM(SUBQUERY) syntax (field becomes '__col1.__col1')
+        if self.iden.column == self.iden.table:
+            field = f'${self.iden.column}'
+        else:
+            field = f'${self.iden.field}'
+            
         if self.func in ('MIN', 'MAX', 'SUM',
                          'AVG'):
             return {f'${self.func.lower()}': field}

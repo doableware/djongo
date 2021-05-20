@@ -292,6 +292,10 @@ class SelectQuery(DQLQuery):
                             raise MigrationError(selected.column)
                         ret.append(None)
             else:
+                ## FIX: issue occurs when there's no explicit alias and we're dealing with FROM(subquery)
+                alias = str(selected.__hash__())
+                if selected.alias:  # has explicit alias
+                    alias = selected.alias
                 ret.append(doc[selected.alias])
 
         return tuple(ret)
