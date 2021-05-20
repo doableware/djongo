@@ -409,6 +409,29 @@ class NestedInQueryConverter(Converter):
         return pipeline
 
 
+## FIX: FROM(SUBQUERY)
+class NestedFromQueryConverter(Converter):
+
+    def __init__(self, *args):
+        self._from_query: O['query_module.SelectQuery'] = None
+        super().__init__(*args)
+
+    def parse(self):
+        from .query import SelectQuery
+        tok = self.statement.next()
+
+        self._from_query = SelectQuery(
+            self.query.db,
+            self.query.connection_properties,
+            sqlparse(tok[0].value[1:-1])[0],
+            self.query.params
+        )
+        self.query.left_table = self._from_query.left_table
+
+    def to_mongo(self):
+        return self._from_query._make_pipeline()
+
+
 class HavingConverter(Converter):
     nested_op: 'WhereOp' = None
     op: 'WhereOp' = None

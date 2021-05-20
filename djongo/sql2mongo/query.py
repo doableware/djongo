@@ -28,7 +28,7 @@ from .converters import (
     ColumnSelectConverter, AggColumnSelectConverter, FromConverter, WhereConverter,
     AggWhereConverter, InnerJoinConverter, OuterJoinConverter, LimitConverter, AggLimitConverter, OrderConverter,
     SetConverter, AggOrderConverter, DistinctConverter, NestedInQueryConverter, GroupbyConverter, OffsetConverter,
-    AggOffsetConverter, HavingConverter)
+    AggOffsetConverter, HavingConverter, NestedFromQueryConverter)
 
 from djongo import base
 logger = getLogger(__name__)
@@ -123,7 +123,13 @@ class SelectQuery(DQLQuery):
                 self.selected_columns = ColumnSelectConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'FROM'):
-                FromConverter(self, statement)
+                ## FIX: FROM(subquery)
+                if hasattr(statement.next_token, 'tokens') and \
+                        len(statement.next_token.tokens) > 1 and \
+                        statement.next_token[-1].value == 'subquery':
+                    self.nested_from_query = NestedFromQueryConverter(self, statement)
+                else:
+                    FromConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'LIMIT'):
                 self.limit = LimitConverter(self, statement)
@@ -179,6 +185,7 @@ class SelectQuery(DQLQuery):
 
     def _needs_aggregation(self):
         if (self.nested_query
+                or self.nested_from_query ## FIX: FROM(subquery)
                 or self.joins
                 or self.distinct
                 or self.groupby):
@@ -190,6 +197,10 @@ class SelectQuery(DQLQuery):
 
     def _make_pipeline(self):
         pipeline = []
+        ## FIX: FROM(subquery)
+        if self.nested_from_query:
+            pipeline.extend(self.nested_from_query.to_mongo())
+            
         for join in self.joins:
             pipeline.extend(join.to_mongo())
 
