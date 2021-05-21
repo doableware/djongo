@@ -86,9 +86,7 @@ class AggColumnSelectConverter(ColumnSelectConverter):
         for selected in self.sql_tokens:
             if isinstance(selected, SQLFunc):
                 ## FIX: issue occurs when there's no explicit alias and we're dealing with FROM(subquery)
-                alias = str(selected.__hash__())
-                if selected.alias:  # has explicit alias
-                    alias = selected.alias
+                alias = selected.alias or str(selected.__hash__())
                 group[alias] = selected.to_mongo()
                 project[alias] = True
             else:
@@ -489,9 +487,7 @@ class GroupbyConverter(Converter, _Tokens2Id):
                 project[selected.field] = f'$_id.{selected.field}'
             else:
                 ## FIX: issue occurs when there's no explicit alias and we're dealing with FROM(subquery)
-                alias = str(selected.__hash__())
-                if selected.alias:  # has explicit alias
-                    alias = selected.alias
+                alias = selected.alias or str(selected.__hash__())
                 project[alias] = True
                 group[alias] = selected.to_mongo()
 
