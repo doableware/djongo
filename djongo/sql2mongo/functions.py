@@ -1,6 +1,6 @@
 import abc
 
-from sqlparse.sql import Token
+from sqlparse.sql import Token, Identifier
 
 from ..exceptions import SQLDecodeError
 from .sql_tokens import AliasableToken, SQLToken
@@ -78,7 +78,7 @@ class CountFunc(SQLFunc):
             ## FIX: COUNT(DISTINCT COL)
             ## TODO: This just gets the parser through the token, but distinct logic is not actually handled yet.
             if isinstance(token[0], Identifier):
-                p = token.get_parameters()[0]
+                token.get_parameters()[0]
             else:
                 token[0].get_parameters()[0]
         except IndexError:

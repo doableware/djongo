@@ -57,6 +57,7 @@ class BaseQuery(abc.ABC):
         self.params = params
         self.token_alias = TokenAlias()
         self.nested_query: Optional[NestedInQueryConverter] = None
+        self.nested_from_query: Optional[NestedFromQueryConverter] = None
         self.left_table: Optional[str] = None
         self._cursor = None
         self.parse()
@@ -124,8 +125,8 @@ class SelectQuery(DQLQuery):
 
             elif tok.match(tokens.Keyword, 'FROM'):
                 ## FIX: FROM(subquery)
-                tokens = getattr(statement.next_token, 'tokens', [])
-                if len(tokens) > 1 and statement.next_token[-1].value == 'subquery':
+                toks = getattr(statement.next_token, 'tokens', [])
+                if len(toks) > 1 and statement.next_token[-1].value == 'subquery':
                     self.nested_from_query = NestedFromQueryConverter(self, statement)
                 else:
                     FromConverter(self, statement)
