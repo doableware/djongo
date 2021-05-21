@@ -124,9 +124,8 @@ class SelectQuery(DQLQuery):
 
             elif tok.match(tokens.Keyword, 'FROM'):
                 ## FIX: FROM(subquery)
-                if hasattr(statement.next_token, 'tokens') and \
-                        len(statement.next_token.tokens) > 1 and \
-                        statement.next_token[-1].value == 'subquery':
+                tokens = getattr(statement.next_token, 'tokens', [])
+                if len(tokens) > 1 and statement.next_token[-1].value == 'subquery':
                     self.nested_from_query = NestedFromQueryConverter(self, statement)
                 else:
                     FromConverter(self, statement)
@@ -293,10 +292,7 @@ class SelectQuery(DQLQuery):
                         ret.append(None)
             else:
                 ## FIX: issue occurs when there's no explicit alias and we're dealing with FROM(subquery)
-                alias = str(selected.__hash__())
-                if selected.alias:  # has explicit alias
-                    alias = selected.alias
-                ret.append(doc[selected.alias])
+                ret.append(doc[selected.alias or str(selected.__hash__())])
 
         return tuple(ret)
 
