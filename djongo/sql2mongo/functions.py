@@ -1,6 +1,7 @@
 import abc
 
 from sqlparse.sql import Token, Identifier
+from sqlparse import tokens
 
 from ..exceptions import SQLDecodeError
 from .sql_tokens import AliasableToken, SQLToken
@@ -19,11 +20,21 @@ class SQLFunc(AliasableToken):
                   query: 'query_module.BaseQuery'
                   ) -> U['CountFunc',
                          'SimpleFunc']:
+        ## FIX: agg(distinct)
+        if isinstance(token[0], Identifier) and token[1][1].match(tokens.Keyword, 'DISTINCT'):
+            token.is_agg_distinct = True
+        else:
+            token.is_agg_distinct = False
+
         func = token[0].get_name()
         if func == 'COUNT':
             return CountFunc.token2sql(token, query)
         else:
             return SimpleFunc(token, query)
+
+    @property
+    def is_agg_distinct(self) -> str:
+        return self._token.is_agg_distinct
 
     @property
     def alias(self) -> str:
