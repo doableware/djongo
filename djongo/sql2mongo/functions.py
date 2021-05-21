@@ -1,6 +1,6 @@
 import abc
 
-from sqlparse.sql import Token
+from sqlparse.sql import Token, Identifier
 
 from ..exceptions import SQLDecodeError
 from .sql_tokens import AliasableToken, SQLToken
@@ -75,7 +75,12 @@ class CountFunc(SQLFunc):
                   ) -> U['CountFuncAll',
                          'CountFuncSingle']:
         try:
-            token[0].get_parameters()[0]
+            ## FIX: COUNT(DISTINCT COL)
+            ## TODO: This just gets the parser through the token, but distinct logic is not actually handled yet.
+            if isinstance(token[0], Identifier):
+                token.get_parameters()[0]
+            else:
+                token[0].get_parameters()[0]
         except IndexError:
             return CountFuncAll(token, query)
         else:
@@ -98,7 +103,9 @@ class CountFuncAll(CountFunc):
 class CountFuncSingle(CountFunc, SingleParamFunc):
 
     def to_mongo(self):
-        field = f'${self.iden.field}'
+        ## FIX: FUNC('__col1')...FROM(SUBQUERY) syntax (field becomes '__col1.__col1')
+        field = f'${self.iden.column}' if self.iden.column == self.iden.table else f'${self.iden.field}'
+
         return {
             '$sum': {
                 '$cond': {
@@ -115,7 +122,9 @@ class CountFuncSingle(CountFunc, SingleParamFunc):
 class SimpleFunc(SingleParamFunc):
 
     def to_mongo(self):
-        field = f'${self.iden.field}'
+        ## FIX: FUNC('__col1')...FROM(SUBQUERY) syntax (field becomes '__col1.__col1')
+        field = f'${self.iden.column}' if self.iden.column == self.iden.table else f'${self.iden.field}'
+
         if self.func in ('MIN', 'MAX', 'SUM',
                          'AVG'):
             return {f'${self.func.lower()}': field}

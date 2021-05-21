@@ -85,8 +85,10 @@ class AggColumnSelectConverter(ColumnSelectConverter):
         }
         for selected in self.sql_tokens:
             if isinstance(selected, SQLFunc):
-                group[selected.alias] = selected.to_mongo()
-                project[selected.alias] = True
+                ## FIX: issue occurs when there's no explicit alias and we're dealing with FROM(subquery)
+                alias = selected.alias or str(selected.__hash__())
+                group[alias] = selected.to_mongo()
+                project[alias] = True
             else:
                 project[selected.field] = True
 
@@ -328,7 +330,10 @@ class _Tokens2Id:
     def to_id(self):
         _id = {}
         for iden in self.sql_tokens:
-            if iden.column == iden.field:
+            ## FIX: FUNC('__col1')...FROM(SUBQUERY) syntax (fields weren't being renamed for outer query to refer)
+            if iden.alias:
+                _id[iden.alias] = f'${iden.field}'
+            elif iden.column == iden.field:
                 _id[iden.field] = f'${iden.field}'
             else:
                 try:
@@ -409,6 +414,29 @@ class NestedInQueryConverter(Converter):
         return pipeline
 
 
+## FIX: FROM(SUBQUERY)
+class NestedFromQueryConverter(Converter):
+
+    def __init__(self, *args):
+        self._from_query: O['query_module.SelectQuery'] = None
+        super().__init__(*args)
+
+    def parse(self):
+        from .query import SelectQuery
+        tok = self.statement.next()
+
+        self._from_query = SelectQuery(
+            self.query.db,
+            self.query.connection_properties,
+            sqlparse(tok[0].value[1:-1])[0],
+            self.query.params
+        )
+        self.query.left_table = self._from_query.left_table
+
+    def to_mongo(self):
+        return self._from_query._make_pipeline()
+
+
 class HavingConverter(Converter):
     nested_op: 'WhereOp' = None
     op: 'WhereOp' = None
@@ -458,8 +486,10 @@ class GroupbyConverter(Converter, _Tokens2Id):
             if isinstance(selected, SQLIdentifier):
                 project[selected.field] = f'$_id.{selected.field}'
             else:
-                project[selected.alias] = True
-                group[selected.alias] = selected.to_mongo()
+                ## FIX: issue occurs when there's no explicit alias and we're dealing with FROM(subquery)
+                alias = selected.alias or str(selected.__hash__())
+                project[alias] = True
+                group[alias] = selected.to_mongo()
 
         pipeline = [
             {
