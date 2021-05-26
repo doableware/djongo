@@ -309,7 +309,7 @@ class OrderConverter(Converter):
         tok = self.statement.next()
         if not tok.match(tokens.Keyword, 'BY'):
             raise SQLDecodeError
-            
+
         tok = self.statement.next()
         self.columns.extend(SQLToken.tokens2sql(tok, self.query))
 
