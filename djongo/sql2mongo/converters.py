@@ -91,40 +91,38 @@ class AggColumnSelectConverter(ColumnSelectConverter):
     def _get_alias(self, token):
         return token.alias or str(token.__hash__())
 
+    def _handle_agg_distinct_token(self, token, group, project):
+        if isinstance(token, SQLFunc) and getattr(token, 'is_agg_distinct', False):
+            # token = agg(distinct col)
+            key = self._get_alias(token)
+            field = f'${token.column}' if token.column == token.table else f'${token.field}'
+            group1 = {'_id': field, key: token.to_mongo()}
+            group2 = {'_id': None, key: ast.literal_eval(str(token.to_mongo()).replace(field, f'${key}'))}
+            pipeline = [{'$group': group1}, {'$group': group2}]
+        elif isinstance(token, SQLFunc) and not getattr(token, 'is_agg_distinct', False):
+            # token = agg(col)
+            key = self._get_alias(token)
+            group[key] = token.to_mongo()
+            pipeline = [{'$group': group}]
+        else: # token = col
+            key = token.field
+            pipeline = [{'$group': group}]
+        project[key] = True
+        return pipeline, key
+
     def _handle_agg_distinct(self, group, project):
-        pipelines, keys = [], []
-        for selected in self.sql_tokens:
-            if isinstance(selected, SQLFunc) and getattr(selected, 'is_agg_distinct', False):
-                # token = agg(distinct col)
-                key = self._get_alias(selected)
-                field = f'${selected.column}' if selected.column == selected.table else f'${selected.field}'
-                group1 = {'_id': field, key: selected.to_mongo()}
-                group2 = {'_id': None, key: ast.literal_eval(str(selected.to_mongo()).replace(field, f'${key}'))}
-                pipeline = [{'$group': group1}, {'$group': group2}]
-            elif isinstance(selected, SQLFunc) and not getattr(selected, 'is_agg_distinct', False):
-                # token = agg(col)
-                key = self._get_alias(selected)
-                group[key] = selected.to_mongo()
-                pipeline = [{'$group': group}]
-            else: # token = col
-                key = selected.field
-                pipeline = [{'$group': group}]
-            project[key] = True
-            keys.append(key)
-            pipelines.append(pipeline)
+        pipelines, keys = zip(*[self._handle_agg_distinct_token(token, group, project) for token in self.sql_tokens])
 
-        if len(pipelines) > 1: 
-            # use $facet when there are multiple selected columns
-            facet, project = {}, {}
-            for idx, pipeline in enumerate(pipelines):
-                facet[str(idx)] = pipeline
-                project[keys[idx]] = {'$arrayElemAt': [ f"${idx}.{keys[idx]}", 0]}
-            final_pipeline = [{'$facet': facet}, {'$project': project}]
-        else:
-            final_pipeline = pipelines[0] + [{'$project': project}]
+        if len(pipelines) == 1: 
+            return pipelines[0] + [{'$project': project}]
+
+        # use $facet when there are multiple selected columns
+        facet, project = {}, {}
+        for idx, pipeline in enumerate(pipelines):
+            facet[str(idx)] = pipeline
+            project[keys[idx]] = {'$arrayElemAt': [ f"${idx}.{keys[idx]}", 0]}
+        return [{'$facet': facet}, {'$project': project}]
         
-        return final_pipeline
-
     def _handle_agg(self, group, project):
         for selected in self.sql_tokens:
             if isinstance(selected, SQLFunc):
@@ -311,7 +309,7 @@ class OrderConverter(Converter):
         tok = self.statement.next()
         if not tok.match(tokens.Keyword, 'BY'):
             raise SQLDecodeError
-
+            
         tok = self.statement.next()
         self.columns.extend(SQLToken.tokens2sql(tok, self.query))
 
