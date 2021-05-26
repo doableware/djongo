@@ -21,11 +21,8 @@ class SQLFunc(AliasableToken):
                   ) -> U['CountFunc',
                          'SimpleFunc']:
         ## FIX: agg(distinct)
-        if isinstance(token[0], Identifier) and token[1][1].match(tokens.Keyword, 'DISTINCT'):
-            token.is_agg_distinct = True
-        else:
-            token.is_agg_distinct = False
-
+        token.is_agg_distinct = isinstance(token[0], Identifier) and token[1][1].match(tokens.Keyword, 'DISTINCT') 
+        
         func = token[0].get_name()
         if func == 'COUNT':
             return CountFunc.token2sql(token, query)
