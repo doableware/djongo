@@ -1,4 +1,5 @@
 import abc
+import ast
 import typing
 from collections import OrderedDict
 from sqlparse import tokens, parse as sqlparse
@@ -77,32 +78,60 @@ class AggColumnSelectConverter(ColumnSelectConverter):
         return [{'$project': project}]
 
     def _using_group_by(self):
-        group = {
-            '_id': None
-        }
-        project = {
-            '_id': False
-        }
+        group = {'_id': None}
+        project = {'_id': False}
+        has_agg_distinct = any(getattr(selected, 'is_agg_distinct', False) for selected in self.sql_tokens)
+
+        ## FIX: agg(distinct) handler
+        pipeline = self._handle_agg_distinct(group, project) if has_agg_distinct \
+                            else self._handle_agg(group, project)
+
+        return pipeline
+
+    def _get_alias(self, token):
+        return token.alias or str(token.__hash__())
+
+    def _handle_agg_distinct_token(self, token, group, project):
+        if isinstance(token, SQLFunc) and getattr(token, 'is_agg_distinct', False):
+            # token = agg(distinct col)
+            key = self._get_alias(token)
+            field = f'${token.column}' if token.column == token.table else f'${token.field}'
+            group1 = {'_id': field, key: token.to_mongo()}
+            group2 = {'_id': None, key: ast.literal_eval(str(token.to_mongo()).replace(field, f'${key}'))}
+            pipeline = [{'$group': group1}, {'$group': group2}]
+        elif isinstance(token, SQLFunc) and not getattr(token, 'is_agg_distinct', False):
+            # token = agg(col)
+            key = self._get_alias(token)
+            group[key] = token.to_mongo()
+            pipeline = [{'$group': group}]
+        else: # token = col
+            key = token.field
+            pipeline = [{'$group': group}]
+        project[key] = True
+        return pipeline, key
+
+    def _handle_agg_distinct(self, group, project):
+        pipelines, keys = zip(*[self._handle_agg_distinct_token(token, group, project) for token in self.sql_tokens])
+
+        if len(pipelines) == 1: 
+            return pipelines[0] + [{'$project': project}]
+
+        # use $facet when there are multiple selected columns
+        facet, project = {}, {}
+        for idx, pipeline in enumerate(pipelines):
+            facet[str(idx)] = pipeline
+            project[keys[idx]] = {'$arrayElemAt': [ f"${idx}.{keys[idx]}", 0]}
+        return [{'$facet': facet}, {'$project': project}]
+        
+    def _handle_agg(self, group, project):
         for selected in self.sql_tokens:
             if isinstance(selected, SQLFunc):
-                ## FIX: issue occurs when there's no explicit alias and we're dealing with FROM(subquery)
-                alias = selected.alias or str(selected.__hash__())
+                alias = self._get_alias(selected)
                 group[alias] = selected.to_mongo()
                 project[alias] = True
             else:
                 project[selected.field] = True
-
-        pipeline = [
-            {
-                '$group': group
-            },
-            {
-                '$project': project
-            }
-        ]
-
-        return pipeline
-
+        return [{'$group': group}, {'$project': project}]
 
 class FromConverter(Converter):
 
