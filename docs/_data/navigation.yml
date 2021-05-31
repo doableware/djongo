@@ -2,7 +2,7 @@
 main:
    - title: "Docs"
      url: /get-started/
-   - title: "Support"
+   - title: "Server"
      url: /support/
    - title: "Source"
      url: https://github.com/nesdis/djongo/
@@ -25,7 +25,7 @@ docs:
     - title: "Other fields"
       url: /using-django-with-other-fields/
 
-  - title: "DjongoNxt"
+  - title: "Djongo Webserver"
 #    url: /djongonxt/
     children:
     - title: "Indexes"
@@ -42,8 +42,6 @@ docs:
 #      url: /djongonxt-aggregation/
 #    - title: "Contact"
 #      url: /djongonxt-more-info/
-  - title: "Get DjongoNxt"
-    url: /support/
 
   - title: "Side stuff"
     children:

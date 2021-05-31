@@ -1,6 +1,8 @@
 
 subject: Enterprise
 next: "/support/request-success"
+classes:
+  - form-right
 fields:
   - type: text
     name: Name
