@@ -1,8 +1,9 @@
-@import "box";
 
-$tire-3-col-total-width: $box-min-width-px*3 + $box-side-margin-px*6 + $container-padding-px;
-.tire-item {
-  @include box--3-col;
+$tire-3-col-total-width: $box-min-width-px*3 + $box-side-margin-px*6 + $container-box-padding-px;
+
+.item-3-col {
+  @extend .box;
+  @include box-3-col;
   text-align: center;
 
   ul {
@@ -20,29 +21,31 @@ $tire-3-col-total-width: $box-min-width-px*3 + $box-side-margin-px*6 + $containe
 
   }
 
-  @include break-max($tire-3-col-total-width) {
-    @include box--2-col;
+  @include break(max, $tire-3-col-total-width) {
+    @include box-2-col;
   }
 
   @include break(x-small) {
-    @include box--1-col;
+    @include box-1-col;
   }
 }
 
-.tire-item__title {
+.item-title {
   font-weight: bold;
   margin-bottom: 1.5em;
 }
 
-.tire-item__price {
+.item-price {
   font-weight: bold;
   font-size: 2.5em;
 }
 
-.tire-item__period {
+.item-period {
   font-size: 0.9em;
   font-weight: lighter;
   margin-bottom: 1em;
 }
 
-
+.tire-disclaimer {
+  @extend .box;
+}

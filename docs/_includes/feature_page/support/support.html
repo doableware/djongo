@@ -1,13 +1,13 @@
 
 <section  itemscope itemtype="https://schema.org/Offer">
   <h1 itemprop="category">Support</h1>
-  <div class="tire">
+  <div class="l-tire">
     {% for tire in site.data.support.tire_column.tires %}
       {% if tire.invisible != true %}
-        <div class="tire-item">
-          <div itemprop="name" class="tire-item__title">{{ tire.title }}</div>
-          <div itemprop="price" class="tire-item__price">${{ tire.price }}</div>
-          <div itemprop="eligibleDuration"  class="tire-item__period">
+        <div class="item-3-col">
+          <div itemprop="name" class="item-title">{{ tire.title }}</div>
+          <div itemprop="price" class="item-price">${{ tire.price }}</div>
+          <div itemprop="eligibleDuration"  class="item-period">
             {% if tire.per_hour %}
               PER HOUR
             {% else %}
@@ -29,8 +29,8 @@
 </section>
 <section itemscope itemtype="https://schema.org/Offer">
   <h1 itemprop="category">Enterprise</h1>
-  <div class="enterprise">
-    <div itemprop="description" class="enterprise__text-box">
+  <div class="l-enterprise">
+    <div itemprop="description" class="text-box">
       {{ include.enterprise | markdownify }}
     </div>
     {% include form.html form=site.data.support.enterprise_form %}

@@ -4,7 +4,7 @@ permalink: /support/payment/djongonxt/
 layout: splash
 classes:
   - empty-header
-  - custom-splash
+  - l-splash
 ---
 
-{% include support/payment.html price_id="price_1HIKphLbyDBUaJVjQylkb7QE" %}
+{% include feature_page/support/payment.html price_id="price_1HIKphLbyDBUaJVjQylkb7QE" %}

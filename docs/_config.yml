@@ -9,8 +9,8 @@ locale                   : "en-US"
 title_separator          : "-"
 name                     : "Doableware AB"
 title                    : "Djongo"
-subtitle                 : "Object Database Mapper"
-description              : "Djongo is a smarter approach to pymongo programming. It maps python objects to MongoDB documents.
+subtitle                 : "Unified Database Query"
+description              : "Djongo is a smarter approach to database querying. It maps python objects to MongoDB documents.
                             It is popularly referred to as an Object Document Mapper or ODM. It is an extension to the traditional
                             Django object relational modeling framework. Use Django Admin to directly add and modify
                             documents stored in MongoDB. Use other contrib modules such as Auth and Sessions without any changes."
@@ -19,7 +19,7 @@ baseurl                  : ""
 repository               : "nesdis/djongo"
 teaser                   : # path of fallback teaser image, e.g. "/assets/images/500x300.png"
 # breadcrumbs            : false # true, false (default)
-logo                     : "/assets/images/djongo-logo-small.png"
+logo                     : "/assets/images/djongo-symbol-small.png"
 words_per_minute         : 200
 comments:
   provider               : # false (default), "disqus", "discourse", "facebook", "google-plus", "staticman", "staticman_v2" "custom"
@@ -164,7 +164,7 @@ defaults:
       notice:
         not_ready: "Parts of this feature are still under development.\n{: .notice--warning}"
         support: "**Note:** If you are an enterprise that uses Djongo in your products, contact us for long term support and [licensing options](/support/).\n{: .notice--danger}"
-        not_standard: "**Note:** Features under development in this section are not part of the standard djongo package. Visit the [support page](/support/) for more information.\n{: .notice--danger}"
+        not_standard: "**Note:** Features under development in this section are preinstalled on the Djongo Webserver. Visit the [support page](/support/) for more information.\n{: .notice--danger}"
       layout: single
       read_time: false
       author_profile: false

@@ -4,7 +4,7 @@ permalink: /support/request-success/
 layout: splash
 classes:
   - empty-header
-  - custom-splash
+  - l-splash
 ---
 
 # Great! Your request has been recorded

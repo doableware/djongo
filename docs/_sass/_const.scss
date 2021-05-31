@@ -1,4 +1,10 @@
 $base-font-size-px: 20px;
-$container-padding-px: 2*$base-font-size-px;
+$container-box-padding-px: 2 * $base-font-size-px;
 
+$x-small: 600px;
+$small: 768px;
+$medium: 900px;
+$large: 1024px;
+$x-large: 1280px;
+$max-width: $x-large;
 
