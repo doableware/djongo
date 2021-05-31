@@ -19,26 +19,27 @@ form:
       required: true
 
 tires:
-  - title: Book A Debug
-    price: 149
-    per_hour: true
-    url: book-a-debug
+  - title: Djongo Webserver
+    price: 15
+    url: webserver
     benefits:
-      - Issue resolved within the next day.
-      - Email support.
+      - A VM instance for deploying your Djongo powered APIs.
+      - A unique API endpoint that is accessible from the web.
 
-  - title: Discord Support
+  - title: Basic Support
     price: 59
     url: discord-support
     benefits:
       - You get access to the *priority discussion board* on Discord.
       - Resolution time within 2 - 4 weeks.
 
-  - title: DjongoNxt Access
-    price: 15
-    url: djongonxt
+  - title: Premium support
+    price: 149
+    per_hour: true
+    url: book-a-debug
     benefits:
-      - You get access to the djongoNxt repository.
+      - Issue resolved within the next day.
+      - Email support.
 
   - title: A Sweet Tip
     price: 4

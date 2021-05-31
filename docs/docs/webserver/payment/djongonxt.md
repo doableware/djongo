@@ -1,6 +1,6 @@
 ---
 title: Djongo Support
-permalink: /support/payment/djongonxt/ 
+permalink: /support/payment/webserver/ 
 layout: splash
 classes:
   - empty-header

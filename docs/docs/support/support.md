@@ -1,12 +1,11 @@
 ---
 title: Djongo Support Services
-permalink: /support/
 layout: splash
 excerpt: "If you are a company that uses Djongo in your products, consider enrolling in a subscription plan. You get long term support"
 description: "If you are a company that uses Djongo in your products, consider enrolling in a subscription plan. You get long term support."
 
 classes:
-  - custom-splash
+  - l-splash
   - empty-header
 ---
 
@@ -46,7 +45,7 @@ The priority [discussion board][board] is hosted on github and members with a su
 
 {% endcapture %}
 
-{% include support/support.html
+{% include feature_page/support/support.html
  enterprise=enterprise
  enterprise_title=enterprise_title
  other_benefits=other_benefits

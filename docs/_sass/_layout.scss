@@ -1,6 +1,21 @@
-@mixin splash {
+
+.l-tire {
+  display: flex;
+  justify-content: left;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.l-splash {
   .page__content {
     section {
+      border-bottom: 1px solid #f2f3f3;
+      padding-bottom: 3em;
+      margin-bottom: 4.5em;
+
+      &:last-of-type {
+        border-bottom-style: none;
+      }
     }
   }
 
@@ -31,26 +46,34 @@
   }
 }
 
-@mixin text-content {
-    margin: 0 1em;
+.l-splash-full {
+  #main {
+    max-width: 100%;
+    padding: 0;
+  }
+}
+
+.l-enterprise {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+
+  form {
+    width: 15em;
+    margin-left: 1em;
 
     @include break(x-small) {
       margin: 0;
+      width: 100%;
     }
   }
 
-@mixin splash--with-border {
-  @include splash;
+  .text-box {
+    width: calc(100% - 16em);
 
-  .page__content {
-    section {
-      border-bottom: 1px solid #f2f3f3;
-      padding-bottom: 3em;
-      margin-bottom: 4.5em;
-
-      &:last-of-type {
-        border-bottom-style: none;
-      }
+    @include break(x-small) {
+      margin: 0;
+      width: 100%;
     }
   }
 }
@@ -79,9 +102,7 @@
   }
 }
 
-.custom-splash {
-  @include splash--with-border;
-}
+
 
 .center-box {
   display: block;
