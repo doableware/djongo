@@ -1,6 +1,8 @@
 ---
 title: Django and MongoDB Connector Design
 permalink: /django-mongodb-connector-design-document/
+classes:
+    - l-docs
 ---
 
 ## SQL to MongoDB query mapping.

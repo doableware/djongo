@@ -1,6 +1,7 @@
 ---
 title: Using Djongo Array Reference Field
 permalink: /using-django-with-mongodb-array-reference-field/
+layout: docs
 ---
 
 ## Array Reference field

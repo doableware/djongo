@@ -1,7 +1,7 @@
 ---
-title: DjongoNxt Database Transactions
-layout: djongoNxt
-permalink: /djongonxt-database-transactions/
+title: Database Transactions
+layout: server
+permalink: /database-transactions/
 ---
 
 
