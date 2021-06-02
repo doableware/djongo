@@ -2,11 +2,15 @@
 title: Get Started
 permalink: /get-started/
 description: "Djongo overcomes common pitfalls of PyMongo programming. It maps python objects to MongoDB documents. Setting up the mapping documents to python objects is easy with Djongo."
+layout: docs
 ---
 
-{{ page.notice.support }}
-
 ## Install
+The complete Djongo package comes preinstalled on the [djongo server][support_page]. It is the easiest way to deploy 
+your djongo powered data models. 
+
+However, for a local installation follow these steps:
+
 1. `pip install djongo`
 2. Into `settings.py` file of your project, add:
 
@@ -19,8 +23,6 @@ description: "Djongo overcomes common pitfalls of PyMongo programming. It maps p
       }
       ```
 
-3. YOU ARE SET! Have fun!
-
 ## Requirements
 1. Python 3.6 or higher.
 2. MongoDB 3.4 or higher.
@@ -31,6 +33,76 @@ description: "Djongo overcomes common pitfalls of PyMongo programming. It maps p
       entries = Entry.objects.filter(blog__name__in=inner_query)
       ```
    MongoDB 3.6 or higher is required.
+
+## Database configuration
+
+The `settings.py` supports (but is not limited to) the following  options:
+
+Attribute | Value | Description
+---------|------|-------------
+ENGINE | djongo | The MongoDB connection engine for interfacing with Django.
+ENFORCE_SCHEMA | True | Ensures that the model schema and database schema are exactly the same. Raises `Migration Error` in case of discrepancy.
+ENFORCE_SCHEMA | False | (Default) Implicitly creates collections. Returns missing fields as `None` instead of raising an exception.
+NAME | your-db-name | Specify your database name. This field cannot be left empty.
+LOGGING | dict | A [dictConfig](https://docs.python.org/3.6/library/logging.config.html) for the type of logging to run on djongo.
+CLIENT | dict | A set of key-value pairs that will be passed directly to [`MongoClient`](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient) as kwargs while creating a new client connection.
+  
+All options except `ENGINE` and `ENFORCE_SCHEMA` are the same those listed in the [pymongo documentation](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient).
+
+
+```python
+    DATABASES = {
+        'default': {
+            'ENGINE': 'djongo',
+            'NAME': 'your-db-name',
+            'ENFORCE_SCHEMA': False,
+            'CLIENT': {
+                'host': 'host-name or ip address',
+                'port': port_number,
+                'username': 'db-username',
+                'password': 'password',
+                'authSource': 'db-name',
+                'authMechanism': 'SCRAM-SHA-1'
+            },
+            'LOGGING': {
+                'version': 1,
+                'loggers': {
+                    'djongo': {
+                        'level': 'DEBUG',
+                        'propagate': False,                        
+                    }
+                },
+             },
+        }
+    }
+```
+
+### Enforce schema
+
+MongoDB is *schemaless*, which means no schema rules are enforced by the database. You can add and exclude fields per entry and MongoDB will not complain. This can make life easier, especially when there are frequent changes to the data model. Take for example the `Blog` Model (version 1).
+
+```python
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.TextField()
+```
+
+You can save several entries into the DB and later modify it to version 2:
+
+```python
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.TextField()
+    description = models.TextField()
+```
+
+The modified Model can be saved **without running any migrations**. 
+
+This works fine if you know what you are doing. Consider a query that retrieves entries belonging to both the 'older' model (with just 2 fields) and the current model. What will the value of `description` now be? To handle such scenarios Djongo comes with the `ENFORCE_SCHEMA` option. 
+
+When connecting to Djongo you can set `ENFORCE_SCHEMA: True`. In this case, a `MigrationError` will be raised when field values are missing from the retrieved documents. You can then check what went wrong. 
+
+`ENFORCE_SCHEMA: False` works by silently setting the missing fields with the value `None`. If your app is programmed to expect this (which means it is not a bug) you can get away by not calling any migrations.
 
 ## Using MongoDB Fields
 
@@ -135,75 +207,6 @@ By setting `null=False, blank=False` in `EmbeddedField`, missing values are neve
 ## Structured Data vs Flexibility
 -->
 
-## Database configuration
-
-The `settings.py` supports (but is not limited to) the following  options:
-
-Attribute | Value | Description
----------|------|-------------
-ENGINE | djongo | The MongoDB connection engine for interfacing with Django.
-ENFORCE_SCHEMA | True | Ensures that the model schema and database schema are exactly the same. Raises `Migration Error` in case of discrepancy.
-ENFORCE_SCHEMA | False | (Default) Implicitly creates collections. Returns missing fields as `None` instead of raising an exception.
-NAME | your-db-name | Specify your database name. This field cannot be left empty.
-LOGGING | dict | A [dictConfig](https://docs.python.org/3.6/library/logging.config.html) for the type of logging to run on djongo.
-CLIENT | dict | A set of key-value pairs that will be passed directly to [`MongoClient`](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient) as kwargs while creating a new client connection.
-  
-All options except `ENGINE` and `ENFORCE_SCHEMA` are the same those listed in the [pymongo documentation](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient).
-
-
-```python
-    DATABASES = {
-        'default': {
-            'ENGINE': 'djongo',
-            'NAME': 'your-db-name',
-            'ENFORCE_SCHEMA': False,
-            'CLIENT': {
-                'host': 'host-name or ip address',
-                'port': port_number,
-                'username': 'db-username',
-                'password': 'password',
-                'authSource': 'db-name',
-                'authMechanism': 'SCRAM-SHA-1'
-            },
-            'LOGGING': {
-                'version': 1,
-                'loggers': {
-                    'djongo': {
-                        'level': 'DEBUG',
-                        'propagate': False,                        
-                    }
-                },
-             },
-        }
-    }
-```
-
-### Enforce schema
-
-MongoDB is *schemaless*, which means no schema rules are enforced by the database. You can add and exclude fields per entry and MongoDB will not complain. This can make life easier, especially when there are frequent changes to the data model. Take for example the `Blog` Model (version 1).
-
-```python
-class Blog(models.Model):
-    name = models.CharField(max_length=100)
-    tagline = models.TextField()
-```
-
-You can save several entries into the DB and later modify it to version 2:
-
-```python
-class Blog(models.Model):
-    name = models.CharField(max_length=100)
-    tagline = models.TextField()
-    description = models.TextField()
-```
-
-The modified Model can be saved **without running any migrations**. 
-
-This works fine if you know what you are doing. Consider a query that retrieves entries belonging to both the 'older' model (with just 2 fields) and the current model. What will the value of `description` now be? To handle such scenarios Djongo comes with the `ENFORCE_SCHEMA` option. 
-
-When connecting to Djongo you can set `ENFORCE_SCHEMA: True`. In this case, a `MigrationError` will be raised when field values are missing from the retrieved documents. You can then check what went wrong. 
-
-`ENFORCE_SCHEMA: False` works by silently setting the missing fields with the value `None`. If your app is programmed to expect this (which means it is not a bug) you can get away by not calling any migrations.
 
 ## Djongo Manager
 
@@ -267,12 +270,12 @@ avatar = models.ImageField(storage=grid_fs_storage, upload_to='')
 
 Refer to [Using GridFSStorage](/using-django-with-mongodb-gridfs/) for more details.
 
-## DjongoNxt
+## Djongo Server
 
-Features under development at DjongoNxt are not a part of the standard Djongo package. Visit the [support page][support_page] for more information.
+Features under development on Djongo Server are not a part of the standard Djongo package. Visit the [support page][support_page] for more information.
 {: .notice--info}
 
-DjongoNxt brings support to all features of MongoDB features including:
+Djongo Server brings support to all features of MongoDB features including:
 
 ### Indexes
 

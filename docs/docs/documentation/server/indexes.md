@@ -1,10 +1,8 @@
 ---
-title: DjongoNxt Indexes
-permalink: /djongonxt-indexes/
+title: Indexes
+permalink: /indexes/
+layout: server
 ---
-
-{{ page.notice.not_standard }}
-
 
 ## Compound Index
 ```python

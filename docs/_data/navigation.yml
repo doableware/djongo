@@ -8,14 +8,12 @@ main:
      url: https://github.com/nesdis/djongo/
 
 docs:
-  - title: "Usage"
+  - title: "Djongo"
     children:
     - title: "Get Started"
       url: /get-started/
     - title: "Integrating Django"
       url: /integrating-django-with-mongodb/
-  - title: "Djongo Fields"
-    children:
     - title: "Embedded Field"
       url: /using-django-with-mongodb-data-fields/
     - title: "Array Field"
@@ -25,19 +23,19 @@ docs:
     - title: "Other fields"
       url: /using-django-with-other-fields/
 
-  - title: "Djongo Webserver"
+  - title: "Djongo Server"
 #    url: /djongonxt/
     children:
     - title: "Indexes"
-      url: /djongonxt-indexes/
+      url: /indexes/
     - title: "Model Query"
-      url: /djongonxt-model-query/
+      url: /model-query/
     - title: "Model Creation"
-      url: /djongonxt-model-creation/
+      url: /model-creation/
     - title: "Model Update"
-      url: /djongonxt-model-update/
+      url: /model-update/
     - title: "Database Transactions"
-      url: /djongonxt-database-transactions/
+      url: /database-transactions/
 #    - title: "Aggregation"
 #      url: /djongonxt-aggregation/
 #    - title: "Contact"

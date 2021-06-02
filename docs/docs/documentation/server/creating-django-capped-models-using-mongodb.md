@@ -1,6 +1,7 @@
 ---
 title: Creating Capped Models using MongoDB
 permalink: /creating-django-capped-models-using-mongodb/
+layout: server
 ---
 
 [Capped collections][capped] are fixed-size collections that support high-throughput operations that insert and retrieve documents based on insertion order. Capped collections work in a way similar to circular buffers: once a collection fills its allocated space, it makes room for new documents by overwriting the oldest documents in the collection.

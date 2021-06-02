@@ -1,6 +1,7 @@
 ---
 title: Other fields
 permalink: /using-django-with-other-fields/
+layout: docs
 ---
 
 ## The ObjectId Field

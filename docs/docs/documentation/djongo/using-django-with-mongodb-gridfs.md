@@ -1,6 +1,7 @@
 ---
 title: Using GridFSStorage
 permalink: /using-django-with-mongodb-gridfs/
+layout: docs
 ---
 
 [GridFS](https://docs.mongodb.com/manual/core/gridfs/) is a specification for storing and retrieving files that exceed the [BSON-document](https://docs.mongodb.com/manual/reference/glossary/#term-bson) [size limit](https://docs.mongodb.com/manual/reference/limits/#limit-bson-document-size) of 16 MB.

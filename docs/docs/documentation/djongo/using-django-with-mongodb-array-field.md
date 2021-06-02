@@ -1,6 +1,7 @@
 ---
 title: Using Djongo Array Model Field
 permalink: /using-django-with-mongodb-array-field/
+layout: docs
 ---
 
 ## ArrayField

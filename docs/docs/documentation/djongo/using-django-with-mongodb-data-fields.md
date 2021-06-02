@@ -1,6 +1,7 @@
 ---
 title: Using Djongo Model fields
 permalink: /using-django-with-mongodb-data-fields/
+layout: docs
 ---
 
 ## EmbeddedField
