@@ -1,7 +1,7 @@
 ---
-title: DjongoNxt Model Query
-layout: djongoNxt
-permalink: /djongonxt-model-query/
+title: Model Query
+layout: server
+permalink: /model-query/
 ---
 
 ## Text Search

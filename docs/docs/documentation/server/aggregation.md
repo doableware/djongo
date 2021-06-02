@@ -1,7 +1,7 @@
 ---
-title: DjongoNxt Aggregation
-permalink: /djongonxt-aggregation/
-layout: djongoNxt
+title: Aggregation
+permalink: /aggregation/
+layout: server
 
 ---
 

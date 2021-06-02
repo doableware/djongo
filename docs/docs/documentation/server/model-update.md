@@ -1,7 +1,7 @@
 ---
-title: DjongoNxt Model Update
-layout: djongoNxt
-permalink: /djongonxt-model-update/
+title: Model Update
+layout: server
+permalink: /model-update/
 ---
 
 ## Bulk Write

@@ -1,7 +1,7 @@
 ---
-title: DjongoNxt Model Creation
-layout: djongoNxt
-permalink: /djongonxt-model-creation/
+title: Model Creation
+layout: server
+permalink: /model-creation/
 ---
 
 

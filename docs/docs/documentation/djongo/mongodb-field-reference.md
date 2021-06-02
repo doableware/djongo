@@ -1,6 +1,7 @@
 ---
 title: MongoDB Field Reference
 permalink: /mongodb-field-reference/
+layout: docs
 ---
 
 ## ObjectIdField

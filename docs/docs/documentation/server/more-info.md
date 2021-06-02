@@ -1,7 +1,7 @@
 ---
 title: More Information
-permalink: /djongonxt-more-info/
-layout: djongoNxt
+permalink: /more-info/
+layout: server
 toc: false
 ---
 

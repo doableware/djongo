@@ -1,14 +1,14 @@
 ---
 title: DjongoNxt
-permalink: /djongonxt/
+permalink: /server/
 toc: false
-layout: djongoNxt
+layout: server
 ---
 
 
-> Features supported in DjongoNxt are not a part of the standard Djongo package. Visit the [support page][support_page] for more information.
+> Features supported in Djongo server are not a part of the standard Djongo package. Visit the [support page][support_page] for more information.
 
-DjongoNxt is a Django and MongoDB connector for full featured database usage. It provides many features of MongoDB enabled through Django. It comes with support for:
+Djongo server is a Django and MongoDB server for full featured database usage. It provides many features of MongoDB enabled through Django. It comes with support for:
 
 ### Indexes
 
