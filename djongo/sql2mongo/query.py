@@ -134,7 +134,7 @@ class SelectQuery(DQLQuery):
             elif tok.match(tokens.Keyword, 'LIMIT'):
                 self.limit = LimitConverter(self, statement)
 
-            elif tok.match(tokens.Keyword, 'ORDER'):
+            elif tok.match(tokens.Keyword, ['ORDER', 'ORDER BY']):
                 self.order = OrderConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'OFFSET'):
@@ -170,7 +170,8 @@ class SelectQuery(DQLQuery):
             return
 
         for doc in cursor:
-            yield self._align_results(doc)
+            if doc:
+                yield self._align_results(doc)
         return
 
     def count(self):
@@ -366,18 +367,19 @@ class InsertQuery(DMLQuery):
         self._cols = [token.column for token in SQLToken.tokens2sql(tok[1], self)]
 
     def _fill_values(self, statement: SQLStatement):
-        for tok in statement:
-            if isinstance(tok, Parenthesis):
-                placeholder = SQLToken.token2sql(tok, self)
-                values = []
-                for index in placeholder:
-                    if isinstance(index, int):
-                        values.append(self.params[index])
-                    else:
-                        values.append(index)
-                self._values.append(values)
-            elif not tok.match(tokens.Keyword, 'VALUES'):
-                raise SQLDecodeError
+        for part in statement:
+            for tok in part.tokens:
+                if isinstance(tok, Parenthesis):
+                    placeholder = SQLToken.token2sql(tok, self)
+                    values = []
+                    for index in placeholder:
+                        if isinstance(index, int):
+                            values.append(self.params[index])
+                        else:
+                            values.append(index)
+                    self._values.append(values)
+                elif not tok.match(tokens.Keyword, 'VALUES') and not tok.ttype == tokens.Whitespace:
+                    raise SQLDecodeError
 
     def execute(self):
         docs = []
@@ -508,6 +510,10 @@ class AlterQuery(DDLQuery):
                 feature += 'DEFAULT '
             elif tok.match(tokens.Keyword, 'SET'):
                 feature += 'SET '
+            elif tok.match(tokens.Keyword, 'TYPE'):
+                feature += 'TYPE '
+            elif tok.match(tokens.Keyword, 'object'):
+                feature += 'object'
             else:
                 raise SQLDecodeError(f'Unknown token: {tok}')
 
@@ -573,6 +579,10 @@ class AlterQuery(DDLQuery):
                 self._type_code = str(tok)
 
             elif tok.match(tokens.Keyword, 'double'):
+                print_warn('column type validation')
+                self._type_code = str(tok)
+
+            elif tok.match(tokens.Keyword, 'object'):
                 print_warn('column type validation')
                 self._type_code = str(tok)
 

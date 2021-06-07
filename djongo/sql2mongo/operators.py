@@ -2,12 +2,13 @@ import re
 import typing
 from itertools import chain
 
+from sqlparse import parse as sqlparse
 from sqlparse import tokens
-from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier, Function
+from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier
 
-from ..exceptions import SQLDecodeError
-from .sql_tokens import SQLToken, SQLStatement
 from . import query
+from .sql_tokens import SQLToken, SQLStatement, SQLComparison
+from ..exceptions import SQLDecodeError
 
 
 def re_index(value: str):
@@ -71,10 +72,10 @@ class _UnaryOp(_Op):
 
 class _BinaryOp(_Op):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, token='prev_token', **kwargs):
         super().__init__(*args, **kwargs)
-        identifier = SQLToken.token2sql(self.statement.prev_token, self.query)
-        self._field = identifier.field
+        identifier = SQLToken.token2sql(getattr(self.statement, token), self.query)
+        self._field = getattr(identifier, "field", getattr(identifier, "left_column", None))
 
     def negate(self):
         raise SQLDecodeError('Negating IN/NOT IN not supported')
@@ -84,6 +85,7 @@ class _BinaryOp(_Op):
 
     def evaluate(self):
         pass
+
 
 class _InNotInOp(_BinaryOp):
 
@@ -141,9 +143,9 @@ class NotInOp(_InNotInOp):
 
 class InOp(_InNotInOp):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(name='IN', *args, **kwargs)
-        self._fill_in(self.statement.next())
+    def __init__(self, *args, token='prev_token', **kwargs):
+        super().__init__(name='IN', *args, token=token, **kwargs)
+        self._fill_in(getattr(self.statement, token)[-1])
 
     def to_mongo(self):
         op = '$in' if not self.is_negated else '$nin'
@@ -369,8 +371,8 @@ class _StatementParser:
         elif tok.match(tokens.Keyword, 'OR'):
             op = OrOp(**kw)
 
-        elif tok.match(tokens.Keyword, 'IN'):
-            op = InOp(**kw)
+        elif any(t.match(tokens.Comparison, 'IN') for t in [tok, *getattr(tok, 'tokens', [])]):
+            op = InOp(**kw, token='current_token')
 
         elif tok.match(tokens.Keyword, 'NOT'):
             if statement.next_token.match(tokens.Keyword, 'IN'):
@@ -409,7 +411,9 @@ class _StatementParser:
             pass
 
         elif isinstance(tok, Identifier):
-            op = ColOp(tok, self.query)
+            t = statement.next_token
+            if not t or not t.match(tokens.Keyword, ('LIKE', 'iLIKE', 'BETWEEN', 'IS', "IN")):
+                op = ColOp(tok, self.query)
         else:
             raise SQLDecodeError
 
@@ -459,18 +463,6 @@ class _StatementParser:
 
         if not self._ops:
             raise SQLDecodeError
-
-        ## Fix for boolean fields
-        def unlink_col_op(op):
-            if isinstance(op, ColOp) and not isinstance(op.rhs, (LikeOp, iLikeOp, BetweenOp, IsOp, NotOp, InOp)):
-                return True
-            if op.lhs:
-                op.lhs.rhs = op.rhs
-            if op.rhs:
-                op.rhs.lhs = op.lhs
-            return False
-
-        self._ops = [op for op in self._ops if unlink_col_op(op)]
 
         op = None
         while self._ops:
@@ -527,6 +519,7 @@ class CmpOp(_Op):
             self._field_ext, self._constant = next(iter(self._constant.items()))
         else:
             self._field_ext = None
+
 
     def negate(self):
         self.is_negated = True
