@@ -33,6 +33,7 @@ from django.utils.html import format_html_join, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from djongo.exceptions import NotSupportedError, print_warn
+from djongo.utils import encode_keys, decode_keys
 
 django_major = int(version.get_version().split('.')[0])
 
@@ -83,20 +84,27 @@ class MongoField(Field):
 
 class JSONField(MongoField):
     def get_prep_value(self, value):
-        if not isinstance(value, (dict, list)):
+        if not isinstance(value, (dict, list, str)):
             raise ValueError(
-                f'Value: {value} must be of type dict/list'
+                f'Value: {value} must be of type dict/list, instead got type {type(value)}'
             )
+        # Fix for special characters in keys.
+        # See: https://stackoverflow.com/a/30254815
+        # and https://jira.mongodb.org/browse/PYTHON-1522
+        # and https://jira.mongodb.org/browse/SERVER-30575
+        if isinstance(value, dict):
+            value = encode_keys(value)
         return value
 
     def to_python(self, value):
         if not isinstance(value, (dict, list)):
             raise ValueError(
-                f'Value: {value} stored in DB must be of type dict/list'
+                f'Value: {value} stored in DB must be of type dict/list, instead got type {type(value)}'
                 'Did you miss any Migrations?'
             )
+        if isinstance(value, dict):
+            value = decode_keys(value)
         return value
-
 
 class ModelField(MongoField):
     """
