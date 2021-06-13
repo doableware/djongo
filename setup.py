@@ -58,7 +58,7 @@ Important links
 ---------------
 
 * `Full Documentation <https://nesdis.github.io/djongo/>`_
-* `Source code <https://github.com/nesdis/djongo>`_
+* `Source code <https://github.com/morbitech1/djongo>`_
 """
 
 
@@ -81,7 +81,7 @@ def find_version(*file_paths):
 
 
 install_requires = [
-    'sqlparse>=0.2.4',
+    'sqlparse>=0.4.1',
     'pymongo>=3.2.0',
     'django>=2.1',
     'dnspython>=2.0',
@@ -91,11 +91,11 @@ if sys.version_info.major == 3 and sys.version_info.minor < 7:
     install_requires.append("dataclasses")
 
 setup(
-    name='djongo',
+    name='us2djongo',
     version=find_version("djongo", "__init__.py"),
     include_package_data=True,
     packages=packages,
-    url='https://nesdis.github.io/djongo/',
+    url='https://github.com/morbitech1/djongo',
     license='AGPL',
     author='nesdis',
     author_email='nesdis@gmail.com',
