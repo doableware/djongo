@@ -7,4 +7,4 @@
 #       * Renz Ladia
 #       * thestick613
 
-__version__ = '1.3.5'
+__version__ = '1.3.8'
