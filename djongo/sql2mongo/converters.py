@@ -493,9 +493,8 @@ class GroupbyConverter(Converter, _Tokens2Id):
 
     def parse(self):
         tok = self.statement.next()
-        if not tok.match(tokens.Keyword, 'BY'):
-            raise SQLDecodeError
-        tok = self.statement.next()
+        if tok.match(tokens.Keyword, 'BY'):
+            tok = self.statement.next()
         self.sql_tokens.extend(SQLToken.tokens2sql(tok, self.query))
 
     def to_mongo(self):
