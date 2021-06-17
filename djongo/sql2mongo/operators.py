@@ -2,12 +2,11 @@ import re
 import typing
 from itertools import chain
 
-from sqlparse import parse as sqlparse
 from sqlparse import tokens
 from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier
 
 from . import query
-from .sql_tokens import SQLToken, SQLStatement, SQLComparison
+from .sql_tokens import SQLToken, SQLStatement, SQLComparison, SQLIdentifier
 from ..exceptions import SQLDecodeError
 
 
@@ -74,8 +73,13 @@ class _BinaryOp(_Op):
 
     def __init__(self, *args, token='prev_token', **kwargs):
         super().__init__(*args, **kwargs)
-        identifier = SQLToken.token2sql(getattr(self.statement, token), self.query)
-        self._field = getattr(identifier, "field", getattr(identifier, "left_column", None))
+        tok = SQLToken.token2sql(getattr(self.statement, token), self.query)
+        if isinstance(tok, SQLIdentifier):
+            self._field = tok.field
+        elif isinstance(tok, SQLComparison):
+            self._field = SQLIdentifier(tok._token.left, tok.query).field
+        else:
+            raise SQLDecodeError(f'Unexpected token: {tok}')
 
     def negate(self):
         raise SQLDecodeError('Negating IN/NOT IN not supported')
@@ -365,6 +369,9 @@ class _StatementParser:
                   statement: SQLStatement) -> '_Op':
         op = None
         kw = {'statement': statement, 'query': self.query}
+        if tok.match(tokens.Name.Placeholder, '%(.+)s', regex=True):
+            return op
+
         if tok.match(tokens.Keyword, 'AND'):
             op = AndOp(**kw)
 
@@ -394,6 +401,9 @@ class _StatementParser:
         elif tok.match(tokens.Keyword, 'IS'):
             op = IsOp(**kw)
 
+        elif tok.value in JSON_OPERATORS:
+            op = JSONOp(**kw)
+
         elif isinstance(tok, Comparison):
             op = CmpOp(tok, self.query)
 
@@ -412,7 +422,7 @@ class _StatementParser:
 
         elif isinstance(tok, Identifier):
             t = statement.next_token
-            if not t or not t.match(tokens.Keyword, ('LIKE', 'iLIKE', 'BETWEEN', 'IS', "IN")):
+            if not t or t.match(tokens.Punctuation, (')', '(')):
                 op = ColOp(tok, self.query)
         else:
             raise SQLDecodeError
@@ -555,6 +565,52 @@ class ColOp(_Op):
         pass
 
 
+class JSONOp(_Op):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._identifier = self.statement.prev_token.value
+        self._operator = self.statement.current_token.value
+        index = re_index(self.statement.next_token.value)
+        self._constant = self.params[index] if index is not None else None
+
+    def negate(self):
+        self.is_negated = True
+
+    def to_mongo(self):
+        field = '.'.join([f[1:-1] for f in self._identifier.split('.')[1:]])
+
+        if self._operator == '$exact':
+            op = '$eq' if not self.is_negated else '$ne'
+            return {field: {op: self._constant}}
+
+        elif self._operator == '$contains':
+            if isinstance(self._constant, dict):
+                return {f'{field}.{k}': self._constant[k] for k in self._constant}
+            elif isinstance(self._constant, list):
+                return {field: {'$all': self._constant}}
+            else:
+                raise SQLDecodeError(f'Invalid params for $contains: {self._constant}')
+
+        elif self._operator == '$has_key':
+            return {f'{field}.{self._constant}': {'$exists': not self.is_negated}}
+
+        elif self._operator == '$has_keys':
+            return {f'{field}.{const}': {'$exists': not self.is_negated} for const in self._constant}
+
+        elif self._operator == '$has_any_keys':
+            return {
+                '$or': [{f'{field}.{const}': {'$exists': not self.is_negated}} for const in self._constant]
+            }
+
+        else:
+            raise SQLDecodeError(f'Invalid JSONOp: {self._operator}')
+
+    def evaluate(self):
+        pass
+
+
+JSON_OPERATORS = ['$exact', '$contains', '$has_key', '$has_keys', '$has_any_keys']
 OPERATOR_MAP = {
     '=': '$eq',
     '>': '$gt',

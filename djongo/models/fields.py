@@ -25,6 +25,7 @@ from django.db import router, connections, transaction
 from django.db.models import (
     Manager, Model, Field, AutoField,
     ForeignKey, BigAutoField)
+from django.db.models.lookups import Transform, FieldGetDbPrepValueMixin, Lookup
 from django.utils import version
 from django.db.models.fields.related import RelatedField
 from django.forms import modelform_factory
@@ -82,11 +83,42 @@ class MongoField(Field):
     empty_strings_allowed = False
 
 
+class KeyTransform(Transform):
+    def __init__(self, key_name, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.key_name = str(key_name)
+
+    def preprocess_lhs(self, compiler, connection):
+        key_transforms = [self.key_name]
+        previous = self.lhs
+        while isinstance(previous, KeyTransform):
+            key_transforms.insert(0, previous.key_name)
+            previous = previous.lhs
+        lhs, params = compiler.compile(previous)
+        return lhs, params, key_transforms
+
+    def as_djongo(self, compiler, connection):
+        lhs, params, key_transforms = self.preprocess_lhs(compiler, connection)
+        dot_lookups = '.'.join([f'"{s}"' for s in key_transforms])
+        return '%s.%s' % (lhs, dot_lookups), []
+
+
+class KeyTransformFactory:
+    def __init__(self, key_name):
+        self.key_name = key_name
+
+    def __call__(self, *args, **kwargs):
+        return KeyTransform(self.key_name, *args, **kwargs)
+
+
 class JSONField(MongoField):
     def get_prep_value(self, value):
+        if value is None:
+            return 'null'
+
         if not isinstance(value, (dict, list, str)):
             raise ValueError(
-                f'Value: {value} must be of type dict/list, instead got type {type(value)}'
+                f'Value: {value} must be of type dict/list/str, instead got type {type(value)}'
             )
         # Fix for special characters in keys.
         # See: https://stackoverflow.com/a/30254815
@@ -105,6 +137,73 @@ class JSONField(MongoField):
         if isinstance(value, dict):
             value = decode_keys(value)
         return value
+
+    def get_transform(self, name):
+        transform = super().get_transform(name)
+        if transform:
+            return transform
+        return KeyTransformFactory(name)
+
+    def value_to_string(self, obj):
+        return self.value_from_object(obj)
+
+
+class DjongoOperatorLookup(FieldGetDbPrepValueMixin, Lookup):
+    djongo_operator = None
+
+    def as_djongo(self, compiler, connection):
+        lhs, lhs_params = self.process_lhs(compiler, connection)
+        rhs, rhs_params = self.process_rhs(compiler, connection)
+        params = tuple(lhs_params) + tuple(rhs_params)
+        return '%s %s %s' % (lhs, self.djongo_operator, rhs), params
+
+
+class DataContains(DjongoOperatorLookup):
+    lookup_name = 'contains'
+    djongo_operator = '$contains'
+
+
+class HasKeyLookup(DjongoOperatorLookup):
+    def as_djongo(self, compiler, connection):
+        if isinstance(self.rhs, KeyTransform):
+            *_, rhs_key_transforms = self.rhs.preprocess_lhs(compiler, connection)
+            for key in rhs_key_transforms[:-1]:
+                self.lhs = KeyTransform(key, self.lhs)
+            self.rhs = rhs_key_transforms[-1]
+        return super().as_djongo(compiler, connection)
+
+
+class HasKey(HasKeyLookup):
+    lookup_name = 'has_key'
+    djongo_operator = '$has_key'
+    prepare_rhs = False
+
+
+class HasKeys(HasKeyLookup):
+    lookup_name = 'has_keys'
+    djongo_operator = '$has_keys'
+
+    def get_prep_lookup(self):
+        return [str(item) for item in self.rhs]
+
+
+class HasAnyKeys(HasKeys):
+    lookup_name = 'has_any_keys'
+    djongo_operator = '$has_any_keys'
+
+
+class JSONExact(DjongoOperatorLookup):
+    lookup_name = 'exact'
+    djongo_operator = '$exact'
+    can_use_none_as_rhs = True
+
+
+JSONField.register_lookup(DataContains)
+JSONField.register_lookup(HasKey)
+JSONField.register_lookup(HasKeys)
+JSONField.register_lookup(HasAnyKeys)
+JSONField.register_lookup(JSONExact)
+
 
 class ModelField(MongoField):
     """
