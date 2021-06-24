@@ -422,7 +422,7 @@ class _StatementParser:
 
         elif isinstance(tok, Identifier):
             t = statement.next_token
-            if not t or t.match(tokens.Punctuation, (')', '(')):
+            if not t or t.match(tokens.Punctuation, (')', '(')) or t.match(tokens.Keyword, ('AND', 'OR')):
                 op = ColOp(tok, self.query)
         else:
             raise SQLDecodeError
@@ -446,12 +446,12 @@ class _StatementParser:
             link_op()
             if isinstance(op, CmpOp):
                 self._cmp_ops.append(op)
-            if not isinstance(op, (CmpOp, ParenthesisOp)):
+            if not isinstance(op, (CmpOp, ParenthesisOp, ColOp)):
                 self._op_precedence(op)
             prev_op = op
 
         if prev_op.lhs is None:
-            if isinstance(prev_op, (CmpOp, ParenthesisOp)):
+            if isinstance(prev_op, (CmpOp, ParenthesisOp, ColOp)):
                 self._ops.append(prev_op)
 
     def _op_precedence(self, operator: _Op):
