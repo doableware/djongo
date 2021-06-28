@@ -11,7 +11,13 @@ $banner-max-width: $banner-max-height * $banner-aspect-ratio/2.44;
 $banner-max-width-small: $banner-max-height-small * $banner-aspect-ratio/2.0;
 
 $media-side-margin: 1.5em;
+
 $mm-line-height: 1.5;
+$mm-h2-padding-bottom: 0.5em;
+$mm-h2-font-size: 1.25em;
+
+$feature-margin-top: 2em;
+$feature-margin-bottom: 1em;
 
 @mixin banner--symbol {
   .page__hero--overlay {
@@ -88,7 +94,7 @@ $mm-line-height: 1.5;
   }
 
   h2 {
-    margin-bottom: 1em;
+    margin-bottom: $feature-margin-bottom;
   }
 }
 
@@ -114,8 +120,8 @@ $mm-line-height: 1.5;
   padding-left: 1em;
   padding-right: 1em;
 
-  > h2 {
-    margin: 2em 0 1em;
+  h2 {
+    margin: $feature-margin-top 0 $feature-margin-bottom;
     border: none;
   }
 }
@@ -291,4 +297,28 @@ $mm-line-height: 1.5;
   margin-left: 2.5em;
 }
 
+.flex {
+  display: flex;
+  justify-content: space-between;
 
+  > div {
+    margin: 0 1em 0;
+  }
+
+  @include break(x-small) {
+    flex-direction: column;
+  }
+}
+
+.fx-form {
+  margin-top: ($feature-margin-top
+   + $feature-margin-bottom
+   + $mm-h2-padding-bottom
+   + $mm-h2-font-size);
+  width: 15em;
+
+  @include break(x-small) {
+    margin-top: 1em;
+    min-width: 0;
+  }
+}
