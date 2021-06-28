@@ -56,7 +56,7 @@ assert e == g
 
 e = Entry()
 e.blog = {
-    'name': 'b2'
+    'name': 'b2',
     'tagline': 't2'
 }
 e.headline = 'h2'

@@ -59,7 +59,7 @@ head_scripts:
   - "https://js.stripe.com/v3/"
   - "https://code.jquery.com/jquery-3.5.1.slim.min.js"
   - "https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"
-  - "/assets/js/cookie-consent.js"
+#  - "/assets/js/cookie-consent.js"
 
 # Reading Files
 include: [_static, _sources]

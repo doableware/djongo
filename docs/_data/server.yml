@@ -1,0 +1,18 @@
+forms:
+  login:
+    subject: server-login
+    next: "/support/request-success"
+    classes:
+      - form--splash
+    fields:
+      - type: text
+        name: userName
+        label: "User Name"
+        required: true
+
+      - type: current-password
+        name: password
+        label: "Password"
+
+      - type: submit
+        value: Login

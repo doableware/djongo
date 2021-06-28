@@ -20,10 +20,22 @@
       <label>{{ field.label }}
         <input name="{{ field.name }}" type="text" {% if field.required %}required{% endif %}>
       </label>
+    {% elsif field.type == 'current-password'
+        or field.type == 'new-password' %}
+      <label>{{ field.label }}
+        <input name="{{ field.name }}"
+               type="password"
+               required autocomplete="{{ field.type }}">
+      </label>
+    {% elsif field.type == 'textarea' %}
+      <label>{{ field.label }}
+        <textarea name="{{ field.name }}" rows="3"></textarea>
+      </label>
     {% elsif field.type == 'email' %}
       <label>{{ field.label }}
         <input name="{{ field.name }}"
                type="email"
+               autocomplete="email"
                {% if field.required %}required{% endif %}
                {% if field.placeholder %}placeholder="{{ field.placeholder }}" {% endif %}>
       </label>

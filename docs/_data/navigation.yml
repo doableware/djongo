@@ -1,11 +1,11 @@
 # main links
 main:
-   - title: "Docs"
-     url: /get-started/
-   - title: "Server"
-     url: /support/
-   - title: "Source"
-     url: https://github.com/nesdis/djongo/
+  - title: "Server"
+    url: /server/
+  - title: "Support"
+    url: /support/
+  - title: "Docs"
+    url: /get-started/
 
 docs:
   - title: "Djongo"
@@ -53,3 +53,9 @@ docs:
 #  - title: "Donate"
 #    url: /donate/
 #    thumbnail: /assets/images/heart.png
+
+server:
+  - title: "Info"
+    url: /server/
+  - title: "Control"
+    url: /server/control
