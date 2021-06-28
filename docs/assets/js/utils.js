@@ -1,0 +1,1 @@
+class Cookie{constructor(){}static has(t){document.cookie.split(";").some((i=>i.trim().startsWith(t+"=")))}static get(t){let i=document.cookie.split(";").find((i=>i.trim().startsWith(t+"=")));if(i)return i.trim().split("=")[1]}static set(t,i){document.cookie=t+"="+i+";Secure"}}export{Cookie};
