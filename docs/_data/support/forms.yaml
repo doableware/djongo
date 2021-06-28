@@ -1,0 +1,77 @@
+# contact form is not used
+contact:
+  subject: support-page
+  next: "/support/request-success"
+  classes:
+    - form--splash
+  fields:
+    - type: select
+      name: Subject
+      label: "Subject:"
+      options:
+        - Commercial License
+        - Cancel Subscription
+
+    - type: text
+      name: Name
+      label: "Name or Organization:"
+
+    - type: email
+      name: Email
+      label: "Email:"
+      placeholder: "name@org.com"
+      required: true
+
+    - type: submit
+      value: Send
+
+enterprise:
+  subject: Enterprise
+  next: "/support/request-success"
+  classes:
+    - fx-form
+  fields:
+    - type: text
+      name: Name
+      label: "Full Name:"
+      required: true
+
+    - type: text
+      name: Organization
+      label: "Organization:"
+      required: true
+
+    - type: email
+      name: Email
+      label: "Email:"
+      placeholder: "name@org.com"
+      required: true
+
+    - type: submit
+      value: Enquire
+
+discuss:
+  subject: "Message"
+  next: "/support/request-success"
+  classes:
+    - fx-form
+  fields:
+    - type: text
+      name: Name
+      label: "Full Name:"
+      required: true
+
+    - type: email
+      name: Email
+      label: "Email:"
+      placeholder: "name@org.com"
+      required: true
+
+    - type: textarea
+      name: Message
+      label: "Message:"
+      required: true
+
+    - type: submit
+      value: Send
+
