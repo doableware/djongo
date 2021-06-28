@@ -5,12 +5,70 @@ description: "Djongo overcomes common pitfalls of PyMongo programming. It maps p
 layout: docs
 ---
 
-## Install
-The complete Djongo package comes preinstalled on the [djongo server][support_page]. It is the easiest way to deploy 
-your djongo powered data models. 
+## Djongo Server
 
-However, for a local installation follow these steps:
+The Djongo package and dependencies are installed and preconfigured on the [Djongo Server][support_page]. The Djongo 
+Server is the fastest way to deploy your djongo powered app. 
 
+### SSH
+On account creation you install your public SSH key at the [server dashboard](/server/).
+This gives a secure shell access to the VM instance for uploading a 
+[Django App](https://docs.djangoproject.com/en/dev/intro/tutorial01/). Once the key is installed, 
+the dashboard displays the SSH port number over which you can connect to the VM instance. 
+
+Establish a secure shell connection using:
+
+```shell
+ssh <user>@api.djongomapper.com -p <port> 
+``` 
+
+The `user` is the same as the username used while creating the server account.
+
+### API Endpoint
+When you create an account on the Djongo Server you get a unique URL path assigned to you. The Django views that you
+create for servicing your API can be accessed and extended further starting from the base URL:
+
+```shell
+https://api.djongomapper.com/<user> 
+``` 
+
+### Launching the App
+
+Establishing a SSH connection to your VM instance logs you into the `/home/$USER` directory. The typical home directory
+structure looks like:
+ 
+```shell
+~home
+| -- .ssh/
+| -- site/
+|   -- api/
+|     -- settings.py
+|     -- urls.py
+|   -- app/
+|     -- app1/
+|       -- views.py
+|       -- models.py
+|     -- app2/
+|       -- views.py
+|       -- models.py
+```
+
+In your `urls.py` if you add an entry like `path('hello/', app1.views.hello)`, the URL path becomes
+`https://api.djongomapper.com/<user>/hello`
+
+#### Reload the Server
+After making changes to your app, you need to reload the server. This is done by clicking the reload button 
+in your [server dashboard](/server/).
+
+{% comment %}
+### Installing dependencies
+
+{% endcomment %}
+
+## Local development
+
+### Setup
+For a local installation start with:
 1. `pip install djongo`
 2. Into `settings.py` file of your project, add:
 
@@ -23,7 +81,7 @@ However, for a local installation follow these steps:
       }
       ```
 
-## Requirements
+### Requirements
 1. Python 3.6 or higher.
 2. MongoDB 3.4 or higher.
 3. If your models use nested queries or sub querysets like:
@@ -104,7 +162,7 @@ When connecting to Djongo you can set `ENFORCE_SCHEMA: True`. In this case, a `M
 
 `ENFORCE_SCHEMA: False` works by silently setting the missing fields with the value `None`. If your app is programmed to expect this (which means it is not a bug) you can get away by not calling any migrations.
 
-## Using MongoDB Fields
+## MongoDB and Django
 
 ### EmbeddedField
  Nest a `dict` inside a model with the `EmbeddedField`. The `model_container` is used to describe the structure of the 
