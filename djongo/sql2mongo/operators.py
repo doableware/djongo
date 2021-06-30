@@ -161,13 +161,13 @@ class InOp(_InNotInOp):
 
 class LikeOp(_BinaryOp):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(name='LIKE', *args, **kwargs)
+    def __init__(self, *args, token='current_token', **kwargs):
+        super().__init__(name='LIKE', *args, token=token, **kwargs)
         self._regex = None
-        self._make_regex(self.statement.next())
+        self._make_regex(getattr(self.statement, token))
 
     def _make_regex(self, token):
-        index = SQLToken.placeholder_index(token)
+        index = SQLToken.placeholder_index(token.right)
 
         to_match = self.params[index]
         if isinstance(to_match, dict):
@@ -189,6 +189,28 @@ class iLikeOp(LikeOp):
             '$regex': self._regex,
             '$options': 'im'
         }}
+
+
+class RegexpOp(_BinaryOp):
+
+    def __init__(self, *args, token='current_token', **kwargs):
+        super().__init__(name='REGEXP', *args, token=token, **kwargs)
+        self._regex = None
+        self._make_regex(self.statement.next())
+
+    def _make_regex(self, token):
+        index = SQLToken.placeholder_index(token)
+
+        to_match = self.params[index]
+        if isinstance(to_match, dict):
+            field_ext, to_match = next(iter(to_match.items()))
+            self._field += '.' + field_ext
+        if not isinstance(to_match, str):
+            raise SQLDecodeError
+        self._regex = to_match
+
+    def to_mongo(self):
+        return {self._field: {'$regex': self._regex}}
 
 
 class IsOp(_BinaryOp):
@@ -387,11 +409,13 @@ class _StatementParser:
                 statement.skip(1)
             else:
                 op = NotOp(**kw)
+        elif tok.value.endswith("REGEXP"):
+            op = RegexpOp(**kw)
 
-        elif tok.match(tokens.Keyword, 'LIKE'):
+        elif isinstance(tok, Comparison) and 'LIKE' in tok.normalized:
             op = LikeOp(**kw)
 
-        elif tok.match(tokens.Keyword, 'iLIKE'):
+        elif isinstance(tok, Comparison) and 'iLIKE' in tok.normalized:
             op = iLikeOp(**kw)
 
         elif tok.match(tokens.Keyword, 'BETWEEN'):
@@ -530,7 +554,6 @@ class CmpOp(_Op):
         else:
             self._field_ext = None
 
-
     def negate(self):
         self.is_negated = True
 
@@ -622,6 +645,7 @@ OPERATOR_PRECEDENCE = {
     'IS': 8,
     'BETWEEN': 7,
     'LIKE': 6,
+    'REGEXP': 6,
     'IN': 5,
     'NOT IN': 4,
     'NOT': 3,
