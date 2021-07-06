@@ -1,54 +1,84 @@
 default:
   fields:
-    - type: text
-      name: First Name
+    - type: input
       label: "First Name:"
-      required: true
+      attr:
+        type: text
+        name: firstName
+        required: ''
 
-    - type: text
-      name: Last Name
+    - type: input
       label: "Last Name:"
-      required: true
+      attr:
+        type: text
+        name: lastName
+        required: ''
 
-    - type: email
-      name: Email
+    - type: input
       label: "Email:"
-      placeholder: "name@org.com"
-      required: true
+      attr:
+        type: email
+        name: email
+        placeholder: "name@org.com"
+        required: ''
 
-    - type: text
-      name: GitHub User Name
+    - type: input
       label: "GitHub User Name:"
-      required: true
+      attr:
+        type: text
+        name: githubUserName
+        required: ''
 
-    - type: text
-      name: Organization
+    - type: input
       label: "Organization:"
-      required: true
+      attr:
+        type: text
+        name: organization
+        required: ''
 
-    - type: submit
-      value: Apply
+    - type: input
+      attr:
+        type: submit
+        value: Apply
+        class: "btn btn--primary btn--large"
 
 webserver:
   fields:
-    - type: text
-      name: User Name
+    - type: input
       label: "User Name"
-      required: true
+      attr:
+        type: text
+        name: userName
+        required: ''
+        autocomplete: username
 
-    - type: new-password
-      name: password
-      label: "Password"
-
-    - type: new-password
-      name: confirm password
-      label: "Confirm Password"
-
-    - type: email
-      name: Email
+    - type: input
       label: "Email"
-      placeholder: "name@org.com"
-      required: true
+      attr:
+        type: email
+        name: email
+        placeholder: "name@org.com"
+        required: ''
+        autocomplete: email
 
-    - type: submit
-      value: Create Account
+    - type: input
+      label: "Password"
+      attr:
+        type: password
+        name: password
+        required: ''
+        autocomplete: new-password
+
+    - type: input
+      label: "Confirm Password"
+      attr:
+        type: password
+        name: confirmPassword
+        required: ''
+        autocomplete: new-password
+
+    - type: input
+      attr:
+        type: submit
+        value: Create Account
+        class: "btn btn--primary btn--large"

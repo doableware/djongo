@@ -6,24 +6,31 @@ contact:
     - form--splash
   fields:
     - type: select
-      name: Subject
       label: "Subject:"
+      name: Subject
       options:
         - Commercial License
         - Cancel Subscription
 
-    - type: text
-      name: Name
+    - type: input
       label: "Name or Organization:"
+      attr:
+        type: text
+        name: Name
 
-    - type: email
-      name: Email
+    - type: input
       label: "Email:"
-      placeholder: "name@org.com"
-      required: true
+      attr:
+        type: email
+        name: Email
+        placeholder: "name@org.com"
+        required: ''
 
-    - type: submit
-      value: Send
+    - type: input
+      attr:
+        type: submit
+        value: Send
+        class: "btn btn--primary btn--large"
 
 enterprise:
   subject: Enterprise
@@ -31,24 +38,33 @@ enterprise:
   classes:
     - fx-form
   fields:
-    - type: text
-      name: Name
+    - type: input
       label: "Full Name:"
-      required: true
+      attr:
+        type: text
+        name: Name
+        required: ''
 
-    - type: text
-      name: Organization
+    - type: input
       label: "Organization:"
-      required: true
+      attr:
+        type: text
+        name: Organization
+        required: ''
 
-    - type: email
-      name: Email
+    - type: input
       label: "Email:"
-      placeholder: "name@org.com"
-      required: true
+      attr:
+        type: email
+        name: Email
+        placeholder: "name@org.com"
+        required: ''
 
-    - type: submit
-      value: Enquire
+    - type: input
+      attr:
+        type: submit
+        value: Enquire
+        class: "btn btn--primary btn--large"
 
 discuss:
   subject: "Message"
@@ -56,22 +72,29 @@ discuss:
   classes:
     - fx-form
   fields:
-    - type: text
-      name: Name
+    - type: input
       label: "Full Name:"
-      required: true
+      attr:
+        type: text
+        name: Name
+        required: ''
 
-    - type: email
-      name: Email
+    - type: input
       label: "Email:"
-      placeholder: "name@org.com"
-      required: true
+      attr:
+        type: email
+        name: Email
+        placeholder: "name@org.com"
+        required: ''
 
     - type: textarea
-      name: Message
       label: "Message:"
+      name: Message
       required: true
 
-    - type: submit
-      value: Send
+    - type: input
+      attr:
+        type: submit
+        value: Send
+        class: "btn btn--primary btn--large"
 
