@@ -5,14 +5,25 @@ forms:
     classes:
       - form--splash
     fields:
-      - type: text
-        name: userName
+      - type: input
         label: "User Name"
-        required: true
+        attr:
+          type: text
+          name: userName
+          required: ''
+          autocomplete: username
 
-      - type: current-password
-        name: password
+      - type: input
         label: "Password"
+        attr:
+          type: password
+          name: password
+          required: ''
+          autocomplete: current-password
 
-      - type: submit
-        value: Login
+      - type: input
+        attr:
+          type: submit
+          value: Login
+          class: "btn btn--primary btn--large"
+
