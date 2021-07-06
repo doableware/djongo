@@ -1,19 +1,14 @@
 dist/
 build/
-venv/
-venv3.8/
-venv_py38_dj30/
 .idea/
 .tox/
 *__pycache__*
 *egg-info/
-
 
 docs/.sass-cache/*
 docs/_site/*
 tests/logs
 
 Gemfile.lock
-upload.sh
 
 /docs/.jekyll-metadata
