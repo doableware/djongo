@@ -19,12 +19,12 @@ form:
       required: true
 
 tires:
-  - title: Djongo Webserver
+  - title: Djongo Cloud Server
     price: 15
     url: webserver
     benefits:
       - A VM instance for deploying your Djongo powered APIs.
-      - An unique API endpoint that is accessible from the web.
+      - Unique API endpoint, accessible from the web.
 
   - title: Basic Support
     price: 59

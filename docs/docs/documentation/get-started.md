@@ -5,66 +5,6 @@ description: "Djongo overcomes common pitfalls of PyMongo programming. It maps p
 layout: docs
 ---
 
-## Djongo Server
-
-The Djongo package and dependencies are installed and preconfigured on the [Djongo Server][support_page]. The Djongo 
-Server is the fastest way to deploy your djongo powered app. 
-
-### SSH
-On account creation you install your public SSH key at the [server dashboard](/server/).
-This gives a secure shell access to the VM instance for uploading a 
-[Django App](https://docs.djangoproject.com/en/dev/intro/tutorial01/). Once the key is installed, 
-the dashboard displays the SSH port number over which you can connect to the VM instance. 
-
-Establish a secure shell connection using:
-
-```shell
-ssh <user>@api.djongomapper.com -p <port> 
-``` 
-
-The `user` is the same as the username used while creating the server account.
-
-### API Endpoint
-When you create an account on the Djongo Server you get a unique URL path assigned to you. The Django views that you
-create for servicing your API can be accessed and extended further starting from the base URL:
-
-```shell
-https://api.djongomapper.com/<user> 
-``` 
-
-### Launching the App
-
-Establishing a SSH connection to your VM instance logs you into the `/home/$USER` directory. The typical home directory
-structure looks like:
- 
-```shell
-~home
-| -- .ssh/
-| -- site/
-|   -- api/
-|     -- settings.py
-|     -- urls.py
-|   -- app/
-|     -- app1/
-|       -- views.py
-|       -- models.py
-|     -- app2/
-|       -- views.py
-|       -- models.py
-```
-
-In your `urls.py` if you add an entry like `path('hello/', app1.views.hello)`, the URL path becomes
-`https://api.djongomapper.com/<user>/hello`
-
-#### Reload the Server
-After making changes to your app, you need to reload the server. This is done by clicking the reload button 
-in your [server dashboard](/server/).
-
-{% comment %}
-### Installing dependencies
-
-{% endcomment %}
-
 ## Local development
 
 ### Setup
@@ -135,32 +75,65 @@ All options except `ENGINE` and `ENFORCE_SCHEMA` are the same those listed in th
     }
 ```
 
-### Enforce schema
+## Djongo Cloud Server
 
-MongoDB is *schemaless*, which means no schema rules are enforced by the database. You can add and exclude fields per entry and MongoDB will not complain. This can make life easier, especially when there are frequent changes to the data model. Take for example the `Blog` Model (version 1).
+The Djongo package and dependencies are installed and preconfigured on the [Server][support_page]. Djongo 
+Server is the fastest way to deploy your djongo powered apps. 
 
-```python
-class Blog(models.Model):
-    name = models.CharField(max_length=100)
-    tagline = models.TextField()
+### SSH
+On account creation you install your public SSH key at the [server dashboard](/server/).
+This gives a secure shell access to the VM instance for uploading a 
+[Django App](https://docs.djangoproject.com/en/dev/intro/tutorial01/). Once the key is installed, 
+the dashboard displays the SSH port number over which you can connect to the VM instance. 
+
+Establish a secure shell connection using:
+
+```shell
+ssh <user>@api.djongomapper.com -p <port> 
+``` 
+
+The `user` is the same as the username used while creating the server account.
+
+### API Endpoint
+When you create an account on the Djongo Server you get a unique URL path assigned to you. The Django views that you
+create for servicing your API can be accessed and extended further starting from the base URL:
+
+```shell
+https://api.djongomapper.com/<user> 
+``` 
+
+### Launching the App
+
+Establishing a SSH connection to your VM instance logs you into the `/home/$USER` directory. The typical home directory
+structure looks like:
+ 
+```shell
+~home
+| -- .ssh/
+| -- site/
+|   -- api/
+|     -- settings.py
+|     -- urls.py
+|   -- app/
+|     -- app1/
+|       -- views.py
+|       -- models.py
+|     -- app2/
+|       -- views.py
+|       -- models.py
 ```
 
-You can save several entries into the DB and later modify it to version 2:
+In your `urls.py` if you add an entry like `path('hello/', app1.views.hello)`, the URL path becomes
+`https://api.djongomapper.com/<user>/hello`
 
-```python
-class Blog(models.Model):
-    name = models.CharField(max_length=100)
-    tagline = models.TextField()
-    description = models.TextField()
-```
+#### Reload the Server
+After making changes to your app, you need to reload the server. This is done by clicking the reload button 
+in your [server dashboard](/server/).
 
-The modified Model can be saved **without running any migrations**. 
+{% comment %}
+### Installing dependencies
 
-This works fine if you know what you are doing. Consider a query that retrieves entries belonging to both the 'older' model (with just 2 fields) and the current model. What will the value of `description` now be? To handle such scenarios Djongo comes with the `ENFORCE_SCHEMA` option. 
-
-When connecting to Djongo you can set `ENFORCE_SCHEMA: True`. In this case, a `MigrationError` will be raised when field values are missing from the retrieved documents. You can then check what went wrong. 
-
-`ENFORCE_SCHEMA: False` works by silently setting the missing fields with the value `None`. If your app is programmed to expect this (which means it is not a bug) you can get away by not calling any migrations.
+{% endcomment %}
 
 ## MongoDB and Django
 
@@ -223,6 +196,32 @@ e.save()
 ## Security and Integrity Checks
 Djongo allows for checks on data fields before they are saved to the database. Running the correct integrity checks and field value validators before writing data into the database is important. 
 
+### Enforce schema
+
+MongoDB is *schemaless*, which means no schema rules are enforced by the database. You can add and exclude fields per entry and MongoDB will not complain. This can make life easier, especially when there are frequent changes to the data model. Take for example the `Blog` Model (version 1).
+
+```python
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.TextField()
+```
+
+You can save several entries into the DB and later modify it to version 2:
+
+```python
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.TextField()
+    description = models.TextField()
+```
+
+The modified Model can be saved **without running any migrations**. 
+
+This works fine if you know what you are doing. Consider a query that retrieves entries belonging to both the 'older' model (with just 2 fields) and the current model. What will the value of `description` now be? To handle such scenarios Djongo comes with the `ENFORCE_SCHEMA` option. 
+
+When connecting to Djongo you can set `ENFORCE_SCHEMA: True`. In this case, a `MigrationError` will be raised when field values are missing from the retrieved documents. You can then check what went wrong. 
+
+`ENFORCE_SCHEMA: False` works by silently setting the missing fields with the value `None`. If your app is programmed to expect this (which means it is not a bug) you can get away by not calling any migrations.
 
 ### Validators
 Apply validators to each field before they are saved.
@@ -328,7 +327,7 @@ avatar = models.ImageField(storage=grid_fs_storage, upload_to='')
 
 Refer to [Using GridFSStorage](/using-django-with-mongodb-gridfs/) for more details.
 
-## Djongo Server
+## Djongo on Cloud
 
 Features under development on Djongo Server are not a part of the standard Djongo package. Visit the [support page][support_page] for more information.
 {: .notice--info}

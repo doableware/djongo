@@ -17,6 +17,6 @@ import {Cookie} from "./utils.js";
       }
     })
   }, reason => {
-
+    //No error handling
   })
 })()

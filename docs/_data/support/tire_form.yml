@@ -51,6 +51,8 @@ webserver:
         name: userName
         required: ''
         autocomplete: username
+        title: 'Alphanumeric characters: min 4, max 8'
+        pattern: '[a-z0-9]{4,8}'
 
     - type: input
       label: "Email"
