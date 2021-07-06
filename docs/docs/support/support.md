@@ -1,8 +1,8 @@
 ---
-title: Djongo Webserver
+title: DjongoCS
 permalink: /support/
 layout: splash
-tagline: "Create and Deploy Web APIs"
+tagline: "Create and Deploy a Backend Server"
 description: "If you are a company that uses Djongo in your products, consider enrolling in a subscription plan. You get long term support."
 excerpt: "If you are a company that uses Djongo in your products, consider enrolling in a subscription plan. You get long term support."
 
@@ -14,8 +14,8 @@ header:
     overlay_image: /assets/images/home/banner-rand-dark-many6.png
     overlay_color_dark: #092e20
     overlay_color: #09411f
-    cta_url: /support/contact/webserver/
-    cta_label: "Deploy API"     
+    cta_url: /support/djongocs/create-account/
+    cta_label: "Create Account"     
 ---
 
 {% capture head %}
