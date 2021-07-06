@@ -84,7 +84,7 @@ class AggColumnSelectConverter(ColumnSelectConverter):
 
         ## FIX: agg(distinct) handler
         pipeline = self._handle_agg_distinct(group, project) if has_agg_distinct \
-                            else self._handle_agg(group, project)
+            else self._handle_agg(group, project)
 
         return pipeline
 
@@ -104,7 +104,7 @@ class AggColumnSelectConverter(ColumnSelectConverter):
             key = self._get_alias(token)
             group[key] = token.to_mongo()
             pipeline = [{'$group': group}]
-        else: # token = col
+        else:  # token = col
             key = token.field
             pipeline = [{'$group': group}]
         project[key] = True
@@ -113,16 +113,16 @@ class AggColumnSelectConverter(ColumnSelectConverter):
     def _handle_agg_distinct(self, group, project):
         pipelines, keys = zip(*[self._handle_agg_distinct_token(token, group, project) for token in self.sql_tokens])
 
-        if len(pipelines) == 1: 
+        if len(pipelines) == 1:
             return pipelines[0] + [{'$project': project}]
 
         # use $facet when there are multiple selected columns
         facet, project = {}, {}
         for idx, pipeline in enumerate(pipelines):
             facet[str(idx)] = pipeline
-            project[keys[idx]] = {'$arrayElemAt': [ f"${idx}.{keys[idx]}", 0]}
+            project[keys[idx]] = {'$arrayElemAt': [f"${idx}.{keys[idx]}", 0]}
         return [{'$facet': facet}, {'$project': project}]
-        
+
     def _handle_agg(self, group, project):
         for selected in self.sql_tokens:
             if isinstance(selected, SQLFunc):
@@ -132,6 +132,7 @@ class AggColumnSelectConverter(ColumnSelectConverter):
             else:
                 project[selected.field] = True
         return [{'$group': group}, {'$project': project}]
+
 
 class FromConverter(Converter):
 
@@ -416,7 +417,7 @@ class NestedInQueryConverter(Converter):
         )
 
     def to_mongo(self):
-        pipeline = [
+        return [
             {
                 '$lookup': {
                     'from': self._in_query.left_table,
@@ -424,19 +425,20 @@ class NestedInQueryConverter(Converter):
                     'as': '_nested_in'
                 }
             },
-            {
-                '$addFields': {
-                    '_nested_in': {
-                        '$map': {
-                            'input': '$_nested_in',
-                            'as': 'lookup_result',
-                            'in': '$$lookup_result.' + self._in_query.selected_columns.sql_tokens[0].column
+            *[
+                {
+                    '$addFields': {
+                        '_nested_in': {
+                            '$map': {
+                                'input': '$_nested_in',
+                                'as': 'lookup_result',
+                                'in': '$$lookup_result.' + t.column
+                            }
                         }
                     }
-                }
-            }
+                } for t in self._in_query.selected_columns.sql_tokens
+            ]
         ]
-        return pipeline
 
 
 ## FIX: FROM(SUBQUERY)

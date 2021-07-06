@@ -412,11 +412,11 @@ class _StatementParser:
         elif tok.value.endswith("REGEXP"):
             op = RegexpOp(**kw)
 
-        elif isinstance(tok, Comparison) and 'LIKE' in tok.normalized:
-            op = LikeOp(**kw)
-
         elif isinstance(tok, Comparison) and 'iLIKE' in tok.normalized:
             op = iLikeOp(**kw)
+
+        elif isinstance(tok, Comparison) and 'LIKE' in tok.normalized:
+            op = LikeOp(**kw)
 
         elif tok.match(tokens.Keyword, 'BETWEEN'):
             op = BetweenOp(**kw)
@@ -645,6 +645,7 @@ OPERATOR_PRECEDENCE = {
     'IS': 8,
     'BETWEEN': 7,
     'LIKE': 6,
+    'iLIKE': 6,
     'REGEXP': 6,
     'IN': 5,
     'NOT IN': 4,
