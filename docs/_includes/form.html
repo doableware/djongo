@@ -16,7 +16,30 @@
       class="{{ include.form.classes | join: ' ' }}"
     {% endif %}>
   {% for field in include.form.fields %}
-    {% if field.type == 'text' %}
+    {% if field.type == 'select' %}
+      <label>{{ field.label }}
+        <select name="{{ field.name }}">
+          {% for opt in field.options %}
+            <option value="{{ opt }}">{{ opt }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+    {% elsif field.type == 'textarea' %}
+      <label>{{ field.label }}
+        <textarea name="{{ field.name }}" rows="3"></textarea>
+      </label>
+
+    {% elsif field.type == 'input' %}
+      {% if field.label %}<label>{{ field.label }}{% endif %}
+        <input
+        {% for attr in field.attr %}
+          {{ attr[0] }}="{{ attr[1] }}"
+        {% endfor %}
+        >
+      {% if field.label %}</label>{% endif %}
+
+    {% elsif field.type == 'text' %}
       <label>{{ field.label }}
         <input name="{{ field.name }}" type="text" {% if field.required %}required{% endif %}>
       </label>
@@ -38,14 +61,6 @@
                autocomplete="email"
                {% if field.required %}required{% endif %}
                {% if field.placeholder %}placeholder="{{ field.placeholder }}" {% endif %}>
-      </label>
-    {% elsif field.type == 'select' %}
-      <label>{{ field.label }}
-        <select name="{{ field.name }}">
-          {% for opt in field.options %}
-            <option value="{{ opt }}">{{ opt }}</option>
-          {% endfor %}
-        </select>
       </label>
     {% elsif field.type == 'submit' %}
       <input class="btn btn--primary btn--large" type="submit" value="{{ field.value }}">
