@@ -1,6 +1,6 @@
 ---
-title: Djongo Webserver
-permalink: /server/
+title: DjongoCS
+permalink: /djongocs/
 layout: docs
 toc: false
 sidebar:

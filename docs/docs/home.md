@@ -3,9 +3,9 @@ permalink: /
 layout: splash
 title: "Unified Database Query"
 excerpt: 
-tagline: Object to Database Mapper
+tagline: Deploy a Multi-DB Enabled Backend Server Instantly
 
-description: "Djongo is a smarter approach to database querying. It maps python objects to MongoDB documents. It can be used with relational SQL databases as well."
+description: "Djongo is a smarter approach to database querying. It maps python objects to MongoDB documents. It can be used with both relational and non-relational databases."
 
 classes:
     - feature-page
@@ -15,8 +15,8 @@ header:
     overlay_image: /assets/images/home/banner-rand-dark-many6.png
     overlay_color_dark: #092e20
     overlay_color: #09411f
-    cta_url: /get-started/
-    cta_label: "Get Started"       
+    cta_url: /support/
+    cta_label: "Deploy"       
 
 ---
 
