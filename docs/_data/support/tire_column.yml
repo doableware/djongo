@@ -24,7 +24,7 @@ tires:
     url: webserver
     benefits:
       - A VM instance for deploying your Djongo powered APIs.
-      - A unique API endpoint that is accessible from the web.
+      - An unique API endpoint that is accessible from the web.
 
   - title: Basic Support
     price: 59
