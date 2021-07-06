@@ -12,6 +12,8 @@ forms:
           name: userName
           required: ''
           autocomplete: username
+          title: 'Only alphanumeric characters'
+          pattern: '[a-z0-9]{4,8}'
 
       - type: input
         label: "Password"
