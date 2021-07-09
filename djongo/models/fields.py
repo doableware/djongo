@@ -116,9 +116,9 @@ class JSONField(MongoField):
         if value is None:
             return 'null'
 
-        if not isinstance(value, (dict, list, str)):
+        if not isinstance(value, (dict, list, str, int, float, bool)):
             raise ValueError(
-                f'Value: {value} must be of type dict/list/str, instead got type {type(value)}'
+                f'Value: {value} must be of type dict/list/str/int/float/bool, instead got type {type(value)}'
             )
         # Fix for special characters in keys.
         # See: https://stackoverflow.com/a/30254815
