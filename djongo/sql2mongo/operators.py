@@ -470,12 +470,12 @@ class _StatementParser:
             link_op()
             if isinstance(op, CmpOp):
                 self._cmp_ops.append(op)
-            if not isinstance(op, (CmpOp, ParenthesisOp, ColOp)):
+            if not isinstance(op, (CmpOp, ParenthesisOp, ColOp, JSONOp)):
                 self._op_precedence(op)
             prev_op = op
 
         if prev_op.lhs is None:
-            if isinstance(prev_op, (CmpOp, ParenthesisOp, ColOp)):
+            if isinstance(prev_op, (CmpOp, ParenthesisOp, ColOp, JSONOp)):
                 self._ops.append(prev_op)
 
     def _op_precedence(self, operator: _Op):
