@@ -245,7 +245,7 @@ class SelectQuery(DQLQuery):
     def _get_cursor(self):
         if self._needs_aggregation():
             pipeline = self._make_pipeline()
-            cur = self.db[self.left_table].aggregate(pipeline)
+            cur = self.db[self.left_table].aggregate(pipeline, allowDiskUse=True)
             logger.debug(f'Aggregation query: {pipeline}')
         else:
             kwargs = {}
@@ -264,7 +264,7 @@ class SelectQuery(DQLQuery):
             if self.offset:
                 kwargs.update(self.offset.to_mongo())
 
-            cur = self.db[self.left_table].find(**kwargs)
+            cur = self.db[self.left_table].find(**kwargs, allow_disk_use=True)
             logger.debug(f'Find query: {kwargs}')
 
         return cur
