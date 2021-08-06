@@ -272,7 +272,7 @@ def django_tests(verbosity, interactive, failfast, keepdb, reverse,
     extra_tests = []
 
     # Run the test suite, including the extra validation tests.
-    sys.path.insert(0, '/home/nesdis/projects/djongo/tests/django_tests/test_utils')
+    sys.path.insert(0, '/home/esidsen/projects/djongo/tests/django_tests/test_utils')
     if not hasattr(settings, 'TEST_RUNNER'):
         settings.TEST_RUNNER = 'django.test.runner.DiscoverRunner'
     settings.TEST_RUNNER = 'test_runner.DiscoverRunner'

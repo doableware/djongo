@@ -164,14 +164,13 @@ defaults:
       notice:
         not_ready: "Parts of this feature are still under development.\n{: .notice--warning}"
         _support: "If you are an enterprise that uses Djongo in your products, contact us for long term support and [licensing options](/support/).\n{: .notice--danger}"
-        not_standard: "Features under development in this section come preinstalled on DjongoCS. Visit the [support page](/support/) for more information.\n{: .notice--danger}"
+        not_standard: "Features under development in this section come preinstalled on the Djongo Webserver. Visit the [support page](/support/) for more information.\n{: .notice--danger}"
       layout: single
       read_time: false
       author_profile: false
       share: false
       comments: false
       toc: true
-      toc_sticky: true
       sidebar:
         nav: "docs"
 
