@@ -19,16 +19,16 @@ form:
       required: true
 
 tires:
-  - title: DjongoCS
+  - title: Djongo Webserver
     price: 15
-    url: djongocs/create-account/
+    url: webserver
     benefits:
       - A VM instance for deploying your Djongo powered APIs.
-      - Unique API endpoint, accessible from the web.
+      - An unique API endpoint that is accessible from the web.
 
   - title: Basic Support
     price: 59
-    url: contact/discord-support/
+    url: discord-support
     benefits:
       - You get access to the *priority discussion board* on Discord.
       - Resolution time within 2 - 4 weeks.
@@ -36,7 +36,7 @@ tires:
   - title: Premium Support
     price: 149
     per_hour: true
-    url: contact/book-a-debug/
+    url: book-a-debug
     benefits:
       - Issue resolved within the next day.
       - Email support.

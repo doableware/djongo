@@ -5,11 +5,9 @@
 {% include vendors/hotjar.html %}
 
 <script src="{{ '/assets/js/cookie-consent.js' | relative_url }}"></script>
-{% if page.permalink == '/djongocs/' %}
-  <script type="module" src="{{ '/assets/js/dashboard.js' | relative_url }}"></script>
-{% elsif page.permalink == '/djongocs/login/'%}
+{% if page.permalink == '/server/' %}
+  <script type="module" src="{{ '/assets/js/client.js' | relative_url }}"></script>
+{% elsif page.permalink == '/server/login/'%}
   <script type="module" src="{{ '/assets/js/login.js' | relative_url }}"></script>
-{% elsif page.permalink == '/support/djongocs/create-account/'%}
-  <script type="module" src="{{ '/assets/js/create-account.js' | relative_url }}"></script>
 {% endif %}
 <!-- end custom head snippets -->

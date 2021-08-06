@@ -1,10 +1,69 @@
 ---
 title: Get Started
 permalink: /get-started/
-description: "Djongo overcomes common pitfalls of PyMongo programming. It maps python objects to MongoDB documents. 
-Setting up the mapping documents to python objects is easy with Djongo."
+description: "Djongo overcomes common pitfalls of PyMongo programming. It maps python objects to MongoDB documents. Setting up the mapping documents to python objects is easy with Djongo."
 layout: docs
 ---
+
+## Djongo Server
+
+The Djongo package and dependencies are installed and preconfigured on the [Djongo Server][support_page]. The Djongo 
+Server is the fastest way to deploy your djongo powered app. 
+
+### SSH
+On account creation you install your public SSH key at the [server dashboard](/server/).
+This gives a secure shell access to the VM instance for uploading a 
+[Django App](https://docs.djangoproject.com/en/dev/intro/tutorial01/). Once the key is installed, 
+the dashboard displays the SSH port number over which you can connect to the VM instance. 
+
+Establish a secure shell connection using:
+
+```shell
+ssh <user>@api.djongomapper.com -p <port> 
+``` 
+
+The `user` is the same as the username used while creating the server account.
+
+### API Endpoint
+When you create an account on the Djongo Server you get a unique URL path assigned to you. The Django views that you
+create for servicing your API can be accessed and extended further starting from the base URL:
+
+```shell
+https://api.djongomapper.com/<user> 
+``` 
+
+### Launching the App
+
+Establishing a SSH connection to your VM instance logs you into the `/home/$USER` directory. The typical home directory
+structure looks like:
+ 
+```shell
+~home
+| -- .ssh/
+| -- site/
+|   -- api/
+|     -- settings.py
+|     -- urls.py
+|   -- app/
+|     -- app1/
+|       -- views.py
+|       -- models.py
+|     -- app2/
+|       -- views.py
+|       -- models.py
+```
+
+In your `urls.py` if you add an entry like `path('hello/', app1.views.hello)`, the URL path becomes
+`https://api.djongomapper.com/<user>/hello`
+
+#### Reload the Server
+After making changes to your app, you need to reload the server. This is done by clicking the reload button 
+in your [server dashboard](/server/).
+
+{% comment %}
+### Installing dependencies
+
+{% endcomment %}
 
 ## Local development
 
@@ -33,11 +92,81 @@ For a local installation start with:
       ```
    MongoDB 3.6 or higher is required.
 
+## Database configuration
+
+The `settings.py` supports (but is not limited to) the following  options:
+
+Attribute | Value | Description
+---------|------|-------------
+ENGINE | djongo | The MongoDB connection engine for interfacing with Django.
+ENFORCE_SCHEMA | True | Ensures that the model schema and database schema are exactly the same. Raises `Migration Error` in case of discrepancy.
+ENFORCE_SCHEMA | False | (Default) Implicitly creates collections. Returns missing fields as `None` instead of raising an exception.
+NAME | your-db-name | Specify your database name. This field cannot be left empty.
+LOGGING | dict | A [dictConfig](https://docs.python.org/3.6/library/logging.config.html) for the type of logging to run on djongo.
+CLIENT | dict | A set of key-value pairs that will be passed directly to [`MongoClient`](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient) as kwargs while creating a new client connection.
+  
+All options except `ENGINE` and `ENFORCE_SCHEMA` are the same those listed in the [pymongo documentation](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient).
+
+
+```python
+    DATABASES = {
+        'default': {
+            'ENGINE': 'djongo',
+            'NAME': 'your-db-name',
+            'ENFORCE_SCHEMA': False,
+            'CLIENT': {
+                'host': 'host-name or ip address',
+                'port': port_number,
+                'username': 'db-username',
+                'password': 'password',
+                'authSource': 'db-name',
+                'authMechanism': 'SCRAM-SHA-1'
+            },
+            'LOGGING': {
+                'version': 1,
+                'loggers': {
+                    'djongo': {
+                        'level': 'DEBUG',
+                        'propagate': False,                        
+                    }
+                },
+             },
+        }
+    }
+```
+
+### Enforce schema
+
+MongoDB is *schemaless*, which means no schema rules are enforced by the database. You can add and exclude fields per entry and MongoDB will not complain. This can make life easier, especially when there are frequent changes to the data model. Take for example the `Blog` Model (version 1).
+
+```python
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.TextField()
+```
+
+You can save several entries into the DB and later modify it to version 2:
+
+```python
+class Blog(models.Model):
+    name = models.CharField(max_length=100)
+    tagline = models.TextField()
+    description = models.TextField()
+```
+
+The modified Model can be saved **without running any migrations**. 
+
+This works fine if you know what you are doing. Consider a query that retrieves entries belonging to both the 'older' model (with just 2 fields) and the current model. What will the value of `description` now be? To handle such scenarios Djongo comes with the `ENFORCE_SCHEMA` option. 
+
+When connecting to Djongo you can set `ENFORCE_SCHEMA: True`. In this case, a `MigrationError` will be raised when field values are missing from the retrieved documents. You can then check what went wrong. 
+
+`ENFORCE_SCHEMA: False` works by silently setting the missing fields with the value `None`. If your app is programmed to expect this (which means it is not a bug) you can get away by not calling any migrations.
+
 ## MongoDB and Django
 
 ### EmbeddedField
  Nest a `dict` inside a model with the `EmbeddedField`. The `model_container` is used to describe the structure of the 
- data stored.
+ data being stored.
 
 ```python
 from djongo import models
@@ -91,138 +220,9 @@ e.save()
 
 -->
 
-## Database configuration
-
-The `settings.py` supports (but is not limited to) the following  options:
-
-Attribute | Value | Description
----------|------|-------------
-ENGINE | djongo | The MongoDB connection engine for interfacing with Django.
-ENFORCE_SCHEMA | True | Ensures that the model schema and database schema are exactly the same. Raises `Migration Error` in case of discrepancy.
-ENFORCE_SCHEMA | False | (Default) Implicitly creates collections. Returns missing fields as `None` instead of raising an exception.
-NAME | your-db-name | Specify your database name. This field cannot be left empty.
-LOGGING | dict | A [dictConfig](https://docs.python.org/3.6/library/logging.config.html) for the type of logging to run on djongo.
-CLIENT | dict | A set of key-value pairs that will be passed directly to [`MongoClient`](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient) as kwargs while creating a new client connection.
-  
-All options except `ENGINE` and `ENFORCE_SCHEMA` are the same those listed in the [pymongo documentation](http://api.mongodb.com/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient).
-
-
-```python
-    DATABASES = {
-        'default': {
-            'ENGINE': 'djongo',
-            'NAME': 'your-db-name',
-            'ENFORCE_SCHEMA': False,
-            'CLIENT': {
-                'host': 'host-name or ip address',
-                'port': port_number,
-                'username': 'db-username',
-                'password': 'password',
-                'authSource': 'db-name',
-                'authMechanism': 'SCRAM-SHA-1'
-            },
-            'LOGGING': {
-                'version': 1,
-                'loggers': {
-                    'djongo': {
-                        'level': 'DEBUG',
-                        'propagate': False,                        
-                    }
-                },
-             },
-        }
-    }
-```
-
-## DjongoCS
-
-Djongo Cloud Server is the fastest way to deploy to the cloud your djongo powered apps. The DjongoCS package and
-dependencies come preconfigured and installed on the [Cloud][support_page]. 
-
-### SSH
-On account creation you install your public SSH key at the [dashboard](/djongocs/).
-This gives a secure shell access to the VM instance for uploading a 
-[Django App](https://docs.djangoproject.com/en/dev/intro/tutorial01/). Once the key is installed, 
-the dashboard displays the SSH port number over which you can connect to the VM instance. 
-
-Establish a secure shell connection using:
-
-```shell
-ssh <user>@api.djongomapper.com -p <port> 
-``` 
-
-The `user` is the same as the username used while creating the account.
-
-### Public API
-When you create an account on DjongoCS you get a unique URL path assigned to you. The Django views that you
-create for servicing your API can be accessed and extended further starting from the base URL:
-
-```shell
-https://api.djongomapper.com/<user> 
-``` 
-
-### Launching the App
-
-Establishing a SSH connection to your server logs you into the `/home/$USER` directory. The typical home directory
-structure looks like:
- 
-```shell
-~home
-| -- .ssh/
-| -- site/
-|   -- api/
-|     -- settings.py
-|     -- urls.py
-|   -- app/
-|     -- app1/
-|       -- views.py
-|       -- models.py
-|     -- app2/
-|       -- views.py
-|       -- models.py
-```
-
-In your `urls.py` if you add an entry like `path('hello/', app1.views.hello)`, the URL path becomes
-`https://api.djongomapper.com/<user>/hello`
-
-#### Reload the Server
-After making changes to your app, you need to reload the server. This is done by clicking the reload button 
-in your [dashboard](/djongocs/).
-
-{% comment %}
-### Installing dependencies
-
-{% endcomment %}
-
 ## Security and Integrity Checks
 Djongo allows for checks on data fields before they are saved to the database. Running the correct integrity checks and field value validators before writing data into the database is important. 
 
-### Enforce schema
-
-MongoDB is *schemaless*, which means no schema rules are enforced by the database. You can add and exclude fields per entry and MongoDB will not complain. This can make life easier, especially when there are frequent changes to the data model. Take for example the `Blog` Model (version 1).
-
-```python
-class Blog(models.Model):
-    name = models.CharField(max_length=100)
-    tagline = models.TextField()
-```
-
-You can save several entries into the DB and later modify it to version 2:
-
-```python
-class Blog(models.Model):
-    name = models.CharField(max_length=100)
-    tagline = models.TextField()
-    description = models.TextField()
-```
-
-The modified Model can be saved **without running any migrations**. 
-
-This works fine if you know what you are doing. Consider a query that retrieves entries belonging to both the 'older' model (with just 2 fields) and the current model. What will the value of `description` now be? To handle such scenarios Djongo comes with the `ENFORCE_SCHEMA` option. 
-
-When connecting to Djongo you can set `ENFORCE_SCHEMA: True`. In this case, a `MigrationError` will be raised when field values are missing from the retrieved documents. You can then check what went wrong. 
-
-`ENFORCE_SCHEMA: False` works by silently setting the missing fields with the value `None`. If your app is programmed to expect this (which means it is not a bug) you can get away by not calling any migrations.
 
 ### Validators
 Apply validators to each field before they are saved.
@@ -287,7 +287,7 @@ post = Entry.objects.get(pk=p_key)
 
 Will [get a model object](https://docs.djangoproject.com/en/dev/topics/db/queries/#retrieving-a-single-object-with-get) having primary key `p_key`.
 
-### Using PyMongo Commands 
+### Using Pymongo commands 
 
 MongoDB has powerful query syntax and `DjongoManager` lets you exploit it fully. For the above `Entry` model define a custom query function:
 
@@ -328,12 +328,12 @@ avatar = models.ImageField(storage=grid_fs_storage, upload_to='')
 
 Refer to [Using GridFSStorage](/using-django-with-mongodb-gridfs/) for more details.
 
-## DjongoCS Features
+## Djongo Server
 
-Features under development on DjongoCS are not a part of the standard Djongo package. Visit the [support page][support_page] for more information.
+Features under development on Djongo Server are not a part of the standard Djongo package. Visit the [support page][support_page] for more information.
 {: .notice--info}
 
-DjongoCS supports multiple features of MongoDB including:
+Djongo Server brings support to all features of MongoDB features including:
 
 ### Indexes
 
