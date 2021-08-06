@@ -1,1 +1,0 @@
-import{Cookie,API_BASE}from"./utils.js";(()=>{const o="/djongocs/login/";Cookie.has("UserId")?fetch(API_BASE+"user-info/").then((s=>{s.json().then((s=>{"LOGIN_REQUIRED"===s.status?window.location.href=o:s.status}))}),(o=>{})):window.location.href=o})();

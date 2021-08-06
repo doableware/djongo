@@ -1,11 +1,11 @@
 # main links
 main:
-  - title: "Docs"
-    url: /get-started/
-  - title: "DjongoCS"
-    url: /djongocs/
+  - title: "Server"
+    url: /server/
   - title: "Support"
     url: /support/
+  - title: "Docs"
+    url: /get-started/
 
 docs:
   - title: "Djongo"
@@ -23,7 +23,7 @@ docs:
     - title: "Other fields"
       url: /using-django-with-other-fields/
 
-  - title: "DjongoCS"
+  - title: "Djongo Server"
 #    url: /djongonxt/
     children:
     - title: "Indexes"
@@ -56,6 +56,6 @@ docs:
 
 server:
   - title: "Info"
-    url: /djongocs/
+    url: /server/
   - title: "Control"
-    url: /djongocs/control
+    url: /server/control
