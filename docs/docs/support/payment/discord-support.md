@@ -3,7 +3,7 @@ title: Djongo Support
 permalink: /support/payment/discord-support/ 
 layout: splash
 classes:
-  - empty-header
+  - empty-banner
   - l-splash
 ---
 

@@ -9,7 +9,14 @@ excerpt: "If you are a company that uses Djongo in your products, consider enrol
 classes:
   - l-splash-full
   - feature-page
-  - empty-banner
+  - banner-page
+
+header:
+    overlay_image: /assets/images/home/banner-rand-dark-many6.png
+    overlay_color_dark: #092e20
+    overlay_color: #09411f
+    cta_url: /support/djongocs/create-account/
+    cta_label: "Create Account"     
 ---
 
 {% capture head %}
