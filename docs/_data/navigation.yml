@@ -12,7 +12,7 @@ docs:
     children:
     - title: "Get Started"
       url: /get-started/
-    - title: "Integrating Django"
+    - title: "Django with MongoDB"
       url: /integrating-django-with-mongodb/
     - title: "Embedded Field"
       url: /using-django-with-mongodb-data-fields/

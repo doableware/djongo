@@ -23,8 +23,8 @@ tires:
     price: 15
     url: djongocs/create-account/
     benefits:
-      - A VM instance for deploying your Djongo powered APIs.
-      - Unique API endpoint, accessible from the web.
+      - A preconfigured server instance for deploying your Djongo powered apps.
+      - Public API endpoint, accessible from the web.
 
   - title: Basic Support
     price: 59
