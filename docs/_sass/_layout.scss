@@ -17,22 +17,22 @@
         border-bottom-style: none;
       }
     }
-  }
 
-  h1 {
-    margin: 1.5em 0 1em;
+    h1 {
+      margin: 1.5em 0 1em;
 
-    @include break(x-small) {
-      text-align: left;
+      @include break(x-small) {
+        text-align: left;
+      }
     }
-  }
 
-  h2 {
-    margin-bottom: 1em;
-  }
+    h2 {
+      margin-bottom: 1em;
+    }
 
-  h1, h2, h3, h4, h5, h6 {
-    text-align: center;
+    h1, h2, h3, h4, h5, h6 {
+      text-align: center;
+    }
   }
 
   form {
@@ -84,7 +84,7 @@
   }
 }
 
-.empty-header {
+.empty-banner {
   .masthead {
     margin-bottom: 3em;
   }

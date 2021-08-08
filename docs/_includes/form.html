@@ -14,7 +14,11 @@
     method="POST"
     {% if include.form.classes %}
       class="{{ include.form.classes | join: ' ' }}"
-    {% endif %}>
+    {% endif %}
+    {% for attr in include.form.attr %}
+      {{ attr[0] }}="{{ attr[1] }}"
+    {% endfor %}
+>
   {% for field in include.form.fields %}
     {% if field.type == 'select' %}
       <label>{{ field.label }}

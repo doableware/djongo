@@ -1,14 +1,15 @@
 ---
 permalink: /
 layout: splash
-title: "Unified Database Query"
+title: "Multi Database Enabled Backends"
 excerpt: 
-tagline: Deploy a Multi-DB Enabled Backend Server Instantly
+tagline: Simplify Multi Database Backend Development. Deploy Your Code On Our Preconfigured Backends Instantly.
 
 description: "Djongo is a smarter approach to database querying. It maps python objects to MongoDB documents. It can be used with both relational and non-relational databases."
 
 classes:
     - feature-page
+    - banner-page
     - l-splash-full
 
 header:
@@ -16,7 +17,7 @@ header:
     overlay_color_dark: #092e20
     overlay_color: #09411f
     cta_url: /support/
-    cta_label: "Deploy"       
+    cta_label: "Get Started"       
 
 ---
 

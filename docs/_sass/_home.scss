@@ -83,8 +83,11 @@ $feature-margin-bottom: 1em;
   }
 }
 
-.feature-page {
+.banner-page {
   @include banner--map;
+}
+
+.feature-page {
 
   .feature__wrapper {
     margin-bottom: 3em;

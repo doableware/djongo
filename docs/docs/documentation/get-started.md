@@ -6,7 +6,7 @@ Setting up the mapping documents to python objects is easy with Djongo."
 layout: docs
 ---
 
-## Local development
+## Local Development
 
 ### Setup
 For a local installation start with:
@@ -91,7 +91,7 @@ e.save()
 
 -->
 
-## Database configuration
+## Database Configuration
 
 The `settings.py` supports (but is not limited to) the following  options:
 
