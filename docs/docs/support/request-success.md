@@ -3,8 +3,8 @@ title: Djongo Support
 permalink: /support/request-success/
 layout: splash
 classes:
-  - empty-header
-  - custom-splash
+  - empty-banner
+  - l-splash
 ---
 
 # Great! Your request has been recorded

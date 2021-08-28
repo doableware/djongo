@@ -1,0 +1,1 @@
+import{API_BASE}from"./utils.js";import{CreateAccountPage}from"./create-account.page.js";(()=>{document.querySelector("form");const e=new CreateAccountPage;e.form.addEventListener("submit",(t=>{t.preventDefault(),document.querySelector('input[type="submit"]').disabled=!0,e.show("loader"),e.sendToBackend(API_BASE)}),!1)})();
