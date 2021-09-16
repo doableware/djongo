@@ -69,15 +69,17 @@ $feature-margin-bottom: 1em;
 @mixin banner--map {
   //mm override
   .wrapper {
-    background-color: rgba(9, 65, 31, 0.38);
+    padding: 3em;
     width: max-content;
     margin-left: 0;
+    background-image: linear-gradient(to left, rgba(255,255,255,0) 0em, rgba(9, 65, 31,1) 2.5em,
+            rgba(9, 65, 31,1) calc(100% - 2.5em), rgba(255,255,255,0));
 
     @include break-min(80em) {
       margin-left: calc((100% - #{$x-large})/2);
     }
 
-    @include break(x-small) {
+    @include break(medium) {
       width: 100%;
     }
   }
@@ -85,6 +87,10 @@ $feature-margin-bottom: 1em;
 
 .banner-page {
   @include banner--map;
+}
+
+.page__hero--overlay {
+  padding: 0;
 }
 
 .feature-page {
