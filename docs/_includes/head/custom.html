@@ -3,26 +3,5 @@
 <link rel="shortcut icon" href="/assets/images/favicon.ico">
 {% include vendors/google-tag-manager.html %}
 {% include vendors/hotjar.html %}
-
-{% if page.debug == true %}
-  <script src="{{ '/assets/js/cookie-consent.js' | relative_url }}"></script>
-
-  {% if page.permalink == '/djongocs/' %}
-    <script type="module" src="{{ '/assets/js/dashboard.js' | relative_url }}"></script>
-  {% elsif page.permalink == '/djongocs/login/'%}
-    <script type="module" src="{{ '/assets/js/login.js' | relative_url }}"></script>
-  {% elsif page.permalink == '/support/djongocs/create-account/'%}
-    <script type="module" src="{{ '/assets/js/test/create-account.js' | relative_url }}"></script>
-  {% endif %}
-{% else %}
-  <script src="{{ '/assets/js/cookie-consent.js' | relative_url }}"></script>
-
-  {% if page.permalink == '/djongocs/' %}
-    <script type="module" src="{{ '/assets/js/dashboard.js' | relative_url }}"></script>
-  {% elsif page.permalink == '/djongocs/login/'%}
-    <script type="module" src="{{ '/assets/js/login.js' | relative_url }}"></script>
-  {% elsif page.permalink == '/support/djongocs/create-account/'%}
-    <script type="module" src="{{ '/assets/js/create-account.js' | relative_url }}"></script>
-  {% endif %}
-{% endif %}
+<script src="{{ '/assets/js/cookie-consent.js' | relative_url }}"></script>
 <!-- end custom head snippets -->

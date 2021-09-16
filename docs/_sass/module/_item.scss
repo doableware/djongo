@@ -1,9 +1,33 @@
+$box-min-width: 16em;
+$box-side-margin: 1em;
+$box-bottom-margin: 2em;
+$container-padding: 2em;
 
-$tire-3-col-total-width: $box-min-width-px*3 + $box-side-margin-px*6 + $container-box-padding-px;
+$item-content-min-width: 25em;
+$item-side-margin: 1em;
+$item-min-width: $item-content-min-width + 2*$item-side-margin;
 
-.item-3-col {
-  @extend .box;
-  @include box-3-col;
+
+@mixin item-width($columns) {
+  @if $columns > 1 {
+    width: calc(#{100% / $columns} - (#{$box-side-margin} * 2));
+
+    @for $i from $columns - 1 through 1 {
+      $total-width: ($i * $item-min-width) + $container-padding;
+      @include break(max, $total-width) {
+        width: calc(#{100% / $i} - (#{$box-side-margin} * 2));
+      }
+    }
+  } @else {
+    width: calc(100% - #{$box-side-margin});
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+.item {
+  padding: 1em 0 1em;
+  margin: 0 $box-side-margin $box-bottom-margin;
   text-align: center;
 
   ul {
@@ -12,22 +36,30 @@ $tire-3-col-total-width: $box-min-width-px*3 + $box-side-margin-px*6 + $containe
 
   form {
     text-align: left;
+
     input[type=submit] {
       text-align: center;
       margin: 0 auto 1.75em auto;
       display: block;
     }
     width: 100%;
-
   }
+}
 
-  @include break(max, $tire-3-col-total-width) {
-    @include box-2-col;
-  }
+.item-3-col {
+  @extend .item;
+  @include item-width(3);
+}
 
-  @include break(x-small) {
-    @include box-1-col;
-  }
+.item-2-col {
+  @extend .item;
+  @include item-width(2);
+}
+
+.item-distinct {
+  border: 1px solid gainsboro;
+  border-radius: 4px;
+  padding: 1em;
 }
 
 .item-title {
@@ -44,8 +76,4 @@ $tire-3-col-total-width: $box-min-width-px*3 + $box-side-margin-px*6 + $containe
   font-size: 0.9em;
   font-weight: lighter;
   margin-bottom: 1em;
-}
-
-.tire-disclaimer {
-  @extend .box;
 }

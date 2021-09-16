@@ -3,7 +3,7 @@ main:
   - title: "Docs"
     url: /get-started/
   - title: "DjongoCS"
-    url: /djongocs/
+    url: /djongocs/dashboard/
   - title: "Support"
     url: /support/
 
