@@ -140,7 +140,7 @@ Djongo Cloud Server is the fastest way to deploy to the cloud your djongo powere
 dependencies come preconfigured and installed on the [Cloud][support_page]. 
 
 ### SSH
-On account creation you install your public SSH key at the [dashboard](/djongocs/).
+On account creation you install your public SSH key at the [dashboard](/djongocs/dashboard/).
 This gives a secure shell access to the VM instance for uploading a 
 [Django App](https://docs.djangoproject.com/en/dev/intro/tutorial01/). Once the key is installed, 
 the dashboard displays the SSH port number over which you can connect to the VM instance. 
@@ -187,7 +187,7 @@ In your `urls.py` if you add an entry like `path('hello/', app1.views.hello)`, t
 
 #### Reload the Server
 After making changes to your app, you need to reload the server. This is done by clicking the reload button 
-in your [dashboard](/djongocs/).
+in your [dashboard](/djongocs/dashboard/).
 
 {% comment %}
 ### Installing dependencies

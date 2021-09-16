@@ -1,5 +1,5 @@
 ---
-title: DjongoCS
+title: Support
 permalink: /support/
 layout: splash
 tagline: "Create and Deploy a Backend Server"

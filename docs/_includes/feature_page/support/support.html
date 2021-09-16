@@ -4,7 +4,7 @@
   <div class="l-tire">
     {% for tire in site.data.support.tire_column.tires %}
       {% if tire.invisible != true %}
-        <div class="item-3-col">
+        <div class="item-3-col item-distinct">
           <div itemprop="name" class="item-title">{{ tire.title }}</div>
           <div itemprop="price" class="item-price">${{ tire.price }}</div>
           <div itemprop="eligibleDuration"  class="item-period">

@@ -1,1 +1,55 @@
-const API_BASE="https://api.djongomapper.com/mapper/";class Cookie{constructor(){}static has(s){return document.cookie.split(";").some((t=>t.trim().startsWith(s+"=")))}static get(s){let t=document.cookie.split(";").find((t=>t.trim().startsWith(s+"=")));if(t)return t.trim().split("=")[1]}static set(s,t){document.cookie=s+"="+t+";Secure"}}class Page{constructor(s){this.els=s}show(s){this.els[s].classList.remove("is-hidden")}hide(s){this.els[s].classList.add("is-hidden")}hideAll(){for(const s in this.els)this.hide(s)}showAll(){for(const s in this.els)this.show(s)}}export{Cookie,API_BASE,Page};
+const API_BASE = 'https://api.djongomapper.com/mapper/';
+
+class Cookie {
+  constructor() {
+  }
+
+  static has(key) {
+    return document.cookie.split(';').
+      some(itm => itm.trim().startsWith(key + '='))
+  }
+
+  static get(key) {
+    let cookie = document.cookie.split(';').
+      find(itm => itm.trim().startsWith(key + '='));
+    if(cookie) {
+      return cookie.trim().split('=')[1];
+    }
+  }
+
+  static set(key, val) {
+    document.cookie = key + '=' + val + ';' + 'Secure';
+  }
+}
+
+class Page {
+  constructor(els) {
+    this.els = els;
+  }
+
+  show(name) {
+    this.els[name].classList.remove('is-hidden');
+  }
+
+  hide(name) {
+    this.els[name].classList.add('is-hidden');
+  }
+
+  hideAll() {
+    for (const name in this.els){
+      this.hide(name);
+    }
+  }
+
+  showAll() {
+    for (const name in this.els){
+      this.show(name);
+    }
+  }
+}
+
+export {
+  Cookie,
+  API_BASE,
+  Page
+}
