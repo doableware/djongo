@@ -328,7 +328,10 @@ class _Tokens2Id:
     def to_id(self):
         _id = {}
         for iden in self.sql_tokens:
-            if iden.column == iden.field:
+            # if the token is a function then call its to_mongo routine
+            if isinstance(iden, SQLFunc) and iden.alias:
+                _id[iden.alias] = iden.to_mongo()
+            elif iden.column == iden.field:
                 _id[iden.field] = f'${iden.field}'
             else:
                 try:
