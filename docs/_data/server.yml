@@ -1,0 +1,31 @@
+forms:
+  login:
+    subject: server-login
+    next: "/support/request-success"
+    classes:
+      - form--splash
+    fields:
+      - type: input
+        label: "User Name"
+        attr:
+          type: text
+          name: userName
+          required: ''
+          autocomplete: username
+          title: 'Only alphanumeric characters'
+          pattern: '[a-z0-9]{4,8}'
+
+      - type: input
+        label: "Password"
+        attr:
+          type: password
+          name: password
+          required: ''
+          autocomplete: current-password
+
+      - type: input
+        attr:
+          type: submit
+          value: Login
+          class: "btn btn--primary btn--large"
+

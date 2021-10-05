@@ -2,6 +2,7 @@ import pytz
 from django.conf import settings
 from django.db.backends.base.operations import BaseDatabaseOperations
 from django.utils import timezone
+import bson
 import datetime
 import calendar
 
@@ -57,6 +58,11 @@ class DatabaseOperations(BaseDatabaseOperations):
 
         return datetime.datetime(1900, 1, 1, value.hour, value.minute,
                                  value.second, value.microsecond)
+    
+    def adapt_decimalfield_value(self, value, max_digits=None, decimal_places=None):
+        if value is None:
+            return None
+        return bson.Decimal128(super().adapt_decimalfield_value(value, max_digits, decimal_places))
 
     def convert_datefield_value(self, value, expression, connection):
         if isinstance(value, datetime.datetime):
