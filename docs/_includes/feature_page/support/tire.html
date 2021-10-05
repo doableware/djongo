@@ -1,0 +1,32 @@
+
+<section  itemscope itemtype="https://schema.org/Offer">
+  <div class="l-tire">
+    {% for tire in site.data.support.tire_column.tires %}
+      {% if tire.invisible != true %}
+        <div class="item-3-col item-distinct">
+          <div itemprop="name" class="item-title">{{ tire.title }}</div>
+          <div itemprop="price" class="item-price">${{ tire.price }}</div>
+          <div itemprop="eligibleDuration"  class="item-period">
+            {% if tire.per_hour %}
+              PER HOUR
+            {% else %}
+              PER MONTH
+            {% endif %}
+          </div>
+          <a class="btn btn--success btn--large" href="{{ tire.url }}">Apply</a>
+          <div itemprop="description">
+            <ul>
+              {% for b in tire.benefits %}
+                <li>{{ b | markdownify | remove: "<p>" | remove: "</p>" }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>
+
+
+
+

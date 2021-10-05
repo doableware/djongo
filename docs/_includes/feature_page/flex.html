@@ -1,0 +1,6 @@
+{% assign items = include.content | split: '::' %}
+<div class="flex">
+  {% for flex in items %}
+    <div>{{ flex | markdownify }}</div>
+  {% endfor %}
+</div>

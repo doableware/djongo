@@ -3,8 +3,8 @@ title: Djongo Support
 permalink: /support/payment/discord-support/ 
 layout: splash
 classes:
-  - empty-header
-  - custom-splash
+  - empty-banner
+  - l-splash
 ---
 
-{% include support/payment.html price_id="price_1I8mqtLbyDBUaJVjs0ZCdbzS" %}
+{% include feature_page/support/payment.html price_id="price_1I8mqtLbyDBUaJVjs0ZCdbzS" %}
