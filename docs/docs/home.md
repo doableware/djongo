@@ -1,12 +1,13 @@
 ---
 permalink: /
 layout: splash
-title: "Multi DB Enabled Backend"
+title: "MongoDB Django App Hosting"
 excerpt: 
-tagline: Create An Endpoint On Your Preconfigured, Multi Database Backend.
+tagline: Host Django Apps on a MongoDB database.
 
-description: "Djongo is a smarter approach to database querying. It maps python objects to MongoDB documents.
-It can be used with both relational and non-relational databases."
+description: "Djongo is a Django and MongoDB hosting service that lets you host Django Apps instantly on
+a preconfigured MongoDB database. Django contrib modules such as Auth, Sessions and Admin 
+can be used directly without any changes."
 
 classes:
     - feature-page
@@ -18,7 +19,7 @@ header:
     overlay_color_dark: #092e20
     overlay_color: #09411f
     cta_url: /djongocs/create-account/
-    cta_label: "Create Endpoint"       
+    cta_label: "Get Started"       
 
 ---
 
