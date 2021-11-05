@@ -176,8 +176,8 @@ class LikeOp(_BinaryOp):
         if not isinstance(to_match, str):
             raise SQLDecodeError
 
-        to_match = to_match.replace('%', '.*')
-        self._regex = '^' + to_match + '$'
+        to_match = re.escape(to_match).replace('%', '.*')
+        self._regex = f'^{to_match}$'
 
     def to_mongo(self):
         return {self._field: {'$regex': self._regex}}
