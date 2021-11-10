@@ -600,6 +600,32 @@ class JSONOp(_Op):
     def negate(self):
         self.is_negated = True
 
+    def lookup_to_mongo(self):
+        # For $contains queries with lookups
+        if not isinstance(self._constant, dict):
+            raise SQLDecodeError(f"Invalid $contains element: {self._constant}")
+        final = {}
+        for k, v in self._constant.items():
+            field = k.rsplit('__', 1)
+
+            if len(field) == 1: # simple equality
+                final[field[0]] = v
+                continue
+
+            field, lookup = '.'.join(field[:-1]), field[-1]
+            '''
+            Supports mongo comparison operators: https://docs.mongodb.com/manual/reference/operator/query/
+            By this design, we expect the user to mix traditional ORM query with mongo operators for $contains.
+            Alternatively, we could also support django-based lookups
+            (https://docs.djangoproject.com/en/3.2/ref/models/querysets/#field-lookups)
+            but that would require more complicated transformations here.
+            '''
+            if lookup in ['in', 'nin', 'lt', 'lte', 'gt', 'gte', 'eq', 'ne']:
+                final[field] = {f'${lookup}': v}
+            else:
+                raise SQLDecodeError(f'Lookup {lookup} not supported in $contains')
+        return final
+
     def to_mongo(self):
         field = '.'.join([f[1:-1] for f in self._identifier.split('.')[1:]])
 
@@ -609,9 +635,16 @@ class JSONOp(_Op):
 
         elif self._operator == '$contains':
             if isinstance(self._constant, dict):
-                return {f'{field}.{k}': self._constant[k] for k in self._constant}
+                # https://docs.mongodb.com/manual/tutorial/query-array-of-documents/#a-single-nested-document-meets-multiple-query-conditions-on-nested-fields
+                if self.is_negated:
+                    return {field: {'$not': {'$elemMatch': self.lookup_to_mongo()}}}
+                else:
+                    return {field: {'$elemMatch': self.lookup_to_mongo()}}
             elif isinstance(self._constant, list):
-                return {field: {'$all': self._constant}}
+                if self.is_negated:
+                    return {field: {'$not': {'$all': self._constant}}}
+                else:
+                    return {field: {'$all': self._constant}}
             else:
                 raise SQLDecodeError(f'Invalid params for $contains: {self._constant}')
 

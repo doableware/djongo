@@ -126,19 +126,10 @@ class SQLIdentifier(AliasableToken):
             return f'{self.table}.{self.column}'
 
     @property
-    def table(self) -> str:
-        name = self.given_table
-        alias2token = self.token_alias.alias2token
-        try:
-            return alias2token[name].table
-        except KeyError:
-            return name
-
-    @property
     def given_table(self) -> str:
         name = self._token.get_parent_name()
         if name is None:
-            name = self._token.get_real_name()
+            name = self._parse_token_value()[0]
 
         if name is None:
             raise SQLDecodeError
@@ -146,10 +137,20 @@ class SQLIdentifier(AliasableToken):
 
     @property
     def column(self) -> str:
-        name = self._token.get_real_name()
+        name = self._parse_token_value()[1]
         if name is None:
             raise SQLDecodeError
         return name
+
+    def _parse_token_value(self):
+        # fix for JSONField accessors (example: a.b.c.d)
+        dealiased = self._token.value.split(' AS ')[0]
+        tokens = [f for f in dealiased.split('.')]
+        table, column = tokens[0], '.'.join(tokens[1:])
+        if not column:
+            column = table
+        table, column = table.replace('"', ''), column.replace('"', '')
+        return table, column
 
 
 class SQLConstIdentifier(AliasableToken):
