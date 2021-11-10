@@ -126,6 +126,15 @@ class SQLIdentifier(AliasableToken):
             return f'{self.table}.{self.column}'
 
     @property
+    def table(self) -> str:
+        name = self.given_table
+        alias2token = self.token_alias.alias2token
+        try:
+            return alias2token[name].table
+        except KeyError:
+            return name
+
+    @property
     def given_table(self) -> str:
         name = self._token.get_parent_name()
         if name is None:
