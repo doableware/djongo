@@ -1,5 +1,6 @@
 import re
 import typing
+from collections import defaultdict
 from itertools import chain
 
 from sqlparse import tokens
@@ -604,11 +605,11 @@ class JSONOp(_Op):
         # For $contains queries with lookups
         if not isinstance(self._constant, dict):
             raise SQLDecodeError(f"Invalid $contains element: {self._constant}")
-        final = {}
+        final = defaultdict(dict)
         for k, v in self._constant.items():
             field = k.rsplit('__', 1)
 
-            if len(field) == 1: # simple equality
+            if len(field) == 1:  # simple equality
                 final[field[0]] = v
                 continue
 
@@ -621,7 +622,7 @@ class JSONOp(_Op):
             but that would require more complicated transformations here.
             '''
             if lookup in ['in', 'nin', 'lt', 'lte', 'gt', 'gte', 'eq', 'ne']:
-                final[field] = {f'${lookup}': v}
+                final[field][f'${lookup}'] = v
             else:
                 raise SQLDecodeError(f'Lookup {lookup} not supported in $contains')
         return final
