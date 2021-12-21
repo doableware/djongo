@@ -936,7 +936,7 @@ def create_forward_array_reference_manager(superclass, rel):
                     for obj in objs:
                         if getattr(obj, rh_field.get_attname()) not in fks:
                             to_add.append(obj)
-                    self.add(to_add)
+                    self.add(*to_add)
 
         set.alters_data = True
 
