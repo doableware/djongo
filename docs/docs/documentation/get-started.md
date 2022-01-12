@@ -5,7 +5,7 @@ description: "Djongo overcomes common pitfalls of PyMongo programming. It maps p
 Setting up the mapping documents to python objects is easy with Djongo."
 layout: docs
 ---
-<!--
+
 ## Quick Deploy
 
 1. Start by [creating an account](/djongocs/create-account/). You will be assigned
@@ -14,7 +14,7 @@ a working webserver instance running Django and MongoDB.
 The username is what was used while creating the account.
 3. Login to your [dashboard](/djongocs/dashboard/) and upload your Public SSH key. The command to open a shell
 to your instance will appear in the dashboard. You can upload your app specific Django scripts to the server.
--->
+
 
 ## Local Development
 
