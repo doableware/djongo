@@ -1,8 +1,10 @@
+import json
 import re
 import typing
 from itertools import chain
+from json import JSONDecodeError
 
-from sqlparse import tokens
+from sqlparse import tokens, parse as sqlparse
 from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier, Function
 
 from . import SQLDecodeError
@@ -159,24 +161,50 @@ class LikeOp(_BinaryOp):
         self._regex = None
         self._make_regex(self.statement.next())
 
+    def check_embedded(self, to_match):
+        try:
+            check_dict = to_match
+            replace_chars = "\\%'"
+            for c in replace_chars:
+                if c == "'":
+                    check_dict = check_dict.replace("'", '"')
+                else:
+                    check_dict = check_dict.replace(c, "")
+            check_dict = json.loads(check_dict)
+            if isinstance(check_dict, dict):
+                return check_dict
+            else:
+                return to_match
+        except Exception as e:
+            return to_match
+
     def _make_regex(self, token):
         index = SQLToken.placeholder_index(token)
-
         to_match = self.params[index]
-        if isinstance(to_match, dict):
-            field_ext, to_match = next(iter(to_match.items()))
-            self._field += '.' + field_ext
-        if not isinstance(to_match, str):
-            raise SQLDecodeError
 
-        to_match = to_match.replace('%', '.*')
-        self._regex = '^' + to_match + '$'
+        
+        try:
+            to_match = self.check_embedded(to_match)
+            if isinstance(to_match, str):
+                to_match = to_match.replace('%', '.*')
+                self._regex = '^' + to_match + '$'
+            elif isinstance(to_match, dict):
+                field_ext, to_match = next(iter(to_match.items()))
+                self._field += '.' + field_ext
+                self._regex = to_match
+            else:
+                raise SQLDecodeError
+            
+            print("\n\n PRINT self.regex: %s"%self._regex)
+        except Exception as e:
+        
 
     def to_mongo(self):
         return {self._field: {'$regex': self._regex}}
 
 
 class iLikeOp(LikeOp):
+
     def to_mongo(self):
         return {self._field: {
             '$regex': self._regex,
@@ -465,6 +493,7 @@ class _StatementParser:
             op.evaluate()
         self._op = op
 
+
 class WhereOp(_Op, _StatementParser):
 
     def __init__(self, *args, **kwargs):
@@ -506,13 +535,19 @@ class CmpOp(_Op):
             raise SQLDecodeError('Join using WHERE not supported')
 
         self._operator = OPERATOR_MAP[self.statement.token_next(0)[1].value]
-        index = re_index(self.statement.right.value)
 
-        self._constant = self.params[index] if index is not None else None
-        if isinstance(self._constant, dict):
-            self._field_ext, self._constant = next(iter(self._constant.items()))
+        if isinstance(self.statement.right, Function):
+            self._routine = RoutineOp(self.statement.right, self.query, self.params)
+            self._constant = None
         else:
-            self._field_ext = None
+            self._routine = None
+            index = re_index(self.statement.right.value)
+
+            self._constant = self.params[index] if index is not None else None
+            if isinstance(self._constant, dict):
+                self._field_ext, self._constant = next(iter(self._constant.items()))
+            else:
+                self._field_ext = None
 
     def negate(self):
         self.is_negated = True
@@ -522,6 +557,10 @@ class CmpOp(_Op):
 
     def to_mongo(self):
         field = self._identifier.field
+
+        if self._routine:
+            return {field: self._routine.to_mongo()}
+
         if self._field_ext:
             field += '.' + self._field_ext
 
@@ -529,6 +568,62 @@ class CmpOp(_Op):
             return {field: {self._operator: self._constant}}
         else:
             return {field: {'$not': {self._operator: self._constant}}}
+
+
+class RoutineOp(_Op):
+
+    def __init__(
+            self,
+            statement: SQLStatement,
+            query: 'query.SelectQuery',
+            params: tuple = None,
+            name='ROUTINE'):
+        super().__init__(statement, query, params, name)
+
+        # Routines should follow the grammar below
+        # ROUTINE := IDENTIFIER PARENTHESIS
+        state = 0
+        routine_name = None
+        routine_params = None
+        for tok in statement:
+            if state == 0:
+                if not isinstance(tok, Identifier):
+                    raise SQLDecodeError
+                routine_name = tok.value
+            elif state == 1:
+                index = re_index(tok.tokens[1].value)
+                routine_params = self.params[index] if index is not None else None
+            else:
+                raise SQLDecodeError
+            state += 1
+        self._routine = ROUTINE_MAP[routine_name](routine_params)
+
+    def negate(self):
+        raise SQLDecodeError("Negating routines not supported")
+
+    def to_mongo(self):
+        return self._routine.to_mongo()
+
+
+class Routine:
+
+    def __init__(self, params):
+        self.params = params
+
+    def to_mongo(self):
+        raise NotImplementedError
+
+
+class ListContainsAny(Routine):
+
+    def __init__(self, params):
+        super().__init__(params)
+        if not isinstance(self.params, list):
+            raise SQLDecodeError("Parameters for contains_any have to be a list: %s" % self.params)
+
+    def to_mongo(self):
+        return {'$in': self.params}
+
 
 
 OPERATOR_MAP = {
@@ -539,6 +634,7 @@ OPERATOR_MAP = {
     '<=': '$lte',
 }
 OPERATOR_PRECEDENCE = {
+    'ROUTINE': 9,
     'IS': 8,
     'BETWEEN': 7,
     'LIKE': 6,
@@ -548,4 +644,7 @@ OPERATOR_PRECEDENCE = {
     'AND': 2,
     'OR': 1,
     'generic': 0
+}
+ROUTINE_MAP = {
+    'LIST_CONTAINS_ANY': ListContainsAny
 }
