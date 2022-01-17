@@ -6,6 +6,16 @@ Setting up the mapping documents to python objects is easy with Djongo."
 layout: docs
 ---
 
+## Quick Deploy
+
+1. Start by [creating an account](/djongocs/create-account/). You will be assigned
+a working webserver instance running Django and MongoDB.
+2. (Optional) Test your instance by entering `https://api.djongomapper.com/<username>/` in your browser.
+The username is what was used while creating the account.
+3. Login to your [dashboard](/djongocs/dashboard/) and upload your Public SSH key. The command to open a shell
+to your instance will appear in the dashboard. You can upload your app specific Django scripts to the server.
+
+
 ## Local Development
 
 ### Setup
@@ -173,7 +183,7 @@ structure looks like:
 |   -- api/
 |     -- settings.py
 |     -- urls.py
-|   -- app/
+|   -- apps/
 |     -- app1/
 |       -- views.py
 |       -- models.py
