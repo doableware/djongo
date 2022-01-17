@@ -386,7 +386,7 @@ class InsertQuery(DMLQuery):
             ins = {}
             if auto:
                 for name in auto['auto']['field_names']:
-                    ins[name] = auto['auto']['seq'] - num + i + 1
+                    ins[name] = int(auto['auto']['seq'] - num + i + 1)
             for _field, value in zip(self._cols, val):
                 if (auto and _field in auto['auto']['field_names']
                         and value == 'DEFAULT'):
@@ -396,7 +396,7 @@ class InsertQuery(DMLQuery):
 
         res = self.db[self.left_table].insert_many(docs, ordered=False)
         if auto:
-            self._result_ref.last_row_id = auto['auto']['seq']
+            self._result_ref.last_row_id = int(auto['auto']['seq'])
         else:
             self._result_ref.last_row_id = res.inserted_ids[-1]
         logger.debug('inserted ids {}'.format(res.inserted_ids))
