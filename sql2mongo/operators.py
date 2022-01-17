@@ -1,5 +1,6 @@
 import re
 import typing
+import json
 from itertools import chain
 
 from sqlparse import tokens
@@ -159,19 +160,38 @@ class LikeOp(_BinaryOp):
         self._regex = None
         self._make_regex(self.statement.next())
 
+    def check_embedded(self, to_match):
+        try:
+            check_dict = to_match
+            replace_chars = "\\%'"
+            for c in replace_chars:
+                if c == "'":
+                    check_dict = check_dict.replace("'", '"')
+                else:
+                    check_dict = check_dict.replace(c, "")
+            check_dict = json.loads(check_dict)
+            if isinstance(check_dict, dict):
+                return check_dict
+            else:
+                return to_match
+        except Exception as e:
+            return to_match
+
     def _make_regex(self, token):
         index = SQLToken.placeholder_index(token)
 
         to_match = self.params[index]
-        if isinstance(to_match, dict):
+        to_match = self.check_embedded(to_match)
+        if isinstance(to_match, str):
+            to_match = to_match.replace('%', '.*')
+            self._regex = '^' + to_match + '$'
+        elif isinstance(to_match, dict):
             field_ext, to_match = next(iter(to_match.items()))
             self._field += '.' + field_ext
-        if not isinstance(to_match, str):
+            self._regex = to_match
+        else:
             raise SQLDecodeError
-
-        to_match = to_match.replace('%', '.*')
-        self._regex = '^' + to_match + '$'
-
+            
     def to_mongo(self):
         return {self._field: {'$regex': self._regex}}
 
