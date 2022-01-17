@@ -182,22 +182,16 @@ class LikeOp(_BinaryOp):
         index = SQLToken.placeholder_index(token)
         to_match = self.params[index]
 
-        
-        try:
-            to_match = self.check_embedded(to_match)
-            if isinstance(to_match, str):
-                to_match = to_match.replace('%', '.*')
-                self._regex = '^' + to_match + '$'
-            elif isinstance(to_match, dict):
-                field_ext, to_match = next(iter(to_match.items()))
-                self._field += '.' + field_ext
-                self._regex = to_match
-            else:
-                raise SQLDecodeError
-            
-            print("\n\n PRINT self.regex: %s"%self._regex)
-        except Exception as e:
-        
+        to_match = self.check_embedded(to_match)
+        if isinstance(to_match, str):
+            to_match = to_match.replace('%', '.*')
+            self._regex = '^' + to_match + '$'
+        elif isinstance(to_match, dict):
+            field_ext, to_match = next(iter(to_match.items()))
+            self._field += '.' + field_ext
+            self._regex = to_match
+        else:
+            raise SQLDecodeError        
 
     def to_mongo(self):
         return {self._field: {'$regex': self._regex}}
