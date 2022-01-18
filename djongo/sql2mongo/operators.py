@@ -185,6 +185,8 @@ class LikeOp(_BinaryOp):
         to_match = self.check_embedded(to_match)
         if isinstance(to_match, str):
             to_match = to_match.replace('%', '.*')
+            to_match = to_match.replace('(', '\\(')
+            to_match = to_match.replace(')', '\\)')
             self._regex = '^' + to_match + '$'
         elif isinstance(to_match, dict):
             field_ext, to_match = next(iter(to_match.items()))
