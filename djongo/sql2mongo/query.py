@@ -251,6 +251,35 @@ class SelectQuery(DQLQuery):
             if self.offset:
                 kwargs.update(self.offset.to_mongo())
 
+            #*** Sort embedded
+            new_sort_list = []
+            if 'filter' in kwargs:
+                is_sort = False
+                sort_field_list = []
+                sort_order = None
+                joined_field_list = None
+                field_seperator = '.'
+                sort_field_list = []
+                for key,_ in kwargs.items():
+                    if key == 'filter':
+                        for filter_key,filter_value in kwargs.get('filter').items():
+                            if '$sort' in filter_key:
+                                is_sort = True
+                                split_key = filter_key.split('.')
+                                sort_field_list.append(split_key[0])
+                                eq_dict = filter_value.get('$eq')
+                                for eq_key, eq_value in eq_dict.items():
+                                    sort_field_list.append(eq_key)
+                                    sort_order = eq_value
+                            else:
+                                sort_field_list.append(filter_key)
+                if is_sort:
+                    joined_field_list = field_seperator.join(sort_field_list)
+                    sort_field_list = [(joined_field_list, sort_order)]
+                    kwargs['filter'] = {}
+                    kwargs['sort'] = sort_field_list
+
+
             cur = self.db[self.left_table].find(**kwargs)
             logger.debug(f'Find query: {kwargs}')
 
