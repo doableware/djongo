@@ -587,7 +587,7 @@ class CmpOp(_Op):
             return {field: {'$not': {self._operator: self._constant}}}
 
     def to_mongo(self):
-        if self._compare_fields_in_same_doc:
+        if getattr(self, '_compare_fields_in_same_doc', False):
             return self._compare_fields_to_mongo()
         else:
             return self._compare_constant_to_mongo()
