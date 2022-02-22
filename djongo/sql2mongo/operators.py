@@ -542,18 +542,23 @@ class CmpOp(_Op):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._identifier = SQLToken.token2sql(self.statement.left, self.query)
+        self._operator = OPERATOR_MAP[self.statement.token_next(0)[1].value]
 
         if isinstance(self.statement.right, Identifier):
-            raise SQLDecodeError('Join using WHERE not supported')
-
-        self._operator = OPERATOR_MAP[self.statement.token_next(0)[1].value]
-        index = re_index(self.statement.right.value)
-
-        self._constant = self.params[index] if index is not None else None
-        if isinstance(self._constant, dict):
-            self._field_ext, self._constant = next(iter(self._constant.items()))
+            # Comparing against field in same doc vs a constant.
+            self._right_identifier = SQLToken.token2sql(self.statement.right, self.query)
+            if self._right_identifier.table == self._identifier.table:
+                self._compare_fields_in_same_doc = True
+            else:
+                raise SQLDecodeError('Join using WHERE not supported')
         else:
-            self._field_ext = None
+            # Comparing with a constant
+            index = re_index(self.statement.right.value)
+            self._constant = self.params[index] if index is not None else None
+            if isinstance(self._constant, dict):
+                self._field_ext, self._constant = next(iter(self._constant.items()))
+            else:
+                self._field_ext = None
 
     def negate(self):
         self.is_negated = True
@@ -561,15 +566,31 @@ class CmpOp(_Op):
     def evaluate(self):
         pass
 
-    def to_mongo(self):
+    def _compare_fields_to_mongo(self):
+        """Comparison for fields in same document.
+        https://docs.mongodb.com/manual/reference/operator/query/expr/#behavior
+        """
+        l_field = self._identifier.field
+        r_field = self._right_identifier.field
+        if not self.is_negated:
+            return {'$expr': {self._operator: [f'${l_field}', f'${r_field}']}}
+        else:
+            return {'$expr': {'$not': {self._operator: [f'${l_field}', f'${r_field}']}}}
+
+    def _compare_constant_to_mongo(self):
         field = self._identifier.field
         if self._field_ext:
             field += '.' + self._field_ext
-
         if not self.is_negated:
             return {field: {self._operator: self._constant}}
         else:
             return {field: {'$not': {self._operator: self._constant}}}
+
+    def to_mongo(self):
+        if self._compare_fields_in_same_doc:
+            return self._compare_fields_to_mongo()
+        else:
+            return self._compare_constant_to_mongo()
 
 
 ## Fix for boolean fields
