@@ -93,6 +93,9 @@ class _BinaryOp(_Op):
 
 
 class _InNotInOp(_BinaryOp):
+    @property
+    def is_in(self):
+        return (isinstance(self, InOp) and not self.is_negated) or (isinstance(self, NotInOp) and self.is_negated)
 
     def _fill_in(self, token):
         self._in = []
@@ -112,9 +115,6 @@ class _InNotInOp(_BinaryOp):
 
     def negate(self):
         self.is_negated = True
-
-    def is_in(self):
-        return (isinstance(self, InOp) and not self.is_negated) or (isinstance(self, NotInOp) and self.is_negated)
 
     def to_mongo(self):
         if self.query.nested_query is not None and not self._in:
