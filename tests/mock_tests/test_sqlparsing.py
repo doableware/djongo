@@ -1,3 +1,4 @@
+import functools
 import typing
 from collections import OrderedDict
 from logging import getLogger, DEBUG, StreamHandler
@@ -188,6 +189,8 @@ sqls = [
 
 t1c1 = '"table1"."col1"'
 t1c2 = '"table1"."col2"'
+t1c1c1 = '"table1"."col1"."col11"'
+t1c1c1c1 = '"table1"."col1"."col11"."col111"'
 t2c1 = '"table2"."col1"'
 t2c2 = '"table2"."col2"'
 t3c1 = '"table3"."col1"'
@@ -334,7 +337,7 @@ class TestCreateTable(VoidQuery):
         calls = [
             call('table'),
             call().create_index(
-                 'col1', unique=True
+                'col1', unique=True
             ),
             call('__schema__'),
             call().update_one(
@@ -442,7 +445,6 @@ class TestCreateTable(VoidQuery):
     @skip('Test Not ready')
     def test_constraint_unique(self):
         pass
-
 
 
 class AlterTable(VoidQuery):
@@ -925,12 +927,14 @@ class ResultQuery(MockTest):
         cursor.__class__ = Cursor
         cls.iter = cursor.__iter__
         cls.find.return_value = cursor
+        cls.find.assert_any_call = functools.partial(cls.find.assert_any_call, allow_disk_use=True)
 
         cls.aggregate = cls.db.__getitem__().aggregate
         cursor = mock.MagicMock()
         cursor.__class__ = CommandCursor
         cls.agg_iter = cursor.__iter__
         cls.aggregate.return_value = cursor
+        cls.aggregate.assert_any_call = functools.partial(cls.aggregate.assert_any_call, allowDiskUse=True)
 
     def eval_find(self):
         result = Query(self.conn, self.db, self.conn_prop, self.sql, self.params)
@@ -1123,6 +1127,7 @@ class TestQueryCount(ResultQuery):
         return_value = [{'a': 1}]
         ans = [(1,)]
         self.eval_aggregate(pipeline, return_value, ans)
+
 
 @skip
 class TestQueryUpdate(ResultQuery):
@@ -1866,6 +1871,129 @@ class TestQueryNestedIn(ResultQuery):
             },
         ]
         self.eval_aggregate(pipeline, return_value, ans)
+
+
+class TestQueryJsonOp(ResultQuery):
+    return_val = [
+        {'_id': 'x', 'col2': 'shouldReturn', 'col1': {'col11': {'col111': [1, 2, 3]}}},
+    ]
+    ans = [('x', {'col11': {'col111': [1, 2, 3]}}, 'shouldReturn')]
+
+    def test_pattern1(self):
+        """$exact"""
+        conn = self.conn
+        find = self.find
+        iter = self.iter
+        self.sql = f"""SELECT "table1._id", {t1c1}, {t1c2} FROM {t1} WHERE {t1c1c1} $exact %(0)s"""
+
+        find_args = {
+            'filter': {
+                'col1.col11': {
+                    '$eq': {'col111': [1, 2, 3]}
+                }
+            },
+            'projection': ['_id', 'col1', 'col2']
+        }
+
+        self.params = [{'col111': [1, 2, 3]}]
+        iter.return_value = self.return_val
+        actual = self.eval_find()
+        find.assert_any_call(**find_args)
+        self.assertEqual(actual, self.ans)
+        conn.reset_mock()
+
+    def test_pattern2(self):
+        """$contains with $in lookup"""
+        conn = self.conn
+        find = self.find
+        iter = self.iter
+        self.sql = f"""SELECT "table1._id", {t1c1}, {t1c2} FROM {t1} WHERE {t1c1c1} $contains %(0)s"""
+
+        find_args = {
+            'filter': {
+                'col1.col11': {
+                    '$elemMatch': {
+                        'col111': {'$in': [1]}
+                    }
+                }
+            },
+            'projection': ['_id', 'col1', 'col2']
+        }
+
+        self.params = [{'col111__in': [1]}]
+        iter.return_value = self.return_val
+        actual = self.eval_find()
+        find.assert_any_call(**find_args)
+        self.assertEqual(actual, self.ans)
+        conn.reset_mock()
+
+    def test_pattern3(self):
+        """NOT $contains with $in lookup"""
+        conn = self.conn
+        find = self.find
+        iter = self.iter
+        self.sql = f"""SELECT "table1._id", {t1c1}, {t1c2} FROM {t1} WHERE NOT {t1c1c1} $contains %(0)s"""
+
+        find_args = {
+            'filter': {
+                'col1.col11': {
+                    '$not': {
+                        '$elemMatch': {
+                            'col111': {'$in': [99]}
+                        }
+                    }
+                }
+            },
+            'projection': ['_id', 'col1', 'col2']
+        }
+
+        self.params = [{'col111__in': [99]}]
+        iter.return_value = self.return_val
+        actual = self.eval_find()
+        find.assert_any_call(**find_args)
+        self.assertEqual(actual, self.ans)
+        conn.reset_mock()
+
+    def test_pattern4(self):
+        """$contains + another nested in subquery"""
+        self.sql = f"""SELECT "table1._id", {t1c1}, {t1c2} FROM {t1} WHERE {t1c1c1} $contains %(0)s"""
+        self.sql += f""" AND {t1c2} IN (SELECT DISTINCT U0."col2" FROM {t1} U0)"""
+
+        pipeline = [
+            {'$lookup': {'from': 'table1',
+                         'pipeline': [{'$group': {'_id': {'col2': '$col2'}}}, {'$replaceRoot': {'newRoot': '$_id'}}],
+                         'as': '_nested_in'}},
+            {'$match': {
+                '$and': [{'col1.col11': {'$elemMatch': {'col111': {'$in': [1]}}}},
+                         {'$expr': {'$in': ['$col2', '$_nested_in']}}]}},
+            {'$project': {'_id': True, 'col1': True, 'col2': True}},
+        ]
+
+        self.params = [{'col111__in': [1]}]
+        self.eval_aggregate(pipeline, self.return_val, self.ans)
+
+    def test_pattern5(self):
+        """$has_keys"""
+        conn = self.conn
+        find = self.find
+        iter = self.iter
+        self.sql = f"""SELECT "table1._id", {t1c1}, {t1c2} FROM {t1} WHERE {t1c1c1} $has_keys %(0)s"""
+
+        find_args = {
+            'filter': {
+                'col1.col11.col111': {
+                    '$exists': True,
+                }
+            },
+            'projection': ['_id', 'col1', 'col2']
+        }
+
+        self.params = [['col111']]
+        iter.return_value = self.return_val
+        actual = self.eval_find()
+        find.assert_any_call(**find_args)
+        self.assertEqual(actual, self.ans)
+        conn.reset_mock()
 
 
 class TestQueryNot(ResultQuery):

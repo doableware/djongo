@@ -111,53 +111,32 @@ class _InNotInOp(_BinaryOp):
                 self._in.append(None)
 
     def negate(self):
-        raise SQLDecodeError('Negating IN/NOT IN not supported')
+        self.is_negated = True
+
+    def is_in(self):
+        return (isinstance(self, InOp) and not self.is_negated) or (isinstance(self, NotInOp) and self.is_negated)
 
     def to_mongo(self):
-        raise NotImplementedError
-
-    def _to_mongo(self, op):
-        ## FIX: incorrectly resolving to $_nested_in for all ops instead of the relevant one only.
         if self.query.nested_query is not None and not self._in:
-            return {
-                '$expr': {
-                    op: ['$' + self._field, '$_nested_in']
-                }
-            }
-
+            expr = {'$in': [f'${self._field}', '$_nested_in']}
+            expr = {'$not': expr} if not self.is_in else expr
+            return {'$expr': expr}
         else:
-            return {self._field: {op: self._in}}
+            expr = {'$in': self._in}
+            expr = {'$not': expr} if not self.is_in else expr
+            return {self._field: expr}
 
 
 class NotInOp(_InNotInOp):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(name='NOT IN', *args, **kwargs)
-        tok = self.statement.next()
-        if not tok.match(tokens.Keyword, 'IN'):
-            raise SQLDecodeError
-        self._fill_in(self.statement.next())
-
-    def to_mongo(self):
-        op = '$nin' if not self.is_negated else '$in'
-        return self._to_mongo(op)
-
-    def negate(self):
-        self.is_negated = True
+    def __init__(self, *args, token='prev_token', **kwargs):
+        super().__init__(name='NOT IN', *args, token=token, **kwargs)
+        self._fill_in(getattr(self.statement, token)[-1])
 
 
 class InOp(_InNotInOp):
-
     def __init__(self, *args, token='prev_token', **kwargs):
         super().__init__(name='IN', *args, token=token, **kwargs)
         self._fill_in(getattr(self.statement, token)[-1])
-
-    def to_mongo(self):
-        op = '$in' if not self.is_negated else '$nin'
-        return self._to_mongo(op)
-
-    def negate(self):
-        self.is_negated = True
 
 
 class LikeOp(_BinaryOp):
@@ -401,6 +380,9 @@ class _StatementParser:
         elif tok.match(tokens.Keyword, 'OR'):
             op = OrOp(**kw)
 
+        elif any(t.match(tokens.Comparison, 'NOT IN') for t in [tok, *getattr(tok, 'tokens', [])]):
+            op = NotInOp(**kw, token='current_token')
+
         elif any(t.match(tokens.Comparison, 'IN') for t in [tok, *getattr(tok, 'tokens', [])]):
             op = InOp(**kw, token='current_token')
 
@@ -471,12 +453,12 @@ class _StatementParser:
             link_op()
             if isinstance(op, CmpOp):
                 self._cmp_ops.append(op)
-            if not isinstance(op, (CmpOp, ParenthesisOp, ColOp, JSONOp)):
+            if not isinstance(op, (CmpOp, ParenthesisOp, ColOp)):
                 self._op_precedence(op)
             prev_op = op
 
         if prev_op.lhs is None:
-            if isinstance(prev_op, (CmpOp, ParenthesisOp, ColOp, JSONOp)):
+            if isinstance(prev_op, (CmpOp, ParenthesisOp, ColOp)):
                 self._ops.append(prev_op)
 
     def _op_precedence(self, operator: _Op):
@@ -500,9 +482,9 @@ class _StatementParser:
             raise SQLDecodeError
 
         op = None
-        while self._ops:
-            op = self._ops.pop(0)
+        for op in self._ops:
             op.evaluate()
+        self._ops.clear()
         self._op = op
 
 
@@ -593,11 +575,11 @@ class CmpOp(_Op):
             return self._compare_constant_to_mongo()
 
 
-## Fix for boolean fields
+## Column operator - Fix for boolean fields, e.g. WHERE study.deleted
 class ColOp(_Op):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(name='COL', *args, **kwargs)
         self._identifier = SQLToken.token2sql(self.statement, self.query)
 
     def negate(self):
@@ -613,7 +595,7 @@ class ColOp(_Op):
 class JSONOp(_Op):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(name='JSON', *args, **kwargs)
         self._identifier = self.statement.prev_token.value
         self._operator = self.statement.current_token.value
         index = re_index(self.statement.next_token.value)
@@ -646,7 +628,7 @@ class JSONOp(_Op):
                 final[field][f'${lookup}'] = v
             else:
                 raise SQLDecodeError(f'Lookup {lookup} not supported in $contains')
-        return final
+        return dict(final)
 
     def to_mongo(self):
         field = '.'.join([f[1:-1] for f in self._identifier.split('.')[1:]])
@@ -697,6 +679,8 @@ OPERATOR_MAP = {
     '<=': '$lte',
 }
 OPERATOR_PRECEDENCE = {
+    'COL': 10,
+    'JSON': 9,
     'IS': 8,
     'BETWEEN': 7,
     'LIKE': 6,
