@@ -37,11 +37,18 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: "3.8"
+      - name: Start MongoDB ${{ matrix.mongodb-version }}
+        uses: supercharge/mongodb-github-action@1.7.0
+        with:
+          mongodb-version: 5.0
+          mongodb-username: ${{ secrets.mongo_user }}
+          mongodb-password: ${{ secrets.mongo_password }}
+          mongodb-db: ${{ secrets.mongo_db_name }}
       - name: Install requirements
         run: pip install -r requirements.txt
       - name: Run tests
-        working-directory: tests/djongo_tests
-        run: python manage.py test
+        working-directory: tests/djongo_tests/test_project
+        run: python manage.py test xtest_app
 
   test-django:
     runs-on: ubuntu-latest
@@ -51,6 +58,13 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: "3.8"
+      - name: Start MongoDB ${{ matrix.mongodb-version }}
+        uses: supercharge/mongodb-github-action@1.7.0
+        with:
+          mongodb-version: 5.0
+          mongodb-username: ${{ secrets.mongo_user }}
+          mongodb-password: ${{ secrets.mongo_password }}
+          mongodb-db: ${{ secrets.mongo_db_name }}
       - name: Install requirements
         run: pip install -r requirements.txt
       - name: Run tests
