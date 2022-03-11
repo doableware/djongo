@@ -1566,7 +1566,9 @@ class TestQueryIn(ResultQuery):
         self.sql = f'{where} {t1c1} NOT IN (%s)'
         find_args['filter'] = {
             'col1': {
-                '$nin': [1]
+                '$not': {
+                    '$in': [1]
+                }
             }
         }
         self.params = [1]
@@ -1591,7 +1593,9 @@ class TestQueryIn(ResultQuery):
         self.sql = f'{where} {t1c1} NOT IN (%s, %s)'
         find_args['filter'] = {
             'col1': {
-                '$nin': [1, 2]
+                '$not': {
+                    '$in': [1, 2]
+                }
             }
         }
         self.params = [1, 2]
@@ -1616,7 +1620,9 @@ class TestQueryIn(ResultQuery):
         self.sql = f'{where} NOT ({t1c1} IN (%s))'
         find_args['filter'] = {
             'col1': {
-                '$nin': [1]
+                '$not': {
+                    '$in': [1]
+                }
             }
         }
         self.params = [1]

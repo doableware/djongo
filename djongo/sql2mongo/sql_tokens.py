@@ -74,19 +74,19 @@ class AliasableToken(SQLToken):
     def __init__(self, *args):
         super().__init__(*args)
         self.token_alias: 'query_module.TokenAlias' = self.query.token_alias
-        self.unaliased = self._token.value
+        self.unaliased = self._token.value.rsplit(' ', 1)[0]
+        self.unaliased = self.unaliased.rsplit(' ', 1)[0] if self.unaliased.endswith(' AS') else self.unaliased
 
         if self.alias:
             self.token_alias.alias2token[self.alias] = self
             self.token_alias.token2alias[self] = self.alias
             if self.is_explicit_alias():
                 self.token_alias.aliased_names.add(self.alias)
-            self.unaliased = self._token.value.rsplit(' ', 1)[0]
-            self.unaliased = self.unaliased.rsplit(' ', 1)[0] if self.unaliased.endswith(' AS') else self.unaliased
+
 
     def __hash__(self):
         if self.is_explicit_alias():
-            return hash(self.unaliased)
+            return hash(self._token[0].value)
         return hash(self._token.value)
 
     def __eq__(self, other):
