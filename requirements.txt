@@ -1,5 +1,5 @@
 sqlparse==0.4.1
-pymongo>=3.2.0
+pymongo>=3.2.0,<4
 django>=2.1,<4
 dnspython>=2.0
 
