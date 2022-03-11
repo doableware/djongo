@@ -11,18 +11,24 @@
 # situations, so it is recommended to run the test suite against as many
 # database backends as possible.  You may want to create a separate settings
 # file for each of the backends you test against.
-import sys
+
+DATABASE_BASE = {
+    'ENGINE': 'djongo',
+    'HOST': '127.0.0.1',
+    'PORT': 27017,
+    'USER': 'testuser',
+    'PASSWORD': 'testPass!@34',
+    'ENFORCE_SCHEMA': True,
+}
 
 DATABASES = {
     'default': {
-        'ENGINE': 'djongo',
         'NAME': 'test1',
-        'ENFORCE_SCHEMA': True,
+        **DATABASE_BASE,
     },
     'other': {
-        'ENGINE': 'djongo',
         'NAME': 'test2',
-        'ENFORCE_SCHEMA': True
+        **DATABASE_BASE,
     }
 }
 
@@ -32,4 +38,3 @@ SECRET_KEY = "django_tests_secret_key"
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.MD5PasswordHasher',
 ]
-
