@@ -48,7 +48,7 @@ jobs:
         run: pip install -r requirements.txt
       - name: Run tests
         working-directory: tests/djongo_tests/test_project
-        run: python manage.py test xtest_app
+        run: python manage.py test xtest_app.tests
 
   test-django:
     runs-on: ubuntu-latest
