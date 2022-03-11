@@ -102,7 +102,7 @@ class DatabaseOperations(BaseDatabaseOperations):
                 for table in tables]
 
     def max_name_length(self):
-        return 60
+        return 200
 
     def no_limit_value(self):
         return None

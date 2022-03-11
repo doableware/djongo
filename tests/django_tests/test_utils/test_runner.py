@@ -5,11 +5,27 @@ from unittest.runner import (
     TextTestResult as BaseTextTestResult,
     TextTestRunner)
 
+from django.db.models import ManyToManyRel
 from django.test.runner import (
     DiscoverRunner as BaseDiscoverRunner,
     ParallelTestSuite as ParallelSuite,
     RemoteTestRunner as RemoteRunner,
     RemoteTestResult as RemoteResult)
+from django.utils.hashable import make_hashable
+
+
+# NOTE: monkey-patch an issue with django itself in versions <3.2.6:
+# https://github.com/django/django/commit/b2f7b53facc7c3432b9d6173276f4baff02e71b7#diff-edcf303eda6c4eaf2fa963e4d39d80c818bb786817d63772c636b3272cb659ebL312
+@property
+def identity(self):
+    return super(ManyToManyRel, self).identity + (
+        self.through,
+        make_hashable(self.through_fields),
+        self.db_constraint,
+    )
+
+
+ManyToManyRel.identity = identity
 
 
 class TextTestResult(BaseTextTestResult):
@@ -78,9 +94,11 @@ class TextTestRunnerFactory:
 
     def __call__(self, *args, **kwargs):
         kwargs['resultclass'] = self.result_class
-        return TextTestRunner(buffer=self.buffer,
+        buffer = self.buffer or kwargs.pop('buffer', None)
+        return TextTestRunner(buffer=buffer,
                               *args,
                               **kwargs)
+
 
 TestRunner = TextTestRunnerFactory()
 
@@ -97,7 +115,7 @@ class DiscoverRunner(BaseDiscoverRunner):
         run_failed = False
         result = None
         try:
-            self.run_checks()
+            self.run_checks(databases)
             result = self.run_suite(suite)
         except Exception:
             run_failed = True

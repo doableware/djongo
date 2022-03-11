@@ -1,0 +1,58 @@
+# GitHub Actions docs
+# https://help.github.com/en/articles/about-github-actions
+# https://help.github.com/en/articles/workflow-syntax-for-github-actions
+name: Automated-Testing
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [ 'opened', 'edited', 'reopened', 'synchronize' ]
+
+concurrency: # cancel previous runs on a push
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-mocks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+      - name: Install requirements
+        run: pip install -r requirements.txt
+      - name: Run tests
+        working-directory: tests/mock_tests
+        run: python -m unittest test_sqlparsing.py
+
+  test-djongo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+      - name: Install requirements
+        run: pip install -r requirements.txt
+      - name: Run tests
+        working-directory: tests/djongo_tests
+        run: python manage.py test
+
+  test-django:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+      - name: Install requirements
+        run: pip install -r requirements.txt
+      - name: Run tests
+        working-directory: tests/django_tests
+        run: python runtests.py --check-currently-passing --discover-passing --discover-tests --check-specific

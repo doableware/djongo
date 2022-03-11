@@ -56,9 +56,9 @@ PARSER_ARGS = {
         'dest': 'start_index'
     },
     '--django-version': {
-        'default': 21,
+        'default': 32,
         'type': int,
-        'choices': [21, 22, 30]
+        'choices': [21, 22, 30, 32]
     },
     '--db-type': {
         'default': 'mongodb',

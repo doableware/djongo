@@ -83,7 +83,6 @@ class AliasableToken(SQLToken):
             if self.is_explicit_alias():
                 self.token_alias.aliased_names.add(self.alias)
 
-
     def __hash__(self):
         if self.is_explicit_alias():
             return hash(self._token[0].value)

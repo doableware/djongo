@@ -17,9 +17,7 @@ from django.test import TestCase, TransactionTestCase
 from django.test.runner import default_test_processes
 from django.test.selenium import SeleniumTestCaseBase
 from django.test.utils import get_runner
-from django.utils.deprecation import (
-    RemovedInDjango30Warning, RemovedInDjango31Warning,
-)
+from django.utils import version
 from django.utils.log import DEFAULT_LOGGING
 from .test_runner import DiscoverRunner
 
@@ -32,8 +30,19 @@ else:
     warnings.filterwarnings('ignore', r'\(1003, *', category=MySQLdb.Warning)
 
 # Make deprecation warnings errors to ensure no usage of deprecated features.
-warnings.simplefilter("error", RemovedInDjango30Warning)
-warnings.simplefilter('error', RemovedInDjango31Warning)
+django_major = int(version.get_version().split('.')[0])
+if 3 <= django_major < 4:
+    from django.utils.deprecation import (
+        RemovedInDjango40Warning, RemovedInDjango41Warning,
+    )
+    warnings.simplefilter("error", RemovedInDjango40Warning)
+    warnings.simplefilter('error', RemovedInDjango41Warning)
+else:
+    from django.utils.deprecation import (
+        RemovedInDjango30Warning, RemovedInDjango31Warning,
+    )
+    warnings.simplefilter("error", RemovedInDjango30Warning)
+    warnings.simplefilter('error', RemovedInDjango31Warning)
 # Make runtime warning errors to ensure no usage of error prone patterns.
 warnings.simplefilter("error", RuntimeWarning)
 # Ignore known warnings in test dependencies.
@@ -80,10 +89,13 @@ ALWAYS_MIDDLEWARE = [
 # Need to add the associated contrib app to INSTALLED_APPS in some cases to
 # avoid "RuntimeError: Model class X doesn't declare an explicit app_label
 # and isn't in an application in INSTALLED_APPS."
-CONTRIB_TESTS_TO_APPS = {
-    'flatpages_tests': 'django.contrib.flatpages',
-    'redirects_tests': 'django.contrib.redirects',
-}
+if 2 <= django_major < 3:
+    CONTRIB_TESTS_TO_APPS = {
+        'flatpages_tests': 'django.contrib.flatpages',
+        'redirects_tests': 'django.contrib.redirects',
+    }
+else:
+    CONTRIB_TESTS_TO_APPS = {}
 
 
 def get_test_modules():
