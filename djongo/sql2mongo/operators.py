@@ -6,6 +6,8 @@ from itertools import chain
 from sqlparse import tokens
 from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier
 
+from djongo.utils import encode_key
+
 from . import query
 from .sql_tokens import SQLToken, SQLStatement, SQLComparison, SQLIdentifier
 from ..exceptions import SQLDecodeError
@@ -653,10 +655,10 @@ class JSONOp(_Op):
                 raise SQLDecodeError(f'Invalid params for $contains: {self._constant}')
 
         elif self._operator == '$has_key':
-            return {f'{field}.{self._constant}': {'$exists': not self.is_negated}}
+            return {f'{field}.{encode_key(self._constant)}': {'$exists': not self.is_negated}}
 
         elif self._operator == '$has_keys':
-            return {f'{field}.{const}': {'$exists': not self.is_negated} for const in self._constant}
+            return {f'{field}.{encode_key(const)}': {'$exists': not self.is_negated} for const in self._constant}
 
         elif self._operator == '$has_any_keys':
             return {

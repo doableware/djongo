@@ -1,3 +1,7 @@
+def encode_key(s: str):
+    return s.replace("\\", "\\\\").replace("\$", "\\u0024").replace(".", "\\u002e")
+
+
 def encode_keys(obj, is_key=False):
     if isinstance(obj, dict):
         return {encode_keys(k, True): encode_keys(v) for k, v in obj.items()}
@@ -6,8 +10,13 @@ def encode_keys(obj, is_key=False):
     if isinstance(obj, int) and is_key:
         return str(obj)
     if isinstance(obj, str) and is_key:
-        return obj.replace("\\", "\\\\").replace("\$", "\\u0024").replace(".", "\\u002e")
+        return encode_key(obj)
     return obj
+
+
+def decode_key(s: str):
+    return s.replace("\\u002e", ".").replace("\\u0024", "\$").replace("\\\\", "\\")
+
 
 def decode_keys(obj, is_key=False):
     if isinstance(obj, dict):
@@ -17,5 +26,5 @@ def decode_keys(obj, is_key=False):
     if isinstance(obj, str) and is_key and (obj.isdigit() or (obj.startswith('-') and obj[1:].isdigit())):
         return int(obj)
     if isinstance(obj, str) and is_key:
-        return obj.replace("\\u002e", ".").replace("\\u0024", "\$").replace("\\\\", "\\")
+        return decode_key(obj)
     return obj
