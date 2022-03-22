@@ -662,7 +662,7 @@ class JSONOp(_Op):
 
         elif self._operator == '$has_any_keys':
             return {
-                '$or': [{f'{field}.{const}': {'$exists': not self.is_negated}} for const in self._constant]
+                '$or': [{f'{field}.{encode_key(const)}': {'$exists': not self.is_negated}} for const in self._constant]
             }
 
         else:

@@ -2001,6 +2001,34 @@ class TestQueryJsonOp(ResultQuery):
         self.assertEqual(actual, self.ans)
         conn.reset_mock()
 
+    def test_pattern6(self):
+        """$has_keys with special key"""
+        conn = self.conn
+        find = self.find
+        iter = self.iter
+        self.sql = f"""SELECT "table1._id", {t1c1}, {t1c2} FROM {t1} WHERE {t1c1c1} $has_keys %(0)s"""
+
+        return_val = [
+            {'_id': 'x', 'col2': 'shouldReturn', 'col1': {'col11': {'col\\u002e111': [1, 2, 3]}}},
+        ]
+        ans = [('x', {'col11': {'col\\u002e111': [1, 2, 3]}}, 'shouldReturn')]
+
+        find_args = {
+            'filter': {
+                'col1.col11.col\\u002e111': {
+                    '$exists': True,
+                }
+            },
+            'projection': ['_id', 'col1', 'col2']
+        }
+
+        self.params = [['col.111']]
+        iter.return_value = return_val
+        actual = self.eval_find()
+        find.assert_any_call(**find_args)
+        self.assertEqual(actual, ans)
+        conn.reset_mock()
+
 
 class TestQueryNot(ResultQuery):
 
