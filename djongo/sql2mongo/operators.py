@@ -4,11 +4,12 @@ from collections import defaultdict
 from itertools import chain
 
 from sqlparse import tokens
-from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier
+from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier, Function
 
 from djongo.utils import encode_key
 
 from . import query
+from .functions import SQLFunc
 from .sql_tokens import SQLToken, SQLStatement, SQLComparison, SQLIdentifier
 from ..exceptions import SQLDecodeError
 
@@ -77,7 +78,7 @@ class _BinaryOp(_Op):
     def __init__(self, *args, token='prev_token', **kwargs):
         super().__init__(*args, **kwargs)
         tok = SQLToken.token2sql(getattr(self.statement, token), self.query)
-        if isinstance(tok, SQLIdentifier):
+        if isinstance(tok, (SQLIdentifier, SQLFunc)):
             self._field = tok.field
         elif isinstance(tok, SQLComparison):
             self._field = SQLIdentifier(tok._token.left, tok.query).field
@@ -408,6 +409,10 @@ class _StatementParser:
             statement.skip(3)
 
         elif tok.match(tokens.Keyword, 'IS'):
+            op = IsOp(**kw)
+
+        elif isinstance(tok, Function) and statement.next_token.match(tokens.Keyword, 'IS'):
+            statement.skip(2)
             op = IsOp(**kw)
 
         elif tok.value in JSON_OPERATORS:

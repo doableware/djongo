@@ -1438,6 +1438,45 @@ class TestQueryGroupBy(ResultQuery):
             f'ORDER BY "dt" ASC'
         )
 
+    def test_pattern5(self):
+        """
+        SELECT "silk_request"."view_name", MAX("silk_request"."time_taken") AS "max" FROM "silk_request" GROUP BY "silk_request"."view_name" HAVING MAX("silk_request"."time_taken") IS NOT NULL ORDER BY "max" DESC LIMIT 5
+        """
+        self.sql = (
+            f'SELECT {t1c1}, MAX({t1c2}) AS "max" '
+            f'FROM table1 '
+            f'GROUP BY {t1c1} '
+            f'HAVING MAX({t1c2}) IS NOT NULL '
+            f'ORDER BY "max" DESC LIMIT 5 '
+        )
+        self.params = ((),)
+        return_value = [
+            {'col1': 'a1', 'max': 5},
+            {'col1': 'b1', 'max': 1},
+        ]
+        ans = [('a1', 5), ('b1', 1)]
+        pipeline = [
+            {
+                '$group': {
+                    '_id': {'col1': '$col1'},
+                    'max': {'$max': '$col2'},
+                }
+            },
+            {
+                '$project': {
+                    '_id': False,
+                    'col1': '$_id.col1',
+                    'max': True,
+                }
+            },
+            {
+                '$match': {'max': {'$ne': None}}
+            },
+            {'$sort': OrderedDict([('max', -1)])},
+            {'$limit': 5},
+        ]
+        self.eval_aggregate(pipeline, return_value, ans)
+
 
 class TestQuerySpecial(ResultQuery):
 

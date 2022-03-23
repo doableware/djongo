@@ -1,16 +1,16 @@
 import abc
 import ast
-import typing
 from collections import OrderedDict
+from typing import Union as U, List, Optional as O
+
 from sqlparse import tokens, parse as sqlparse
 from sqlparse.sql import Parenthesis
-from typing import Union as U, List, Optional as O
+
 from . import query as query_module
-from .sql_tokens import SQLIdentifier, SQLConstIdentifier, SQLComparison
 from .functions import SQLFunc, CountFuncAll
 from .operators import WhereOp
+from .sql_tokens import SQLIdentifier, SQLConstIdentifier, SQLComparison, SQLToken, SQLStatement
 from ..exceptions import SQLDecodeError
-from .sql_tokens import SQLToken, SQLStatement
 
 
 class Converter:
@@ -475,13 +475,19 @@ class HavingConverter(Converter):
         super().__init__(query, statement)
 
     def parse(self):
-        tok = self.statement[:3]
+        cutoff = 2
+        next_next_token_idx = self.statement._tok_id + 4
+        if next_next_token_idx < len(self.statement._statement.tokens) and self.statement._statement[
+            next_next_token_idx].match(tokens.Keyword, 'IS'):
+            cutoff += 4
+        tok = self.statement[:cutoff + 1]
+
         self.op = WhereOp(
             statement=tok,
             query=self.query,
             params=self.query.params
         )
-        self.statement.skip(2)
+        self.statement.skip(cutoff)
 
     def to_mongo(self):
         return {'$match': self.op.to_mongo()}
