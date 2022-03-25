@@ -158,9 +158,13 @@ class LikeOp(_BinaryOp):
             self._field += '.' + field_ext
         if not isinstance(to_match, str):
             raise SQLDecodeError
-
-        to_match = re.escape(to_match).replace('%', '.*')
-        self._regex = f'^{to_match}$'
+        # Ensure all regex special characters are handled
+        to_match = re.escape(to_match)
+        # Like expression special character - the expression above will escape \\
+        to_match = to_match.replace('\\\\_', '_')
+        # Like expression special character + ensure normal % is handled properly
+        to_match = '%'.join(s.replace('%', '.*') for s in to_match.split('\\\\%'))
+        self._regex = to_match
 
     def to_mongo(self):
         return {self._field: {'$regex': self._regex}}
