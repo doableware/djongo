@@ -179,6 +179,7 @@ class ModelField(MongoField):
 
     def _value_thru_container(self, value):
         processed_value = {}
+        self.model_container._meta.abstract = False
         inst = self.model_container(**value)
         for field in self.model_container._meta.get_fields():
             processed_value[field.attname] = getattr(inst, field.attname)
