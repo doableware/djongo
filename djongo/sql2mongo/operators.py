@@ -1,3 +1,4 @@
+import copy
 import re
 import typing
 import json
@@ -58,6 +59,8 @@ class _UnaryOp(_Op):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # identifier = SQLToken.token2sql(self.statement.current_token, self.query)
+        # self._field = identifier.field
         self._op = None
 
     def negate(self):
@@ -270,16 +273,30 @@ class BetweenOp(_BinaryOp):
 class NotOp(_UnaryOp):
     def __init__(self, *args, **kwargs):
         super().__init__(name='NOT', *args, **kwargs)
+        self._field = self.statement.next_token.value
+        # if not self.rhs:
+        #     self.negate = lambda: None
+        #     # self.rhs = self
+        #     self.is_negated = True
+        #     rhs = copy.deepcopy(self)
+        #     self.rhs = rhs
 
     def negate(self):
         raise SQLDecodeError
 
     def evaluate(self):
-        self.rhs.negate()
+        if self.rhs:
+            self.rhs.negate()
         if isinstance(self.rhs, ParenthesisOp):
             self.rhs.evaluate()
         if self.lhs is not None:
             self.lhs.rhs = self.rhs
+
+    def to_mongo(self):
+        if self.rhs is None:
+            return {self._field: {'$ne': True}}
+        else:
+            super().to_mongo()
 
 
 class _AndOrOp(_Op):
