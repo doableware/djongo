@@ -17,7 +17,7 @@ def re_index(value: str):
     if match:
         index = int(match.group(1))
     else:
-        match = re.match(r'NULL', value, flags=re.IGNORECASE)
+        match = re.match(r'NULL|true', value, flags=re.IGNORECASE)
         if not match:
             raise SQLDecodeError
         index = None
