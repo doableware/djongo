@@ -570,3 +570,5 @@ OPERATOR_PRECEDENCE = {
     'OR': 1,
     'generic': 0
 }
+
+AND_OR_NOT_SEPARATOR = 3
