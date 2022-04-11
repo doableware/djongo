@@ -18,8 +18,10 @@ from sqlparse import tokens
 from sqlparse.sql import (
     Identifier, Parenthesis,
     Where,
-    Statement)
+    Statement, Comparison, Token, TokenList)
+from sqlparse.tokens import Keyword, Operator, Literal, Punctuation, Whitespace, Generic
 
+from .operators import OPERATOR_PRECEDENCE, AND_OR_NOT_SEPARATOR
 from ..exceptions import SQLDecodeError, MigrationError, print_warn
 from .functions import SQLFunc
 from .sql_tokens import (SQLToken, SQLStatement, SQLIdentifier,
@@ -778,8 +780,13 @@ class Query:
         self.connection_properties = connection_properties
         self._params_index_count = -1
         self._sql = re.sub(r'%s', self._param_index, sql)
+
         self.last_row_id = None
         self._result_generator = None
+
+        self.skip = False
+        self.skipped = 0
+        self.is_where = False
 
         self._query = self.parse()
 
@@ -838,7 +845,63 @@ class Query:
             f'sql_command: {self._sql}\n'
             f'params: {self._params}'
         )
-        statement = sqlparse(self._sql)
+
+        def check_conditions(item):
+            if not getattr(self, 'is_where', False):
+                self.is_where = getattr(item, 'value', None) == 'WHERE' and getattr(item, 'ttype', None) == Keyword
+            if getattr(item, 'value', None) in Where.M_CLOSE[1] and getattr(item, 'ttype', None) == Where.M_CLOSE[0]:
+                self.is_where = False
+
+            parent: TokenList = getattr(item, 'parent', None)
+            index_of_precedence = parent.token_index(item)
+            next_token = parent.token_next(index_of_precedence, skip_ws=True, skip_cm=True)[1]
+            next_token_value = getattr(next_token, 'value', False)
+
+            if next_token_value in OPERATOR_PRECEDENCE \
+                    and OPERATOR_PRECEDENCE.get(next_token_value, 0) > AND_OR_NOT_SEPARATOR:
+                self.skip = True
+            else:
+                self.skip = False
+
+            return self.is_where and not self.skip
+
+        def parse_where(where_item):
+            identifier_token_list = [
+                Token(ttype=Literal.String.Symbol, value=value) for value in where_item.value.split('.')
+            ]
+            for identifier_token_list_index in range(1, len(identifier_token_list), 2):
+                identifier_token_list.insert(identifier_token_list_index, Token(ttype=Punctuation, value='.'))
+            return Comparison([
+                    Identifier(identifier_token_list),
+                    Token(ttype=Operator.Comparison, value='='),
+                    Token(ttype=Generic, value=True)
+                ])
+
+        def from_part(token, token_list):
+            if check_conditions(token) and isinstance(token, Identifier) and not isinstance(token.parent, Comparison):
+                token = parse_where(token)
+            elif self.skip:
+                return token
+            if hasattr(token, 'tokens'):
+                to_append_token_list = []
+                for new_token in getattr(token, 'tokens', []):
+                    to_append_token_list.append(from_part(new_token, token_list))
+                token = token.__class__(to_append_token_list)
+
+            return token
+
+        def from_statement(_statement):
+            _statement = _statement[0]
+            statement_tokens = []
+
+            for token_index, token in enumerate(_statement.tokens):
+                statement_tokens.append(from_part(token, []))
+
+            return Statement(statement_tokens)
+
+        statement = []
+        sql = sqlparse(self._sql)
+        statement.append(from_statement(sql))
 
         if len(statement) > 1:
             raise SQLDecodeError(self._sql)
