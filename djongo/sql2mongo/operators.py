@@ -16,7 +16,7 @@ def re_index(value: str):
     if match:
         index = int(match.group(1))
     else:
-        match = re.match(r'NULL', value, flags=re.IGNORECASE)
+        match = re.match(r'NULL|true', value, flags=re.IGNORECASE)
         if not match:
             raise SQLDecodeError
         index = None
@@ -529,7 +529,7 @@ class CmpOp(_Op):
         self._operator = OPERATOR_MAP[self.statement.token_next(0)[1].value]
         index = re_index(self.statement.right.value)
 
-        self._constant = self.params[index] if index is not None else None
+        self._constant = self.params[index] if index is not None else MAP_INDEX_NONE[self.statement.right.value]
         if isinstance(self._constant, dict):
             self._field_ext, self._constant = next(iter(self._constant.items()))
         else:
@@ -570,3 +570,10 @@ OPERATOR_PRECEDENCE = {
     'OR': 1,
     'generic': 0
 }
+
+MAP_INDEX_NONE = {
+    'NULL': None,
+    'True': True
+}
+
+AND_OR_NOT_SEPARATOR = 3
