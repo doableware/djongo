@@ -130,7 +130,7 @@ class SelectQuery(DQLQuery):
             elif tok.match(tokens.Keyword, 'LIMIT'):
                 self.limit = LimitConverter(self, statement)
 
-            elif tok.match(tokens.Keyword, 'ORDER'):
+            elif tok.match(tokens.Keyword, 'ORDER BY'):
                 self.order = OrderConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'OFFSET'):
@@ -144,7 +144,7 @@ class SelectQuery(DQLQuery):
                 converter = OuterJoinConverter(self, statement)
                 self.joins.append(converter)
 
-            elif tok.match(tokens.Keyword, 'GROUP'):
+            elif tok.match(tokens.Keyword, 'GROUP BY'):
                 self.groupby = GroupbyConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'HAVING'):
@@ -857,8 +857,7 @@ class Query:
             next_token = parent.token_next(index_of_precedence, skip_ws=True, skip_cm=True)[1]
             next_token_value = getattr(next_token, 'value', False)
 
-            if next_token_value in OPERATOR_PRECEDENCE \
-                    and OPERATOR_PRECEDENCE.get(next_token_value, 0) > AND_OR_NOT_SEPARATOR:
+            if OPERATOR_PRECEDENCE.get(next_token_value, 0) > AND_OR_NOT_SEPARATOR:
                 self.skip = True
             else:
                 self.skip = False
