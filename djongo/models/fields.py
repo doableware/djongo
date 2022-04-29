@@ -113,12 +113,9 @@ class KeyTransformFactory:
 
 class JSONField(MongoField):
     def get_prep_value(self, value):
-        if value is None:
-            return 'null'
-
-        if not isinstance(value, (dict, list, str, int, float, bool)):
+        if not isinstance(value, (dict, list, str, int, float, bool, type(None))):
             raise ValueError(
-                f'Value: {value} must be of type dict/list/str/int/float/bool, instead got type {type(value)}'
+                f'Value: {value} must be of type dict/list/str/int/float/bool/null, instead got type {type(value)}'
             )
         # Fix for special characters in keys.
         # See: https://stackoverflow.com/a/30254815
@@ -129,7 +126,7 @@ class JSONField(MongoField):
         return value
 
     def to_python(self, value):
-        if not isinstance(value, (dict, list)):
+        if not isinstance(value, (dict, list, type(None))):
             raise ValueError(
                 f'Value: {value} stored in DB must be of type dict/list, instead got type {type(value)}'
                 'Did you miss any Migrations?'
