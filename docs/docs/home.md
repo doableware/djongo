@@ -1,5 +1,5 @@
 ---
-permalink: /
+permalink: /home/
 layout: splash
 title: "MongoDB Django App Hosting"
 excerpt: 
