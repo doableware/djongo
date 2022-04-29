@@ -46,10 +46,6 @@ DATABASES = {
       ```
      MongoDB 3.6 or higher is required.
 
-## Dear Supporter
-
-I am inundated daily with your love, appreciation, queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. Visit my [Patreon page](https://www.patreon.com/nesdis) to understand the different levels of support and services you can get.
-
 ## How it works
 
 djongo is a SQL to mongodb query compiler. It translates a SQL query string into a mongoDB query document. As a result, all Django features, models etc work as is.
