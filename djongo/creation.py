@@ -19,31 +19,23 @@ class DatabaseCreation(BaseDatabaseCreation):
             args = [
                 'mongodump',
                 '--quiet',
-            ]
-            if host is not None:
-                args += [
-                    '--host',
-                    host
-                ]
-            args += [
                 '--db',
                 source_database_name
             ]
+            if host is not None:
+                args += ['--host', host]
+
             subprocess.run(args)
             args = [
                 'mongorestore',
                 f'dump/{source_database_name}',
-                '--quiet'
-            ]
-            if host is not None:
-                args += [
-                    '--host',
-                    host
-                ]
-            args += [
+                '--quiet',
                 '--db',
                 target_database_name
             ]
+            if host is not None:
+                args += ['--host', host]
+
             subprocess.run(args)
             shutil.rmtree('dump')
 
