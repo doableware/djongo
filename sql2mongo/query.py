@@ -530,14 +530,13 @@ class AlterQuery(DDLQuery):
         self.db[self.left_table].drop_index(self._iden_name)
 
     def _drop_column(self):
-        self.db[self.left_table].update(
+        self.db[self.left_table].update_many(
             {},
             {
                 '$unset': {
                     self._iden_name: ''
                 }
             },
-            multi=True
         )
         self.db['__schema__'].update(
             {'name': self.left_table},
