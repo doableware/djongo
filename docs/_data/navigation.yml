@@ -4,8 +4,8 @@ main:
     url: /get-started/
   - title: "DjongoCS"
     url: /djongocs/login/
-  - title: "Support"
-    url: /support/
+  - title: "Source"
+    url: https://github.com/doableware/djongo
 
 docs:
   - title: "Djongo"
