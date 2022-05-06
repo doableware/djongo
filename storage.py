@@ -7,6 +7,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.files.storage import Storage
 from django.utils.deconstruct import deconstructible
 from django.utils.encoding import filepath_to_uri
+from django.db import connections
 
 from gridfs import GridFS, NoFile
 
@@ -162,8 +163,10 @@ class GridFSStorage(Storage):
         collection_name = path.replace(os.sep, '.').strip('.')
 
         if not hasattr(self, '_db'):
-            from django.db import connections
             self._db = connections[self.database].connection
+            if self._db is None:
+                connections[self.database].connect()
+                self._db = connections[self.database].connection
 
         return GridFS(self._db, collection_name), filename
 

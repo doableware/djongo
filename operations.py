@@ -114,7 +114,44 @@ class DatabaseOperations(BaseDatabaseOperations):
         )
 
     def date_extract_sql(self, lookup_type, field_name):
-        return "EXTRACT('%s' FROM %s)" % (lookup_type, field_name)
+        """
+        Given a lookup_type of 'year', 'month', or 'day', return the SQL that
+        extracts a value from the given date field field_name.
+        """
+        if lookup_type == 'year':
+            pass
+        elif lookup_type == 'month':
+            pass
+        elif lookup_type == 'day':
+            pass
+        else:
+            raise ValueError("Djongo backend only support 'year', 'month' and 'day' Date Functions.")
+        return "%s(%s)" % (lookup_type.upper(), field_name)  # ex: MONTH(field)
+
+    def datetime_extract_sql(self, lookup_type, field_name, tzname):
+        """
+        Given a lookup_type of 'year', 'month', or 'day', return the SQL that
+        extracts a value from the given date field field_name.
+        """
+        if lookup_type == 'year':
+            pass
+        elif lookup_type == 'month':
+            pass
+        elif lookup_type == 'day':
+            pass
+        elif lookup_type == 'hour':
+            pass
+        elif lookup_type == 'minute':
+            pass
+        elif lookup_type == 'second':
+            pass
+        else:
+            raise ValueError(
+                "Djongo backend only support 'year', 'month', 'day', 'hour', 'minute' and 'second' DateTime Functions.")
+        return "%s(%s)" % (lookup_type.upper(), field_name)  # ex: MONTH(field)
 
     def date_trunc_sql(self, lookup_type, field_name):
-        return "DATE_TRUNC('%s', %s)" % (lookup_type, field_name)
+        return "DATE_TRUNC(%s, %s)" % (lookup_type.upper(), field_name)
+
+    def datetime_trunc_sql(self, lookup_type, field_name, tzname):
+        return "DATE_TRUNC(%s, %s)" % (lookup_type.upper(), field_name)
