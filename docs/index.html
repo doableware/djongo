@@ -105,7 +105,7 @@
     <meta itemprop="headline" content="Djongo">
     <section class="page__content" itemprop="text">
       <section class="pitch-content">
-        <div class="feature__wrapper">
+        <div class="feature__wrapper ">
   <div class="feature__item--center">
     <div class="archive__item">
       <div class="archive__item-body">
@@ -116,7 +116,7 @@
     </div>
   </div>
 </div>
-        <div class="feature__wrapper">
+        <div class="feature__wrapper seamless">
   <div class="feature__item">
     <div class="archive__item">
       <div class="archive__item-teaser">
@@ -194,7 +194,7 @@
       <div class="archive__item-body">
         <h2 class="archive__item-title">Rapid Prototyping</h2>
         <div class="archive__item-excerpt">
-          <p>Speed up app development and execution with schema free models. Enforce levels of schema protection with data evolution.</p>
+          <p>Speed up development with schema free models. Enforce protection with evolution.</p>
         </div>
         <p><a id="btn-rapid-prototyping"              href="#rapid-prototyping"
               class="btn btn--primary">
@@ -226,7 +226,7 @@
   <div class="pitch-content">
     <h2>Djongo</h2>
 <p><img alt="Djongo" class="img-right sz-sm top-align" src="/assets/images/home/djongo-name-logo.png" />
-Djongo provides a unified approach to database interfacing. It is an extension to the traditional 
+Djongo is a unified approach to database interfacing. It is an extension to the traditional 
 <a href="https://www.djangoproject.com/">Django ORM</a> framework. It maps python objects to MongoDB documents, a technique
 popularly referred to as Object Document Mapping or ODM.</p>
 <p>Constructing queries using Djongo is <strong>much easier</strong> compared to writing lengthy Pymongo query documents.
@@ -235,11 +235,12 @@ Storing raw <code>JSON</code> emitted by the frontend directly into the database
 <p><strong>You no longer</strong> need to use the shell to inspect your data. By using the <code>Admin</code> package, you can access and
 modify data directly from the web browser.
  Djongo includes handy UI elements that help represent MongoDB documents on the browser. </p>
+<p><a href="/djongocs/create-account">Get Djongo</a>&#8594;</p>
   </div>
 </section>
 <section class="pitch">
   <div class="pitch-content">
-    <h2>Security and Integrity Checks</h2>
+    <h2 id="security-and-integrity-checks">Security and Integrity Checks</h2>
 <div class="language-python highlighter-rouge highlight code-left top-align"><pre><span></span><code><span class="k">def</span> <span class="nf">script_injection</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
   <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;&lt;script&gt;&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
     <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s1">&#39;Script injection in </span><span class="si">%(value)s</span><span class="s1">&#39;</span><span class="p">),</span>
@@ -257,16 +258,7 @@ modify data directly from the web browser.
 </section>
 <section class="pitch">
   <div class="pitch-content">
-    <h2>Rapid Prototyping</h2>
-<p><img alt="Djongo" class="img-right sz-sm" src="/assets/images/home/rapid-levels.png" />
-As your data evolves you may wish to enforce a structure to it. The <code>JSONField</code> represents documents with no structure, and <strong>no validations</strong>. </p>
-<p>The <code>EmbeddedField</code> lets you describe the structure which triggers automatic <strong>validations at the application level</strong>.</p>
-<p>Setting <code>enforce_schema = True</code> in the <code>settings.py</code> file enables schema <strong>checks at the database level</strong>.</p>
-  </div>
-</section>
-<section class="pitch">
-  <div class="pitch-content">
-    <h2>Query Creation</h2>
+    <h2 id="query-creation">Query Creation</h2>
 <div class="pitch-query">
   <div class="fp-left pos-twice sz-hf">
     <h3>PyMongo</h3>
@@ -351,6 +343,16 @@ and <strong>automatically generates</strong> the pymongo query document on the l
 </section>
 <section class="pitch">
   <div class="pitch-content">
+    <h2 id="rapid-prototyping">Rapid Prototyping</h2>
+<p><img alt="Djongo" class="img-right sz-sm" src="/assets/images/home/rapid-levels.png" />
+As your data evolves you may wish to enforce a structure to it. The <code>JSONField</code> represents documents with no structure, and <strong>no validations</strong>. </p>
+<p>The <code>EmbeddedField</code> lets you describe the structure which triggers automatic <strong>validations at the application level</strong>.</p>
+<p>Setting <code>enforce_schema = True</code> in the <code>settings.py</code> file enables schema <strong>checks at the database level</strong>.</p>
+<p><a href="/djongocs/create-account">Get rapid prototyping</a>&#8594;</p>
+  </div>
+</section>
+<section class="pitch">
+  <div class="pitch-content">
     <h2>Installation and Setup</h2>
 <p>Download and install the latest version of Djongo by running:</p>
 <div class="language-python highlighter-rouge highlight"><pre><span></span><code><span class="n">pip</span> <span class="n">install</span> <span class="n">djongo</span>
@@ -371,7 +373,7 @@ Go into the root of <em>mysite</em> directory to find the <code>settings.py</cod
 </code></pre></div>
 
 <p>YOU ARE SET! Have fun!</p>
-<p class="text-center"><a class="btn btn--primary btn--large" href="/get-started">Get Started</a></p>
+<p class="text-center"><a class="btn btn--primary btn--large" href="/djongocs/create-account">Get Started</a></p>
   </div>
 </section>
 
