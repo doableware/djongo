@@ -2,6 +2,9 @@
 Module with constants and mappings to build MongoDB queries from
 SQL constructors.
 """
+
+# THIS FILE WAS CHANGED ON - 19 Apr 2022
+
 import abc
 import re
 from logging import getLogger
