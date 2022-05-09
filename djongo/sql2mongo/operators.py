@@ -1,10 +1,12 @@
+# THIS FILE WAS CHANGED ON - 09 May 2022
+
 import re
 import typing
 import json
 from itertools import chain
 
 from sqlparse import tokens
-from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier, Function
+from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier
 
 from ..exceptions import SQLDecodeError
 from .sql_tokens import SQLToken, SQLStatement
@@ -12,9 +14,13 @@ from . import query
 
 
 def re_index(value: str):
-    match = re.match(r'%\(([0-9]+)\)s', value, flags=re.IGNORECASE)
+    match = list(re.finditer(r'%\(([0-9]+)\)s', value, flags=re.IGNORECASE))
+
     if match:
-        index = int(match.group(1))
+        if len(match) == 1:
+            index = int(match[0].group(1))
+        else:
+            index = [int(x.group(1)) for x in match]
     else:
         match = re.match(r'NULL|true', value, flags=re.IGNORECASE)
         if not match:
@@ -529,7 +535,12 @@ class CmpOp(_Op):
         self._operator = OPERATOR_MAP[self.statement.token_next(0)[1].value]
         index = re_index(self.statement.right.value)
 
-        self._constant = self.params[index] if index is not None else MAP_INDEX_NONE[self.statement.right.value]
+        if self._operator in NEW_OPERATORS:
+            index = index if isinstance(index, list) else [index]
+            self._constant = [self.params[i] for i in index]
+        else:
+            self._constant = self.params[index] if index is not None else MAP_INDEX_NONE[self.statement.right.value]
+
         if isinstance(self._constant, dict):
             self._field_ext, self._constant = next(iter(self._constant.items()))
         else:
@@ -558,6 +569,8 @@ OPERATOR_MAP = {
     '<': '$lt',
     '>=': '$gte',
     '<=': '$lte',
+    'IN': '$in',
+    'NOT IN': '$nin'
 }
 OPERATOR_PRECEDENCE = {
     'IS': 8,
@@ -575,5 +588,7 @@ MAP_INDEX_NONE = {
     'NULL': None,
     'True': True
 }
+
+NEW_OPERATORS = ['$in', '$nin']
 
 AND_OR_NOT_SEPARATOR = 3
