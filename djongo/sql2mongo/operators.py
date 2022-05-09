@@ -1,4 +1,4 @@
-# THIS FILE WAS CHANGED ON - 14 Apr 2022
+# THIS FILE WAS CHANGED ON - 09 May 2022
 
 import re
 import typing
@@ -6,7 +6,7 @@ import json
 from itertools import chain
 
 from sqlparse import tokens
-from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier, Function
+from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier
 
 from ..exceptions import SQLDecodeError
 from .sql_tokens import SQLToken, SQLStatement
@@ -535,7 +535,8 @@ class CmpOp(_Op):
         self._operator = OPERATOR_MAP[self.statement.token_next(0)[1].value]
         index = re_index(self.statement.right.value)
 
-        if isinstance(index, list) and self._operator in NEW_OPERATORS:
+        if self._operator in NEW_OPERATORS:
+            index = index if isinstance(index, list) else [index]
             self._constant = [self.params[i] for i in index]
         elif self._operator not in NEW_OPERATORS:
             self._constant = self.params[index] if index is not None else MAP_INDEX_NONE[self.statement.right.value]
