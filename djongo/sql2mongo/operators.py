@@ -538,10 +538,8 @@ class CmpOp(_Op):
         if self._operator in NEW_OPERATORS:
             index = index if isinstance(index, list) else [index]
             self._constant = [self.params[i] for i in index]
-        elif self._operator not in NEW_OPERATORS:
-            self._constant = self.params[index] if index is not None else MAP_INDEX_NONE[self.statement.right.value]
         else:
-            raise SQLDecodeError
+            self._constant = self.params[index] if index is not None else MAP_INDEX_NONE[self.statement.right.value]
 
         if isinstance(self._constant, dict):
             self._field_ext, self._constant = next(iter(self._constant.items()))
