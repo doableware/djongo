@@ -17,3 +17,5 @@ Gemfile.lock
 venv/
 .env/
 .venv/
+
+/docs/djongocs/assets/*

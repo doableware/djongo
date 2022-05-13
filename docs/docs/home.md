@@ -1,11 +1,13 @@
 ---
-permalink: /
+permalink: /home/
 layout: splash
-title: "Multi Database Enabled Backends"
+title: "MongoDB Django App Hosting"
 excerpt: 
-tagline: Simplify Multi Database Backend Development. Deploy Your Code On Our Preconfigured Backends Instantly.
+tagline: Host Django Apps on a MongoDB database.
 
-description: "Djongo is a smarter approach to database querying. It maps python objects to MongoDB documents. It can be used with both relational and non-relational databases."
+description: "Djongo is a Django and MongoDB hosting service that lets you host Django Apps instantly on
+a preconfigured MongoDB database. Django contrib modules such as Auth, Sessions and Admin 
+can be used directly without any changes."
 
 classes:
     - feature-page
@@ -13,10 +15,10 @@ classes:
     - l-splash-full
 
 header:
-    overlay_image: /assets/images/home/banner-rand-dark-many6.png
+    overlay_image: /assets/images/home/banner-rand-dark-many7.png
     overlay_color_dark: #092e20
     overlay_color: #09411f
-    cta_url: /support/
+    cta_url: /djongocs/create-account/
     cta_label: "Get Started"       
 
 ---
@@ -37,12 +39,16 @@ Easily create and query [embedded documents](/using-django-with-mongodb-data-fie
 
 ## Djongo
 ![Djongo](/assets/images/home/djongo-name-logo.png){: .img-right .sz-sm .top-align}
-Djongo is a smarter approach to database querying. It is an extension to the traditional [Django ORM](https://www.djangoproject.com/) framework. It maps python objects to MongoDB documents, a technique popularly referred to as Object Document Mapping or ODM.
+Djongo provides a unified approach to database interfacing. It is an extension to the traditional 
+[Django ORM](https://www.djangoproject.com/) framework. It maps python objects to MongoDB documents, a technique
+popularly referred to as Object Document Mapping or ODM.
 
 Constructing queries using Djongo is **much easier** compared to writing lengthy Pymongo query documents.
-Storing raw `JSON` emitted by the frontend directly into the database is scary. Djongo ensures that **only clean data** gets through. 
+Storing raw `JSON` emitted by the frontend directly into the database is scary. Djongo ensures that 
+**only clean data** gets through. 
 
-**You no longer** need to use the shell to inspect your data. By using the `Admin` package, you can access and modify data directly from the web browser.
+**You no longer** need to use the shell to inspect your data. By using the `Admin` package, you can access and
+modify data directly from the web browser.
  Djongo includes handy UI elements that help represent MongoDB documents on the browser. 
 
 ::

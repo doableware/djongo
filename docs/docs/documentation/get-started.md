@@ -6,6 +6,16 @@ Setting up the mapping documents to python objects is easy with Djongo."
 layout: docs
 ---
 
+## Deploy
+
+1. Start by [creating an account](/djongocs/create-account/). You will be assigned
+a working webserver instance running Django and MongoDB.
+2. (Optional) Test your instance by entering `https://api.djongomapper.com/<username>/` in your browser.
+The username is what was used while creating the account.
+3. Login to your [dashboard](/djongocs/dashboard/) and upload your Public SSH key. The command to open a shell
+to your instance will appear in the dashboard. You can upload your app specific Django scripts to the server.
+
+
 ## Local Development
 
 ### Setup
@@ -140,7 +150,7 @@ Djongo Cloud Server is the fastest way to deploy to the cloud your djongo powere
 dependencies come preconfigured and installed on the [Cloud][support_page]. 
 
 ### SSH
-On account creation you install your public SSH key at the [dashboard](/djongocs/).
+On account creation you install your public SSH key at the [dashboard](/djongocs/dashboard/).
 This gives a secure shell access to the VM instance for uploading a 
 [Django App](https://docs.djangoproject.com/en/dev/intro/tutorial01/). Once the key is installed, 
 the dashboard displays the SSH port number over which you can connect to the VM instance. 
@@ -173,7 +183,7 @@ structure looks like:
 |   -- api/
 |     -- settings.py
 |     -- urls.py
-|   -- app/
+|   -- apps/
 |     -- app1/
 |       -- views.py
 |       -- models.py
@@ -187,7 +197,7 @@ In your `urls.py` if you add an entry like `path('hello/', app1.views.hello)`, t
 
 #### Reload the Server
 After making changes to your app, you need to reload the server. This is done by clicking the reload button 
-in your [dashboard](/djongocs/).
+in your [dashboard](/djongocs/dashboard/).
 
 {% comment %}
 ### Installing dependencies
