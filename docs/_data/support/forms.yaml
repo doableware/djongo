@@ -1,7 +1,5 @@
 # contact form is not used
 webserver:
-  attr:
-    "v-on:submit.prevent": submit
   fields:
     - type: input
       label: "User Name"

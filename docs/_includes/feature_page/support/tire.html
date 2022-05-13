@@ -3,7 +3,7 @@
   <div class="l-tire">
     {% for tire in site.data.support.tire_column.tires %}
       {% if tire.invisible != true %}
-        <div class="item-3-col">
+        <div class="item-3-col item-distinct">
           <div itemprop="name" class="item-title">{{ tire.title }}</div>
           <div itemprop="price" class="item-price">${{ tire.price }}</div>
           <div itemprop="eligibleDuration"  class="item-period">
@@ -13,7 +13,7 @@
               PER MONTH
             {% endif %}
           </div>
-          <a class="btn btn--success btn--large" href="/support/{{ tire.url }}">Apply</a>
+          <a class="btn btn--success btn--large" href="{{ tire.url }}">Apply</a>
           <div itemprop="description">
             <ul>
               {% for b in tire.benefits %}

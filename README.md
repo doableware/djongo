@@ -4,9 +4,10 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 <a href="https://badge.fury.io/py/djongo"><img src="https://badge.fury.io/py/djongo.svg" alt="PyPI version" height="18"></a>
 
- ## The only connector that let's you use Django with MongoDB *without* changing the Django ORM
+ ## The only connector that lets you use Django with MongoDB *without* changing the Django ORM
 
-Use MongoDB as a backend database for your Django project, without changing the Django ORM. Use the Django Admin GUI to add and modify documents in MongoDB. 
+Use MongoDB as a backend database for your Django project, without changing the Django ORM.
+Use the Django Admin GUI to add and modify documents in MongoDB. 
 
 ## Usage:
 <ol>
@@ -46,13 +47,10 @@ DATABASES = {
       ```
      MongoDB 3.6 or higher is required.
 
-## Dear Supporter
-
-I am inundated daily with your love, appreciation, queries and feature requests for Djongo. Djongo has grown into more than a simple hobby project of an individual developer. Visit my [Patreon page](https://www.patreon.com/nesdis) to understand the different levels of support and services you can get.
-
 ## How it works
 
-djongo is a SQL to mongodb query compiler. It translates a SQL query string into a mongoDB query document. As a result, all Django features, models etc work as is.
+djongo is a SQL to mongodb query compiler. It translates a SQL query string into a mongoDB query document.
+As a result, all Django features, models etc. work as is.
   
   Django contrib modules: 
 <pre><code>  
@@ -70,15 +68,18 @@ djongo is a SQL to mongodb query compiler. It translates a SQL query string into
   * Embedded Array.
   * Embedded Form Fields.
   
-  Read the [full documentation](https://nesdis.github.io/djongo/)
+  Read the [full documentation](https://www.djongomapper.com/)
   
 ## Contribute
  
- If you think djongo is useful, **please share it** with the world! Your endorsements and online reviews will help get more support for this project.
-  
- Take a look at the [Enhancements project](https://github.com/nesdis/djongo/projects/1) that contains a list of features that must be implemented in future versions of Djongo. You can contribute to the source code or the documentation by creating a simple pull request! You may want to refer to the design documentation to get an idea on how [Django MongoDB connector](https://nesdis.github.io/djongo/django-mongodb-connector-design-document/) is implemented.
- 
- Add a star, show some love :) 
+If you think djongo is useful, **please share it** with the world! 
+
+You can contribute to the source code or the documentation by creating a simple pull request! 
+You may want to refer to the design documentation to get
+an idea on how [Django MongoDB connector](https://www.djongomapper.com/djongo/django-mongodb-connector-design-document/)
+is implemented.
+
+Add a star, show some love :) 
 
 ## Questions and Discussion
 

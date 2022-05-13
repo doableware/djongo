@@ -1,5 +1,5 @@
 ---
-title: DjongoCS
+title: Support
 permalink: /support/
 layout: splash
 tagline: "Create and Deploy a Backend Server"
@@ -10,6 +10,9 @@ classes:
   - l-splash-full
   - feature-page
   - empty-banner
+
+redirect_to: /djongocs/create-account/
+
 ---
 
 {% capture head %}

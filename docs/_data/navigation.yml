@@ -3,9 +3,9 @@ main:
   - title: "Docs"
     url: /get-started/
   - title: "DjongoCS"
-    url: /djongocs/
-  - title: "Support"
-    url: /support/
+    url: /djongocs/login/
+  - title: "Source"
+    url: https://github.com/doableware/djongo
 
 docs:
   - title: "Djongo"

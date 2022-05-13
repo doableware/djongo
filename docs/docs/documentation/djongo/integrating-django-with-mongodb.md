@@ -1,7 +1,9 @@
 ---
 title: Django with MongoDB
 permalink: /integrating-django-with-mongodb/
-description: "Djongo is an extension to the Django ORM. Use MongoDB as the backend for your Django project, without changing the Django ORM. Use Django Admin to directly add and modify documents stored in MongoDB. Use other contrib modules such as Auth and Sessions without any changes. Start using Django with MongoDB by adding just one line of code"
+description: "Djongo is an extension to the Django ORM. Use MongoDB as the backend for your Django project, without changing the Django ORM.
+Use Django Admin to directly add and modify documents stored in MongoDB. Use other contrib modules such as Auth
+and Sessions without any changes. Start using Django with MongoDB by adding just one line of code"
 layout: docs
 ---
 
@@ -104,7 +106,7 @@ When migrating an existing Django app to MongoDB,  it is recommended to start a 
   
 2. Run `manage.py makemigrations <myapp>` followed by `manage.py migrate`.
 3. Open Django Admin and you should find all Models defined in your app, showing up in the Admin.
-4. While the relevant collections have been created in MongoDB, they have have no data inside.
+4. While the relevant collections have been created in MongoDB, they have no data inside.
 5. Continue by inserting data into the collections manually, or use Django Admin for a GUI. 
 
 ## Setting up an existing MongoDB database on Django
