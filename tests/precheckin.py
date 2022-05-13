@@ -8,7 +8,7 @@ import unittest
 from pymongo import MongoClient
 from mock_tests import test_sqlparsing
 
-client = MongoClient()
+client = MongoClient('mongodb://dusan:dusan@terabase-mongo:27017')
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -48,7 +48,7 @@ def run_commands(path):
 
 
 if __name__ == '__main__':
-    run_test_sqlparsing()
+    # run_test_sqlparsing()
     app_root = os.path.join(TEST_DIR, 'djongo_tests', 'test_project')
     main_test_app = os.path.join(app_root, 'xtest_app')
     remove_migrations(main_test_app)

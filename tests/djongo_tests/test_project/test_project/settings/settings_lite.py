@@ -25,12 +25,20 @@ SECRET_KEY = '5s(0&1x3(963q!xdyt1=$^(5om4(_=_39ys6=bnp7n-h8%7z+('
 DEBUG = True
 
 ALLOWED_HOSTS = ['localhost','127.0.0.1']
-
+DEFAULT_AUTO_FIELD = ''
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
         'NAME': 'djongo-test',
         'ENFORCE_SCHEMA': False,
+        'CLIENT': {
+            'host': 'terabase-mongo',
+            'port': int(os.environ.get('MONGO_INITDB_PORT', 27017)),
+            'username': os.environ.get('MONGO_INITDB_ROOT_USERNAME', 'dusan'),
+            'password': os.environ.get('MONGO_INITDB_ROOT_PASSWORD', 'dusan'),
+            'authSource': 'admin',
+            'authMechanism': 'SCRAM-SHA-1',
+        },
         'LOGGING': {
             'version': 1,
             'loggers': {

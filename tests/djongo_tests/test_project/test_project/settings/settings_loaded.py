@@ -32,9 +32,12 @@ DATABASES = {
         'ENGINE': 'djongo',
         'NAME': 'djongo-test',
         'CLIENT': {
-            'host': '127.0.0.1',
-            'port': 27017,
+            'host': 'terabase-mongo',
+            'port': int(os.environ.get('MONGO_INITDB_PORT', 27017)),
+            'username': os.environ.get('MONGO_INITDB_ROOT_USERNAME', 'dusan'),
+            'password': os.environ.get('MONGO_INITDB_ROOT_PASSWORD', 'dusan'),
             'authSource': 'admin',
+            'authMechanism': 'SCRAM-SHA-1',
         },
         'ENFORCE_SCHEMA': True
     },
