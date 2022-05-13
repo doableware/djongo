@@ -86,6 +86,7 @@ class _BinaryOp(_Op):
     def evaluate(self):
         pass
 
+
 class _InNotInOp(_BinaryOp):
 
     def _fill_in(self, token):
@@ -183,6 +184,7 @@ class LikeOp(_BinaryOp):
         to_match = self.params[index]
         to_match = self.check_embedded(to_match)
         if isinstance(to_match, str):
+            to_match = re.escape(to_match)
             to_match = to_match.replace('%', '.*')
             self._regex = '^' + to_match + '$'
         elif isinstance(to_match, dict):
@@ -191,7 +193,7 @@ class LikeOp(_BinaryOp):
             self._regex = to_match
         else:
             raise SQLDecodeError
-            
+
     def to_mongo(self):
         return {self._field: {'$regex': self._regex}}
 
