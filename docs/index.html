@@ -93,7 +93,7 @@
 <div class="page__hero--overlay"
   style="background-image: url('/assets/images/home/banner-rand-dark-many7.png');">
     <div class="wrapper">
-      <h1 id="page-title" class="page__title" itemprop="headline">
+      <h1 class="page__title" itemprop="headline">
           MongoDB Django App Hosting
       </h1>
       <p class="page__lead">Host Django Apps on a MongoDB database.</p>
@@ -171,15 +171,15 @@
   <div class="feature__item">
     <div class="archive__item">
       <div class="archive__item-teaser">
-        <img src="/assets/images/home/support-new.png"
-             alt="Support">
+        <img src="/assets/images/home/cloud-tiles.png"
+             alt="Cloud Services">
       </div>
       <div class="archive__item-body">
-        <h2 class="archive__item-title">Support</h2>
+        <h2 class="archive__item-title">Cloud</h2>
         <div class="archive__item-excerpt">
-          <p>Phone, Chat and Email support. Including commercial licensing for enterprises.</p>
+          <p>Managed DBs, Storage, Kubernetes, Compute and Virtual Private Cloud (VPC) services</p>
         </div>
-        <p><a id="btn-support"              href="/support/"
+        <p><a id="btn-support"              href="/djongocs/create-account"
               class="btn btn--primary">
           More</a></p>
       </div>
@@ -220,40 +220,20 @@
     </div>
   </div>
 </div>
-
       </section>
-      <section class="pitch">
+<section class="pitch">
   <div class="pitch-content">
-    <h2>Djongo</h2>
+    <h2 id="djongo">Djongo</h2>
 <p><img alt="Djongo" class="img-right sz-sm top-align" src="/assets/images/home/djongo-name-logo.png" />
-Djongo is a unified approach to database interfacing. It is an extension to the traditional 
-<a href="https://www.djangoproject.com/">Django ORM</a> framework. It maps python objects to MongoDB documents, a technique
-popularly referred to as Object Document Mapping or ODM.</p>
+Djongo is a unified approach to database interfacing. It is an extension to the<br />
+<a href="https://www.djangoproject.com/">Django ORM</a> framework but maps python objects to MongoDB documents.</p>
 <p>Constructing queries using Djongo is <strong>much easier</strong> compared to writing lengthy Pymongo query documents.
 Storing raw <code>JSON</code> emitted by the frontend directly into the database is scary. Djongo ensures that 
 <strong>only clean data</strong> gets through. </p>
 <p><strong>You no longer</strong> need to use the shell to inspect your data. By using the <code>Admin</code> package, you can access and
-modify data directly from the web browser.
+modify data directly from the browser.
  Djongo includes handy UI elements that help represent MongoDB documents on the browser. </p>
 <p><a href="/djongocs/create-account">Get Djongo</a>&#8594;</p>
-  </div>
-</section>
-<section class="pitch">
-  <div class="pitch-content">
-    <h2 id="security-and-integrity-checks">Security and Integrity Checks</h2>
-<div class="language-python highlighter-rouge highlight code-left top-align"><pre><span></span><code><span class="k">def</span> <span class="nf">script_injection</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-  <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;&lt;script&gt;&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s1">&#39;Script injection in </span><span class="si">%(value)s</span><span class="s1">&#39;</span><span class="p">),</span>
-                          <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">value</span><span class="p">})</span>
-
-<span class="k">class</span> <span class="nc">Entry</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
-  <span class="n">homepage</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">URLField</span><span class="p">(</span><span class="n">validators</span><span class="o">=</span><span class="p">[</span><span class="n">URLValidator</span><span class="p">,</span>
-                                         <span class="n">script_injection</span><span class="p">])</span>
-</code></pre></div>
-
-<p>Djongo performs <strong>checks on data fields</strong> before they are saved to the database. </p>
-<p>Define <strong>custom validators</strong> or use builtin validators to check the data. Validation is triggered prior to writing to the database.</p>
-<p>Running <strong>integrity checks</strong> and field value validators ensures protect from garbage data. </p>
   </div>
 </section>
 <section class="pitch">
@@ -263,7 +243,7 @@ modify data directly from the web browser.
   <div class="fp-left pos-twice sz-hf">
     <h3>PyMongo</h3>
     <div class="code">
-      <div class="language-python highlighter-rouge highlight sz-short"><pre><span></span><code><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s1">&#39;entry&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+      <div class="language-python highlighter-rouge highlight sz-short codehilite"><pre><span></span><code><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s1">&#39;entry&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
   <span class="p">[{</span>
     <span class="s1">&#39;$match&#39;</span><span class="p">:</span> <span class="p">{</span>
       <span class="s1">&#39;author_id&#39;</span><span class="p">:</span> <span class="p">{</span>
@@ -330,7 +310,7 @@ modify data directly from the web browser.
   <div class="fp-right pos-twice sz-hf">
     <h3>Djongo</h3>
     <div class="code">
-      <div class="language-python highlighter-rouge highlight sz-short"><pre><span></span><code><span class="n">qs</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">author__name</span><span class="o">=</span><span class="s1">&#39;Paul&#39;</span><span class="p">)</span>\
+      <div class="language-python highlighter-rouge highlight sz-short codehilite"><pre><span></span><code><span class="n">qs</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">author__name</span><span class="o">=</span><span class="s1">&#39;Paul&#39;</span><span class="p">)</span>\
                   <span class="o">.</span><span class="n">select_related</span><span class="p">(</span><span class="s1">&#39;blog&#39;</span><span class="p">)</span>
 </code></pre></div>
     </div>
@@ -339,6 +319,34 @@ modify data directly from the web browser.
 <p>Djongo generates complex, error free, aggregation queries automatically.
 It takes the relatively simple query on the right 
 and <strong>automatically generates</strong> the pymongo query document on the left.</p>
+  </div>
+</section>
+<section class="pitch">
+  <div class="pitch-content">
+    <h2 id="cloud-services">Cloud Services</h2>
+<p><img alt="Djongo" class="img-right sz-sm" src="/assets/images/home/cloud.png" />
+Focus on developing your models and views. Let djongo cloud services automate platform management. </p>
+<p>Deploy a platform that includes compute, storage, database, and networking products.
+Scale your resources as your app grows. </p>
+<p><a href="/djongocs/create-account">Create a platform</a>&#8594;</p>
+  </div>
+</section>
+<section class="pitch">
+  <div class="pitch-content">
+    <h2 id="security-and-integrity-checks">Security and Integrity Checks</h2>
+<div class="language-python highlighter-rouge highlight code-left top-align codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">script_injection</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+  <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;&lt;script&gt;&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s1">&#39;Script injection in </span><span class="si">%(value)s</span><span class="s1">&#39;</span><span class="p">),</span>
+                          <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">value</span><span class="p">})</span>
+
+<span class="k">class</span> <span class="nc">Entry</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+  <span class="n">homepage</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">URLField</span><span class="p">(</span><span class="n">validators</span><span class="o">=</span><span class="p">[</span><span class="n">URLValidator</span><span class="p">,</span>
+                                         <span class="n">script_injection</span><span class="p">])</span>
+</code></pre></div>
+
+<p>Djongo performs <strong>checks on data fields</strong> before they are saved to the database. </p>
+<p>Define <strong>custom validators</strong> or use builtin validators to check the data. Validation is triggered prior to writing to the database.</p>
+<p>Running <strong>integrity checks</strong> and field value validators ensures protect from garbage data. </p>
   </div>
 </section>
 <section class="pitch">
@@ -353,18 +361,18 @@ As your data evolves you may wish to enforce a structure to it. The <code>JSONFi
 </section>
 <section class="pitch">
   <div class="pitch-content">
-    <h2>Installation and Setup</h2>
+    <h2 id="installation-and-setup">Installation and Setup</h2>
 <p>Download and install the latest version of Djongo by running:</p>
-<div class="language-python highlighter-rouge highlight"><pre><span></span><code><span class="n">pip</span> <span class="n">install</span> <span class="n">djongo</span>
+<div class="language-python highlighter-rouge codehilite"><pre><span></span><code><span class="n">pip</span> <span class="n">install</span> <span class="n">djongo</span>
 </code></pre></div>
 
 <p>The project directory is where all Djongo settings live. Auto generate the required files by running:</p>
-<div class="language-python highlighter-rouge highlight"><pre><span></span><code><span class="n">django</span><span class="o">-</span><span class="n">admin</span> <span class="n">startproject</span> <span class="n">mysite</span>
+<div class="language-python highlighter-rouge highlight codehilite"><pre><span></span><code><span class="n">django</span><span class="o">-</span><span class="n">admin</span> <span class="n">startproject</span> <span class="n">mysite</span>
 </code></pre></div>
 
 <p>You can replace <em>mysite</em> with a name of your choosing.
 Go into the root of <em>mysite</em> directory to find the <code>settings.py</code> file. Add:</p>
-<div class="language-python highlighter-rouge highlight"><pre><span></span><code><span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
+<div class="language-python highlighter-rouge highlight codehilite"><pre><span></span><code><span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s1">&#39;ENGINE&#39;</span><span class="p">:</span> <span class="s1">&#39;djongo&#39;</span><span class="p">,</span>
         <span class="s1">&#39;NAME&#39;</span><span class="p">:</span> <span class="s1">&#39;your-db-name&#39;</span><span class="p">,</span>
@@ -376,7 +384,6 @@ Go into the root of <em>mysite</em> directory to find the <code>settings.py</cod
 <p class="text-center"><a class="btn btn--primary btn--large" href="/djongocs/create-account">Get Started</a></p>
   </div>
 </section>
-
     </section>
   </article>
 </div>
