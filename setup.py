@@ -86,7 +86,6 @@ install_requires = [
     'sqlparse==0.4.2',
     'pymongo>=3.2.0',
     'django>=2.1',
-    'pytz==2021.3',
 ]
 
 if sys.version_info.major == 3 and sys.version_info.minor < 7:
