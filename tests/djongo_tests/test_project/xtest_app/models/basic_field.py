@@ -29,6 +29,7 @@ class NamedBlog(models.Model):
 
 
 class NamedAuthor(models.Model):
+    _id = models.ObjectIdField(primary_key=True)
     name = models.CharField(max_length=200)
 
     class Meta:
@@ -39,11 +40,12 @@ class NamedAuthor(models.Model):
 
 
 class BasicBlog(NamedBlog):
+    _id = models.AutoField(primary_key=True)
     tagline = models.TextField(default='##tagline##')
 
 
 class BasicAuthor(NamedAuthor):
-    pass
+    _id = models.AutoField(primary_key=True)
 
 
 class BasicHeadlinedEntry(models.Model):
@@ -57,6 +59,7 @@ class BasicHeadlinedEntry(models.Model):
 
 
 class BasicRelatedEntry(BasicHeadlinedEntry):
+    _id = models.AutoField(primary_key=True)
     blog = models.ForeignKey(BasicBlog, on_delete=models.CASCADE)
     authors = models.ManyToManyField(BasicAuthor)
 
