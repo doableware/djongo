@@ -90,21 +90,18 @@
   </div>
 </div>
     <div class="initial-content">
-<div class="page__hero--overlay"
+<div class="banner is-pitch"
   style="background-image: url('/assets/images/home/banner-rand-dark-many7.png');">
-    <div class="wrapper">
-      <h1 class="page__title" itemprop="headline">
-          MongoDB Django App Hosting
-      </h1>
-      <p class="page__lead">Host Django Apps on a MongoDB database.</p>
-        <p><a href="/djongocs/create-account/" class="btn btn--light-outline btn--large">Get Started</a></p>
+    <div class="banner-text is-hero">
+      <h1 itemprop="headline">MongoDB Django App Hosting</h1>
+<p class="banner-lead">Deploy Django Apps on a MongoDB or SQL database.</p>      <p><a href="/djongocs/create-account/" class="btn btn--large">Deploy</a></p>
     </div>
 </div>
 <div id="main" role="main">
   <article class="splash" itemscope itemtype="https://schema.org/CreativeWork">
     <meta itemprop="headline" content="Djongo">
     <section class="page__content" itemprop="text">
-      <section class="pitch-content">
+      <section class="l-fixed-content">
         <div class="feature__wrapper ">
   <div class="feature__item--center">
     <div class="archive__item">
@@ -222,7 +219,7 @@
 </div>
       </section>
 <section class="pitch">
-  <div class="pitch-content">
+  <div class="l-fixed-content">
     <h2 id="djongo">Djongo</h2>
 <p><img alt="Djongo" class="img-right sz-sm top-align" src="/assets/images/home/djongo-name-logo.png" />
 Djongo is a unified approach to database interfacing. It is an extension to the<br />
@@ -237,7 +234,7 @@ modify data directly from the browser.
   </div>
 </section>
 <section class="pitch">
-  <div class="pitch-content">
+  <div class="l-fixed-content">
     <h2 id="query-creation">Query Creation</h2>
 <div class="pitch-query">
   <div class="fp-left pos-twice sz-hf">
@@ -322,17 +319,24 @@ and <strong>automatically generates</strong> the pymongo query document on the l
   </div>
 </section>
 <section class="pitch">
-  <div class="pitch-content">
-    <h2 id="cloud-services">Cloud Services</h2>
-<p><img alt="Djongo" class="img-right sz-sm" src="/assets/images/home/cloud.png" />
-Focus on developing your models and views. Let djongo cloud services automate platform management. </p>
-<p>Deploy a platform that includes compute, storage, database, and networking products.
-Scale your resources as your app grows. </p>
-<p><a href="/djongocs/create-account">Create a platform</a>&#8594;</p>
+  <div class="l-fixed-content">
+    
   </div>
 </section>
+
+<div class="banner is-dark"
+  style="background-image: url('/assets/images/home/banner-cloud.png');">
+    <div class="banner-text is-dark">
+      <h1 itemprop="headline">Cloud Services</h1>
+<p>Focus on uploading <code>models.py</code> and <code>views.py</code>.
+Let djongo cloud services automate the rest.</p>
+<p>Deploy a platform that includes Kubernetes, compute, storage,
+database, and networking products. Scale your platform as your app grows.</p>
+      <p><a href="/djongocs/create-account/" class="btn btn--large">Create a platform</a></p>
+    </div>
+</div>
 <section class="pitch">
-  <div class="pitch-content">
+  <div class="l-fixed-content">
     <h2 id="security-and-integrity-checks">Security and Integrity Checks</h2>
 <div class="language-python highlighter-rouge highlight code-left top-align codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">script_injection</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
   <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;&lt;script&gt;&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
@@ -350,7 +354,7 @@ Scale your resources as your app grows. </p>
   </div>
 </section>
 <section class="pitch">
-  <div class="pitch-content">
+  <div class="l-fixed-content">
     <h2 id="rapid-prototyping">Rapid Prototyping</h2>
 <p><img alt="Djongo" class="img-right sz-sm" src="/assets/images/home/rapid-levels.png" />
 As your data evolves you may wish to enforce a structure to it. The <code>JSONField</code> represents documents with no structure, and <strong>no validations</strong>. </p>
@@ -360,7 +364,7 @@ As your data evolves you may wish to enforce a structure to it. The <code>JSONFi
   </div>
 </section>
 <section class="pitch">
-  <div class="pitch-content">
+  <div class="l-fixed-content">
     <h2 id="installation-and-setup">Installation and Setup</h2>
 <p>Download and install the latest version of Djongo by running:</p>
 <div class="language-python highlighter-rouge codehilite"><pre><span></span><code><span class="n">pip</span> <span class="n">install</span> <span class="n">djongo</span>
