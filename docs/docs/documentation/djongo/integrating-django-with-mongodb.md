@@ -106,7 +106,7 @@ When migrating an existing Django app to MongoDB,  it is recommended to start a 
   
 2. Run `manage.py makemigrations <myapp>` followed by `manage.py migrate`.
 3. Open Django Admin and you should find all Models defined in your app, showing up in the Admin.
-4. While the relevant collections have been created in MongoDB, they have have no data inside.
+4. While the relevant collections have been created in MongoDB, they have no data inside.
 5. Continue by inserting data into the collections manually, or use Django Admin for a GUI. 
 
 ## Setting up an existing MongoDB database on Django

@@ -10,6 +10,9 @@ classes:
   - l-splash-full
   - feature-page
   - empty-banner
+
+redirect_to: /djongocs/create-account/
+
 ---
 
 {% capture head %}
