@@ -59,8 +59,8 @@ and others... fully supported.
 Important links
 ---------------
 
-* `Full Documentation <https://nesdis.github.io/djongo/>`_
-* `Source code <https://github.com/nesdis/djongo>`_
+* `Full Documentation <https://www.djongomapper.com/>`_
+* `Source code <https://github.com/doableware/djongo>`_
 """
 
 
@@ -84,7 +84,7 @@ def find_version(*file_paths):
 
 install_requires = [
     'sqlparse==0.4.2',
-    'pymongo>=3.2.0',
+    'pymongo>=3.2.0,<4.0.0',
     'django>=2.1',
 ]
 
@@ -96,10 +96,10 @@ setup(
     version=find_version("djongo", "__init__.py"),
     include_package_data=True,
     packages=packages,
-    url='https://nesdis.github.io/djongo/',
+    url='https://www.djongomapper.com/',
     license='AGPL',
-    author='nesdis',
-    author_email='nesdis@gmail.com',
+    author='doableware',
+    author_email='support@doableware.com',
     description=(
         'Driver for allowing Django to use MongoDB as the database backend.'),
     install_requires=install_requires,
