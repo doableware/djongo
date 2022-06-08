@@ -9,6 +9,10 @@ class DatabaseCreation(BaseDatabaseCreation):
     def _clone_test_db(self, suffix, verbosity, keepdb=False):
         source_database_name = self.connection.settings_dict['NAME']
         target_database_name = self.get_test_db_clone_settings(suffix)['NAME']
+        try:
+            host = self.connection.settings_dict['CLIENT']['host']
+        except KeyError:
+            host = None
         client = self.connection.client_connection
         if not keepdb:
             self._destroy_test_db(target_database_name, verbosity)
@@ -18,6 +22,9 @@ class DatabaseCreation(BaseDatabaseCreation):
                 '--db',
                 source_database_name
             ]
+            if host is not None:
+                args += ['--host', host]
+
             subprocess.run(args)
             args = [
                 'mongorestore',
@@ -26,6 +33,9 @@ class DatabaseCreation(BaseDatabaseCreation):
                 '--db',
                 target_database_name
             ]
+            if host is not None:
+                args += ['--host', host]
+
             subprocess.run(args)
             shutil.rmtree('dump')
 
