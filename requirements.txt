@@ -1,8 +1,8 @@
-sqlparse==0.2.4
+sqlparse==0.4.2
 pymongo>=3.2.0,<4.0.0
-django>=2.0,<=3.1.4
+django>=2.0
 pytz>=2018.5
-
+=======
  # requirements.txt
  #
  # installs dependencies from ./setup.py, and the package itself,
