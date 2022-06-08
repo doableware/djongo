@@ -13,6 +13,8 @@ MongoDB is defined.
 These are the main fields for working with MongoDB.
 """
 
+# THIS FILE WAS CHANGED ON - 28 Mar 2022
+
 import functools
 import json
 import typing
@@ -109,6 +111,7 @@ class ModelField(MongoField):
                  model_container: typing.Type[Model],
                  *args, **kwargs):
         self.model_container = model_container
+        self.model_container._meta.abstract = False
         self._validate_container()
         super().__init__(*args, **kwargs)
 
