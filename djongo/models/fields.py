@@ -257,6 +257,11 @@ class ModelField(MongoField):
         if isinstance(value, str):
             value = json.loads(value)
 
+        # On POST, a Model Object was input to this method.
+        if isinstance(value, self.model_container):
+            value = {field.attname: getattr(value, field.attname) 
+                                            for field in value._meta.fields} 
+
         if not isinstance(value, self.base_type):
             raise ValidationError(
                 f'Value: {value} must be an instance of {self.base_type}')
@@ -590,6 +595,13 @@ class EmbeddedFormBoundField(forms.BoundField):
     #     return getattr(self.field.model_form, name)
 
     def __str__(self):
+        empty_model = self.field.model_form._meta.model
+        instance = self.value()
+        if instance:
+            # The model_form_class expects a Model object.
+            for key, val in instance.items():
+                setattr(empty_model, key, val) 
+            instance = empty_model
         instance = self.value()
         model_form = self.field.model_form_class(instance=instance, **self.field.model_form_kwargs)
 
@@ -608,6 +620,9 @@ class EmbeddedFormWidget(forms.MultiWidget):
             return value
         elif isinstance(value, Model):
             return [getattr(value, f_n) for f_n in self.field_names]
+        elif isinstance(value, dict):
+            # On update, a dict was input into here.
+            return value
         else:
             raise forms.ValidationError('Expected model-form')
 
