@@ -1,11 +1,17 @@
 # main links
 main:
-  - title: "Docs"
-    url: /get-started/
+  - title: "Create Account"
+    url: /djongocs/create-account/
+    id: 'nav-create-account'
   - title: "DjongoCS"
     url: /djongocs/login/
-  - title: "Source"
-    url: https://github.com/doableware/djongo
+    id: 'nav-login'
+  - title: "Docs"
+    url: /get-started/
+    id: 'nav-docs'
+
+#  - title: "Source"
+#    url: https://github.com/doableware/djongo
 
 docs:
   - title: "Djongo"
