@@ -9,7 +9,7 @@ locale                   : "en-US"
 title_separator          : "-"
 name                     : "Doableware AB"
 title                    : "Djongo"
-subtitle                 : "MongoDB Django Hosting"
+subtitle                 : ""
 description              : "Djongo is a smarter approach to database querying. It maps python objects to MongoDB documents.
                             It is popularly referred to as an Object Document Mapper or ODM. It is an extension to the traditional
                             Django object relational modeling framework. Use Django Admin to directly add and modify
@@ -171,7 +171,7 @@ defaults:
       share: false
       comments: false
       toc: true
-      toc_sticky: true
+      toc_sticky: false
       debug: false
       sidebar:
         nav: "docs"
