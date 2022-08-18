@@ -1,3 +1,5 @@
+# THIS FILE WAS CHANGED ON - 14 Apr 2022
+
 from distutils.core import setup
 from setuptools import find_packages
 import os
@@ -81,8 +83,8 @@ def find_version(*file_paths):
 
 
 install_requires = [
-    'sqlparse>=0.4.1',
-    'pymongo>=3.2.0',
+    'sqlparse==0.4.2',
+    'pymongo>=3.2.0,<4.0.0',
     'django>=2.1',
     'dnspython>=2.0',
 ]
@@ -97,8 +99,8 @@ setup(
     packages=packages,
     url='https://github.com/morbitech1/djongo',
     license='AGPL',
-    author='nesdis',
-    author_email='nesdis@gmail.com',
+    author='doableware',
+    author_email='support@doableware.com',
     description=(
         'Driver for allowing Django to use MongoDB as the database backend.'),
     install_requires=install_requires,

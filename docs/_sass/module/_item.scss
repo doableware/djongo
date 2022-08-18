@@ -1,0 +1,92 @@
+$box-min-width: 16em;
+$box-side-margin: 1em;
+$box-bottom-margin: 2em;
+$container-padding: 2em;
+
+$item-content-min-width: 25em;
+$item-side-margin: 1em;
+$item-min-width: $item-content-min-width + 2*$item-side-margin;
+
+
+@mixin item-width($columns) {
+  @if $columns > 1 {
+    width: calc(#{100% / $columns} - (#{$box-side-margin} * 2));
+
+    @for $i from $columns - 1 through 1 {
+      $total-width: ($i * $item-min-width) + $container-padding;
+      @include break(max, $total-width) {
+        width: calc(#{100% / $i} - (#{$box-side-margin} * 2));
+      }
+    }
+  } @else {
+    width: calc(100% - #{$box-side-margin});
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+.item {
+  //padding: 1em 0 1em;
+  margin: 0 $box-side-margin $box-bottom-margin;
+  text-align: center;
+
+  ul {
+    text-align: left;
+  }
+
+  form {
+    text-align: left;
+
+    input[type=submit] {
+      text-align: center;
+      margin: 0 auto 1.75em auto;
+      display: block;
+    }
+    width: 100%;
+  }
+}
+
+.item-3-col {
+  @extend .item;
+  @include item-width(3);
+}
+
+.item-2-col {
+  @extend .item;
+  @include item-width(2);
+}
+
+.item-distinct {
+  border: 1px solid gainsboro;
+  border-radius: 4px;
+  padding: 1em;
+}
+
+.item-title {
+  font-weight: bold;
+  margin-bottom: 1.5em;
+}
+
+.item-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.switcher-title {
+  font-weight: bold;
+  margin-left: 10px;
+  margin-right: 10px;
+  font-size: 1.5em;
+}
+
+.item-price {
+  font-weight: bold;
+  font-size: 2.5em;
+}
+
+.item-period {
+  font-size: 0.9em;
+  font-weight: lighter;
+  margin-bottom: 1em;
+}

@@ -19,26 +19,33 @@ form:
       required: true
 
 tires:
-  - title: Book A Debug
-    price: 149
-    per_hour: true
-    url: book-a-debug
+  - title: DjongoCS
+    price: 15
+    url: /djongocs/create-account/
     benefits:
-      - Issue resolved within the next day.
+      - Full featured DjongoCS package.
+      - Preconfigured virtual machine instance.
+      - Public endpoint over Https.
+      - Upgradeable instance.
       - Email support.
+      - Cancel anytime.
 
-  - title: Discord Support
+  - title: Basic Support
     price: 59
-    url: discord-support
+    url: /support/contact/discord-support/
     benefits:
-      - You get access to the *priority discussion board* on Discord.
+      - Includes DjongoCS
+      - Access to the *priority discussion board* on Discord.
       - Resolution time within 2 - 4 weeks.
 
-  - title: DjongoNxt Access
-    price: 15
-    url: djongonxt
+  - title: Premium Support
+    price: 149
+    per_hour: true
+    url: /support/contact/book-a-debug/
     benefits:
-      - You get access to the djongoNxt repository.
+      - Includes DjongoCS
+      - Issue resolved within the next day.
+      - Email support.
 
   - title: A Sweet Tip
     price: 4

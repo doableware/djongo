@@ -1,10 +1,13 @@
+# THIS FILE WAS CHANGED ON - 09 May 2022
+
 import re
 import typing
+import json
 from collections import defaultdict
 from itertools import chain
 
 from sqlparse import tokens
-from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier, Function
+from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier
 
 from djongo.utils import encode_key
 
@@ -15,11 +18,15 @@ from ..exceptions import SQLDecodeError
 
 
 def re_index(value: str):
-    match = re.match(r'%\(([0-9]+)\)s', value, flags=re.IGNORECASE)
+    match = list(re.finditer(r'%\(([0-9]+)\)s', value, flags=re.IGNORECASE))
+
     if match:
-        index = int(match.group(1))
+        if len(match) == 1:
+            index = int(match[0].group(1))
+        else:
+            index = [int(x.group(1)) for x in match]
     else:
-        match = re.match(r'NULL', value, flags=re.IGNORECASE)
+        match = re.match(r'NULL|true', value, flags=re.IGNORECASE)
         if not match:
             raise SQLDecodeError
         index = None
@@ -147,16 +154,21 @@ class LikeOp(_BinaryOp):
     def __init__(self, *args, token='current_token', **kwargs):
         super().__init__(name='LIKE', *args, token=token, **kwargs)
         self._regex = None
-        self._make_regex(getattr(self.statement, token))
+        self._make_regex(self.statement.next())
 
     def _make_regex(self, token):
         index = SQLToken.placeholder_index(token.right)
 
         to_match = self.params[index]
-        if isinstance(to_match, dict):
+        to_match = self.check_embedded(to_match)
+        if isinstance(to_match, str):
+            to_match = to_match.replace('%', '.*')
+            self._regex = '^' + to_match + '$'
+        elif isinstance(to_match, dict):
             field_ext, to_match = next(iter(to_match.items()))
             self._field += '.' + field_ext
-        if not isinstance(to_match, str):
+            self._regex = to_match
+        else:
             raise SQLDecodeError
         # Ensure all regex special characters are handled
         to_match = re.escape(to_match)
@@ -688,6 +700,8 @@ OPERATOR_MAP = {
     '<': '$lt',
     '>=': '$gte',
     '<=': '$lte',
+    'IN': '$in',
+    'NOT IN': '$nin'
 }
 OPERATOR_PRECEDENCE = {
     'COL': 10,
@@ -704,3 +718,12 @@ OPERATOR_PRECEDENCE = {
     'OR': 1,
     'generic': 0
 }
+
+MAP_INDEX_NONE = {
+    'NULL': None,
+    'True': True
+}
+
+NEW_OPERATORS = ['$in', '$nin']
+
+AND_OR_NOT_SEPARATOR = 3

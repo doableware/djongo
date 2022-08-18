@@ -1,0 +1,143 @@
+# contact form is not used
+webserver:
+  fields:
+    - type: input
+      label: "User Name"
+      attr:
+        type: text
+        name: userName
+        required: ''
+        autocomplete: username
+        title: 'Alphanumeric characters: min 4, max 8'
+        pattern: '[a-z0-9]{4,8}'
+
+    - type: input
+      label: "Password"
+      attr:
+        type: password
+        name: password
+        required: ''
+        autocomplete: new-password
+
+    - type: input
+      label: "Confirm Password"
+      attr:
+        type: password
+        name: confirmPassword
+        required: ''
+        autocomplete: new-password
+
+    - type: input
+      label: "Email"
+      attr:
+        type: email
+        name: email
+        placeholder: "name@org.com"
+        required: ''
+        autocomplete: email
+
+    - type: input
+      attr:
+        type: submit
+        value: Create Account
+        class: "btn btn--primary btn--large"
+
+contact:
+  subject: support-page
+  next: "/support/request-success"
+  classes:
+    - form--splash
+  fields:
+    - type: select
+      label: "Subject:"
+      name: Subject
+      options:
+        - Commercial License
+        - Cancel Subscription
+
+    - type: input
+      label: "Name or Organization:"
+      attr:
+        type: text
+        name: Name
+
+    - type: input
+      label: "Email:"
+      attr:
+        type: email
+        name: Email
+        placeholder: "name@org.com"
+        required: ''
+
+    - type: input
+      attr:
+        type: submit
+        value: Send
+        class: "btn btn--primary btn--large"
+
+enterprise:
+  subject: Enterprise
+  next: "/support/request-success"
+  classes:
+    - fx-form
+  fields:
+    - type: input
+      label: "Full Name:"
+      attr:
+        type: text
+        name: Name
+        required: ''
+
+    - type: input
+      label: "Organization:"
+      attr:
+        type: text
+        name: Organization
+        required: ''
+
+    - type: input
+      label: "Email:"
+      attr:
+        type: email
+        name: Email
+        placeholder: "name@org.com"
+        required: ''
+
+    - type: input
+      attr:
+        type: submit
+        value: Enquire
+        class: "btn btn--primary btn--large"
+
+discuss:
+  subject: "Message"
+  next: "/support/request-success"
+  classes:
+    - fx-form
+  fields:
+    - type: input
+      label: "Full Name:"
+      attr:
+        type: text
+        name: Name
+        required: ''
+
+    - type: input
+      label: "Email:"
+      attr:
+        type: email
+        name: Email
+        placeholder: "name@org.com"
+        required: ''
+
+    - type: textarea
+      label: "Message:"
+      name: Message
+      required: true
+
+    - type: input
+      attr:
+        type: submit
+        value: Send
+        class: "btn btn--primary btn--large"
+
