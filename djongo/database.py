@@ -6,11 +6,8 @@ clients = {}
 
 
 def connect(db, **kwargs):
-    try:
-        return clients[db]
-    except KeyError:
-        logger.debug('New MongoClient connection')
-        clients[db] = MongoClient(**kwargs, connect=False)
+    logger.debug('New MongoClient connection')
+    clients[db] = MongoClient(**kwargs, connect=False)
     return clients[db]
 
 
