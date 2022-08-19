@@ -1,3 +1,5 @@
+# THIS FILE WAS CHANGED ON - 19 Aug 2022
+
 from logging import getLogger
 from pymongo import MongoClient
 
