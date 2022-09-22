@@ -473,14 +473,14 @@ class AlterQuery(DDLQuery):
             self.execute = self._rename_collection
 
     def _rename_column(self):
-        self.db[self.left_table].update(
+        self.db[self.left_table].update_many(
             {},
             {
                 '$rename': {
                     self._old_name: self._new_name
                 }
             },
-            multi=True
+#             multi=True
         )
 
     def _rename_collection(self):
@@ -539,16 +539,16 @@ class AlterQuery(DDLQuery):
         self.db[self.left_table].drop_index(self._iden_name)
 
     def _drop_column(self):
-        self.db[self.left_table].update(
+        self.db[self.left_table].update_many(
             {},
             {
                 '$unset': {
                     self._iden_name: ''
                 }
             },
-            multi=True
+#             multi=True
         )
-        self.db['__schema__'].update(
+        self.db['__schema__'].update_one(
             {'name': self.left_table},
             {
                 '$unset': {
@@ -609,7 +609,7 @@ class AlterQuery(DDLQuery):
                                      err_sub_sql=statement)
 
     def _add_column(self):
-        self.db[self.left_table].update(
+        self.db[self.left_table].update_many(
             {
                 '$or': [
                     {self._iden_name: {'$exists': False}},
@@ -621,9 +621,9 @@ class AlterQuery(DDLQuery):
                     self._iden_name: self._default
                 }
             },
-            multi=True
+#             multi=True
         )
-        self.db['__schema__'].update(
+        self.db['__schema__'].update_one(
             {'name': self.left_table},
             {
                 '$set': {
