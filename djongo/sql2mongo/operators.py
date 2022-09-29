@@ -412,7 +412,6 @@ class _StatementParser:
 
         elif tok.match(tokens.Keyword, 'BETWEEN'):
             op = BetweenOp(**kw)
-            statement.skip(3)
 
         elif tok.match(tokens.Keyword, 'IS'):
             op = IsOp(**kw)
