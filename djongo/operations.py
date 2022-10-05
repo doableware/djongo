@@ -64,6 +64,9 @@ class DatabaseOperations(BaseDatabaseOperations):
             return None
         return bson.Decimal128(super().adapt_decimalfield_value(value, max_digits, decimal_places))
 
+    def conditional_expression_supported_in_where_clause(self, expression):
+            return False
+
     def convert_datefield_value(self, value, expression, connection):
         if isinstance(value, datetime.datetime):
             if settings.USE_TZ:
