@@ -158,7 +158,7 @@ compress_html:
 # Defaults
 defaults:
   - scope:
-      path: "docs"
+      path: "markdown/documentation"
       type: pages
     values:
       notice:
@@ -175,4 +175,10 @@ defaults:
       debug: false
       sidebar:
         nav: "docs"
+  - scope:
+      path: "markdown/legal"
+      type: pages
+    values:
+      toc: true
+      toc_sticky: false
 
