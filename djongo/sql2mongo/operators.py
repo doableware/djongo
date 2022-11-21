@@ -525,7 +525,7 @@ class CmpOp(_Op):
 
         if self._sql_operator in LIKE_OPERATOR_MAP.keys():
             like_op = LikeOp(to_match=self._constant)
-            self._constant = like_op.to_match
+            self._constant = like_op.regex
 
         if isinstance(self._constant, dict):
             self._field_ext, self._constant = next(iter(self._constant.items()))
@@ -550,14 +550,15 @@ class CmpOp(_Op):
                 mongo[field]['$options'] = 'im'
         else:
             if self._sql_operator in LIKE_OPERATOR_MAP:
-                mongo = {field: {'$not': bson.regex.Regex(self._constant)}}
+                regex = bson.regex.Regex(self._constant, 'i')
+                if self._sql_operator == 'iLIKE':
+                    regex = bson.regex.Regex(self._constant, 'i')
+                mongo = {field: {'$not': regex}}
             else:
-                mongo = {field: {'$not': {self._operator: bson.regex.Regex(self._constant)}}}
-
-            if self._sql_operator == 'iLIKE':
-                mongo[field]['$not']['$options'] = 'im'
+                mongo = {field: {'$not': {self._operator: self._constant}}}
 
         return mongo
+
 
 LIKE_OPERATOR_MAP = {
     'LIKE': '$regex',
