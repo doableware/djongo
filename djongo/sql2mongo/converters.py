@@ -4,7 +4,7 @@ from collections import OrderedDict
 from typing import Union as U, List, Optional as O
 
 from sqlparse import tokens, parse as sqlparse
-from sqlparse.sql import Parenthesis
+from sqlparse.sql import Parenthesis, IdentifierList, Comparison, Where
 
 from . import query as query_module
 from .functions import SQLFunc
@@ -19,7 +19,7 @@ class Converter:
     def __init__(
             self,
             query: U['query_module.SelectQuery',
-                     'query_module.BaseQuery'],
+            'query_module.BaseQuery'],
             statement: SQLStatement
     ):
         self.query = query
@@ -350,8 +350,33 @@ class SetConverter(Converter):
         super().__init__(*args)
 
     def parse(self):
+        toks = self.parse_set_tokens()
+        self.sql_tokens.extend(toks)
+
+    def parse_set_tokens(self):
+        # handle conditional sets
+        ret = []
         tok = self.statement.next()
-        self.sql_tokens.extend(SQLToken.tokens2sql(tok, self.query))
+        while tok:
+            prev_tok = self.statement.prev_token
+            next_tok = self.statement.next_token
+            if tok.value == '=':
+                l = prev_tok[-1] if isinstance(prev_tok, IdentifierList) else prev_tok
+                r = next_tok[0] if isinstance(next_tok, IdentifierList) else next_tok
+                cmp = Comparison([l, tok, r])
+                sql_cmp = SQLComparison(cmp, self.query)
+                ret.append(sql_cmp)
+            elif isinstance(tok, IdentifierList):
+                start = 1 if prev_tok and prev_tok.value == '=' else 0
+                end = -1 if next_tok and next_tok.value == '=' else None
+                t = SQLToken.tokens2sql(IdentifierList(tokens=tok[start:end]), self.query)
+                ret.extend(t)
+            elif isinstance(tok, Comparison):
+                ret.extend(SQLToken.tokens2sql(tok, self.query))
+            if isinstance(next_tok, Where):
+                break
+            tok = self.statement.next()
+        return ret
 
     def to_mongo(self):
         # use aggregation pipeline when updating using existing fields
@@ -377,7 +402,7 @@ class _Tokens2Id:
         U[SQLIdentifier, SQLFunc]
     ]
     query: U['query_module.SelectQuery',
-             'query_module.BaseQuery']
+    'query_module.BaseQuery']
 
     def to_id(self):
         _id = {}
@@ -496,7 +521,7 @@ class HavingConverter(Converter):
 
     def __init__(self,
                  query: U['query_module.SelectQuery',
-                          'query_module.BaseQuery'],
+                 'query_module.BaseQuery'],
                  statement: SQLStatement):
         super().__init__(query, statement)
 

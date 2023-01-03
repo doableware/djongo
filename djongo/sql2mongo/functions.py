@@ -1,7 +1,7 @@
 from sqlparse import tokens, parse as sqlparse
 from sqlparse.sql import Function, Case
 
-from .sql_tokens import AliasableToken, SQLToken, SQLStatement
+from .sql_tokens import AliasableToken, SQLToken, SQLStatement, SQLCase
 from ..exceptions import SQLDecodeError
 
 
@@ -46,36 +46,8 @@ class SQLFunc(AliasableToken):
 
     @property
     def resolved_field(self):
-        if self.conditional_cases:
-            """Deal with condition aggregation functions - agg(case when .. then .. else ..)
-            Might not be the best place to put this since it's also possible to have conditional cases w/o aggregation.
-            But we can refactor it when the need comes.
-            """
-            from .operators import WhereOp
-            cases = []
-            for c in self.conditional_cases:
-                case_toks, then_toks = c
-                case_val, then_val = None, None
-                if case_toks:
-                    case_stmt = SQLStatement(sqlparse(' '.join(str(s) for s in case_toks))[0])
-                    case_op = WhereOp(statement=case_stmt, query=self.query, params=self.query.params)
-                    case_val = case_op.to_mongo()
-                if then_toks:
-                    then_stmt = SQLStatement(sqlparse(' '.join(str(s) for s in then_toks[1:]))[0])
-                    then_val = SQLToken.token2sql(then_stmt.next(), query=self.query).to_mongo()
-                cases.append((case_val, then_val))
-            if not cases:
-                raise SQLDecodeError
-            cases_to_mongo = {'$cond': [cases[0][0], cases[0][1]]}
-            cond = cases_to_mongo['$cond']
-            for c in cases[1:]:
-                if c[0]:  # a WHEN..THEN vs ELSE
-                    nested_cond = {'$cond': [c[0], c[1]]}
-                    cond.append(nested_cond)
-                else:
-                    cond.append(c[1])
-                cond = nested_cond['$cond']
-            return cases_to_mongo
+        if self.case:
+            return self.case.to_mongo()
         else:
             """FIX: FUNC('__col1')...FROM(SUBQUERY) syntax (field becomes '__col1.__col1')"""
             iden = self.identifier
@@ -87,11 +59,11 @@ class SQLFunc(AliasableToken):
         return self.func_tok[1][1].match(tokens.Keyword, 'DISTINCT')
 
     @property
-    def conditional_cases(self):
+    def case(self):
         t = self.func_tok[1][1]
         if not isinstance(t, Case):
             return None
-        return t.get_cases(skip_ws=True)
+        return SQLCase(t, self.query)
 
     @property
     def is_wildcard(self):

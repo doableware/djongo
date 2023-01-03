@@ -4,7 +4,8 @@ from typing import Union as U, Iterator, Optional as O, Optional, List
 
 from pymongo import ASCENDING, DESCENDING
 from sqlparse import tokens, parse as sqlparse
-from sqlparse.sql import Token, Identifier, Function, Comparison, Parenthesis, IdentifierList, Statement, Operation
+from sqlparse.sql import Token, Identifier, Function, Comparison, Parenthesis, IdentifierList, Statement, Operation, \
+    Case
 
 from . import query as query_module
 from ..exceptions import SQLDecodeError, NotSupportedError
@@ -76,6 +77,10 @@ class SQLToken:
                 yield SQLPlaceholder(token, query)
         elif token.ttype == tokens.Name.Placeholder:
             yield SQLPlaceholder(token, query)
+        elif isinstance(token, Operation):
+            yield SQLOperation(token, query)
+        elif isinstance(token, Case):
+            yield SQLCase(token, query)
         else:
             raise SQLDecodeError(f'Unsupported: {token.value}')
 
@@ -267,22 +272,29 @@ class SQLConstIdentifier(AliasableToken):
 class SQLComparison(SQLToken):
     def __init__(self, *args):
         super().__init__(*args)
+        l = self._token.left
+        r = self._token.right
 
         # Evaluate rhs of a comparison token, used in update statement
+        # - have to eagerly evaluate to get uses_existing_fields
         self._rhs = None
-        if isinstance(self._token.right, Identifier):
+        if isinstance(r, Identifier):
             self._rhs = f"${self.right_column}"
-        elif isinstance(self._token.right, Parenthesis) and isinstance(self._token.right[1], Operation):
-            op = SQLOperation(self._token.right[1], self.query)
+        elif isinstance(r, Case):
+            op = SQLCase(r, self.query)
             self.uses_existing_fields = op.uses_existing_fields
             self._rhs = op.to_mongo()
-        elif isinstance(self._token.right, Operation):
-            op = SQLOperation(self._token.right, self.query)
+        elif isinstance(r, Parenthesis) and isinstance(r[1], Operation):
+            op = SQLOperation(r[1], self.query)
             self.uses_existing_fields = op.uses_existing_fields
             self._rhs = op.to_mongo()
-        elif self._token.right.ttype == tokens.Name.Placeholder:
-            self._rhs = self.query.params[self.placeholder_index(self._token.right)]
-        elif self._token.right.match(tokens.Keyword, 'NULL'):
+        elif isinstance(r, Operation):
+            op = SQLOperation(r, self.query)
+            self.uses_existing_fields = op.uses_existing_fields
+            self._rhs = op.to_mongo()
+        elif r.ttype == tokens.Name.Placeholder:
+            self._rhs = self.query.params[self.placeholder_index(r)]
+        elif r.match(tokens.Keyword, 'NULL'):
             self._rhs = None
 
     @property
@@ -336,6 +348,47 @@ class SQLPlaceholder(SQLToken):
 
     def to_mongo(self):
         return self.query.params[self.get_value()]
+
+
+class SQLCase(SQLToken):
+    def __init__(self, *args):
+        if not isinstance(args[0], Case):
+            raise SQLDecodeError
+        super().__init__(*args)
+        # assume true, could fail in edge cases, e.g. case when NOW() > %(1)s then %(2)s ...
+        self.uses_existing_fields = True
+
+    @property
+    def cases(self):
+        return self._token.get_cases(skip_ws=True)
+
+    def to_mongo(self):
+        from .operators import WhereOp
+        cases = []
+        for c in self.cases:
+            case_toks, then_toks = c
+            case_val, then_val = None, None
+            if case_toks:
+                case_stmt = SQLStatement(sqlparse(' '.join(str(s) for s in case_toks))[0])
+                case_op = WhereOp(statement=case_stmt, query=self.query, params=self.query.params)
+                case_val = case_op.to_mongo()
+            if then_toks:
+                then_stmt = SQLStatement(sqlparse(' '.join(str(s) for s in then_toks[1:]))[0])
+                then_op = SQLToken.token2sql(then_stmt.next(), query=self.query)
+                then_val = then_op.to_mongo()
+            cases.append((case_val, then_val))
+        if not cases:
+            raise SQLDecodeError
+        cases_to_mongo = {'$cond': [cases[0][0], cases[0][1]]}
+        cond = cases_to_mongo['$cond']
+        for c in cases[1:]:
+            if c[0]:  # WHEN..THEN
+                nested_cond = {'$cond': [c[0], c[1]]}
+                cond.append(nested_cond)
+                cond = nested_cond['$cond']
+            else:  # ELSE
+                cond.append(c[1])
+        return cases_to_mongo
 
 
 class SQLStatement:

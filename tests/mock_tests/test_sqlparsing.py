@@ -861,6 +861,7 @@ class TestUpdate(VoidQuery):
         self.db.__getitem__.assert_has_calls(calls)
 
     def test_pattern3(self):
+        """Update with math expression"""
         self.sql = (self.base_sql + f'"col1" = (({t1c2} / %s) + %s), "col2" = NULL')
         self.params = [5, 2]
         self.exe()
@@ -869,6 +870,46 @@ class TestUpdate(VoidQuery):
             call().update_many(
                 filter={},
                 update=[{'$set': {'col1': {'$add': [{'$divide': ['$col2', 5]}, 2]}, 'col2': None}}])
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
+
+    def test_pattern4(self):
+        """Update with conditionals, E.g.
+        UPDATE "study_study" SET "n_total_expected" = %(0)s,
+            "progress" = CASE
+                WHEN ("study_study"."n_total_expected" > %(1)s)
+                THEN ("study_study"."dicoms"."len" / "study_study"."n_total_expected")
+                ELSE %(2)s
+                END,
+            "file_hash" = %(3)s,
+            "reportCompleted" = CASE
+                WHEN ("study_study"."reportCompleted")
+                THEN %(4)s
+                ELSE %(5)s
+                END
+        """
+        self.sql = (self.base_sql + f'"col1" = CASE WHEN ({t1c1} / %s > %s) THEN ({t1c1} / {t1c2}) ELSE %s END, '
+                                    f'"col2" = NULL,'
+                                    f'"col3" = CASE WHEN ({t1c3} / %s = %s) THEN {t1c3} ELSE %s END')
+        self.params = [2, 4, 1, 5, 2, 1]
+        self.exe()
+        calls = [
+            call()('table'),
+            call().update_many(
+                filter={},
+                update=[{'$set': {
+                    'col1': {'$cond': [
+                        {'$expr': {'$gt': [{'$divide': ['$col1', 2]}, 4]}},
+                        {'$divide': ['$col1', '$col2']},
+                        1]
+                    },
+                    'col2': None,
+                    'col3': {'$cond': [
+                        {'$expr': {'$eq': [{'$divide': ['$col3', 5]}, 2]}},
+                        '$col3',
+                        1]
+                    }
+                }}])
         ]
         self.db.__getitem__.assert_has_calls(calls)
 
