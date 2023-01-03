@@ -4,9 +4,10 @@ SQL constructors.
 """
 import abc
 import re
+from dataclasses import dataclass, field as dataclass_field
 from logging import getLogger
 from typing import Optional, Dict, List, Union as U, Sequence, Set
-from dataclasses import dataclass, field as dataclass_field
+
 from pymongo import MongoClient
 from pymongo import ReturnDocument
 from pymongo.command_cursor import CommandCursor
@@ -18,20 +19,35 @@ from sqlparse import tokens
 from sqlparse.sql import (
     Identifier, Parenthesis,
     Where,
-    Statement)
+    Statement, Operation)
 
-from ..exceptions import SQLDecodeError, MigrationError, print_warn
-from .functions import SQLFunc
-from .sql_tokens import (SQLToken, SQLStatement, SQLIdentifier,
-                         AliasableToken, SQLConstIdentifier, SQLColumnDef, SQLColumnConstraint)
+from djongo import base
 from .converters import (
     ColumnSelectConverter, AggColumnSelectConverter, FromConverter, WhereConverter,
     AggWhereConverter, InnerJoinConverter, OuterJoinConverter, LimitConverter, AggLimitConverter, OrderConverter,
     SetConverter, AggOrderConverter, DistinctConverter, NestedInQueryConverter, GroupbyConverter, OffsetConverter,
     AggOffsetConverter, HavingConverter, NestedFromQueryConverter)
+from .functions import SQLFunc
+from .sql_tokens import (SQLToken, SQLStatement, SQLIdentifier,
+                         AliasableToken, SQLConstIdentifier, SQLColumnDef, SQLColumnConstraint)
+from ..exceptions import SQLDecodeError, MigrationError, print_warn
 
-from djongo import base
 logger = getLogger(__name__)
+
+
+def placeholder_indexes(token) -> List[int]:
+    matches = re.findall(r'%\(([0-9]+)\)s', token, flags=re.IGNORECASE)
+    return [int(m) for m in matches]
+
+
+def substitute_placeholders(token):
+    token_value = token.unaliased
+    token_value = token_value.lstrip('(').rstrip(')')
+    token_indexes = placeholder_indexes(token_value)
+    for i in token_indexes:
+        param = token.query.params[i]
+        token_value = token_value.replace(f'%({i})s', str(param))
+    return token_value
 
 
 @dataclass
@@ -43,6 +59,14 @@ class TokenAlias:
                         SQLFunc,
                         SQLIdentifier], str] = dataclass_field(default_factory=dict)
     aliased_names: Set[str] = dataclass_field(default_factory=set)
+
+    def similartoken2alias(self, token):
+        token_value = substitute_placeholders(token)
+        for _token in self.token2alias:
+            _token_value = substitute_placeholders(_token)
+            if token_value == _token_value:
+                return self.token2alias[_token]
+        return None
 
 
 class BaseQuery(abc.ABC):
@@ -85,7 +109,7 @@ class DDLQuery(BaseQuery):
         super().__init__(*args)
 
     def execute(self):
-        return 
+        return
 
 
 class DQLQuery(BaseQuery):
@@ -186,13 +210,41 @@ class SelectQuery(DQLQuery):
 
     def _needs_aggregation(self):
         if (self.nested_query
-                or self.nested_from_query ## FIX: FROM(subquery)
+                or self.nested_from_query  ## FIX: FROM(subquery)
                 or self.joins
                 or self.distinct
                 or self.groupby):
             return True
+
         if any(isinstance(sql_token, (SQLFunc, SQLConstIdentifier))
                for sql_token in self.selected_columns.sql_tokens):
+            return True
+
+        def any_operation_in_order(order, sql_ops):
+            order_cols = getattr(order, 'columns', [])  # :/
+            if not order_cols:
+                return False
+            any_op_alias = any(getattr(sql_token, 'alias', '') in order_cols for sql_token in sql_ops)
+            return any_op_alias
+
+        def any_operation_in_where(where):
+            where_val = getattr(getattr(getattr(where, 'op', None), 'statement', None), 'value', None)
+            if not where_val:
+                return False
+            stmt: Statement = sqlparse(where_val)[0]
+            toks = stmt.tokens
+            while toks:  # Do a DFS for an Operation token
+                t = toks.pop()
+                if isinstance(t, Operation):
+                    return True
+                else:
+                    toks += getattr(t, 'tokens', [])
+            return False
+
+        if any_operation_in_order(
+                self.order, self.selected_columns.sql_operations) or any_operation_in_where(self.where):
+            # computed field used in condition or sort
+            logger.debug(f"Found computed field condition/sort for {self.statement.value}")
             return True
         return False
 
@@ -201,12 +253,16 @@ class SelectQuery(DQLQuery):
         ## FIX: FROM(subquery)
         if self.nested_from_query:
             pipeline.extend(self.nested_from_query.to_mongo())
-            
+
         for join in self.joins:
             pipeline.extend(join.to_mongo())
 
         if self.nested_query:
             pipeline.extend(self.nested_query.to_mongo())
+
+        if self.selected_columns.sql_operations:
+            self.selected_columns.__class__ = AggColumnSelectConverter
+            pipeline.extend(self.selected_columns.to_mongo_computed_fields())
 
         if self.where:
             self.where.__class__ = AggWhereConverter
@@ -235,12 +291,12 @@ class SelectQuery(DQLQuery):
 
         if self._needs_column_selection():
             self.selected_columns.__class__ = AggColumnSelectConverter
-            pipeline.extend(self.selected_columns.to_mongo())
+            pipeline.extend(self.selected_columns.to_mongo_normal_fields())
 
         return pipeline
 
     def _needs_column_selection(self):
-        return not(self.distinct or self.groupby) and self.selected_columns
+        return not (self.distinct or self.groupby) and self.selected_columns
 
     def _get_cursor(self):
         if self._needs_aggregation():
@@ -260,7 +316,7 @@ class SelectQuery(DQLQuery):
 
             if self.order:
                 kwargs.update(self.order.to_mongo())
-            
+
             if self.offset:
                 kwargs.update(self.offset.to_mongo())
 
@@ -322,10 +378,10 @@ class UpdateQuery(DMLQuery):
                 self.left_table = c.sql_tokens[0].table
 
             elif tok.match(tokens.Keyword, 'SET'):
-                c = self.set_columns = SetConverter(self, statement)
+                self.set_columns = SetConverter(self, statement)
 
             elif isinstance(tok, Where):
-                c = self.where = WhereConverter(self, statement)
+                self.where = WhereConverter(self, statement)
 
             else:
                 raise SQLDecodeError
@@ -571,8 +627,8 @@ class AlterQuery(DDLQuery):
     def _add(self, statement: SQLStatement):
         for tok in statement:
             if tok.match(tokens.Keyword, (
-                'CONSTRAINT', 'KEY', 'REFERENCES',
-                'NOT NULL', 'NULL'
+                    'CONSTRAINT', 'KEY', 'REFERENCES',
+                    'NOT NULL', 'NULL'
             )):
                 print_warn(f'schema validation using {tok}')
 
@@ -837,7 +893,7 @@ class Query:
         except OperationFailure as e:
             import djongo
             exe = SQLDecodeError(
-                f'FAILED SQL: {self._sql}\n' 
+                f'FAILED SQL: {self._sql}\n'
                 f'Params: {self._params}\n'
                 f'Pymongo error: {e.details}\n'
                 f'Version: {djongo.__version__}'

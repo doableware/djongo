@@ -7,9 +7,9 @@ from sqlparse import tokens, parse as sqlparse
 from sqlparse.sql import Parenthesis
 
 from . import query as query_module
-from .functions import SQLFunc, CountFuncAll
+from .functions import SQLFunc
 from .operators import WhereOp
-from .sql_tokens import SQLIdentifier, SQLConstIdentifier, SQLComparison, SQLToken, SQLStatement
+from .sql_tokens import SQLIdentifier, SQLConstIdentifier, SQLComparison, SQLToken, SQLStatement, SQLOperation
 from ..exceptions import SQLDecodeError
 
 
@@ -38,11 +38,12 @@ class ColumnSelectConverter(Converter):
     def __init__(self, query, statement):
         self.select_all = False
         self.num_columns = 0
-
-        self.sql_tokens: List[
-            U[SQLIdentifier, SQLFunc]
-        ] = []
+        self.sql_tokens: List[U[SQLIdentifier, SQLFunc, SQLOperation]] = []
         super().__init__(query, statement)
+
+    @property
+    def sql_operations(self):
+        return [t for t in self.sql_tokens if isinstance(t, SQLOperation)]
 
     def parse(self):
         tok = self.statement.next()
@@ -54,64 +55,66 @@ class ColumnSelectConverter(Converter):
             for sql_token in SQLToken.tokens2sql(tok, self.query):
                 self.sql_tokens.append(sql_token)
 
-    def to_mongo(self):
-        doc = [selected.column for selected in self.sql_tokens]
+    def _to_mongo(self, toks):
+        doc = {}
+
+        def _to_mongo_value(s):
+            if isinstance(s, SQLOperation):
+                val = s.to_mongo()
+            elif s.column and s.column.endswith('.len'):  # get size of array fields
+                val = {'$size': {"$ifNull": [f"${s.column.rstrip('.len')}", []]}}
+            else:
+                val = f'${s.column}'
+            return val
+
+        for selected in toks:
+            doc[selected.alias or selected.column] = _to_mongo_value(selected)
         return {'projection': doc}
+
+    def to_mongo(self):
+        return self._to_mongo(self.sql_tokens)
 
 
 class AggColumnSelectConverter(ColumnSelectConverter):
 
-    def to_mongo(self):
+    def _to_mongo(self, toks, ops_to_mongo=False):
         project = {}
 
-        if any(isinstance(tok, SQLFunc) for tok in self.sql_tokens):
-            # A SELECT func without groupby clause still needs a groupby
-            # in MongoDB
-            return self._using_group_by()
-
-        elif isinstance(self.sql_tokens[0], SQLConstIdentifier):
-            project[self.sql_tokens[0].alias] = self.sql_tokens[0].to_mongo()
+        if any(isinstance(tok, SQLFunc) for tok in toks):
+            # A SELECT func without groupby clause still needs a groupby in MongoDB
+            return AggColumnSelectConverter._using_group_by(toks)
+        elif isinstance(toks[0], SQLConstIdentifier):
+            project[toks[0].alias] = toks[0].to_mongo()
         else:
-            for selected in self.sql_tokens:
-                project[selected.field] = True
+            for selected in toks:
+                if isinstance(selected, SQLOperation):
+                    project[selected.alias] = selected.to_mongo() if ops_to_mongo else True
+                else:
+                    project[selected.field] = True
 
         return [{'$project': project}]
 
-    def _using_group_by(self):
+    def to_mongo_computed_fields(self):
+        return self._to_mongo(self.sql_operations, ops_to_mongo=True)
+
+    def to_mongo_normal_fields(self):
+        return self._to_mongo(self.sql_tokens, ops_to_mongo=False)
+
+    @classmethod
+    def _using_group_by(cls, sql_tokens):
         group = {'_id': None}
         project = {'_id': False}
-        has_agg_distinct = any(getattr(selected, 'is_agg_distinct', False) for selected in self.sql_tokens)
+        has_agg_distinct = any(isinstance(selected, SQLFunc) and selected.is_distinct for selected in sql_tokens)
 
         ## FIX: agg(distinct) handler
-        pipeline = self._handle_agg_distinct(group, project) if has_agg_distinct \
-            else self._handle_agg(group, project)
+        pipeline = cls._handle_agg_distinct(group, project, sql_tokens) if has_agg_distinct \
+            else cls._handle_agg(group, project, sql_tokens)
 
         return pipeline
 
-    def _get_alias(self, token):
-        return token.alias or str(token.__hash__())
-
-    def _handle_agg_distinct_token(self, token, group, project):
-        if isinstance(token, SQLFunc) and getattr(token, 'is_agg_distinct', False):
-            # token = agg(distinct col)
-            key = self._get_alias(token)
-            field = f'${token.column}' if token.column == token.table else f'${token.field}'
-            group1 = {'_id': field, key: token.to_mongo()}
-            group2 = {'_id': None, key: ast.literal_eval(str(token.to_mongo()).replace(field, f'${key}'))}
-            pipeline = [{'$group': group1}, {'$group': group2}]
-        elif isinstance(token, SQLFunc) and not getattr(token, 'is_agg_distinct', False):
-            # token = agg(col)
-            key = self._get_alias(token)
-            group[key] = token.to_mongo()
-            pipeline = [{'$group': group}]
-        else:  # token = col
-            key = token.field
-            pipeline = [{'$group': group}]
-        project[key] = True
-        return pipeline, key
-
-    def _handle_agg_distinct(self, group, project):
-        pipelines, keys = zip(*[self._handle_agg_distinct_token(token, group, project) for token in self.sql_tokens])
+    @classmethod
+    def _handle_agg_distinct(cls, group, project, sql_tokens):
+        pipelines, keys = zip(*[cls._handle_agg_distinct_token(token, group, project) for token in sql_tokens])
 
         if len(pipelines) == 1:
             return pipelines[0] + [{'$project': project}]
@@ -123,15 +126,40 @@ class AggColumnSelectConverter(ColumnSelectConverter):
             project[keys[idx]] = {'$arrayElemAt': [f"${idx}.{keys[idx]}", 0]}
         return [{'$facet': facet}, {'$project': project}]
 
-    def _handle_agg(self, group, project):
-        for selected in self.sql_tokens:
+    @classmethod
+    def _handle_agg(cls, group, project, sql_tokens):
+        for selected in sql_tokens:
             if isinstance(selected, SQLFunc):
-                alias = self._get_alias(selected)
+                alias = cls._get_alias(selected)
                 group[alias] = selected.to_mongo()
                 project[alias] = True
             else:
                 project[selected.field] = True
         return [{'$group': group}, {'$project': project}]
+
+    @staticmethod
+    def _get_alias(token):
+        return token.alias or str(token.__hash__())
+
+    @classmethod
+    def _handle_agg_distinct_token(cls, token, group, project):
+        if isinstance(token, SQLFunc) and token.is_distinct:
+            # token = agg(distinct col)
+            key = cls._get_alias(token)
+            field = token.resolved_field
+            group1 = {'_id': field, key: token.to_mongo()}
+            group2 = {'_id': None, key: ast.literal_eval(str(token.to_mongo()).replace(field, f'${key}'))}
+            pipeline = [{'$group': group1}, {'$group': group2}]
+        elif isinstance(token, SQLFunc) and not token.is_distinct:
+            # token = agg(col)
+            key = cls._get_alias(token)
+            group[key] = token.to_mongo()
+            pipeline = [{'$group': group}]
+        else:  # token = col
+            key = token.field
+            pipeline = [{'$group': group}]
+        project[key] = True
+        return pipeline, key
 
 
 class FromConverter(Converter):
@@ -254,7 +282,7 @@ class OuterJoinConverter(JoinConverter):
         toks = self.query.selected_columns.sql_tokens
         fields = {}
         for tok in toks:
-            if not isinstance(tok, CountFuncAll) and tok.table == table:
+            if not (isinstance(tok, SQLFunc) and tok.is_wildcard) and tok.table == table:
                 fields[tok.column] = None
         return fields
 
@@ -326,14 +354,12 @@ class SetConverter(Converter):
         self.sql_tokens.extend(SQLToken.tokens2sql(tok, self.query))
 
     def to_mongo(self):
-        return {
-            'update': {
-                '$set': {
-                    sql.left_column: self.query.params[sql.rhs_indexes]
-                    if sql.rhs_indexes is not None else None
-                    for sql in self.sql_tokens}
-            }
-        }
+        # use aggregation pipeline when updating using existing fields
+        # https://www.mongodb.com/docs/manual/reference/method/db.collection.updateMany/#example-1--update-with-aggregation-pipeline-using-existing-fields
+        uses_existing_fields = any(getattr(t, 'uses_existing_fields', False) for t in self.sql_tokens)
+        _set = {'$set': {sql.left_column: sql.rhs for sql in self.sql_tokens}}
+        _set = [_set] if uses_existing_fields else _set
+        return {'update': _set}
 
 
 class AggOrderConverter(OrderConverter):

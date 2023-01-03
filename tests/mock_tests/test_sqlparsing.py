@@ -189,8 +189,10 @@ sqls = [
 
 t1c1 = '"table1"."col1"'
 t1c2 = '"table1"."col2"'
+t1c3 = '"table1"."col3"'
 t1c1c1 = '"table1"."col1"."col11"'
 t1c1c1c1 = '"table1"."col1"."col11"."col111"'
+t1c3c3c3 = '"table1"."col3"."col33"."col333"'
 t2c1 = '"table2"."col1"'
 t2c2 = '"table2"."col2"'
 t3c1 = '"table3"."col1"'
@@ -691,7 +693,7 @@ class TestDelete(VoidQuery):
         self.exe()
         calls = [
             call()('table'),
-            call().delete_many(filter={'col': {'$lt': 1}})
+            call().delete_many(filter={'$expr': {'$lt': ['$col', 1]}})
         ]
         self.db.__getitem__.assert_has_calls(calls)
 
@@ -841,8 +843,32 @@ class TestUpdate(VoidQuery):
         calls = [
             call()('table'),
             call().update_many(
-                filter={'col1': {'$eq': 2}},
+                filter={'$expr': {'$eq': ['$col1', 2]}},
                 update={'$set': {'col1': 1, 'col2': None}})
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
+
+    def test_condition2(self):
+        self.sql = (self.base_sql + f'"col1" = {t1c2}, "col2" = NULL, "col3" = %s')
+        self.params = [10]
+        self.exe()
+        calls = [
+            call()('table'),
+            call().update_many(
+                filter={},
+                update={'$set': {'col1': '$col2', 'col2': None, 'col3': 10}})
+        ]
+        self.db.__getitem__.assert_has_calls(calls)
+
+    def test_pattern3(self):
+        self.sql = (self.base_sql + f'"col1" = (({t1c2} / %s) + %s), "col2" = NULL')
+        self.params = [5, 2]
+        self.exe()
+        calls = [
+            call()('table'),
+            call().update_many(
+                filter={},
+                update=[{'$set': {'col1': {'$add': [{'$divide': ['$col2', 5]}, 2]}, 'col2': None}}])
         ]
         self.db.__getitem__.assert_has_calls(calls)
 
@@ -983,9 +1009,7 @@ class TestQueryDistinct(ResultQuery):
         pipeline = [
             {
                 '$match': {
-                    'col2': {
-                        '$eq': 1
-                    }
+                    '$expr': {'$eq': ['$col2', 1]}
                 }
             },
             {
@@ -1068,6 +1092,40 @@ class TestQueryFunctions(ResultQuery):
         ans = [(1, 2)]
         self.eval_aggregate(pipeline, return_value, ans)
 
+    def test_pattern2(self):
+        """FUNC(DISTINCT x) """
+        self.sql = f'SELECT COUNT(DISTINCT {t1c1}) AS "dist_count1"' \
+                   f' FROM "table1"'
+        pipeline = [
+            {'$group': {'_id': '$col1',
+                        'dist_count1': {'$sum': {'$cond': {'if': {'$gt': ['$col1', None]}, 'then': 1, 'else': 0}}}}},
+            {'$group': {'_id': None,
+                        'dist_count1': {
+                            '$sum': {'$cond': {'if': {'$gt': ['$dist_count1', None]}, 'then': 1, 'else': 0}}}}},
+            {'$project': {'_id': False, 'dist_count1': True}}
+        ]
+        return_value = [{'dist_count1': 3}]
+        ans = [(3,)]
+        self.eval_aggregate(pipeline, return_value, ans)
+
+    def test_pattern3(self):
+        """ Conditional functions, e.g.
+        qs.annotate(n_items=Sum(Case(When(col1__isnull=True, then=1), output_field=IntegerField())))
+        SELECT SUM(CASE WHEN "table1"."col1" IS NULL THEN %(0)s ELSE NULL END) as "n_items" from "table1"
+        """
+        self.sql = f'SELECT SUM(CASE WHEN {t1c1} IS NULL THEN %(0)s WHEN {t1c1} = %(1)s THEN {t1c2} ' \
+                   f'ELSE ({t1c2} / %(2)s) END) as "n_items" ' \
+                   f'FROM "table1"'
+        self.params = [1, 1, 0]
+        pipeline = [
+            {'$group': {'_id': None, 'n_items': {'$sum': {'$cond': [{'col1': None}, 1, {
+                '$cond': [{'$expr': {'$eq': ['$col1', 1]}}, '$col2', {'$divide': ['$col2', 0]}]}]}}}},
+            {'$project': {'_id': False, 'n_items': True}}
+        ]
+        return_value = [{'n_items': 40}]
+        ans = [(40,)]
+        self.eval_aggregate(pipeline, return_value, ans)
+
 
 class TestQueryCount(ResultQuery):
 
@@ -1087,9 +1145,7 @@ class TestQueryCount(ResultQuery):
         pipeline = [
             {
                 '$match': {
-                    'col2': {
-                        '$eq': 2
-                    }
+                    '$expr': {'$eq': ['$col2', 2]}
                 }
             },
             {
@@ -1129,7 +1185,6 @@ class TestQueryCount(ResultQuery):
         self.eval_aggregate(pipeline, return_value, ans)
 
 
-@skip
 class TestQueryUpdate(ResultQuery):
 
     def test_pattern1(self):
@@ -1138,7 +1193,7 @@ class TestQueryUpdate(ResultQuery):
         sql = 'UPDATE "table" SET "col1" = %s, "col2" = NULL WHERE "table"."col2" = %s'
         params = [1, 2]
         result = Query(self.db, self.conn, self.conn_prop, sql, params)
-        um.assert_any_call(filter={'col2': {'$eq': 2}}, update={'$set': {'col1': 1, 'col2': None}})
+        um.assert_any_call(filter={'$expr': {'$eq': ['$col2', 2]}}, update={'$set': {'col1': 1, 'col2': None}})
         self.conn.reset_mock()
 
     def test_pattern2(self):
@@ -1146,7 +1201,7 @@ class TestQueryUpdate(ResultQuery):
         sql = 'UPDATE "table" SET "col" = %s WHERE "table"."col" = %s'
         params = [1, 2]
         result = Query(self.db, self.conn, self.conn_prop, sql, params)
-        um.assert_any_call(filter={'col': {'$eq': 2}}, update={'$set': {'col': 1}})
+        um.assert_any_call(filter={'$expr': {'$eq': ['$col', 2]}}, update={'$set': {'col': 1}})
         self.conn.reset_mock()
 
     def test_pattern3(self):
@@ -1154,7 +1209,7 @@ class TestQueryUpdate(ResultQuery):
         sql = 'UPDATE "table" SET "col1" = %s WHERE "table"."col2" = %s'
         params = [1, 2]
         result = Query(self.db, self.conn, self.conn_prop, sql, params)
-        um.assert_any_call(filter={'col2': {'$eq': 2}}, update={'$set': {'col1': 1}})
+        um.assert_any_call(filter={'$expr': {'$eq': ['$col2', 2]}}, update={'$set': {'col1': 1}})
         self.conn.reset_mock()
 
     def test_pattern4(self):
@@ -1162,7 +1217,7 @@ class TestQueryUpdate(ResultQuery):
         sql = 'UPDATE "table" SET "col1" = %s, "col2" = %s WHERE "table"."col2" = %s'
         params = [1, 2, 3]
         result = Query(self.db, self.conn, self.conn_prop, sql, params)
-        um.assert_any_call(filter={'col2': {'$eq': 3}}, update={'$set': {'col1': 1, 'col2': 2}})
+        um.assert_any_call(filter={'$expr': {'$eq': ['$col2', 3]}}, update={'$set': {'col1': 1, 'col2': 2}})
         self.conn.reset_mock()
 
 
@@ -1423,7 +1478,7 @@ class TestQueryGroupBy(ResultQuery):
                 }
             },
             {
-                '$match': {'dt': {'$lt': 2}}
+                '$match': {'$expr': {'$lt': ['$dt', 2]}}
             }
         ]
         self.eval_aggregate(pipeline, return_value, ans)
@@ -1519,7 +1574,7 @@ class TestQueryIn(ResultQuery):
 
         where = 'SELECT "table1"."col1", "table1"."col2" FROM "table1" WHERE'
         find_args = {
-            'projection': ['col1', 'col2'],
+            'projection': {'col1': '$col1', 'col2': '$col2'},
             'filter': {}
         }
 
@@ -1546,7 +1601,7 @@ class TestQueryIn(ResultQuery):
 
         where = 'SELECT "table1"."col1", "table1"."col2" FROM "table1" WHERE'
         find_args = {
-            'projection': ['col1', 'col2'],
+            'projection': {'col1': '$col1', 'col2': '$col2'},
             'filter': {}
         }
 
@@ -1573,7 +1628,7 @@ class TestQueryIn(ResultQuery):
 
         where = 'SELECT "table1"."col1", "table1"."col2" FROM "table1" WHERE'
         find_args = {
-            'projection': ['col1', 'col2'],
+            'projection': {'col1': '$col1', 'col2': '$col2'},
             'filter': {}
         }
 
@@ -1598,7 +1653,7 @@ class TestQueryIn(ResultQuery):
 
         where = 'SELECT "table1"."col1", "table1"."col2" FROM "table1" WHERE'
         find_args = {
-            'projection': ['col1', 'col2'],
+            'projection': {'col1': '$col1', 'col2': '$col2'},
             'filter': {}
         }
 
@@ -1625,7 +1680,7 @@ class TestQueryIn(ResultQuery):
 
         where = 'SELECT "table1"."col1", "table1"."col2" FROM "table1" WHERE'
         find_args = {
-            'projection': ['col1', 'col2'],
+            'projection': {'col1': '$col1', 'col2': '$col2'},
             'filter': {}
         }
 
@@ -1652,7 +1707,7 @@ class TestQueryIn(ResultQuery):
 
         where = 'SELECT "table1"."col1", "table1"."col2" FROM "table1" WHERE'
         find_args = {
-            'projection': ['col1', 'col2'],
+            'projection': {'col1': '$col1', 'col2': '$col2'},
             'filter': {}
         }
 
@@ -1920,12 +1975,52 @@ class TestQueryNestedIn(ResultQuery):
 
 class TestQueryJsonOp(ResultQuery):
     return_val = [
-        {'_id': 'x', 'col2': 'shouldReturn', 'col1': {'col11': {'col111': [1, 2, 3]}}},
+        {
+            '_id': 'x', 'col2': 'shouldReturn', 'col3': 'shouldReturn', 'col1': {'col11': {'col111': [1, 2, 3]}},
+            'additional_permissions': [{'group': 'some_pk'}]
+        },
     ]
     ans = [('x', {'col11': {'col111': [1, 2, 3]}}, 'shouldReturn')]
 
+    def test_pattern0(self):
+        """$exact
+        qs.filter(additional_permissions__group='some_pk')
+        To query a collection with docs like [
+            {'additional_permissions': [{'group': 'some_pk'}]}
+        ]
+        """
+        conn = self.conn
+        find = self.find
+        iter = self.iter
+        self.sql = f"""SELECT "table1._id", {t1c1}, {t1c2} FROM {t1} WHERE "table1"."additional_permissions"."group" $exact %(0)s"""
+
+        find_args = {
+            'filter': {
+                '$expr': {
+                    '$cond': [
+                        {'$eq': [{'$type': '$additional_permissions'}, 'array']},
+                        {'$in': ['some_pk', '$additional_permissions.group']},
+                        {'$eq': ['$additional_permissions.group', 'some_pk']}
+                    ]
+                }
+            },
+            'projection': {'_id': '$_id', 'col1': '$col1', 'col2': '$col2'},
+        }
+
+        self.params = ['some_pk']
+        iter.return_value = self.return_val
+        actual = self.eval_find()
+        find.assert_any_call(**find_args)
+        self.assertEqual(actual, self.ans)
+        conn.reset_mock()
+
     def test_pattern1(self):
-        """$exact"""
+        """$exact
+        qs.filter(col1__col11__exact={'col111': [1,2,3]})
+        To query a collection with docs like [
+            {'col1': {'col11': {'col111': [1,2,3]}}}
+        ]
+        """
         conn = self.conn
         find = self.find
         iter = self.iter
@@ -1933,11 +2028,15 @@ class TestQueryJsonOp(ResultQuery):
 
         find_args = {
             'filter': {
-                'col1.col11': {
-                    '$eq': {'col111': [1, 2, 3]}
+                '$expr': {
+                    '$cond': [
+                        {'$eq': [{'$type': '$col1'}, 'array']},
+                        {'$in': [{'col111': [1, 2, 3]}, '$col1.col11']},
+                        {'$eq': ['$col1.col11', {'col111': [1, 2, 3]}]}
+                    ]
                 }
             },
-            'projection': ['_id', 'col1', 'col2']
+            'projection': {'_id': '$_id', 'col1': '$col1', 'col2': '$col2'},
         }
 
         self.params = [{'col111': [1, 2, 3]}]
@@ -1948,7 +2047,41 @@ class TestQueryJsonOp(ResultQuery):
         conn.reset_mock()
 
     def test_pattern2(self):
-        """$contains with $in lookup"""
+        """ $contains on simple array
+        qs.filter(col1__col11__contains=[1])
+        To query a collection with docs like [
+            {'col1': {'col11': [1, 2]}}
+        ]
+        """
+        conn = self.conn
+        find = self.find
+        iter = self.iter
+        self.sql = f"""SELECT "table1._id", {t1c1}, {t1c2} FROM {t1} WHERE {t1c1c1c1} $contains %(0)s"""
+
+        find_args = {
+            'filter': {
+                'col1.col11.col111': {
+                    '$all': [1]
+                }
+            },
+            'projection': {'_id': '$_id', 'col1': '$col1', 'col2': '$col2'},
+        }
+
+        self.params = [[1]]
+        iter.return_value = self.return_val
+        actual = self.eval_find()
+        find.assert_any_call(**find_args)
+        self.assertEqual(actual, self.ans)
+        conn.reset_mock()
+
+    def test_pattern3(self):
+        """$contains on an array of embedded documents, checking if any of
+            embedded documents have a property with a specified value
+        qs.filter(col1__col11__contains={'col111': 0})
+        To query a collection with docs like [
+            {'col1': {'col11': [{'col111': 1}, {'col111': 0}]}}
+        ]
+        """
         conn = self.conn
         find = self.find
         iter = self.iter
@@ -1958,22 +2091,58 @@ class TestQueryJsonOp(ResultQuery):
             'filter': {
                 'col1.col11': {
                     '$elemMatch': {
-                        'col111': {'$in': [1]}
+                        'col111': 0
                     }
                 }
             },
-            'projection': ['_id', 'col1', 'col2']
+            'projection': {'_id': '$_id', 'col1': '$col1', 'col2': '$col2'},
         }
 
-        self.params = [{'col111__in': [1]}]
+        self.params = [{'col111': 0}]
         iter.return_value = self.return_val
         actual = self.eval_find()
         find.assert_any_call(**find_args)
         self.assertEqual(actual, self.ans)
         conn.reset_mock()
 
-    def test_pattern3(self):
-        """NOT $contains with $in lookup"""
+    def test_pattern4(self):
+        """$contains on an array of embedded documents, checking if any of
+            embedded documents have a property with a value in the input array
+        qs.filter(col1__col11__contains={'col111__in': [0, 1]})
+        To query a collection with docs like [
+            {'col1': {'col11': [{'col111': 1}, {'col111': 0}]}}
+        ]
+        """
+        conn = self.conn
+        find = self.find
+        iter = self.iter
+        self.sql = f"""SELECT "table1._id", {t1c1}, {t1c2} FROM {t1} WHERE {t1c1c1} $contains %(0)s"""
+
+        find_args = {
+            'filter': {
+                'col1.col11': {
+                    '$elemMatch': {
+                        'col111': {'$in': [0, 1]}
+                    }
+                }
+            },
+            'projection': {'_id': '$_id', 'col1': '$col1', 'col2': '$col2'},
+        }
+
+        self.params = [{'col111__in': [0, 1]}]
+        iter.return_value = self.return_val
+        actual = self.eval_find()
+        find.assert_any_call(**find_args)
+        self.assertEqual(actual, self.ans)
+        conn.reset_mock()
+
+    def test_pattern5(self):
+        """NOT $contains on simple array, i.e. does not contain all the specified elements
+        qs.filter(~Q(col1__col11__contains=[3,4,5]))
+        To query a collection with docs like [
+            {'col1': {'col11': [3]}}  # only has 3 but not 4 and 5, so will be retrieved
+        ]
+        """
         conn = self.conn
         find = self.find
         iter = self.iter
@@ -1983,23 +2152,21 @@ class TestQueryJsonOp(ResultQuery):
             'filter': {
                 'col1.col11': {
                     '$not': {
-                        '$elemMatch': {
-                            'col111': {'$in': [99]}
-                        }
+                        '$all': [3, 4, 5]
                     }
                 }
             },
-            'projection': ['_id', 'col1', 'col2']
+            'projection': {'_id': '$_id', 'col1': '$col1', 'col2': '$col2'},
         }
 
-        self.params = [{'col111__in': [99]}]
+        self.params = [[3, 4, 5]]
         iter.return_value = self.return_val
         actual = self.eval_find()
         find.assert_any_call(**find_args)
         self.assertEqual(actual, self.ans)
         conn.reset_mock()
 
-    def test_pattern4(self):
+    def test_pattern6(self):
         """$contains + another nested in subquery"""
         self.sql = f"""SELECT "table1._id", {t1c1}, {t1c2} FROM {t1} WHERE {t1c1c1} $contains %(0)s"""
         self.sql += f""" AND {t1c2} IN (SELECT DISTINCT U0."col2" FROM {t1} U0)"""
@@ -2017,7 +2184,7 @@ class TestQueryJsonOp(ResultQuery):
         self.params = [{'col111__in': [1]}]
         self.eval_aggregate(pipeline, self.return_val, self.ans)
 
-    def test_pattern5(self):
+    def test_pattern7(self):
         """$has_keys"""
         conn = self.conn
         find = self.find
@@ -2030,7 +2197,7 @@ class TestQueryJsonOp(ResultQuery):
                     '$exists': True,
                 }
             },
-            'projection': ['_id', 'col1', 'col2']
+            'projection': {'_id': '$_id', 'col1': '$col1', 'col2': '$col2'},
         }
 
         self.params = [['col111']]
@@ -2040,7 +2207,7 @@ class TestQueryJsonOp(ResultQuery):
         self.assertEqual(actual, self.ans)
         conn.reset_mock()
 
-    def test_pattern6(self):
+    def test_pattern8(self):
         """$has_keys with special key"""
         conn = self.conn
         find = self.find
@@ -2058,7 +2225,7 @@ class TestQueryJsonOp(ResultQuery):
                     '$exists': True,
                 }
             },
-            'projection': ['_id', 'col1', 'col2']
+            'projection': {'_id': '$_id', 'col1': '$col1', 'col2': '$col2'},
         }
 
         self.params = [['col.111']]
@@ -2066,6 +2233,229 @@ class TestQueryJsonOp(ResultQuery):
         actual = self.eval_find()
         find.assert_any_call(**find_args)
         self.assertEqual(actual, ans)
+        conn.reset_mock()
+
+    def test_pattern9(self):
+        """Don't add $ on a placeholder string value"""
+        conn = self.conn
+        find = self.find
+        iter = self.iter
+
+        self.sql = f"""SELECT "table1._id", {t1c1}, {t1c2} FROM {t1} WHERE {t1c2} $exact %(0)s"""
+        find_args = {
+            'filter': {'$expr': {'$eq': ['$col2', 'shouldReturn']}},
+            'projection': {'_id': '$_id', 'col1': '$col1', 'col2': '$col2'},
+        }
+        self.params = ['shouldReturn']
+        iter.return_value = self.return_val
+        actual = self.eval_find()
+        find.assert_any_call(**find_args)
+        self.assertEqual(actual, self.ans)
+
+        conn.reset_mock()
+
+        conn.reset_mock()
+
+    def test_pattern10(self):
+        """Add $ on a column name"""
+        conn = self.conn
+        find = self.find
+        iter = self.iter
+
+        self.sql = f"""SELECT "table1._id", {t1c1}, {t1c2} FROM {t1} WHERE {t1c2} $exact {t1c3}"""
+        find_args = {
+            'filter': {'$expr': {'$eq': ['$col2', '$col3']}},
+            'projection': {'_id': '$_id', 'col1': '$col1', 'col2': '$col2'},
+        }
+        self.params = []
+        iter.return_value = self.return_val
+        actual = self.eval_find()
+        find.assert_any_call(**find_args)
+        self.assertEqual(actual, self.ans)
+
+        conn.reset_mock()
+
+
+class TestQueryLen(ResultQuery):
+    """Array length."""
+    return_val = [
+        {'_id': 'x', 'col2': 'shouldReturn', 'col1': {'col11': {'col111': [1, 2, 3]}},
+         'col3': {'col33': {'col333': [1, 2, 3, 4, 5]}}},
+    ]
+    ans = [('x', {'col11': {'col111': [1, 2, 3]}}, 'shouldReturn')]
+
+    def test_pattern1(self):
+        """Handles queries like:
+        qs.filter(array_field__len=3)
+        SELECT "a" from "b" where "array_field"."len" $exact %(0)s
+        """
+        conn = self.conn
+        find = self.find
+        iter = self.iter
+        self.params = [3]
+        self.sql = f"""SELECT "table1._id", {t1c1}, {t1c2} FROM {t1} WHERE {t1c1c1c1}."len" $exact %(0)s"""
+
+        find_args = {
+            'filter': {
+                '$expr': {
+                    '$eq': [
+                        {'$size': {'$ifNull': ['$col1.col11.col111', []]}},
+                        3
+                    ]
+                }
+            },
+            'projection': {'_id': '$_id', 'col1': '$col1', 'col2': '$col2'},
+        }
+
+        iter.return_value = self.return_val
+        actual = self.eval_find()
+        find.assert_any_call(**find_args)
+        self.assertEqual(actual, self.ans)
+        conn.reset_mock()
+
+    def test_pattern2(self):
+        """Handles queries like:
+        qs.filter(array_field__len__gt=1)
+        SELECT "a" from "b" where "array_field"."len" > %(0)s
+        """
+        conn = self.conn
+        find = self.find
+        iter = self.iter
+        self.params = [5]
+        self.sql = f"""SELECT "table1._id", {t1c1}, {t1c2} FROM {t1} WHERE {t1c1c1c1}."len" > %(0)s"""
+
+        find_args = {
+            'filter': {
+                '$expr': {
+                    '$gt': [
+                        {'$size': {'$ifNull': ['$col1.col11.col111', []]}},
+                        5
+                    ]
+                }
+            },
+            'projection': {'_id': '$_id', 'col1': '$col1', 'col2': '$col2'},
+        }
+
+        iter.return_value = self.return_val
+        actual = self.eval_find()
+        find.assert_any_call(**find_args)
+        self.assertEqual(actual, self.ans)
+        conn.reset_mock()
+
+    def test_pattern3(self):
+        """Handles queries like:
+        qs.filter(array_field__len__lt=F('array_field2__len'))
+        SELECT "a" from "b" where "array_field"."len" < "array_field2"."len"
+        """
+        conn = self.conn
+        find = self.find
+        iter = self.iter
+        self.params = []
+        self.sql = f"""SELECT "table1._id", {t1c1}, {t1c2} FROM {t1} WHERE {t1c1c1c1}."len" < {t1c3c3c3}."len" """
+
+        find_args = {
+            'filter': {
+                '$expr': {
+                    '$lt':
+                        [
+                            {'$size': {"$ifNull": ['$col1.col11.col111', []]}},
+                            {'$size': {"$ifNull": ['$col3.col33.col333', []]}}
+                        ]
+                }
+            },
+            'projection': {'_id': '$_id', 'col1': '$col1', 'col2': '$col2'},
+        }
+
+        iter.return_value = self.return_val
+        actual = self.eval_find()
+        find.assert_any_call(**find_args)
+        self.assertEqual(actual, self.ans)
+        conn.reset_mock()
+
+
+class TestQueryMathOperations(ResultQuery):
+    """ Handle mathematical operations like / * + - % ^"""
+    # Suppose {'_id': 'x', 'col1': 2, 'col2': 5} is in collection
+    return_val = [
+        {'_id': 'x', 'col1': 2, 'col2': 5, 'val': 14},
+    ]
+
+    def test_pattern1(self):
+        """Handles queries like:
+        qs.annotate(val=ExpressionWrapper((F('col1') + F('col2')) * 2, output_field=FloatField()))
+        SELECT (("table1"."col1" + "table1"."col2") * %(0)s) as val from "table1"
+        """
+        ans = [(14,)]
+        conn = self.conn
+        find = self.find
+        self.params = [2]
+
+        find_args = {
+            'projection': {
+                'val': {
+                    '$multiply': [{'$add': ['$col1', '$col2']}, 2]
+                }
+            },
+        }
+
+        self.sql = f"""SELECT (({t1c1} + {t1c2}) * %(0)s) as val FROM {t1} """
+
+        self.iter.return_value = self.return_val
+        actual = self.eval_find()
+        find.assert_any_call(**find_args)
+        self.assertEqual(actual, ans)
+        conn.reset_mock()
+
+    def test_pattern2(self):
+        """Handles queries like:
+        qs.annotate(val=ExpressionWrapper((F('col1') + F('col2')) * 2, output_field=FloatField())).filter(val__gt=10)
+        SELECT "table1"."col2" FROM from "table1 where (("table1"."col1" + "table1"."col2") * %(0)s) > %(1)s"
+        """
+        conn = self.conn
+        ans = [(5,)]
+        self.sql = f"""SELECT {t1c2} FROM {t1} where (({t1c1} + {t1c2}) * %(0)s) > %(1)s"""
+        self.params = [2, 10]
+        pipeline = [
+            {
+                '$match': {
+                    '$expr': {'$gt': [{'$multiply': [{'$add': ['$col1', '$col2']}, 2]}, 10]}
+                }
+            },
+            {
+                '$project': {'col2': True}
+            },
+        ]
+        self.eval_aggregate(pipeline, self.return_val, ans)
+        conn.reset_mock()
+
+    def test_pattern3(self):
+        """Handles queries like:
+        qs.annotate(val=ExpressionWrapper((F('col1') + F('col2')) * 2, output_field=FloatField())).filter(val__gt=10).order_by('-val')
+        SELECT "table1"."col2", (("table1"."col1" + "table1"."col2") * %(0)s) as val FROM from "table1" where (("table1"."col1" + "table1"."col2") * %(0)s) > %(1)s ORDER BY val DESC"
+        """
+        conn = self.conn
+        ans = [(5, 14)]
+        self.sql = f"""SELECT {t1c2}, (({t1c1} + {t1c2}) * %(0)s) AS val FROM {t1} where (({t1c1} + {t1c2}) * %(1)s) > {t1c1} ORDER BY val DESC"""
+        self.params = [2, 2]
+        pipeline = [
+            {
+                '$project': {
+                    'val': {'$multiply': [{'$add': ['$col1', '$col2']}, 2]}
+                }
+            },
+            {
+                '$match': {
+                    '$expr': {'$gt': ['$val', "$col1"]}
+                }
+            },
+            {
+                '$sort': OrderedDict([('val', -1)])
+            },
+            {
+                '$project': {'col2': True, 'val': True}
+            },
+        ]
+        self.eval_aggregate(pipeline, self.return_val, ans)
         conn.reset_mock()
 
 
@@ -2076,17 +2466,13 @@ class TestQueryNot(ResultQuery):
         find = self.find
 
         find_args = {
-            'projection': ['col1'],
+            'projection': {'col1': '$col1'},
             'filter': {}
         }
 
         self.sql = f'{where} NOT ({t1c1} <= %s)'
         find_args['filter'] = {
-            'col1': {
-                '$not': {
-                    '$lte': 1
-                }
-            }
+            '$expr': {'$not': {'$lte': ['$col1', 1]}}
         }
         self.params = [1]
         self.iter.return_value = [{'_id': 'x', 'col1': 1}, {'_id': 'x', 'col1': 3, }]
@@ -2099,17 +2485,13 @@ class TestQueryNot(ResultQuery):
         find = self.find
 
         find_args = {
-            'projection': ['col1'],
+            'projection': {'col1': '$col1'},
             'filter': {}
         }
 
         self.sql = f'{where} NOT {t1c1} <= %s'
         find_args['filter'] = {
-            'col1': {
-                '$not': {
-                    '$lte': 1
-                }
-            }
+            '$expr': {'$not': {'$lte': ['$col1', 1]}}
         }
         self.params = [1]
         self.iter.return_value = [{'_id': 'x', 'col1': 1}, {'_id': 'x', 'col1': 3, }]
@@ -2119,11 +2501,7 @@ class TestQueryNot(ResultQuery):
 
         self.sql = f'{where} NOT {t1c1} = NULL'
         find_args['filter'] = {
-            'col1': {
-                '$not': {
-                    '$eq': None
-                }
-            }
+            '$expr': {'$not': {'$eq': ['$col1', None]}}
         }
         self.params = []
         self.iter.return_value = [{'_id': 'x', 'col1': 1}, {'_id': 'x', 'col1': 3, }]
@@ -2136,17 +2514,13 @@ class TestQueryNot(ResultQuery):
         find = self.find
 
         find_args = {
-            'projection': ['col1'],
+            'projection': {'col1': '$col1'},
             'filter': {}
         }
 
         self.sql = f'{where} NOT {t1c1} = NULL'
         find_args['filter'] = {
-            'col1': {
-                '$not': {
-                    '$eq': None
-                }
-            }
+            '$expr': {'$not': {'$eq': ['$col1', None]}}
         }
         self.params = []
         self.iter.return_value = [{'_id': 'x', 'col1': 1}, {'_id': 'x', 'col1': 3, }]
@@ -2162,15 +2536,13 @@ class TestQueryBasic(ResultQuery):
         find = self.find
 
         find_args = {
-            'projection': ['col1'],
+            'projection': {'col1': '$col1'},
             'filter': {}
         }
 
         self.sql = f'{where} {t1c1} = %s'
         find_args['filter'] = {
-            'col1': {
-                '$eq': 1
-            }
+            '$expr': {'$eq': ['$col1', 1]}
         }
         self.params = [1]
         self.eval_find()
@@ -2182,15 +2554,13 @@ class TestQueryBasic(ResultQuery):
         find = self.find
 
         find_args = {
-            'projection': ['col1'],
+            'projection': {'col1': '$col1'},
             'filter': {}
         }
 
         self.sql = f'{where} {t1c1} <= %s'
         find_args['filter'] = {
-            'col1': {
-                '$lte': 1
-            }
+            '$expr': {'$lte': ['$col1', 1]}
         }
         self.params = [1]
         self.eval_find()
@@ -2202,15 +2572,13 @@ class TestQueryBasic(ResultQuery):
         find = self.find
 
         find_args = {
-            'projection': ['col1'],
+            'projection': {'col1': '$col1'},
             'filter': {}
         }
 
         self.sql = f'{where} {t1c1} = NULL'
         find_args['filter'] = {
-            'col1': {
-                '$eq': None
-            }
+            '$expr': {'$eq': ['$col1', None]}
         }
         self.params = []
         self.eval_find()
@@ -2225,7 +2593,7 @@ class TestQueryAndOr(ResultQuery):
         find = self.find
 
         find_args = {
-            'projection': ['col1'],
+            'projection': {'col1': '$col1'},
             'filter': {}
         }
 
@@ -2233,9 +2601,7 @@ class TestQueryAndOr(ResultQuery):
         find_args['filter'] = {
             '$and': [
                 {
-                    'col1': {
-                        '$eq': 1
-                    }
+                    '$expr': {'$eq': ['$col1', 1]}
                 },
                 {
                     'col2': None
@@ -2252,7 +2618,7 @@ class TestQueryAndOr(ResultQuery):
         find = self.find
 
         find_args = {
-            'projection': ['col1'],
+            'projection': {'col1': '$col1'},
             'filter': {}
         }
 
@@ -2260,9 +2626,7 @@ class TestQueryAndOr(ResultQuery):
         find_args['filter'] = {
             '$and': [
                 {
-                    'col1': {
-                        '$eq': 1
-                    }
+                    '$expr': {'$eq': ['$col1', 1]}
                 },
                 {
                     'col2': {'$ne': None}
@@ -2279,7 +2643,7 @@ class TestQueryAndOr(ResultQuery):
         find = self.find
 
         find_args = {
-            'projection': ['col1'],
+            'projection': {'col1': '$col1'},
             'filter': {}
         }
 
@@ -2287,14 +2651,10 @@ class TestQueryAndOr(ResultQuery):
         find_args['filter'] = {
             '$and': [
                 {
-                    'col1': {
-                        '$eq': 1
-                    }
+                    '$expr': {'$eq': ['$col1', 1]}
                 },
                 {
-                    'col1': {
-                        '$lte': 2
-                    }
+                    '$expr': {'$lte': ['$col1', 2]}
                 }
             ]
         }
@@ -2308,25 +2668,15 @@ class TestQueryAndOr(ResultQuery):
         find = self.find
 
         find_args = {
-            'projection': ['col1'],
+            'projection': {'col1': '$col1'},
             'filter': {}
         }
 
         self.sql = f'{where} (NOT ({t1c1} = %s) AND {t1c1} <= %s)'
         find_args['filter'] = {
             '$and': [
-                {
-                    'col1': {
-                        '$not': {
-                            '$eq': 1
-                        }
-                    }
-                },
-                {
-                    'col1': {
-                        '$lte': 2
-                    }
-                }
+                {'$expr': {'$not': {'$eq': ['$col1', 1]}}},
+                {'$expr': {'$lte': ['$col1', 2]}}
             ]
         }
         self.params = [1, 2]
@@ -2339,25 +2689,15 @@ class TestQueryAndOr(ResultQuery):
         find = self.find
 
         find_args = {
-            'projection': ['col1'],
+            'projection': {'col1': '$col1'},
             'filter': {}
         }
 
         self.sql = f'{where} {t1c1} <= %s AND NOT ({t1c1} = %s)'
         find_args['filter'] = {
             '$and': [
-                {
-                    'col1': {
-                        '$lte': 2
-                    }
-                },
-                {
-                    'col1': {
-                        '$not': {
-                            '$eq': 1
-                        }
-                    }
-                }
+                {'$expr': {'$lte': ['$col1', 2]}},
+                {'$expr': {'$not': {'$eq': ['$col1', 1]}}}
             ]
         }
         self.params = [2, 1]
@@ -2370,27 +2710,15 @@ class TestQueryAndOr(ResultQuery):
         find = self.find
 
         find_args = {
-            'projection': ['col1'],
+            'projection': {'col1': '$col1'},
             'filter': {}
         }
 
         self.sql = f'{where} (NOT ({t1c1} <= %s) AND NOT ({t1c1} = %s))'
         find_args['filter'] = {
             '$and': [
-                {
-                    'col1': {
-                        '$not': {
-                            '$lte': 2
-                        }
-                    }
-                },
-                {
-                    'col1': {
-                        '$not': {
-                            '$eq': 1
-                        }
-                    }
-                }
+                {'$expr': {'$not': {'$lte': ['$col1', 2]}}},
+                {'$expr': {'$not': {'$eq': ['$col1', 1]}}}
             ]
         }
         self.params = [2, 1]
@@ -2403,27 +2731,15 @@ class TestQueryAndOr(ResultQuery):
         find = self.find
 
         find_args = {
-            'projection': ['col1'],
+            'projection': {'col1': '$col1'},
             'filter': {}
         }
 
         self.sql = f'{where} NOT ({t1c1} <= %s AND {t1c1} = %s)'
         find_args['filter'] = {
             '$or': [
-                {
-                    'col1': {
-                        '$not': {
-                            '$lte': 2
-                        }
-                    }
-                },
-                {
-                    'col1': {
-                        '$not': {
-                            '$eq': 1
-                        }
-                    }
-                }
+                {'$expr': {'$not': {'$lte': ['$col1', 2]}}},
+                {'$expr': {'$not': {'$eq': ['$col1', 1]}}}
             ]
         }
         self.params = [2, 1]
@@ -2436,27 +2752,15 @@ class TestQueryAndOr(ResultQuery):
         find = self.find
 
         find_args = {
-            'projection': ['col1'],
+            'projection': {'col1': '$col1'},
             'filter': {}
         }
 
         self.sql = f'{where} NOT ({t1c1} <= %s OR {t1c1} = %s)'
         find_args['filter'] = {
             '$and': [
-                {
-                    'col1': {
-                        '$not': {
-                            '$lte': 2
-                        }
-                    }
-                },
-                {
-                    'col1': {
-                        '$not': {
-                            '$eq': 1
-                        }
-                    }
-                }
+                {'$expr': {'$not': {'$lte': ['$col1', 2]}}},
+                {'$expr': {'$not': {'$eq': ['$col1', 1]}}}
             ]
         }
         self.params = [2, 1]
@@ -2469,7 +2773,7 @@ class TestQueryAndOr(ResultQuery):
         find = self.find
 
         find_args = {
-            'projection': ['col1'],
+            'projection': {'col1': '$col1'},
             'filter': {}
         }
 
@@ -2478,27 +2782,11 @@ class TestQueryAndOr(ResultQuery):
             '$and': [
                 {
                     '$and': [
-                        {
-                            'col1': {
-                                '$not': {
-                                    '$lte': 2
-                                }
-                            }
-                        },
-                        {
-                            'col1': {
-                                '$not': {
-                                    '$eq': 1
-                                }
-                            }
-                        }
+                        {'$expr': {'$not': {'$lte': ['$col1', 2]}}},
+                        {'$expr': {'$not': {'$eq': ['$col1', 1]}}}
                     ]
                 },
-                {
-                    'col1': {
-                        '$gte': 0
-                    }
-                },
+                {'$expr': {'$gte': ['$col1', 0]}},
             ]
         }
         self.params = [2, 1, 0]
@@ -2511,7 +2799,7 @@ class TestQueryAndOr(ResultQuery):
         find = self.find
 
         find_args = {
-            'projection': ['col1'],
+            'projection': {'col1': '$col1'},
             'filter': {}
         }
 

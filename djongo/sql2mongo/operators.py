@@ -7,7 +7,6 @@ from sqlparse import tokens
 from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier, Function
 
 from djongo.utils import encode_key
-
 from . import query
 from .functions import SQLFunc
 from .sql_tokens import SQLToken, SQLStatement, SQLComparison, SQLIdentifier
@@ -21,9 +20,28 @@ def re_index(value: str):
     else:
         match = re.match(r'NULL', value, flags=re.IGNORECASE)
         if not match:
-            raise SQLDecodeError
+            raise SQLDecodeError('Unable to find placeholder or NULL')
         index = None
     return index
+
+
+def set_constant(op, token, attr='_constant', unwrap_dict=True):
+    if not isinstance(token, Token):
+        raise SQLDecodeError(f'{token} is not a Token!')
+    index = re_index(token.value)
+    setattr(op, attr, op.params[index] if index is not None else None)
+    const_val = getattr(op, attr, None)
+    if unwrap_dict and isinstance(const_val, dict):  # unwrap dict
+        key, value = next(iter(const_val.items()))
+        setattr(op, '_field_ext', key)
+        setattr(op, attr, value)
+    else:
+        setattr(op, '_field_ext', None)
+
+
+def parse_field(val, is_array_len=False, with_dollar=True):
+    val = f'${val}' if with_dollar and isinstance(val, str) else val
+    return {'$size': {"$ifNull": [val, []]}} if is_array_len else val
 
 
 class _Op:
@@ -539,19 +557,14 @@ class CmpOp(_Op):
 
         if isinstance(self.statement.right, Identifier):
             # Comparing against field in same doc vs a constant.
+            self._is_right_constant = False
             self._right_identifier = SQLToken.token2sql(self.statement.right, self.query)
-            if self._right_identifier.table == self._identifier.table:
-                self._compare_fields_in_same_doc = True
-            else:
+            if self._right_identifier.table != self._identifier.table:
                 raise SQLDecodeError('Join using WHERE not supported')
         else:
             # Comparing with a constant
-            index = re_index(self.statement.right.value)
-            self._constant = self.params[index] if index is not None else None
-            if isinstance(self._constant, dict):
-                self._field_ext, self._constant = next(iter(self._constant.items()))
-            else:
-                self._field_ext = None
+            self._is_right_constant = True
+            set_constant(self, self.statement.right)
 
     def negate(self):
         self.is_negated = True
@@ -563,27 +576,32 @@ class CmpOp(_Op):
         """Comparison for fields in same document.
         https://docs.mongodb.com/manual/reference/operator/query/expr/#behavior
         """
-        l_field = self._identifier.field
-        r_field = self._right_identifier.field
+        l_field = self.query.token_alias.similartoken2alias(self._identifier)
+        l_field = f'${l_field}' if l_field else parse_field(self._identifier.field, self._identifier.is_array_len)
+        r_field = self.query.token_alias.similartoken2alias(self._right_identifier)
+        r_field = f'${r_field}' if r_field else parse_field(
+            self._right_identifier.field, self._right_identifier.is_array_len)
         if not self.is_negated:
-            return {'$expr': {self._operator: [f'${l_field}', f'${r_field}']}}
+            return {'$expr': {self._operator: [l_field, r_field]}}
         else:
-            return {'$expr': {'$not': {self._operator: [f'${l_field}', f'${r_field}']}}}
+            return {'$expr': {'$not': {self._operator: [l_field, r_field]}}}
 
     def _compare_constant_to_mongo(self):
-        field = self._identifier.field
+        field = self.query.token_alias.similartoken2alias(self._identifier)
+        field = f'${field}' if field else parse_field(self._identifier.field, self._identifier.is_array_len)
+        constant = parse_field(self._constant, False, with_dollar=False)
         if self._field_ext:
             field += '.' + self._field_ext
         if not self.is_negated:
-            return {field: {self._operator: self._constant}}
+            return {'$expr': {self._operator: [field, constant]}}
         else:
-            return {field: {'$not': {self._operator: self._constant}}}
+            return {'$expr': {'$not': {self._operator: [field, constant]}}}
 
     def to_mongo(self):
-        if getattr(self, '_compare_fields_in_same_doc', False):
-            return self._compare_fields_to_mongo()
-        else:
+        if self._is_right_constant:
             return self._compare_constant_to_mongo()
+        else:
+            return self._compare_fields_to_mongo()
 
 
 ## Column operator - Fix for boolean fields, e.g. WHERE study.deleted
@@ -607,20 +625,31 @@ class JSONOp(_Op):
 
     def __init__(self, *args, **kwargs):
         super().__init__(name='JSON', *args, **kwargs)
-        self._identifier = self.statement.prev_token.value
+        self._identifier = SQLIdentifier(self.statement.prev_token, self.query)
         self._operator = self.statement.current_token.value
-        index = re_index(self.statement.next_token.value)
-        self._constant = self.params[index] if index is not None else None
+        next_tok = self.statement.next_token
+
+        if isinstance(next_tok, Identifier):
+            # Comparing against field in same doc vs a constant.
+            self._is_right_constant = False
+            self._right = SQLToken.token2sql(next_tok, self.query)
+            if self._right.table != self._identifier.table:
+                raise SQLDecodeError('Join using WHERE not supported')
+        else:
+            # Comparing with a constant
+            self._is_right_constant = True
+            set_constant(self, next_tok, unwrap_dict=False, attr='_right')
 
     def negate(self):
         self.is_negated = True
 
-    def lookup_to_mongo(self):
+    @staticmethod
+    def lookup_to_mongo(value):
         # For $contains queries with lookups
-        if not isinstance(self._constant, dict):
-            raise SQLDecodeError(f"Invalid $contains element: {self._constant}")
+        if not isinstance(value, dict):
+            raise SQLDecodeError(f"Invalid $contains element: {value}")
         final = defaultdict(dict)
-        for k, v in self._constant.items():
+        for k, v in value.items():
             field = k.rsplit('__', 1)
 
             if len(field) == 1:  # simple equality
@@ -641,44 +670,60 @@ class JSONOp(_Op):
                 raise SQLDecodeError(f'Lookup {lookup} not supported in $contains')
         return dict(final)
 
-    def to_mongo(self):
-        field = '.'.join([f[1:-1] for f in self._identifier.split('.')[1:]])
-
-        if self._operator == '$exact':
-            op = '$eq' if not self.is_negated else '$ne'
-            return {field: {op: self._constant}}
-
-        elif self._operator == '$contains':
-            if isinstance(self._constant, dict):
-                # https://docs.mongodb.com/manual/tutorial/query-array-of-documents/#a-single-nested-document-meets-multiple-query-conditions-on-nested-fields
-                if self.is_negated:
-                    return {field: {'$not': {'$elemMatch': self.lookup_to_mongo()}}}
-                else:
-                    return {field: {'$elemMatch': self.lookup_to_mongo()}}
-            elif isinstance(self._constant, list):
-                if self.is_negated:
-                    return {field: {'$not': {'$all': self._constant}}}
-                else:
-                    return {field: {'$all': self._constant}}
-            else:
-                raise SQLDecodeError(f'Invalid params for $contains: {self._constant}')
-
-        elif self._operator == '$has_key':
-            return {f'{field}.{encode_key(self._constant)}': {'$exists': not self.is_negated}}
-
-        elif self._operator == '$has_keys':
-            return {f'{field}.{encode_key(const)}': {'$exists': not self.is_negated} for const in self._constant}
-
-        elif self._operator == '$has_any_keys':
-            return {
-                '$or': [{f'{field}.{encode_key(const)}': {'$exists': not self.is_negated}} for const in self._constant]
-            }
-
-        else:
-            raise SQLDecodeError(f'Invalid JSONOp: {self._operator}')
-
     def evaluate(self):
         pass
+
+    def to_mongo(self):
+        operator = self._operator
+        if self._is_right_constant:
+            right = parse_field(self._right, False, with_dollar=False)
+        else:
+            right = parse_field(self._right.field, self._right.is_array_len, with_dollar=True)
+        is_negated = self.is_negated
+
+        field = parse_field(self._identifier.field, self._identifier.is_array_len, with_dollar=False)
+        field_with_dollar = parse_field(self._identifier.field, self._identifier.is_array_len, with_dollar=True)
+        field_parts = self._identifier.field.rsplit('.', 1)
+        if self._identifier.is_array_len and operator not in ['$exact']:
+            raise SQLDecodeError(
+                f"Attempting to use array length ({self._identifier}) with {operator} which doesn't make sense.")
+
+        if operator == '$exact':
+            op = '$eq' if not is_negated else '$ne'
+            op2 = '$in' if not is_negated else '$nin'
+            if len(field_parts) > 1 and not self._identifier.is_array_len:
+                parent_field = f'${field_parts[0]}'
+                return {'$expr': {
+                    '$cond': [
+                        {'$eq': [{'$type': parent_field}, "array"]},
+                        {op2: [right, field_with_dollar]},
+                        {op: [field_with_dollar, right]}
+                    ]}
+                }
+            else:
+                return {'$expr': {op: [field_with_dollar, right]}}
+        elif operator == '$contains':
+            if isinstance(right, dict):
+                # https://docs.mongodb.com/manual/tutorial/query-array-of-documents/#a-single-nested-document-meets-multiple-query-conditions-on-nested-fields
+                if is_negated:
+                    return {field: {'$not': {'$elemMatch': self.lookup_to_mongo(right)}}}
+                else:
+                    return {field: {'$elemMatch': self.lookup_to_mongo(right)}}
+            elif isinstance(right, list):
+                if is_negated:
+                    return {field: {'$not': {'$all': right}}}
+                else:
+                    return {field: {'$all': right}}
+            else:
+                raise SQLDecodeError(f'Invalid params for $contains: {right}')
+        elif operator == '$has_key':
+            return {f'{field}.{encode_key(right)}': {'$exists': not is_negated}}
+        elif operator == '$has_keys':
+            return {f'{field}.{encode_key(const)}': {'$exists': not is_negated} for const in right}
+        elif operator == '$has_any_keys':
+            return {'$or': [{f'{field}.{encode_key(const)}': {'$exists': not is_negated}} for const in right]}
+        else:
+            raise SQLDecodeError(f'Invalid JSONOp: {operator}')
 
 
 JSON_OPERATORS = ['$exact', '$contains', '$has_key', '$has_keys', '$has_any_keys']
@@ -688,8 +733,15 @@ OPERATOR_MAP = {
     '<': '$lt',
     '>=': '$gte',
     '<=': '$lte',
+    '^': '$mod',
+    '*': '$multiply',
+    '/': '$divide',
+    '%': '$mod',
+    '+': '$add',
+    '-': '$subtract',
 }
 OPERATOR_PRECEDENCE = {
+    'MATH': 11,
     'COL': 10,
     'JSON': 9,
     'IS': 8,

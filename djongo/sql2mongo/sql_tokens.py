@@ -1,9 +1,11 @@
 import abc
 import re
-from typing import Union as U, Iterator, Optional as O
+from typing import Union as U, Iterator, Optional as O, Optional, List
+
 from pymongo import ASCENDING, DESCENDING
 from sqlparse import tokens, parse as sqlparse
-from sqlparse.sql import Token, Identifier, Function, Comparison, Parenthesis, IdentifierList, Statement
+from sqlparse.sql import Token, Identifier, Function, Comparison, Parenthesis, IdentifierList, Statement, Operation
+
 from . import query as query_module
 from ..exceptions import SQLDecodeError, NotSupportedError
 
@@ -12,7 +14,18 @@ all_token_types = U['SQLConstIdentifier',
                     'djongo.sql2mongo.functions.SimpleFunc',
                     'SQLIdentifier',
                     'SQLComparison',
-                    'SQLPlaceholder']
+                    'SQLPlaceholder',
+                    'SQLOperation']
+
+
+def strip_alias(sql_token, tok_value):
+    if isinstance(sql_token, SQLOperation) and sql_token.has_explicit_alias or not isinstance(
+            sql_token, SQLOperation):
+        unaliased = tok_value.rsplit(' ', 1)[0]
+        unaliased = unaliased.rsplit(' ', 1)[0] if unaliased.upper().endswith(' AS') else unaliased
+    else:
+        unaliased = sql_token._token.value
+    return unaliased
 
 
 class SQLToken:
@@ -23,6 +36,7 @@ class SQLToken:
                  query: 'query_module.BaseQuery'):
         self._token = token
         self.query = query
+        self.uses_existing_fields = False
 
     def __repr__(self):
         return f'{self._token}'
@@ -35,24 +49,32 @@ class SQLToken:
         if isinstance(token, Identifier):
             # Bug fix for sql parse
             if isinstance(token[0], Parenthesis):
-                try:
-                    int(token[0][1].value)
-                except ValueError:
-                    yield SQLIdentifier(token[0][1], query)
+                if isinstance(token[0][1], Operation):
+                    yield SQLOperation(token, query)
                 else:
-                    yield SQLConstIdentifier(token, query)
+                    try:
+                        int(token[0][1].value)
+                    except ValueError:
+                        yield SQLIdentifier(token[0][1], query)
+                    else:
+                        yield SQLConstIdentifier(token, query)
             elif isinstance(token[0], Function):
-                yield SQLFunc.token2sql(token, query)
+                yield SQLFunc(token, query)
             else:
                 yield SQLIdentifier(token, query)
         elif isinstance(token, Function):
-            yield SQLFunc.token2sql(token, query)
+            yield SQLFunc(token, query)
         elif isinstance(token, Comparison):
             yield SQLComparison(token, query)
         elif isinstance(token, IdentifierList):
             for tok in token.get_identifiers():
                 yield from SQLToken.tokens2sql(tok, query)
         elif isinstance(token, Parenthesis):
+            if isinstance(token[1], Operation):
+                yield SQLOperation(token[1], query)
+            else:
+                yield SQLPlaceholder(token, query)
+        elif token.ttype == tokens.Name.Placeholder:
             yield SQLPlaceholder(token, query)
         else:
             raise SQLDecodeError(f'Unsupported: {token.value}')
@@ -65,7 +87,9 @@ class SQLToken:
 
     @staticmethod
     def placeholder_index(token) -> int:
-        return int(re.match(r'%\(([0-9]+)\)s', token.value, flags=re.IGNORECASE).group(1))
+        # only matches from start of token
+        match = re.match(r'%\(([0-9]+)\)s', token.value, flags=re.IGNORECASE)
+        return int(match.group(1)) if match else None
 
 
 class AliasableToken(SQLToken):
@@ -74,48 +98,54 @@ class AliasableToken(SQLToken):
     def __init__(self, *args):
         super().__init__(*args)
         self.token_alias: 'query_module.TokenAlias' = self.query.token_alias
-        self.unaliased = self._token.value.rsplit(' ', 1)[0]
-        self.unaliased = self.unaliased.rsplit(' ', 1)[0] if self.unaliased.endswith(' AS') else self.unaliased
+
+        try:
+            self._ord = ORDER_BY_MAP[self._token.get_ordering()]
+            self._token = self._token[0]
+        except Exception:
+            self._ord = None
+
+        tok_value = self._token.value
+        self.unaliased = strip_alias(self, tok_value)
+        self.is_array_len = [f for f in self.unaliased.split('.')][-1] == '"len"'
 
         if self.alias:
             self.token_alias.alias2token[self.alias] = self
             self.token_alias.token2alias[self] = self.alias
-            if self.is_explicit_alias():
+            if self.has_explicit_alias:
                 self.token_alias.aliased_names.add(self.alias)
 
     def __hash__(self):
-        if self.is_explicit_alias():
+        if self.has_explicit_alias:
             return hash(self._token[0].value)
         return hash(self._token.value)
 
     def __eq__(self, other):
         return hash(self) == hash(other)
 
-    def is_explicit_alias(self):
+    @property
+    def has_explicit_alias(self):
         return len(self._token.tokens) >= 5 and self._token[-3].match(tokens.Keyword, 'AS')
 
     @property
-    def alias(self) -> str:
+    def alias(self) -> Optional[str]:
         # bug fix sql parse
-        if not self._token.get_ordering():
+        try:
             return self._token.get_alias()
+        except Exception:
+            return None
+
+    @property
+    def order(self):
+        if self._ord is None:
+            raise SQLDecodeError
+        return self._ord
 
 
 class SQLIdentifier(AliasableToken):
 
     def __init__(self, *args):
         super().__init__(*args)
-        self._ord = None
-        if self._token.get_ordering():
-            # Bug fix for sql parse
-            self._ord = self._token.get_ordering()
-            self._token = self._token[0]
-
-    @property
-    def order(self):
-        if self._ord is None:
-            raise SQLDecodeError
-        return ORDER_BY_MAP[self._ord]
 
     @property
     def field(self) -> str:
@@ -153,14 +183,72 @@ class SQLIdentifier(AliasableToken):
             raise SQLDecodeError
         return name
 
+    def to_mongo(self):
+        from .operators import parse_field
+        return parse_field(self.column, self.is_array_len)
+
     def _parse_token_value(self):
         # fix for JSONField accessors (example: a.b.c.d)
         tokens = [f for f in self.unaliased.split('.')]
+        if tokens[-1] == '"len"':
+            tokens.pop()
         table, column = tokens[0], '.'.join(tokens[1:])
         if not column:
             column = table
         table, column = table.replace('"', ''), column.replace('"', '')
         return table, column
+
+
+class SQLOperation(AliasableToken):
+    def __init__(self, *args):
+        super().__init__(*args)
+        statement = sqlparse(self.unaliased)[0]
+        self.token: Token = statement[0]
+        if isinstance(self.token, Parenthesis):  # unwrap parenthesis
+            self.token = self.token[1]
+        self._left = SQLToken.token2sql(self.token[0], self.query)
+        self._right = SQLToken.token2sql(self.token[-1], self.query)
+        self._table = None
+
+        if isinstance(self._left, SQLIdentifier) or isinstance(self._right, SQLIdentifier):
+            self.uses_existing_fields = True
+            ltable = getattr(self._left, 'table', '')
+            rtable = getattr(self._right, 'table', '')
+            if ltable and rtable and ltable != rtable:
+                raise SQLDecodeError('Unable to do SQL operation on fields from different tables yet.')
+            self._table = ltable or rtable
+        else:
+            self.uses_existing_fields = getattr(
+                self._left, 'uses_existing_fields', False) or getattr(self._right, 'uses_existing_fields', False)
+            self._table = getattr(self._left, '_table', False) or getattr(self._right, '_table', False)
+
+    @property
+    def left(self):
+        return self._left
+
+    @property
+    def right(self):
+        return self._right
+
+    @property
+    def operator(self):
+        from .operators import OPERATOR_MAP
+        if self.alias:
+            value = self._token[0][1][2].value
+        else:
+            value = self._token[2].value
+        return OPERATOR_MAP[value]
+
+    @property
+    def field(self):
+        return self.to_mongo()
+
+    @property
+    def table(self) -> str:
+        return self._table
+
+    def to_mongo(self):
+        return {self.operator: [self.left.to_mongo(), self.right.to_mongo()]}
 
 
 class SQLConstIdentifier(AliasableToken):
@@ -177,6 +265,25 @@ class SQLConstIdentifier(AliasableToken):
 
 
 class SQLComparison(SQLToken):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+        # Evaluate rhs of a comparison token, used in update statement
+        self._rhs = None
+        if isinstance(self._token.right, Identifier):
+            self._rhs = f"${self.right_column}"
+        elif isinstance(self._token.right, Parenthesis) and isinstance(self._token.right[1], Operation):
+            op = SQLOperation(self._token.right[1], self.query)
+            self.uses_existing_fields = op.uses_existing_fields
+            self._rhs = op.to_mongo()
+        elif isinstance(self._token.right, Operation):
+            op = SQLOperation(self._token.right, self.query)
+            self.uses_existing_fields = op.uses_existing_fields
+            self._rhs = op.to_mongo()
+        elif self._token.right.ttype == tokens.Name.Placeholder:
+            self._rhs = self.query.params[self.placeholder_index(self._token.right)]
+        elif self._token.right.match(tokens.Keyword, 'NULL'):
+            self._rhs = None
 
     @property
     def left_table(self):
@@ -199,14 +306,8 @@ class SQLComparison(SQLToken):
         return rhs.column
 
     @property
-    def rhs_indexes(self):
-        if not self._token.right.ttype == tokens.Name.Placeholder:
-            if self._token.right.match(tokens.Keyword, 'NULL'):
-                return None
-            raise SQLDecodeError
-
-        index = self.placeholder_index(self._token.right)
-        return index
+    def rhs(self):
+        return self._rhs
 
 
 class SQLPlaceholder(SQLToken):
@@ -222,7 +323,8 @@ class SQLPlaceholder(SQLToken):
     def __init__(self, token: Token, query: 'query_module.BaseQuery'):
         super().__init__(token, query)
 
-    def get_value(self, tok: Token):
+    def get_value(self, tok: Token = None):
+        tok = tok if tok else self._token
         if tok.ttype == tokens.Name.Placeholder:
             return self.placeholder_index(tok)
         elif tok.match(tokens.Keyword, 'NULL'):
@@ -231,6 +333,9 @@ class SQLPlaceholder(SQLToken):
             return 'DEFAULT'
         else:
             raise SQLDecodeError
+
+    def to_mongo(self):
+        return self.query.params[self.get_value()]
 
 
 class SQLStatement:
@@ -286,7 +391,6 @@ class SQLStatement:
 
 
 class SQLColumnDef:
-
     not_null = object()
     unique = object()
     autoincrement = object()
@@ -362,7 +466,7 @@ class SQLColumnDef:
                     if not indexes:
                         break
                 if len(sql[i:]) > 1:
-                    sql = sql[i+3:]
+                    sql = sql[i + 3:]
                 else:
                     sql = None
                 yield SQLColumnConstraint()
