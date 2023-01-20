@@ -12,4 +12,10 @@ tests/logs
 Gemfile.lock
 
 /docs/.jekyll-metadata
+
+# python venv
+venv/
+.env/
+.venv/
+
 /docs/djongocs/assets/*

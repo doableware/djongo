@@ -89,7 +89,7 @@ class DDLQuery(BaseQuery):
         super().__init__(*args)
 
     def execute(self):
-        return 
+        return
 
 
 class DQLQuery(BaseQuery):
@@ -253,7 +253,7 @@ class SelectQuery(DQLQuery):
 
             if self.order:
                 kwargs.update(self.order.to_mongo())
-            
+
             if self.offset:
                 kwargs.update(self.offset.to_mongo())
 
