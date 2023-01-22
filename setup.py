@@ -1,11 +1,12 @@
 # THIS FILE WAS CHANGED ON - 14 Apr 2022
 
-from distutils.core import setup
-from setuptools import find_packages
-import os
 import codecs
+import os
 import re
 import sys
+from distutils.core import setup
+
+from setuptools import find_packages
 
 LONG_DESCRIPTION = """
 
@@ -92,7 +93,7 @@ if sys.version_info.major == 3 and sys.version_info.minor < 7:
     install_requires.append("dataclasses")
 
 setup(
-    name='djongo',
+    name='dj-mongo-backend',
     version=find_version("djongo", "__init__.py"),
     include_package_data=True,
     packages=packages,
