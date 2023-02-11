@@ -16,6 +16,7 @@ These are the main fields for working with MongoDB.
 import functools
 import json
 import typing
+import datetime
 
 from bson import ObjectId
 from django import forms
@@ -113,7 +114,7 @@ class KeyTransformFactory:
 
 class JSONField(MongoField):
     def get_prep_value(self, value):
-        if not isinstance(value, (dict, list, str, int, float, bool, type(None))):
+        if not isinstance(value, (dict, list, str, int, float, bool, datetime.datetime, type(None))):
             raise ValueError(
                 f'Value: {value} must be of type dict/list/str/int/float/bool/null, instead got type {type(value)}'
             )
