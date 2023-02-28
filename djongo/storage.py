@@ -1,3 +1,5 @@
+# THIS FILE WAS CHANGED ON - 19 Aug 2022
+
 import os
 from urllib.parse import urljoin
 
@@ -16,7 +18,7 @@ def _get_subcollections(collection):
     Returns all sub-collections of `collection`.
     """
     # XXX: Use the MongoDB API for this once it exists.
-    for name in collection.database.collection_names():
+    for name in collection.database.list_collection_names():
         cleaned = name[:name.rfind('.')]
         if cleaned != collection.name and cleaned.startswith(collection.name):
             yield cleaned

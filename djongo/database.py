@@ -1,3 +1,5 @@
+# THIS FILE WAS CHANGED ON - 19 Aug 2022
+
 from logging import getLogger
 from pymongo import MongoClient
 
@@ -6,11 +8,8 @@ clients = {}
 
 
 def connect(db, **kwargs):
-    try:
-        return clients[db]
-    except KeyError:
-        logger.debug('New MongoClient connection')
-        clients[db] = MongoClient(**kwargs, connect=False)
+    logger.debug('New MongoClient connection')
+    clients[db] = MongoClient(**kwargs, connect=False)
     return clients[db]
 
 
