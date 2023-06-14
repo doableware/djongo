@@ -8,6 +8,8 @@ from . import query as query_module
 from ..exceptions import SQLDecodeError, NotSupportedError
 
 all_token_types = U['SQLConstIdentifier',
+                    'SQLConstIntIdentifier',
+                    'SQLConstParameterizedIdentifier',
                     'djongo.sql2mongo.functions.CountFunc',
                     'djongo.sql2mongo.functions.SimpleFunc',
                     'SQLIdentifier',
@@ -40,9 +42,14 @@ class SQLToken:
                 except ValueError:
                     yield SQLIdentifier(token[0][1], query)
                 else:
-                    yield SQLConstIdentifier(token, query)
+                    # TMiles-2022.XI.18 - Specify int identifier to match original functionality.
+                    yield SQLConstIntIdentifier(token, query)
             elif isinstance(token[0], Function):
                 yield SQLFunc.token2sql(token, query)
+            elif token[0].ttype == tokens.Name.Placeholder:
+                # TMiles-2022.XI.18
+                # Use a parameterized const identifier to handle newer django foreign key lookup queries.
+                yield SQLConstParameterizedIdentifier(token, query);
             else:
                 yield SQLIdentifier(token, query)
         elif isinstance(token, Function):
@@ -152,7 +159,18 @@ class SQLIdentifier(AliasableToken):
         return name
 
 
+# TMiles-2022.XI.18
+# Break ConstIdentifier into Int and Parameterized subclasses to allow for django 4
+# foreign key lookups and for future expansion to other non-int constants.
 class SQLConstIdentifier(AliasableToken):
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
+    def to_mongo(self) -> dict:
+        return {'$literal': self.value}
+
+class SQLConstIntIdentifier(SQLConstIdentifier):
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -161,8 +179,17 @@ class SQLConstIdentifier(AliasableToken):
     def value(self) -> int:
         return int(self._token[0][1].value)
 
-    def to_mongo(self) -> dict:
-        return {'$literal': self.value}
+class SQLConstParameterizedIdentifier(SQLConstIdentifier):
+
+    def __init__(self, *args):
+        tok = args[0];
+        if (tok[0].ttype != tokens.Name.Placeholder):
+            raise Exception("Token is not a placeholder");
+        super().__init__(*args)
+
+    @property
+    def value(self):
+        return self.query.params[self.placeholder_index(self._token[0])];
 
 
 class SQLComparison(SQLToken):
