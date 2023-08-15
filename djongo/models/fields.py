@@ -18,6 +18,7 @@ These are the main fields for working with MongoDB.
 import functools
 import json
 import typing
+from typing import Any
 
 from bson import ObjectId
 from django import forms
@@ -211,7 +212,6 @@ class ModelField(MongoField):
         value = super().value_from_object(obj)
         if value is None:
             return None
-
         container_obj = self.model_container(**value)
         processed_value = self._obj_thru_fields('value_from_object', container_obj)
         return processed_value
@@ -233,7 +233,7 @@ class ModelField(MongoField):
                                                        value, 
                                                        connection)
         return processed_value
-     
+
     def get_prep_value(self, value):
         if (value is None or
                 not isinstance(value, self.base_type)):
@@ -261,6 +261,20 @@ class ModelField(MongoField):
             value = {field.attname: getattr(value, field.attname) 
                                             for field in value._meta.fields} 
 
+        new_value = []
+
+        if isinstance(value, list):
+            for val in value:
+                if isinstance(val, self.model_container):
+                    new_value.append({field.attname: getattr(val, field.attname) 
+                                            for field in val._meta.fields})
+                if isinstance(val, dict):
+                    new_value.append(val)
+            value = new_value
+
+        if type(value) == dict and self.base_type == list:
+            value = [value]
+        
         if not isinstance(value, self.base_type):
             raise ValidationError(
                 f'Value: {value} must be an instance of {self.base_type}')
@@ -300,7 +314,6 @@ class FormedField(ModelField):
             'model_form_kw': self.model_form_kwargs,
             'name': self.attname
         }
-
         defaults.update(kwargs)
         return super().formfield(**defaults)
 
@@ -377,6 +390,16 @@ class ArrayField(FormedField):
         for _dict in value:
             super().validate(_dict, model_instance, validate_parent=False)
 
+    def formfield(self, **kwargs):
+        defaults = {
+            'form_class': ArrayFormField,
+            'model_container': self.model_container,
+            'model_form_class': self.model_form_class,
+            'model_form_kw': self.model_form_kwargs,
+            'name': self.attname
+        }
+        return super().formfield(**defaults)
+
 
 def _get_model_form_class(model_form_class, model_container, admin, request):
     if not model_form_class:
@@ -403,14 +426,14 @@ class NestedFormSet(forms.formsets.BaseFormSet):
 
 
 class ArrayFormField(forms.Field):
-    def __init__(self, name, model_form_class, model_container, mdl_form_kw_l,
+    def __init__(self, name, model_form_class, model_container, model_form_kw,
                  widget=None, admin=None, request=None, *args, **kwargs):
 
         self.name = name
         self.model_container = model_container
         self.model_form_class = _get_model_form_class(
             model_form_class, model_container, admin, request)
-        self.mdl_form_kw_l = mdl_form_kw_l
+        self.mdl_form_kw_l = model_form_kw
         self.admin = admin
         self.request = request
 
@@ -420,7 +443,6 @@ class ArrayFormField(forms.Field):
         error_messages = {
             'incomplete': 'Enter all required fields.',
         }
-
         self.ArrayFormSet = forms.formset_factory(
             self.model_form_class, formset=NestedFormSet, can_delete=True)
         super().__init__(error_messages=error_messages,
@@ -446,6 +468,10 @@ class ArrayFormField(forms.Field):
     def has_changed(self, initial, data):
         form_set_initial = []
         for init in initial or []:
+            empty_model = self.model_container
+            for key, val in init.items():
+                setattr(empty_model, key, val)
+                init = empty_model
             form_set_initial.append(
                 forms.model_to_dict(
                     init,
@@ -463,9 +489,8 @@ class ArrayFormField(forms.Field):
 class ArrayFormBoundField(forms.BoundField):
     def __init__(self, form, field, name):
         super().__init__(form, field, name)
-
         data = self.data if form.is_bound else None
-        initial = []
+        initial = self.value()
         if self.initial is not None:
             for ini in self.initial:
                 if isinstance(ini, Model):
@@ -475,7 +500,6 @@ class ArrayFormBoundField(forms.BoundField):
                             fields=field.model_form_class._meta.fields,
                             exclude=field.model_form_class._meta.exclude
                         ))
-
         self.form_set = field.ArrayFormSet(data, initial=initial, prefix=self.html_name)
 
     def __getitem__(self, idx):
@@ -596,14 +620,20 @@ class EmbeddedFormBoundField(forms.BoundField):
     def __str__(self):
         instance = self.value()
         empty_model = self.field.model_form._meta.model
-        instance = self.value()
         if instance:
             # The model_form_class expects a Model object.
-            for key, val in instance.items():
-                setattr(empty_model, key, val) 
-            instance = empty_model
+            if type(instance) == dict:
+                for key, val in instance.items():
+                    setattr(empty_model, key, val) 
+                instance = empty_model
+            if(type(instance)== list):
+                if instance == []:
+                    instance = None
+                else:
+                    for key, val in instance[0].items():
+                        setattr(empty_model, key, val)
+                    instance = empty_model
         model_form = self.field.model_form_class(instance=instance, **self.field.model_form_kwargs)
-
         return mark_safe(f'<table>\n{ model_form.as_table() }\n</table>')
 
 
