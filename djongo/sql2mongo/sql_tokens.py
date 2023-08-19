@@ -49,7 +49,7 @@ class SQLToken:
             elif token[0].ttype == tokens.Name.Placeholder:
                 # TMiles-2022.XI.18
                 # Use a parameterized const identifier to handle newer django foreign key lookup queries.
-                yield SQLConstParameterizedIdentifier(token, query);
+                yield SQLConstParameterizedIdentifier(token, query)
             else:
                 yield SQLIdentifier(token, query)
         elif isinstance(token, Function):
@@ -182,14 +182,14 @@ class SQLConstIntIdentifier(SQLConstIdentifier):
 class SQLConstParameterizedIdentifier(SQLConstIdentifier):
 
     def __init__(self, *args):
-        tok = args[0];
+        tok = args[0]
         if (tok[0].ttype != tokens.Name.Placeholder):
-            raise Exception("Token is not a placeholder");
+            raise Exception("Token is not a placeholder")
         super().__init__(*args)
 
     @property
     def value(self):
-        return self.query.params[self.placeholder_index(self._token[0])];
+        return self.query.params[self.placeholder_index(self._token[0])]
 
 
 class SQLComparison(SQLToken):
