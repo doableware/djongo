@@ -3,8 +3,8 @@ main:
   - title: "Create Account"
     url: /djongocs/create-account/
     id: 'nav-create-account'
-  - title: "DjongoCS"
-    url: /djongocs/login/
+  - title: "Products"
+    url: /djongocs/products/
     id: 'nav-login'
   - title: "Docs"
     url: /get-started/

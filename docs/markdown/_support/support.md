@@ -1,6 +1,5 @@
 ---
 title: Support
-permalink: /support/
 layout: splash
 tagline: "Create and Deploy a Backend Server"
 description: "If you are a company that uses Djongo in your products, consider enrolling in a subscription plan. You get long term support."
