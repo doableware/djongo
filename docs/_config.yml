@@ -62,7 +62,7 @@ head_scripts:
 #  - "/assets/js/cookie-consent.js"
 
 # Reading Files
-include: [_static, _sources]
+include: [_static, _sources, .well-known]
 
 exclude:
   - "*.sublime-project"
