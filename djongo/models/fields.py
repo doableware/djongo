@@ -35,6 +35,9 @@ from django.utils.html import format_html_join, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from djongo.exceptions import NotSupportedError, print_warn
+from django.db.models import DateField,DateTimeField
+from django.db.models.fields import NOT_PROVIDED
+from django.utils import timezone
 
 django_major = int(version.get_version().split('.')[0])
 
@@ -1089,3 +1092,109 @@ class ArrayReferenceField(ForeignKey):
                 initial = initial()
             defaults['initial'] = [i.pk for i in initial]
         return super().formfield(**defaults)
+
+class FlexiEmbeddedField(FormedField):
+    """
+        This type of model field would give you the functionalty of dynamic object saving for a concrete model.In concrete modeling if there are any field
+        which might not contain values always, By this type of field you can skip the field. Though this will only work for embeded field only. 
+
+    """
+    def __init__(self,
+                 model_container,
+                 model_form_class=None,
+                 model_form_kwargs: dict = None,
+                 *args, **kwargs):
+        super().__init__(model_container, *args, **kwargs)
+
+    def _save_value_thru_fields(self, func_name: str, value: dict, *other_args):
+        # override the method to save the fields in db which does not have any null value
+        processed_value = {}
+        errors = {}
+
+        for field in self.model_container._meta.get_fields():
+            try:
+                field_value = None
+                try:
+                    field_value = value[field.attname]
+
+                    if field_value is None or field_value == "":
+                        # if field contains a "default value" then any null or blank values are not allowed.
+                        if not isinstance(field.default, type):
+                            if field.blank is False and field.null is False:
+                                raise ValidationError(
+                                    f'"{field}" has a default value as "{field.default}".It can\'t be changed to null or "" ')
+
+                        if field.blank is False or field.null is False:
+                            # raise ValidationError(f'Value for field "{field}" not supported as it is not allowed empty values')
+                            field_value = None
+
+                        # null values or "" or both  are allowed to the field, keep the value as it is. By defualt django model doesnot allow both to true
+                        if field.null is True and field_value is None:
+                            processed_value[field.attname] = getattr(field, func_name)(field_value, *other_args)
+                        elif field.blank is True and field_value == "":
+                            processed_value[field.attname] = getattr(field, func_name)(field_value, *other_args)
+                        elif field.blank is True and field.null is True:
+                            processed_value[field.attname] = getattr(field, func_name)(field_value, *other_args)
+                        else:
+                            raise ValidationError(
+                                f'Value for field "{field}" not supported as it is not allowed "{field_value}" values')
+
+                except KeyError:
+                    # if no value is passed from the frontend and if field contain a default value the set it to default val
+                    if field.blank is False and field.null is False:
+                        if not isinstance(field.default, type):
+                            # having a default value and we didnot pass any value regarding this field
+                            processed_value[field.attname] = getattr(field, func_name)(field.default, *other_args)
+                        else:
+                            # did not pass any value from frontend
+                            field_value = None
+
+                    # setting DateTimeField or DateField value. It gets fired when user did't provide any value for these fields.
+                    # auto_now_add - editable=False - fire at only iintial instance creation
+                    if isinstance(field, DateTimeField) or isinstance(field, DateField) or isinstance(field, TimeField):
+                        current_time = timezone.now()
+                        formatted_value = field.to_python(current_time)
+                        if field.auto_now_add is True:
+                            field.editable = False
+                        elif field.auto_now is True:
+                            field.editable = True
+                        try:
+                            field._check_fix_default_value()
+                            processed_value[field.attname] = getattr(field, func_name)(formatted_value, *other_args)
+                        except Warning as w:
+                            errors[field.name] = w.with_traceback()
+
+                # print(f'fields are called for "{field}" and defualt value for fields "{field.default}"')
+
+                #  can not set the custom values for date and datetime fields if auto_now or auto now_add true.
+                if (isinstance(field, DateTimeField) or isinstance(field, DateField) or isinstance(field, TimeField)) \
+                        and (field.auto_now is True or field.auto_now_add is True):
+                    field_value = None
+
+                if field_value is not None and not isinstance(field.default, NOT_PROVIDED):
+                    processed_value[field.attname] = getattr(field, func_name)(field_value, *other_args)
+
+
+            except ValidationError as e:
+                errors[field.name] = e.error_list
+
+        if errors:
+            e = ValidationError(errors)
+            raise ValidationError(str(e))
+
+        return processed_value
+
+    def _value_thru_fields(self, func_name: str, value: dict, *other_args):
+        # override the method to fetch the fields from db which does not have any null value
+        processed_value = {}
+        for field in self.model_container._meta.get_fields():
+            try:
+                field_value = value[field.attname]
+            except KeyError:
+                continue
+            if (field.blank is False and field_value == "") or (field.null is True and field_value == None):
+                field_value = None
+            if field_value is not None:
+                # print(f'field value for "{field}": "{field_value==""}"')
+                processed_value[field.attname] = getattr(field, func_name)(field_value, *other_args)
+        return processed_value
