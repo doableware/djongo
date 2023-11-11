@@ -13,7 +13,7 @@ MongoDB is defined.
 These are the main fields for working with MongoDB.
 """
 
-# THIS FILE WAS CHANGED ON - 28 Mar 2022
+# THIS FILE WAS CHANGED ON - 17 Apr 2023
 
 import functools
 import json
@@ -264,6 +264,60 @@ class ModelField(MongoField):
         value = self._value_thru_container(value)
         processed_value = self._value_thru_fields('to_python', value)
         return processed_value
+
+
+class FieldsArrayField(Field):
+    """
+    Implements array of the fields inside the document.
+
+    To put inside the document correctly, put the base field inside the constructor.
+    To instanciate the document with corresponding field, put python list as argument.
+    """
+    description = "Field of the field array"
+
+    def __init__(self, base_field=None, *args, **kwargs):
+        if not base_field:
+            raise ValueError('You must specify a base_field')
+        self.base_field = base_field
+        super().__init__(*args, **kwargs)
+
+    def db_type(self, connection):
+        return '{}[]'.format(self.base_field.db_type(connection=connection))
+
+    def from_db_value(self, value, expression, connection):
+        if value is None:
+            return []
+        return value
+
+    def to_python(self, value):
+        if isinstance(value, list):
+            return [self.base_field.to_python(val) for val in value]
+        elif value is None:
+            return []
+        elif isinstance(value, str):
+            # If the value is a string, try to parse it as a JSON array
+            try:
+                value = json.loads(value)
+                return [self.base_field.to_python(val) for val in value]
+            except ValueError:
+                pass
+        raise ValidationError("Invalid value for ArrayField")
+
+    def get_prep_value(self, value):
+        if isinstance(value, list):
+            return [self.base_field.get_prep_value(val) for val in value]
+        elif value is None:
+            return []
+        else:
+            return json.dumps([self.base_field.get_prep_value(val) for val in value])
+
+    def formfield(self, **kwargs):
+        defaults = {
+            'form_class': forms.CharField,
+            'widget': forms.Textarea(attrs={'rows': 2}),
+        }
+        defaults.update(kwargs)
+        return super().formfield(**defaults)
 
 
 class FormedField(ModelField):
