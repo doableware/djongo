@@ -102,7 +102,7 @@ class DatabaseOperations(BaseDatabaseOperations):
                 for table in tables]
 
     def max_name_length(self):
-        return 60
+        return self.connection.settings_dict.get('MAX_NAME_LENGTH') or 60
 
     def no_limit_value(self):
         return None
