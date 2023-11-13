@@ -1,6 +1,5 @@
 dist/
 build/
-venv/
 .idea/
 .tox/
 *__pycache__*
