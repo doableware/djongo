@@ -1,0 +1,4 @@
+include djongo/dynamic_formsets/static/dynamic_formsets/images/*.*
+include djongo/dynamic_formsets/static/dynamic_formsets/js/jquery/*.*
+include djongo/dynamic_formsets/static/dynamic_formsets/js/jquery-formset/*.*
+include djongo/dynamic_formsets/templates/admin/*.*
