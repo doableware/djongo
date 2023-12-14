@@ -34,6 +34,12 @@ from djongo import base
 logger = getLogger(__name__)
 
 
+def get_session(db: Database):
+    if hasattr(db.client, 'session'):
+        return db.client.session
+    return None
+
+
 @dataclass
 class TokenAlias:
     alias2token: Dict[str, U[AliasableToken,
@@ -231,9 +237,10 @@ class SelectQuery(DQLQuery):
         return not(self.distinct or self.groupby) and self.selected_columns
 
     def _get_cursor(self):
+        session = get_session(self.db)
         if self._needs_aggregation():
             pipeline = self._make_pipeline()
-            cur = self.db[self.left_table].aggregate(pipeline)
+            cur = self.db[self.left_table].aggregate(pipeline, session=session)
             logger.debug(f'Aggregation query: {pipeline}')
         else:
             kwargs = {}
@@ -252,7 +259,7 @@ class SelectQuery(DQLQuery):
             if self.offset:
                 kwargs.update(self.offset.to_mongo())
 
-            cur = self.db[self.left_table].find(**kwargs)
+            cur = self.db[self.left_table].find(**kwargs, session=session)
             logger.debug(f'Find query: {kwargs}')
 
         return cur
@@ -325,7 +332,7 @@ class UpdateQuery(DMLQuery):
 
     def execute(self):
         db = self.db
-        self.result = db[self.left_table].update_many(**self.kwargs)
+        self.result = db[self.left_table].update_many(**self.kwargs, session=get_session(db))
         logger.debug(f'update_many: {self.result.modified_count}, matched: {self.result.matched_count}')
 
 
@@ -370,6 +377,7 @@ class InsertQuery(DMLQuery):
     def execute(self):
         docs = []
         num = len(self._values)
+        session = get_session(self.db)
 
         auto = self.db['__schema__'].find_one_and_update(
             {
@@ -379,7 +387,8 @@ class InsertQuery(DMLQuery):
                 }
             },
             {'$inc': {'auto.seq': num}},
-            return_document=ReturnDocument.AFTER
+            return_document=ReturnDocument.AFTER,
+            session=session
         )
 
         for i, val in enumerate(self._values):
@@ -394,7 +403,7 @@ class InsertQuery(DMLQuery):
                 ins[_field] = value
             docs.append(ins)
 
-        res = self.db[self.left_table].insert_many(docs, ordered=False)
+        res = self.db[self.left_table].insert_many(docs, ordered=False, session=session)
         if auto:
             self._result_ref.last_row_id = int(auto['auto']['seq'])
         else:
@@ -753,7 +762,7 @@ class DeleteQuery(DMLQuery):
 
     def execute(self):
         db_con = self.db
-        self.result = db_con[self.left_table].delete_many(**self.kw)
+        self.result = db_con[self.left_table].delete_many(**self.kw, session=get_session(db_con))
         logger.debug('delete_many: {}'.format(self.result.deleted_count))
 
     def count(self):
