@@ -36,7 +36,9 @@ logger = getLogger(__name__)
 
 def get_session(db: Database):
     if hasattr(db.client, 'session'):
-        return db.client.session
+        session = db.client.session
+        if not session.has_ended:
+            return session
     return None
 
 

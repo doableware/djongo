@@ -1,4 +1,5 @@
 from contextlib import ContextDecorator
+
 from django.db import DEFAULT_DB_ALIAS, connections
 
 
@@ -58,16 +59,17 @@ class Atomic(ContextDecorator):
         self.savepoint = savepoint
         self.durable = durable
         self.session = None
+        self.client = None
 
     def __enter__(self):
         db = get_connection(self.using)
         if db.client_connection is None:
-            client = db.get_new_connection(db.get_connection_params()).client
+            self.client = db.get_new_connection(db.get_connection_params()).client
         else:
-            client = db.client_connection.client
+            self.client = db.client_connection.client
 
-        self.session = client.start_session()
-        setattr(client, 'session', self.session)
+        self.session = self.client.start_session()
+        setattr(self.client, 'session', self.session)
 
         self.session.start_transaction()
 
@@ -80,6 +82,9 @@ class Atomic(ContextDecorator):
 
         finally:
             self.session.end_session()
+
+        if self.client is not None:
+            delattr(self.client, 'session')
 
 
 def atomic(using=None, savepoint=True, durable=False):
