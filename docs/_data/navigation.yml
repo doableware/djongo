@@ -3,6 +3,8 @@ main:
   - title: "Create Account"
     url: /djongocs/create-account/
     id: 'nav-create-account'
+  - title: "Services"
+    url: /app-development/
   - title: "Products"
     url: /djongocs/products/
     id: 'nav-login'
