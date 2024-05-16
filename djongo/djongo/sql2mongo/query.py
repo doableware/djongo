@@ -475,6 +475,16 @@ class AlterQuery(DDLQuery):
 
     def _rename_collection(self):
         self.db[self.left_table].rename(self._new_name)
+        self.db['__schema__'].update_one(
+            {
+                'name': self.left_table
+            },
+            {
+                '$set': {
+                    'name': self._new_name
+                }
+            }
+        )
 
     def _alter(self, statement: SQLStatement):
         self.execute = lambda: None
