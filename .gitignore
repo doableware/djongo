@@ -1,13 +1,9 @@
-dist/
-build/
 .idea/
-.tox/
 *__pycache__*
 *egg-info/
 
 docs/.sass-cache/*
 docs/_site/*
-tests/logs
 
 Gemfile.lock
 
