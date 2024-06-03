@@ -1,0 +1,14 @@
+[run]
+branch = True
+omit =
+    */django/utils/autoreload.py
+source = django
+
+[report]
+ignore_errors = True
+omit =
+    */django/conf/locale/*
+    */tests/*
+
+[html]
+directory = coverage_html
