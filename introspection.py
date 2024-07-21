@@ -1,9 +1,11 @@
 import collections
 import datetime
-
 import bson
 from django.db.backends.base.introspection import BaseDatabaseIntrospection, FieldInfo, TableInfo
 from django.db.models import Index
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 
 class DatabaseIntrospection(BaseDatabaseIntrospection):
@@ -41,7 +43,7 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
     #     return sorted(cursor.m_cli_connection.collection_names(False))
 
     def get_table_list(self, cursor):
-
+        logger.debug(f'Introspection list table names')
         return [
             TableInfo(c, 't')
             for c in cursor.db_conn.list_collection_names()
