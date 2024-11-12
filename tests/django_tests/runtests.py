@@ -2,14 +2,27 @@
 import argparse
 import json
 import os
+import subprocess
 import sys
+import unittest
+from importlib import import_module
 from itertools import chain
+from pathlib import Path
+import django
+
+from test_utils import (
+    Entry,
+    Report,
+    TestIdManager,
+    TestResult,
+    VerdictEntry
+)
 # from typing import Literal
 
-from test_utils import setup_tests
+# from utils import setup_tests
 
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
-UTILS_DIR = os.path.join(ROOT_DIR, 'test_utils',)
+UTILS_DIR = os.path.join(ROOT_DIR, 'utils', )
 TEST_REPO_DIR = os.path.join(
     ROOT_DIR,
     'tests'
@@ -19,34 +32,6 @@ TEST_RESULTS_FILE = os.path.join(ROOT_DIR, 'results', 'test_list.json')
 TEST_VERSIONS = ('v21', 'v22', 'v30')
 PY_VERSIONS = ('p36', 'p38')
 DB_VERSIONS = ('sqlite', 'mongodb')
-
-# TEST_LITERAL = Literal['v21', 'v22', 'v30']
-# PY_LITERAL = Literal['p36', 'p38']
-# DB_LITERAL = Literal['sqlite', 'mongodb']
-
-#
-# class TestResult(TypedDict):
-#     passing: List[str]
-#     failing: List[str]
-#
-# class TestName(TypedDict):
-#     migrations: TestResult
-#
-# class DbVersions(TypedDict):
-#     sqlite: TestName
-#     mongodb: TestName
-#
-#
-# class PyVersions(TypedDict):
-#     p36: DbVersions
-#     p38: DbVersions
-#     repo_tests: List[str]
-#
-#
-# class TestVersions(TypedDict):
-#     v21: PyVersions
-#     v22: PyVersions
-#     v30: PyVersions
 
 
 PARSER_ARGS = {
@@ -93,6 +78,86 @@ check_tests = [
     'datatypes',
     'aggregation']
 
+
+class DjangoReportEntries(Entry):
+    entries_type = VerdictEntry
+
+class DjangoReport(Report):
+    report_file = Path(__file__).parent / 'django_report.json'
+    report_entries_type = DjangoReportEntries
+
+    @staticmethod
+    def key():
+        return django.__version__
+
+    def _log_entry(self, result: TestResult):
+        entry = self.entry
+        test_ids = TestIdManager.test_ids
+        for test in result.success:
+            entry.passed = test_ids[test.id()]
+        for test in chain(result.failures, result.errors):
+            entry.failed = test_ids[test.id()]
+
+
+class RunTests(unittest.TestCase):
+    version = '3.1.11'
+    test_dir = Path(__file__).parent / 'tests' / version
+
+    kwargs = {
+        'verbosity': 1,
+        'interactive': False,
+        'failfast': True,
+        'keepdb': True,
+        'reverse': False,
+        'test_labels': check_tests,
+        'debug_sql': False,
+        'parallel': 1,
+        'tags': None,
+        'exclude_tags': None,
+        'test_name_patterns': None,
+        'start_at': None,
+        'start_after': None,
+        'pdb': False,
+        'buffer': False,
+    }
+
+    @staticmethod
+    def _run(cmd: str):
+        print(f'Running: {cmd}')
+        try:
+            o = subprocess.run(cmd,
+                               shell=True,
+                               check=True,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT,
+                               text=True)
+        except subprocess.CalledProcessError as e:
+            print(e.stdout)
+            raise
+        print(o.stdout)
+
+    def test_runtest(self):
+        sys.path.insert(0, str(self.test_dir.absolute()))
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'test_sqlite')
+        settings = import_module('test_sqlite')
+        settings.TEST_RUNNER = 'test_utils.DiscoverRunner'
+        runtests = import_module('django_tests')
+        result = runtests.django_tests(**self.kwargs)
+        if result:
+            DjangoReport.log_test_report(result)
+
+    def test_clone_django(self):
+        version = self.version
+        test_dir = self.test_dir
+        clone_dir = test_dir / '.clone'
+        self._run(f'git clone --branch {version} '
+                  f'https://github.com/django/django '
+                  f'{clone_dir.absolute()}')
+        clone_tests_dir = clone_dir / 'tests'
+        self._run(f'mv {clone_tests_dir.absolute()}/* {test_dir}')
+        self._run(f'rm -rf {clone_dir.absolute()}')
+        run_tests = test_dir / 'runtests.py'
+        run_tests.replace(run_tests.with_stem('django_tests'))
 
 class TestManager:
 
