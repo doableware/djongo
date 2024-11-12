@@ -207,6 +207,8 @@ class MockTest(TestCase):
     db = None
     sql: str
 
+    tags = ['sql_parsing']
+
     @classmethod
     def setUpClass(cls):
         cls.conn = mock.MagicMock()
@@ -515,13 +517,12 @@ class TestAlterTableDrop(AlterTable):
 
         calls = [
             call('table'),
-            call().update(
+            call().update_many(
                 {},
-                {'$unset': {'c': ''}},
-                multi=True
+                {'$unset': {'c': ''}}
             ),
             call('__schema__'),
-            call().update(
+            call().update_one(
                 {'name': 'table'},
                 {'$unset': {'fields.c': ''}}
             )
@@ -554,10 +555,9 @@ class TestAlterTableRename(AlterTable):
         self.exe()
         calls = [
             call('table'),
-            call().update(
+            call().update_many(
                 {},
                 {'$rename': {'b': 'c'}},
-                multi=True
             )
         ]
         self.db.__getitem__.assert_has_calls(calls)
@@ -597,15 +597,14 @@ class TestAlterTableAddColumn(AlterTableAdd):
         calls = [
             call('table'),
 
-            call().update({'$or': [
+            call().update_many({'$or': [
                 {'c': {'$exists': False}},
                 {'c': None}]},
-                {'$set': {'c': 2}},
-                multi=True),
+                {'$set': {'c': 2}},),
 
             call('__schema__'),
 
-            call().update({'name': 'table'},
+            call().update_one({'name': 'table'},
                           {'$set': {
                               'fields.c': {
                                   'type_code': 'integer'}}})
@@ -919,6 +918,7 @@ class ResultQuery(MockTest):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.tags.append('basic')
 
         cls.find = cls.db.__getitem__().find
         cursor = mock.MagicMock()
@@ -954,6 +954,11 @@ class ResultQuery(MockTest):
 class SelectQuery(ResultQuery):
     part1 = ''
     part2 = ''
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.tags.append('crud')
 
     @property
     def sql(self) -> str:
@@ -1439,7 +1444,11 @@ class TestQuerySpecial(ResultQuery):
     @skip
     def test_pattern1(self):
         """
-         SELECT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content", COUNT("dummy_multipleblogposts"."h1") AS "h1__count", COUNT("dummy_multipleblogposts"."content") AS "content__count" FROM "dummy_multipleblogposts" GROUP BY "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content" LIMIT 21
+         SELECT "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content",
+          COUNT("dummy_multipleblogposts"."h1") AS "h1__count", COUNT("dummy_multipleblogposts"."content")
+          AS "content__count" FROM "dummy_multipleblogposts"
+          GROUP BY "dummy_multipleblogposts"."id", "dummy_multipleblogposts"."h1", "dummy_multipleblogposts"."content"
+           LIMIT 21
 
          :return:
          """
@@ -1627,6 +1636,9 @@ class TestQueryJoin(ResultQuery):
          sql_command: SELECT "null_fk_comment"."id", "null_fk_comment"."post_id", "null_fk_comment"."comment_text", "null_fk_post"."id", "null_fk_post"."forum_id", "null_fk_post"."title", "null_fk_forum"."id", "null_fk_forum"."system_info_id", "null_fk_forum"."forum_name", "null_fk_systeminfo"."id", "null_fk_systeminfo"."system_details_id", "null_fk_systeminfo"."system_name" FROM "null_fk_comment" LEFT OUTER JOIN "null_fk_post" ON ("null_fk_comment"."post_id" = "null_fk_post"."id") LEFT OUTER JOIN "null_fk_forum" ON ("null_fk_post"."forum_id" = "null_fk_forum"."id") LEFT OUTER JOIN "null_fk_systeminfo" ON ("null_fk_forum"."system_info_id" = "null_fk_systeminfo"."id") ORDER BY "null_fk_comment"."comment_text" ASC
         :return:
         """
+        self.tags.append('advanced')
+        self.tags.remove('basic')
+
         self.sql = (
             f'SELECT {t1c1}, {t2c1}, {t1c2}, {t2c2} '
             f'FROM table1 '
@@ -1726,6 +1738,9 @@ class TestQueryJoin(ResultQuery):
 class TestQueryNestedIn(ResultQuery):
 
     def test_pattern1(self):
+        self.tags.append('advanced')
+        self.tags.remove('basic')
+
         return_value = [{'col1': 'a1', 'col2': 'a2'}, {'col1': 'b1', 'col2': 'b2'}]
         ans = [('a1', 'a2'), ('b1', 'b2')]
 
