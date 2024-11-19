@@ -16,9 +16,12 @@ from pymongo.errors import OperationFailure, CollectionInvalid
 from sqlparse import parse as sqlparse
 from sqlparse import tokens
 from sqlparse.sql import (
-    Identifier, Parenthesis,
+    Identifier,
+    Parenthesis,
     Where,
-    Statement)
+    Values,
+    Statement
+)
 
 from ..exceptions import SQLDecodeError, MigrationError, print_warn
 from .functions import SQLFunc
@@ -128,7 +131,7 @@ class SelectQuery(DQLQuery):
             elif tok.match(tokens.Keyword, 'LIMIT'):
                 self.limit = LimitConverter(self, statement)
 
-            elif tok.match(tokens.Keyword, 'ORDER'):
+            elif tok.match(tokens.Keyword, 'ORDER BY'):
                 self.order = OrderConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'OFFSET'):
@@ -142,7 +145,7 @@ class SelectQuery(DQLQuery):
                 converter = OuterJoinConverter(self, statement)
                 self.joins.append(converter)
 
-            elif tok.match(tokens.Keyword, 'GROUP'):
+            elif tok.match(tokens.Keyword, 'GROUP BY'):
                 self.groupby = GroupbyConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'HAVING'):
@@ -354,7 +357,10 @@ class InsertQuery(DMLQuery):
         self._cols = [token.column for token in SQLToken.tokens2sql(tok[1], self)]
 
     def _fill_values(self, statement: SQLStatement):
-        for tok in statement:
+        tok_value = statement.next()
+        if not isinstance(tok_value, Values):
+            raise SQLDecodeError
+        for tok in tok_value:
             if isinstance(tok, Parenthesis):
                 placeholder = SQLToken.token2sql(tok, self)
                 values = []
@@ -364,8 +370,6 @@ class InsertQuery(DMLQuery):
                     else:
                         values.append(index)
                 self._values.append(values)
-            elif not tok.match(tokens.Keyword, 'VALUES'):
-                raise SQLDecodeError
 
     def execute(self):
         docs = []
@@ -415,7 +419,6 @@ class AlterQuery(DDLQuery):
     def __init__(self, *args):
         self._iden_name = None
         self._old_name = None
-        self._new_name = None
         self._new_name = None
         self._default = None
         self._type_code = None
