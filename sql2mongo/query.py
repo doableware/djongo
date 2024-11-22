@@ -2,7 +2,7 @@
 Module with constants and mappings to build MongoDB queries from
 SQL constructors.
 """
-import abc
+import itertools
 import re
 from logging import getLogger
 from typing import Optional, Dict, List, Union as U, Sequence, Set
@@ -28,10 +28,27 @@ from .functions import SQLFunc
 from .sql_tokens import (SQLToken, SQLStatement, SQLIdentifier,
                          AliasableToken, SQLConstIdentifier, SQLColumnDef, SQLColumnConstraint)
 from .converters import (
-    ColumnSelectConverter, AggColumnSelectConverter, FromConverter, WhereConverter,
-    AggWhereConverter, InnerJoinConverter, OuterJoinConverter, LimitConverter, AggLimitConverter, OrderConverter,
-    SetConverter, AggOrderConverter, DistinctConverter, NestedInQueryConverter, GroupbyConverter, OffsetConverter,
-    AggOffsetConverter, HavingConverter)
+    ColumnSelectConverter,
+    AggColumnSelectConverter,
+    FromConverter,
+    VoidConverter,
+    VoidSelectConverter,
+    WhereConverter,
+    AggWhereConverter,
+    InnerJoinConverter,
+    OuterJoinConverter,
+    LimitConverter,
+    AggLimitConverter,
+    OrderConverter,
+    SetConverter,
+    AggOrderConverter,
+    DistinctConverter,
+    NestedInQueryConverter,
+    GroupbyConverter,
+    OffsetConverter,
+    AggOffsetConverter,
+    HavingConverter
+)
 
 from djongo import base
 logger = getLogger(__name__)
@@ -48,14 +65,19 @@ class TokenAlias:
     aliased_names: Set[str] = dataclass_field(default_factory=set)
 
 
-class BaseQuery(abc.ABC):
+class Query:
+    func_interface: str
+    count_interface: str
+
     def __init__(self,
+                 client_connection: MongoClient,
                  db: Database,
                  connection_properties: 'base.DjongoClient',
                  statement: Statement,
                  params: Sequence):
         self.statement = statement
         self.db = db
+        self.cli_con = client_connection
         self.connection_properties = connection_properties
         self.params = params
         self.token_alias = TokenAlias()
@@ -65,100 +87,195 @@ class BaseQuery(abc.ABC):
         self.parse()
 
     def __iter__(self):
-        return
-        yield
+        raise NotImplementedError
 
-    @abc.abstractmethod
+    def __next__(self):
+        raise NotImplementedError
+
     def parse(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def execute(self):
-        raise NotImplementedError
-
-
-DMLQuery = BaseQuery
-
-
-class DDLQuery(BaseQuery):
-
-    @abc.abstractmethod
-    def __init__(self, *args):
-        super().__init__(*args)
-
-    def execute(self):
-        return 
-
-
-class DQLQuery(BaseQuery):
-
-    def execute(self):
-        return
-
-    @abc.abstractmethod
     def count(self):
         raise NotImplementedError
 
+    def close(self):
+        return
+
+    @staticmethod
+    def execute(client_connection: MongoClient,
+                db_connection: Database,
+                connection_properties: 'base.DjongoClient',
+                sql: str,
+                params: Optional[Sequence]):
+        import djongo
+        exe = SQLDecodeError(
+            err_sql=sql,
+            params=params,
+            version=djongo.__version__
+        )
+        logger.debug(
+            f'sql_command: {sql}\n'
+            f'params: {params}'
+        )
+        count = itertools.count()
+        sql = re.sub(r'%s', lambda _: f'%({next(count)})s', sql)
+        statement = sqlparse(sql)
+
+        if len(statement) > 1:
+            raise exe
+
+        statement = statement[0]
+        sm_type = statement.get_type()
+
+        try:
+            query = Query.FUNC_MAP[sm_type](client_connection,
+                                        db_connection,
+                                        connection_properties,
+                                        statement,
+                                        params)
+        except KeyError:
+            logger.debug(f'Not implemented "{sm_type}" of "{statement}"')
+            raise exe
+
+        except MigrationError:
+            raise
+
+        except SQLDecodeError as e:
+            e.err_sql = sql,
+            e.params = params,
+            e.version = djongo.__version__
+            raise e
+
+        except Exception as e:
+            raise exe from e
+
+        return query
+
+    def _execute(self):
+        raise NotImplementedError
+
+class DDLQuery(Query):
+
+
+    def __init__(self, *args):
+        super().__init__(*args)
+        self._execute()
+
+    def __iter__(self):
+        return
+
+    def __next__(self):
+        raise StopIteration
+
+DMLQuery = DDLQuery
+
+class DQLQuery(Query):
+
+    def _execute(self):
+        raise TypeError(f'DQL Query execute on __iter__')
+
+    def count(self):
+        raise NotImplementedError
+
+class SelectQueryStage(dict):
+    agg_cast = {
+        WhereConverter: AggWhereConverter,
+        OrderConverter: AggOrderConverter,
+        OffsetConverter: AggOffsetConverter,
+        LimitConverter: AggLimitConverter,
+        ColumnSelectConverter: AggColumnSelectConverter
+    }
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.needs_aggregation = False
+        self.needs_column_selection = True
+
+
+    def values(self):
+        if not self.needs_column_selection:
+            self['SELECT'].__class__ = VoidSelectConverter
+
+        for stage in super().values():
+            if not isinstance(stage, type | VoidConverter):
+                if self.needs_aggregation:
+                    try:
+                        stage.__class__ = self.agg_cast[type(stage)]
+                    except KeyError:
+                        pass
+                yield stage
+
+
+class SelectQueryStageGet:
+
+    def __init__(self, name:str=None):
+        self.name = name
+
+    def __set_name__(self, owner, name: str):
+        if not self.name:
+            self.name = name
+
+    def __get__(self, instance: 'SelectQuery', owner):
+        ret = instance.stages[self.name.upper()]
+        if not isinstance(ret, type):
+            return ret
+        return None
 
 class SelectQuery(DQLQuery):
 
     def __init__(self, *args):
-        self.selected_columns: Optional[ColumnSelectConverter] = None
-        self.where: Optional[WhereConverter] = None
-        self.joins: List[
-            U[InnerJoinConverter, OuterJoinConverter]
-        ] = []
-        self.order: Optional[OrderConverter] = None
-        self.offset: Optional[OffsetConverter] = None
-        self.limit: Optional[LimitConverter] = None
-        self.distinct: Optional[DistinctConverter] = None
-        self.groupby: Optional[GroupbyConverter] = None
-        self.having: Optional[HavingConverter] = None
 
         self._cursor: Optional[U[BasicCursor, CommandCursor]] = None
+        self._result_generator = None
+        self.stages = SelectQueryStage(**{
+            'INNER JOIN': InnerJoinConverter,
+            'LEFT OUTER JOIN': OuterJoinConverter,
+            'nested_query': NestedInQueryConverter,
+            'WHERE': WhereConverter,
+            'GROUP BY': GroupbyConverter,
+            'HAVING': HavingConverter,
+            'DISTINCT': DistinctConverter,
+            'ORDER BY': OrderConverter,
+            'OFFSET': OffsetConverter,
+            'LIMIT': LimitConverter,
+            'SELECT': ColumnSelectConverter,
+            'FROM': FromConverter,
+        })
         super().__init__(*args)
+
+    distinct = SelectQueryStageGet()
+    selected_columns = SelectQueryStageGet('SELECT')
+
 
     def parse(self):
         statement = SQLStatement(self.statement)
 
         for tok in statement:
-            if tok.match(tokens.DML, 'SELECT'):
-                self.selected_columns = ColumnSelectConverter(self, statement)
-
-            elif tok.match(tokens.Keyword, 'FROM'):
-                FromConverter(self, statement)
-
-            elif tok.match(tokens.Keyword, 'LIMIT'):
-                self.limit = LimitConverter(self, statement)
-
-            elif tok.match(tokens.Keyword, 'ORDER BY'):
-                self.order = OrderConverter(self, statement)
-
-            elif tok.match(tokens.Keyword, 'OFFSET'):
-                self.offset = OffsetConverter(self, statement)
-
-            elif tok.match(tokens.Keyword, 'INNER JOIN'):
-                converter = InnerJoinConverter(self, statement)
-                self.joins.append(converter)
-
-            elif tok.match(tokens.Keyword, 'LEFT OUTER JOIN'):
-                converter = OuterJoinConverter(self, statement)
-                self.joins.append(converter)
-
-            elif tok.match(tokens.Keyword, 'GROUP BY'):
-                self.groupby = GroupbyConverter(self, statement)
-
-            elif tok.match(tokens.Keyword, 'HAVING'):
-                self.having = HavingConverter(self, statement)
-
-            elif isinstance(tok, Where):
-                self.where = WhereConverter(self, statement)
-
-            else:
-                raise SQLDecodeError(f'Unknown keyword: {tok}')
+            try:
+                self.stages[str(tok)] = self.stages[str(tok)](self, statement)
+            except KeyError:
+                if isinstance(tok, Where):
+                    self.stages['WHERE'] = self.stages['WHERE'](self, statement)
+                else:
+                    raise SQLDecodeError(f'Unknown keyword: {tok}')
 
     def __iter__(self):
+        try:
+            yield from self._iter()
 
+        except MigrationError:
+            raise
+
+        except Exception as e:
+            import djongo
+            exe = SQLDecodeError(
+                err_sql=self.statement,
+                params=self.params,
+                version=djongo.__version__
+            )
+            raise exe from e
+
+    def _iter(self):
         if self._cursor is None:
             self._cursor = self._get_cursor()
 
@@ -170,90 +287,52 @@ class SelectQuery(DQLQuery):
             yield self._align_results(doc)
         return
 
+    def __next__(self):
+        if self._result_generator is None:
+            self._result_generator = iter(self)
+
+        result = next(self._result_generator)
+        logger.debug(f'Result: {result}')
+        return result
+
+    def close(self):
+        if self._cursor:
+            self._cursor.close()
+
     def count(self):
 
         if self._cursor is None:
             self._cursor = self._get_cursor()
         return len(list(self._cursor))
-        # if isinstance(self._cursor, BasicCursor):
-        #     return self._cursor.count()
-        # else:
-        #     return len(list(self._cursor))
 
-    def _needs_aggregation(self):
-        if (self.nested_query
-                or self.joins
-                or self.distinct
-                or self.groupby):
-            return True
+    def _check_aggregation(self):
         if any(isinstance(sql_token, (SQLFunc, SQLConstIdentifier))
                for sql_token in self.selected_columns.sql_tokens):
-            return True
-        return False
+            self.stages.needs_aggregation = True
+
 
     def _make_pipeline(self):
         pipeline = []
-        for join in self.joins:
-            pipeline.extend(join.to_mongo())
-
-        if self.nested_query:
-            pipeline.extend(self.nested_query.to_mongo())
-
-        if self.where:
-            self.where.__class__ = AggWhereConverter
-            pipeline.append(self.where.to_mongo())
-
-        if self.groupby:
-            pipeline.extend(self.groupby.to_mongo())
-
-        if self.having:
-            pipeline.append(self.having.to_mongo())
-
-        if self.distinct:
-            pipeline.extend(self.distinct.to_mongo())
-
-        if self.order:
-            self.order.__class__ = AggOrderConverter
-            pipeline.append(self.order.to_mongo())
-
-        if self.offset:
-            self.offset.__class__ = AggOffsetConverter
-            pipeline.append(self.offset.to_mongo())
-
-        if self.limit:
-            self.limit.__class__ = AggLimitConverter
-            pipeline.append(self.limit.to_mongo())
-
-        if self._needs_column_selection():
-            self.selected_columns.__class__ = AggColumnSelectConverter
-            pipeline.extend(self.selected_columns.to_mongo())
+        for stage in self.stages.values():
+            doc = stage.to_mongo()
+            if isinstance(doc, dict):
+                pipeline.append(doc)
+            else:
+                pipeline.extend(doc)
 
         return pipeline
 
-    def _needs_column_selection(self):
-        return not(self.distinct or self.groupby) and self.selected_columns
 
     def _get_cursor(self):
-        if self._needs_aggregation():
+        self._check_aggregation()
+        if self.stages.needs_aggregation:
             pipeline = self._make_pipeline()
             cur = self.db[self.left_table].aggregate(pipeline)
             logger.debug(f'Aggregation query: {pipeline}')
         else:
             kwargs = {}
-            if self.where:
-                kwargs.update(self.where.to_mongo())
-
-            if self.selected_columns:
-                kwargs.update(self.selected_columns.to_mongo())
-
-            if self.limit:
-                kwargs.update(self.limit.to_mongo())
-
-            if self.order:
-                kwargs.update(self.order.to_mongo())
-            
-            if self.offset:
-                kwargs.update(self.offset.to_mongo())
+            for stage in self.stages.values():
+                kwargs.update(stage.to_mongo())
 
             cur = self.db[self.left_table].find(**kwargs)
             logger.debug(f'Find query: {kwargs}')
@@ -326,7 +405,7 @@ class UpdateQuery(DMLQuery):
 
         self.kwargs.update(self.set_columns.to_mongo())
 
-    def execute(self):
+    def _execute(self):
         db = self.db
         self.result = db[self.left_table].update_many(**self.kwargs)
         logger.debug(f'update_many: {self.result.modified_count}, matched: {self.result.matched_count}')
@@ -335,9 +414,8 @@ class UpdateQuery(DMLQuery):
 class InsertQuery(DMLQuery):
 
     def __init__(self,
-                 result_ref: 'Query',
                  *args):
-        self._result_ref = result_ref
+        self.last_row_id = 0
         self._cols = None
         self._values = []
         super().__init__(*args)
@@ -371,7 +449,7 @@ class InsertQuery(DMLQuery):
                         values.append(index)
                 self._values.append(values)
 
-    def execute(self):
+    def _execute(self):
         docs = []
         num = len(self._values)
 
@@ -400,9 +478,9 @@ class InsertQuery(DMLQuery):
 
         res = self.db[self.left_table].insert_many(docs, ordered=False)
         if auto:
-            self._result_ref.last_row_id = int(auto['auto']['seq'])
+            self.last_row_id = int(auto['auto']['seq'])
         else:
-            self._result_ref.last_row_id = res.inserted_ids[-1]
+            self.last_row_id = res.inserted_ids[-1]
         logger.debug('inserted ids {}'.format(res.inserted_ids))
 
     def parse(self):
@@ -437,7 +515,7 @@ class AlterQuery(DDLQuery):
             elif tok.match(tokens.Keyword, 'ADD'):
                 self._add(statement)
             elif tok.match(tokens.Keyword, 'FLUSH'):
-                self.execute = self._flush
+                self._execute = self._flush
             elif tok.match(tokens.Keyword.DDL, 'DROP'):
                 self._drop(statement)
             elif tok.match(tokens.Keyword.DDL, 'ALTER'):
@@ -452,7 +530,7 @@ class AlterQuery(DDLQuery):
         to = False
         for tok in statement:
             if tok.match(tokens.Keyword, 'COLUMN'):
-                self.execute = self._rename_column
+                self._execute = self._rename_column
                 column = True
             if tok.match(tokens.Keyword, 'TO'):
                 to = True
@@ -464,7 +542,7 @@ class AlterQuery(DDLQuery):
 
         if not column:
             # Rename table
-            self.execute = self._rename_collection
+            self._execute = self._rename_collection
 
     def _rename_column(self):
         self.db[self.left_table].update_many(
@@ -480,7 +558,7 @@ class AlterQuery(DDLQuery):
         self.db[self.left_table].rename(self._new_name)
 
     def _alter(self, statement: SQLStatement):
-        self.execute = lambda: None
+        self._execute = lambda: None
         feature = ''
 
         for tok in statement:
@@ -520,11 +598,11 @@ class AlterQuery(DDLQuery):
             elif isinstance(tok, Identifier):
                 self._iden_name = tok.get_real_name()
             elif tok.match(tokens.Keyword, 'INDEX'):
-                self.execute = self._drop_index
+                self._execute = self._drop_index
             elif tok.match(tokens.Keyword, 'CONSTRAINT'):
                 pass
             elif tok.match(tokens.Keyword, 'COLUMN'):
-                self.execute = self._drop_column
+                self._execute = self._drop_column
             else:
                 raise SQLDecodeError
 
@@ -580,18 +658,18 @@ class AlterQuery(DDLQuery):
                 self._default = self.params[i]
 
             elif tok.match(tokens.Keyword, 'UNIQUE'):
-                if self.execute == self._add_column:
+                if self._execute == self._add_column:
                     self.field_dir = [(self._iden_name, 1)]
-                self.execute = self._unique
+                self._execute = self._unique
 
             elif tok.match(tokens.Keyword, 'INDEX'):
-                self.execute = self._index
+                self._execute = self._index
 
             elif tok.match(tokens.Keyword, 'FOREIGN'):
-                self.execute = self._fk
+                self._execute = self._fk
 
             elif tok.match(tokens.Keyword, 'COLUMN'):
-                self.execute = self._add_column
+                self._execute = self._add_column
 
             elif isinstance(tok, Where):
                 print_warn('partial indexes')
@@ -640,10 +718,14 @@ class AlterQuery(DDLQuery):
         pass
 
 
+
 class CreateQuery(DDLQuery):
 
     def __init__(self, *args):
         super().__init__(*args)
+
+    def _execute(self):
+        return
 
     def _create_table(self, statement):
         if '__schema__' not in self.connection_properties.cached_collections:
@@ -735,6 +817,27 @@ class CreateQuery(DDLQuery):
             raise SQLDecodeError
 
 
+class DropQuery(DMLQuery):
+
+    def parse(self):
+        statement = SQLStatement(self.statement)
+        statement.skip(2)
+        tok = statement.next()
+        if tok.match(tokens.Keyword, 'DATABASE'):
+            tok = statement.next()
+            db_name = tok.get_name()
+            self.cli_con.drop_database(db_name)
+        elif tok.match(tokens.Keyword, 'TABLE'):
+            tok = statement.next()
+            table_name = tok.get_name()
+            self.db.drop_collection(table_name)
+        else:
+            raise SQLDecodeError('statement:{}'.format(statement))
+
+    def _execute(self):
+        return
+
+
 class DeleteQuery(DMLQuery):
 
     def __init__(self, *args):
@@ -754,7 +857,7 @@ class DeleteQuery(DMLQuery):
             where = WhereConverter(self, statement)
             kw.update(where.to_mongo())
 
-    def execute(self):
+    def _execute(self):
         db_con = self.db
         self.result = db_con[self.left_table].delete_many(**self.kw)
         logger.debug('delete_many: {}'.format(self.result.deleted_count))
@@ -763,184 +866,23 @@ class DeleteQuery(DMLQuery):
         return self.result.deleted_count
 
 
-class Query:
-
-    def __init__(self,
-                 client_connection: MongoClient,
-                 db_connection: Database,
-                 connection_properties: 'base.DjongoClient',
-                 sql: str,
-                 params: Optional[Sequence]):
-
-        self._params = params
-        self.db = db_connection
-        self.cli_con = client_connection
-        self.connection_properties = connection_properties
-        self._params_index_count = -1
-        self._sql = re.sub(r'%s', self._param_index, sql)
-        self.last_row_id = None
-        self._result_generator = None
-
-        self._query = self.parse()
-
-    def count(self):
-        return self._query.count()
-
-    def close(self):
-        if self._query and self._query._cursor:
-            self._query._cursor.close()
-
-    def __next__(self):
-        if self._result_generator is None:
-            self._result_generator = iter(self)
-
-        result = next(self._result_generator)
-        logger.debug(f'Result: {result}')
-        return result
-
-    next = __next__
-
-    def __iter__(self):
-        if self._query is None:
-            return
-
-        try:
-            yield from iter(self._query)
-
-        except MigrationError:
-            raise
-
-        except OperationFailure as e:
-            import djongo
-            exe = SQLDecodeError(
-                f'FAILED SQL: {self._sql}\n' 
-                f'Params: {self._params}\n'
-                f'Pymongo error: {e.details}\n'
-                f'Version: {djongo.__version__}'
-            )
-            raise exe from e
-
-        except Exception as e:
-            import djongo
-            exe = SQLDecodeError(
-                f'FAILED SQL: {self._sql}\n'
-                f'Params: {self._params}\n'
-                f'Version: {djongo.__version__}'
-            )
-            raise exe from e
-
-    def _param_index(self, _):
-        self._params_index_count += 1
-        return '%({})s'.format(self._params_index_count)
-
-    def parse(self):
-        logger.debug(
-            f'sql_command: {self._sql}\n'
-            f'params: {self._params}'
-        )
-        statement = sqlparse(self._sql)
-
-        if len(statement) > 1:
-            raise SQLDecodeError(self._sql)
-
-        statement = statement[0]
-        sm_type = statement.get_type()
-
-        try:
-            handler = self.FUNC_MAP[sm_type]
-        except KeyError:
-            logger.debug('\n Not implemented {} {}'.format(sm_type, statement))
-            raise SQLDecodeError(f'{sm_type} command not implemented for SQL {self._sql}')
-
-        else:
-            try:
-                return handler(self, statement)
-
-            except MigrationError:
-                raise
-
-            except OperationFailure as e:
-                import djongo
-                exe = SQLDecodeError(
-                    err_sql=self._sql,
-                    params=self._params,
-                    version=djongo.__version__
-                )
-                raise exe from e
-
-            except SQLDecodeError as e:
-                import djongo
-                e.err_sql = self._sql,
-                e.params = self._params,
-                e.version = djongo.__version__
-                raise e
-
-            except Exception as e:
-                import djongo
-                exe = SQLDecodeError(
-                    err_sql=self._sql,
-                    params=self._params,
-                    version=djongo.__version__
-                )
-                raise exe from e
-
-    def _alter(self, sm):
-        try:
-            query = AlterQuery(self.db, self.connection_properties, sm, self._params)
-        except SQLDecodeError:
-            logger.warning('Not implemented alter command for SQL {}'.format(self._sql))
-            raise
-        else:
-            query.execute()
-            return query
-
-    def _create(self, sm):
-        query = CreateQuery(self.db, self.connection_properties, sm, self._params)
-        query.execute()
-        return query
-
-    def _drop(self, sm):
-        statement = SQLStatement(sm)
-        statement.skip(2)
-        tok = statement.next()
-        if tok.match(tokens.Keyword, 'DATABASE'):
-            tok = statement.next()
-            db_name = tok.get_name()
-            self.cli_con.drop_database(db_name)
-        elif tok.match(tokens.Keyword, 'TABLE'):
-            tok = statement.next()
-            table_name = tok.get_name()
-            self.db.drop_collection(table_name)
-        else:
-            raise SQLDecodeError('statement:{}'.format(sm))
-
-    def _update(self, sm):
-        query = UpdateQuery(self.db, self.connection_properties, sm, self._params)
-        query.execute()
-        return query
-
-    def _delete(self, sm):
-        query = DeleteQuery(self.db, self.connection_properties, sm, self._params)
-        query.execute()
-        return query
-
-    def _insert(self, sm):
-        query = InsertQuery(self, self.db, self.connection_properties, sm, self._params)
-        query.execute()
-        return query
-
-    def _select(self, sm):
-        return SelectQuery(self.db, self.connection_properties, sm, self._params)
-
-    FUNC_MAP = {
-        'SELECT': _select,
-        'UPDATE': _update,
-        'INSERT': _insert,
-        'DELETE': _delete,
-        'CREATE': _create,
-        'DROP': _drop,
-        'ALTER': _alter
-    }
+type query_types = (
+        SelectQuery |
+        UpdateQuery |
+        InsertQuery |
+        DeleteQuery |
+        CreateQuery |
+        DropQuery |
+        AlterQuery
+)
 
 
-
+Query.FUNC_MAP = {
+    'SELECT': SelectQuery,
+    'UPDATE': UpdateQuery,
+    'INSERT': InsertQuery,
+    'DELETE': DeleteQuery,
+    'CREATE': CreateQuery,
+    'DROP': DropQuery,
+    'ALTER': AlterQuery
+}

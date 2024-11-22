@@ -25,7 +25,7 @@ class SQLToken:
         self.query = query
 
     def __repr__(self):
-        return f'{self._token}'
+        return str(self._token)
 
     @staticmethod
     def tokens2sql(token: Token,

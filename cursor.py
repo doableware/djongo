@@ -48,7 +48,7 @@ class Cursor:
 
     def execute(self, sql, params=None):
         try:
-            self.result = Query(
+            self.result = Query.execute(
                 self.client_conn,
                 self.db_conn,
                 self.connection_properties,
@@ -62,7 +62,7 @@ class Cursor:
         ret = []
         for _ in range(size):
             try:
-                ret.append(self.result.next())
+                ret.append(next(self.result))
             except StopIteration:
                 break
             except Exception as e:
@@ -73,7 +73,7 @@ class Cursor:
 
     def fetchone(self):
         try:
-            return self.result.next()
+            return next(self.result)
         except StopIteration:
             return None
         except Exception as e:

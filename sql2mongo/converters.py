@@ -1,4 +1,4 @@
-import abc
+
 import typing
 from collections import OrderedDict
 from sqlparse import tokens, parse as sqlparse
@@ -14,11 +14,11 @@ from .sql_tokens import SQLToken, SQLStatement
 
 class Converter:
 
-    @abc.abstractmethod
+
     def __init__(
             self,
             query: U['query_module.SelectQuery',
-                     'query_module.BaseQuery'],
+                     'query_module.Query'],
             statement: SQLStatement
     ):
         self.query = query
@@ -32,6 +32,9 @@ class Converter:
     def to_mongo(self):
         raise NotImplementedError
 
+class VoidConverter(Converter):
+    def to_mongo(self):
+        raise TypeError('Converters do not support to_mongo')
 
 class ColumnSelectConverter(Converter):
     def __init__(self, query, statement):
@@ -47,8 +50,7 @@ class ColumnSelectConverter(Converter):
         tok = self.statement.next()
 
         if tok.match(tokens.Keyword, 'DISTINCT'):
-            self.query.distinct = DistinctConverter(self.query, self.statement)
-
+            self.query.stages[str(tok)] = self.query.stages[str(tok)](self.query, self.statement)
         else:
             for sql_token in SQLToken.tokens2sql(tok, self.query):
                 self.sql_tokens.append(sql_token)
@@ -57,6 +59,8 @@ class ColumnSelectConverter(Converter):
         doc = [selected.column for selected in self.sql_tokens]
         return {'projection': doc}
 
+class VoidSelectConverter(VoidConverter, ColumnSelectConverter):
+    pass
 
 class AggColumnSelectConverter(ColumnSelectConverter):
 
@@ -102,7 +106,8 @@ class AggColumnSelectConverter(ColumnSelectConverter):
         return pipeline
 
 
-class FromConverter(Converter):
+
+class FromConverter(VoidConverter):
 
     def parse(self):
         tok = self.statement.next()
@@ -134,13 +139,21 @@ class AggWhereConverter(WhereConverter):
 
 class JoinConverter(Converter):
 
-    @abc.abstractmethod
+
     def __init__(self, *args):
         self.left_table: O[str] = None
         self.right_table: O[str] = None
         self.left_column: O[str] = None
         self.right_column: O[str] = None
+        self.joins: list[JoinConverter |
+                         InnerJoinConverter |
+                         OuterJoinConverter] = []
         super().__init__(*args)
+        self.query.stages.needs_aggregation = True
+
+    def __call__(self, *args):
+        self.joins.append(type(self)(*args))
+        return self
 
     def parse(self):
         tok = self.statement.next()
@@ -182,35 +195,40 @@ class JoinConverter(Converter):
 
         return lookup
 
+    def _to_mongo(self):
+        raise NotImplementedError
+
+    def to_mongo(self):
+        yield from self._to_mongo()
+        if self.joins:
+            for join in self.joins:
+                yield from join._to_mongo()
+
 
 class InnerJoinConverter(JoinConverter):
 
     def __init__(self, *args):
         super().__init__(*args)
 
-    def to_mongo(self):
+    def _to_mongo(self):
         if self.left_table == self.query.left_table:
             match_field = self.left_column
         else:
             match_field = f'{self.left_table}.{self.left_column}'
 
         lookup = self._lookup()
-        pipeline = [
-            {
-                '$match': {
-                    match_field: {
-                        '$ne': None,
-                        '$exists': True
-                    }
+        yield {
+            '$match': {
+                match_field: {
+                    '$ne': None,
+                    '$exists': True
                 }
-            },
-            lookup,
-            {
-                '$unwind': '$' + self.right_table
             }
-        ]
-
-        return pipeline
+        }
+        yield lookup
+        yield {
+            '$unwind': '$' + self.right_table
+        }
 
 
 class OuterJoinConverter(JoinConverter):
@@ -226,28 +244,24 @@ class OuterJoinConverter(JoinConverter):
                 fields[tok.column] = None
         return fields
 
-    def to_mongo(self):
+    def _to_mongo(self):
         lookup = self._lookup()
         null_fields = self._null_fields(self.right_table)
 
-        pipeline = [
-            lookup,
-            {
-                '$unwind': {
-                    'path': '$' + self.right_table,
-                    'preserveNullAndEmptyArrays': True
-                }
-            },
-            {
-                '$addFields': {
-                    self.right_table: {
-                        '$ifNull': ['$' + self.right_table, null_fields]
-                    }
+        yield lookup
+        yield {
+            '$unwind': {
+                'path': '$' + self.right_table,
+                'preserveNullAndEmptyArrays': True
+            }
+        }
+        yield {
+            '$addFields': {
+                self.right_table: {
+                    '$ifNull': ['$' + self.right_table, null_fields]
                 }
             }
-        ]
-
-        return pipeline
+        }
 
 
 class LimitConverter(Converter):
@@ -319,7 +333,7 @@ class _Tokens2Id:
         U[SQLIdentifier, SQLFunc]
     ]
     query: U['query_module.SelectQuery',
-             'query_module.BaseQuery']
+             'query_module.Query']
 
     def to_id(self):
         _id = {}
@@ -349,22 +363,22 @@ class _Tokens2Id:
 class DistinctConverter(ColumnSelectConverter, _Tokens2Id):
     def __init__(self, *args):
         super().__init__(*args)
+        self.query.stages.needs_aggregation = True
+        self.query.stages.needs_column_selection = False
 
     def to_mongo(self):
         _id = self.to_id()
 
-        return [
-            {
+        yield {
                 '$group': {
                     '_id': _id
                 }
-            },
-            {
+            }
+        yield {
                 '$replaceRoot': {
                     'newRoot': '$_id'
                 }
             }
-        ]
 
 
 class NestedInQueryConverter(Converter):
@@ -373,39 +387,39 @@ class NestedInQueryConverter(Converter):
         self._token = token
         self._in_query: O['query_module.SelectQuery'] = None
         super().__init__(*args)
+        self.query.stages.needs_aggregation = True
 
     def parse(self):
         from .query import SelectQuery
 
         self._in_query = SelectQuery(
+            self.query.cli_con,
             self.query.db,
             self.query.connection_properties,
             sqlparse(self._token.value[1:-1])[0],
             self.query.params
         )
+        self._in_query.stages.needs_aggregation = True
 
     def to_mongo(self):
-        pipeline = [
-            {
-                '$lookup': {
-                    'from': self._in_query.left_table,
-                    'pipeline': self._in_query._make_pipeline(),
-                    'as': '_nested_in'
-                }
-            },
-            {
-                '$addFields': {
-                    '_nested_in': {
-                        '$map': {
-                            'input': '$_nested_in',
-                            'as': 'lookup_result',
-                            'in': '$$lookup_result.' + self._in_query.selected_columns.sql_tokens[0].column
-                        }
+        yield {
+            '$lookup': {
+                'from': self._in_query.left_table,
+                'pipeline': self._in_query._make_pipeline(),
+                'as': '_nested_in'
+            }
+        }
+        yield {
+            '$addFields': {
+                '_nested_in': {
+                    '$map': {
+                        'input': '$_nested_in',
+                        'as': 'lookup_result',
+                        'in': '$$lookup_result.' + self._in_query.selected_columns.sql_tokens[0].column
                     }
                 }
             }
-        ]
-        return pipeline
+        }
 
 
 class HavingConverter(Converter):
@@ -414,7 +428,7 @@ class HavingConverter(Converter):
 
     def __init__(self,
                  query: U['query_module.SelectQuery',
-                          'query_module.BaseQuery'],
+                          'query_module.Query'],
                  statement: SQLStatement):
         super().__init__(query, statement)
 
@@ -436,6 +450,8 @@ class GroupbyConverter(Converter, _Tokens2Id):
     def __init__(self, *args):
         self.sql_tokens: List[SQLToken] = []
         super().__init__(*args)
+        self.query.stages.needs_aggregation = True
+        self.query.stages.needs_column_selection = False
 
     def parse(self):
         tok = self.statement.next()

@@ -88,14 +88,12 @@ class _BinaryOp(_Op):
 
 class _InNotInOp(_BinaryOp):
 
-    def _fill_in(self, token):
+    def _fill_in(self, token: Token):
         self._in = []
 
         # Check for nested
         if token[1].ttype == tokens.DML:
-            from .converters import NestedInQueryConverter
-
-            self.query.nested_query = NestedInQueryConverter(token, self.query, 0)
+            self.query.stages['nested_query'] = self.query.stages['nested_query'](token, self.query, 0)
             return
 
         for index in SQLToken.token2sql(token, self.query):
@@ -111,7 +109,7 @@ class _InNotInOp(_BinaryOp):
         raise NotImplementedError
 
     def _to_mongo(self, op):
-        if self.query.nested_query is not None:
+        if not isinstance(self.query.stages['nested_query'], type):
             return {
                 '$expr': {
                     op: ['$' + self._field, '$_nested_in']
