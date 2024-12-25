@@ -235,7 +235,7 @@
          DjongoCS Containers
         </h2>
         <h3 class="is-subtitled">
-         Deploy a frustration free Django MongoDB instance on GCP
+         Preconfigured Django MongoDB Djongo instances on GCP
         </h3>
         <div class="pc">
          <div>
@@ -243,12 +243,12 @@
          </div>
          <div>
           <p>
-           Deploy a preset Ubuntu webserver instance running MongoDB and Django with the latest version
-of Djongo.
+           Focus on developing the models and views for your app. Let Djongo cloud services take care of
+configuration and deployment. Manage access keys, modify subscription plans, 
+and request support using the dashboard.
           </p>
           <p>
-           Focus on developing the models.py and views.py. Let djongo cloud services automate the rest. 
-Manage access keys, modify subscription plans, and request support using the dashboard.
+           Alternatively, download the latest version of djongo from the private pypi server for local development.
           </p>
           <p>
            <a class="btn btn--theme btn--primary btn--medium" href="/djongocs/create-account" id="create-account-2">
@@ -257,6 +257,230 @@ Manage access keys, modify subscription plans, and request support using the das
           </p>
          </div>
         </div>
+       </div>
+      </section>
+      <section>
+       <div class="l-fixed-content">
+        <h2 id="built-for-enterprises">
+         Built for Enterprises
+        </h2>
+        <div class="l-grid l-tiles is-titled">
+         <div class="grid-3-row">
+          <img alt="First Access" src="/assets/images/rapid.svg">
+          <h1>
+           First Access
+          </h1>
+          <p>
+           Djongo packages released to enterprises are compatible with newer versions of Django and MongoDB.
+          </p>
+         </div>
+         <div class="grid-3-row">
+          <img alt="Support" src="/assets/images/support-new.svg">
+          <h1>
+           Support
+          </h1>
+          <p>
+           As an enterprise customer, your queries and change requests take top priority.
+          </p>
+         </div>
+         <div class="grid-3-row">
+          <img alt="Redistribute" src="/assets/images/security.svg">
+          <h1>
+           Secure
+          </h1>
+          <p>
+           Djongo source is open and viewed by hundreds of developers everyday. Reported security vulnerabilities, bugs are rectified and continuously integrated.
+          </p>
+         </div>
+        </div>
+       </div>
+      </section>
+      <section>
+       <div class="l-fixed-content">
+        <h2 id="prototyping">
+         Prototyping
+        </h2>
+        <div class="chart">
+         <div class="x-axis">
+          Security
+         </div>
+         <div class="chart-grid">
+          <div class="c1-title">
+           JSONField
+          </div>
+          <div class="c1-content">
+           Represents documents with no structure, and no validations.
+          </div>
+          <div class="c2-title">
+           EmbeddedField
+          </div>
+          <div class="c2-content">
+           Used to describe the data structure that triggers automatic validations at the application level.
+          </div>
+          <div class="c3-title">
+           Settings.py
+          </div>
+          <div class="c3-content">
+           <p>
+            Set enforce_schema to True in settings.py to enable schema checks at the database level.
+           </p>
+          </div>
+         </div>
+         <div class="y-axis">
+          Lines of code
+         </div>
+         <div class="cta">
+          <p>
+           <a class="cta" href="/djongocs/create-account" id="start-prototyping">
+            Start prototyping
+           </a>
+          </p>
+         </div>
+        </div>
+       </div>
+      </section>
+      <section>
+       <div class="l-fixed-content">
+        <h2 id="queries">
+         Queries
+        </h2>
+        <div class="query">
+         <div>
+          <div class="language-python highlighter-rouge highlight codehilite">
+           <pre><span></span><code><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s1">'entry'</span><span class="p">]</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+  <span class="p">[{</span>
+    <span class="s1">'$match'</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s1">'author_id'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">'$ne'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s1">'$exists'</span><span class="p">:</span> <span class="kc">True</span>
+       <span class="p">}</span>
+     <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s1">'$lookup'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">'from'</span><span class="p">:</span> <span class="s1">'author'</span><span class="p">,</span>
+        <span class="s1">'localField'</span><span class="p">:</span> <span class="s1">'author_id'</span><span class="p">,</span>
+        <span class="s1">'foreignField'</span><span class="p">:</span> <span class="s1">'id'</span><span class="p">,</span>
+        <span class="s1">'as'</span><span class="p">:</span> <span class="s1">'author'</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s1">'$unwind'</span><span class="p">:</span> <span class="s1">'$author'</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s1">'$lookup'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">'from'</span><span class="p">:</span> <span class="s1">'blog'</span><span class="p">,</span>
+        <span class="s1">'localField'</span><span class="p">:</span> <span class="s1">'blog_id'</span><span class="p">,</span>
+        <span class="s1">'foreignField'</span><span class="p">:</span> <span class="s1">'id'</span><span class="p">,</span>
+        <span class="s1">'as'</span><span class="p">:</span> <span class="s1">'blog'</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s1">'$unwind'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">'path'</span><span class="p">:</span> <span class="s1">'$blog'</span><span class="p">,</span>
+        <span class="s1">'preserveNullAndEmptyArrays'</span><span class="p">:</span> <span class="kc">True</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s1">'$addFields'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">'blog'</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s1">'$ifNull'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'$blog'</span><span class="p">,</span> <span class="p">{</span>
+            <span class="s1">'id'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">'title'</span><span class="p">:</span> <span class="kc">None</span>
+          <span class="p">}]</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s1">'$match'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">'author.name'</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s1">'$eq'</span><span class="p">:</span> <span class="s1">'Paul'</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span> 
+    <span class="p">{</span>
+      <span class="s1">'$project'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">'id'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s1">'blog_id'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s1">'author_id'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s1">'content'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s1">'blog.id'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s1">'blog.title'</span><span class="p">:</span> <span class="kc">True</span>
+      <span class="p">}</span>
+    <span class="p">}]</span>
+</code></pre>
+          </div>
+         </div>
+         <div class="query-right-box">
+          <div class="query-djongo">
+           <div class="language-python highlighter-rouge highlight codehilite">
+            <pre><span></span><code><span class="n">qs</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">author__name</span><span class="o">=</span><span class="s1">'Paul'</span><span class="p">)</span><span class="o">.</span><span class="n">select_related</span><span class="p">(</span><span class="s1">'blog'</span><span class="p">)</span>
+</code></pre>
+           </div>
+          </div>
+          <div>
+           <div class="btn btn--primary btn--medium">
+            PyMongo
+           </div>
+          </div>
+          <div>
+           <div class="btn btn--primary btn--medium">
+            Djongo
+           </div>
+          </div>
+          <div>
+           <p>
+            Djongo generates complex, error free, aggregation queries automatically.
+           </p>
+           <p>
+            It takes the query on the top and
+            <strong>
+             automatically
+            </strong>
+            generates the pymongo query document as the output.
+           </p>
+          </div>
+         </div>
+        </div>
+       </div>
+      </section>
+      <section>
+       <div class="l-fixed-content">
+        <h2 id="security-and-integrity-checks">
+         Security and Integrity Checks
+        </h2>
+        <div class="language-python highlighter-rouge highlight code-left top-align codehilite">
+         <pre><span></span><code><span class="k">def</span> <span class="nf">script_injection</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+  <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">'&lt;script&gt;'</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s1">'Script injection in </span><span class="si">%(value)s</span><span class="s1">'</span><span class="p">),</span>
+                          <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">'value'</span><span class="p">:</span> <span class="n">value</span><span class="p">})</span>
+
+<span class="k">class</span> <span class="nc">Entry</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+  <span class="n">homepage</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">URLField</span><span class="p">(</span><span class="n">validators</span><span class="o">=</span><span class="p">[</span><span class="n">URLValidator</span><span class="p">,</span>
+                                         <span class="n">script_injection</span><span class="p">])</span>
+</code></pre>
+        </div>
+        <p>
+         Djongo performs
+         <strong>
+          checks on data fields
+         </strong>
+         before they are saved to the database.
+        </p>
+        <p>
+         Define
+         <strong>
+          custom validators
+         </strong>
+         or use builtin validators to check the data. Validation is triggered prior to writing to the database.
+        </p>
+        <p>
+         Running
+         <strong>
+          integrity checks
+         </strong>
+         and field value validators ensures protect from garbage data.
+        </p>
        </div>
       </section>
       <section>
@@ -340,7 +564,7 @@ Manage access keys, modify subscription plans, and request support using the das
              <img src="/assets/images/tick.svg">
             </div>
             <div>
-             Supports the latest version of Django, MongoDB.
+             Download the latest package from pypi.djongomapper.com
             </div>
             <div>
              <img src="/assets/images/tick.svg">
@@ -523,230 +747,6 @@ Manage access keys, modify subscription plans, and request support using the das
           </tr>
          </tbody>
         </table>
-       </div>
-      </section>
-      <section>
-       <div class="l-fixed-content">
-        <h2 id="built-for-enterprises">
-         Built for Enterprises
-        </h2>
-        <div class="l-grid l-tiles is-titled">
-         <div class="grid-3-row">
-          <img alt="First Access" src="/assets/images/rapid.svg">
-          <h1>
-           First Access
-          </h1>
-          <p>
-           Djongo packages released to enterprises are compatible with newer versions of Django and MongoDB.
-          </p>
-         </div>
-         <div class="grid-3-row">
-          <img alt="Support" src="/assets/images/support-new.svg">
-          <h1>
-           Support
-          </h1>
-          <p>
-           As an enterprise customer, your queries and change requests take top priority.
-          </p>
-         </div>
-         <div class="grid-3-row">
-          <img alt="Redistribute" src="/assets/images/security.svg">
-          <h1>
-           Secure
-          </h1>
-          <p>
-           Djongo source is open and viewed by hundreds of developers everyday. Reported security vulnerabilities, bugs are rectified and continuously integrated.
-          </p>
-         </div>
-        </div>
-       </div>
-      </section>
-      <section>
-       <div class="l-fixed-content">
-        <h2 id="queries">
-         Queries
-        </h2>
-        <div class="query">
-         <div>
-          <div class="language-python highlighter-rouge highlight codehilite">
-           <pre><span></span><code><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s1">'entry'</span><span class="p">]</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
-  <span class="p">[{</span>
-    <span class="s1">'$match'</span><span class="p">:</span> <span class="p">{</span>
-      <span class="s1">'author_id'</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">'$ne'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="s1">'$exists'</span><span class="p">:</span> <span class="kc">True</span>
-       <span class="p">}</span>
-     <span class="p">}</span>
-    <span class="p">},</span>
-    <span class="p">{</span>
-      <span class="s1">'$lookup'</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">'from'</span><span class="p">:</span> <span class="s1">'author'</span><span class="p">,</span>
-        <span class="s1">'localField'</span><span class="p">:</span> <span class="s1">'author_id'</span><span class="p">,</span>
-        <span class="s1">'foreignField'</span><span class="p">:</span> <span class="s1">'id'</span><span class="p">,</span>
-        <span class="s1">'as'</span><span class="p">:</span> <span class="s1">'author'</span>
-      <span class="p">}</span>
-    <span class="p">},</span>
-    <span class="p">{</span>
-      <span class="s1">'$unwind'</span><span class="p">:</span> <span class="s1">'$author'</span>
-    <span class="p">},</span>
-    <span class="p">{</span>
-      <span class="s1">'$lookup'</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">'from'</span><span class="p">:</span> <span class="s1">'blog'</span><span class="p">,</span>
-        <span class="s1">'localField'</span><span class="p">:</span> <span class="s1">'blog_id'</span><span class="p">,</span>
-        <span class="s1">'foreignField'</span><span class="p">:</span> <span class="s1">'id'</span><span class="p">,</span>
-        <span class="s1">'as'</span><span class="p">:</span> <span class="s1">'blog'</span>
-      <span class="p">}</span>
-    <span class="p">},</span>
-    <span class="p">{</span>
-      <span class="s1">'$unwind'</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">'path'</span><span class="p">:</span> <span class="s1">'$blog'</span><span class="p">,</span>
-        <span class="s1">'preserveNullAndEmptyArrays'</span><span class="p">:</span> <span class="kc">True</span>
-      <span class="p">}</span>
-    <span class="p">},</span>
-    <span class="p">{</span>
-      <span class="s1">'$addFields'</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">'blog'</span><span class="p">:</span> <span class="p">{</span>
-          <span class="s1">'$ifNull'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'$blog'</span><span class="p">,</span> <span class="p">{</span>
-            <span class="s1">'id'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="s1">'title'</span><span class="p">:</span> <span class="kc">None</span>
-          <span class="p">}]</span>
-        <span class="p">}</span>
-      <span class="p">}</span>
-    <span class="p">},</span>
-    <span class="p">{</span>
-      <span class="s1">'$match'</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">'author.name'</span><span class="p">:</span> <span class="p">{</span>
-          <span class="s1">'$eq'</span><span class="p">:</span> <span class="s1">'Paul'</span>
-        <span class="p">}</span>
-      <span class="p">}</span>
-    <span class="p">},</span> 
-    <span class="p">{</span>
-      <span class="s1">'$project'</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">'id'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="s1">'blog_id'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="s1">'author_id'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="s1">'content'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="s1">'blog.id'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="s1">'blog.title'</span><span class="p">:</span> <span class="kc">True</span>
-      <span class="p">}</span>
-    <span class="p">}]</span>
-</code></pre>
-          </div>
-         </div>
-         <div class="query-right-box">
-          <div class="query-djongo">
-           <div class="language-python highlighter-rouge highlight codehilite">
-            <pre><span></span><code><span class="n">qs</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">author__name</span><span class="o">=</span><span class="s1">'Paul'</span><span class="p">)</span><span class="o">.</span><span class="n">select_related</span><span class="p">(</span><span class="s1">'blog'</span><span class="p">)</span>
-</code></pre>
-           </div>
-          </div>
-          <div>
-           <div class="btn btn--primary btn--medium">
-            PyMongo
-           </div>
-          </div>
-          <div>
-           <div class="btn btn--primary btn--medium">
-            Djongo
-           </div>
-          </div>
-          <div>
-           <p>
-            Djongo generates complex, error free, aggregation queries automatically.
-           </p>
-           <p>
-            It takes the query on the top and
-            <strong>
-             automatically
-            </strong>
-            generates the pymongo query document as the output.
-           </p>
-          </div>
-         </div>
-        </div>
-       </div>
-      </section>
-      <section>
-       <div class="l-fixed-content">
-        <h2 id="prototyping">
-         Prototyping
-        </h2>
-        <div class="chart">
-         <div class="x-axis">
-          Security
-         </div>
-         <div class="chart-grid">
-          <div class="c1-title">
-           JSONField
-          </div>
-          <div class="c1-content">
-           Represents documents with no structure, and no validations.
-          </div>
-          <div class="c2-title">
-           EmbeddedField
-          </div>
-          <div class="c2-content">
-           Used to describe the data structure that triggers automatic validations at the application level.
-          </div>
-          <div class="c3-title">
-           Settings.py
-          </div>
-          <div class="c3-content">
-           <p>
-            Set enforce_schema to True in settings.py to enable schema checks at the database level.
-           </p>
-          </div>
-         </div>
-         <div class="y-axis">
-          Lines of code
-         </div>
-         <div class="cta">
-          <p>
-           <a class="cta" href="/djongocs/create-account" id="start-prototyping">
-            Start prototyping
-           </a>
-          </p>
-         </div>
-        </div>
-       </div>
-      </section>
-      <section>
-       <div class="l-fixed-content">
-        <h2 id="security-and-integrity-checks">
-         Security and Integrity Checks
-        </h2>
-        <div class="language-python highlighter-rouge highlight code-left top-align codehilite">
-         <pre><span></span><code><span class="k">def</span> <span class="nf">script_injection</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-  <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">'&lt;script&gt;'</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s1">'Script injection in </span><span class="si">%(value)s</span><span class="s1">'</span><span class="p">),</span>
-                          <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">'value'</span><span class="p">:</span> <span class="n">value</span><span class="p">})</span>
-
-<span class="k">class</span> <span class="nc">Entry</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
-  <span class="n">homepage</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">URLField</span><span class="p">(</span><span class="n">validators</span><span class="o">=</span><span class="p">[</span><span class="n">URLValidator</span><span class="p">,</span>
-                                         <span class="n">script_injection</span><span class="p">])</span>
-</code></pre>
-        </div>
-        <p>
-         Djongo performs
-         <strong>
-          checks on data fields
-         </strong>
-         before they are saved to the database.
-        </p>
-        <p>
-         Define
-         <strong>
-          custom validators
-         </strong>
-         or use builtin validators to check the data. Validation is triggered prior to writing to the database.
-        </p>
-        <p>
-         Running
-         <strong>
-          integrity checks
-         </strong>
-         and field value validators ensures protect from garbage data.
-        </p>
        </div>
       </section>
       <section>
