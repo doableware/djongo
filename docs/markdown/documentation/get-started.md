@@ -18,30 +18,34 @@ to your instance will appear in the dashboard. You can upload your app specific 
 
 ## Local Development
 
-### Setup
-For a local installation start with:
-1. `pip install djongo`
-2. Into `settings.py` file of your project, add:
+### Prerequisites
 
-      ```python
-      DATABASES = {
-          'default': {
-              'ENGINE': 'djongo',
-              'NAME': 'your-db-name',
-          }
+* You have a DjongoCS account.
+* Your access credentials have been successfully [setup](#generate-access-token).
+
+### Install
+
+* Start with: 
+
+```shell
+  pip install --extra-index-url https://pypi.djongomapper.com/latest-updates/ djongo
+```
+* Into `settings.py` file of your project, add:
+
+```python
+  DATABASES = {
+      'default': {
+          'ENGINE': 'djongo',
+          'NAME': 'your-db-name',
       }
-      ```
+  }
+```
 
-### Requirements
-1. Python 3.6 or higher.
-2. MongoDB 3.4 or higher.
-3. If your models use nested queries or sub querysets like:
-  
-      ```python
-      inner_query = Blog.objects.filter(name__contains='Ch').values('name')
-      entries = Entry.objects.filter(blog__name__in=inner_query)
-      ```
-   MongoDB 3.6 or higher is required.
+* Alternatively, you can install an older version directly from pypi:
+
+```shell
+  pip install djongo
+```
 
 ## MongoDB and Django
 
@@ -143,66 +147,6 @@ All options except `ENGINE` and `ENFORCE_SCHEMA` are the same those listed in th
         }
     }
 ```
-
-## DjongoCS
-
-Djongo Cloud Server is the fastest way to deploy to the cloud your djongo powered apps. The DjongoCS package and
-dependencies come preconfigured and installed on the [Cloud][support_page]. 
-
-### SSH
-On account creation you install your public SSH key at the [dashboard](/djongocs/dashboard/).
-This gives a secure shell access to the VM instance for uploading a 
-[Django App](https://docs.djangoproject.com/en/dev/intro/tutorial01/). Once the key is installed, 
-the dashboard displays the SSH port number over which you can connect to the VM instance. 
-
-Establish a secure shell connection using:
-
-```shell
-ssh <user>@api.djongomapper.com -p <port> 
-``` 
-
-The `user` is the same as the username used while creating the account.
-
-### Public API
-When you create an account on DjongoCS you get a unique URL path assigned to you. The Django views that you
-create for servicing your API can be accessed and extended further starting from the base URL:
-
-```shell
-https://api.djongomapper.com/<user> 
-``` 
-
-### Launching the App
-
-Establishing a SSH connection to your server logs you into the `/home/$USER` directory. The typical home directory
-structure looks like:
- 
-```shell
-~home
-| -- .ssh/
-| -- site/
-|   -- api/
-|     -- settings.py
-|     -- urls.py
-|   -- apps/
-|     -- app1/
-|       -- views.py
-|       -- models.py
-|     -- app2/
-|       -- views.py
-|       -- models.py
-```
-
-In your `urls.py` if you add an entry like `path('hello/', app1.views.hello)`, the URL path becomes
-`https://api.djongomapper.com/<user>/hello`
-
-#### Reload the Server
-After making changes to your app, you need to reload the server. This is done by clicking the reload button 
-in your [dashboard](/djongocs/dashboard/).
-
-{% comment %}
-### Installing dependencies
-
-{% endcomment %}
 
 ## Security and Integrity Checks
 Djongo allows for checks on data fields before they are saved to the database. Running the correct integrity checks and field value validators before writing data into the database is important. 
@@ -338,9 +282,85 @@ avatar = models.ImageField(storage=grid_fs_storage, upload_to='')
 
 Refer to [Using GridFSStorage](/using-django-with-mongodb-gridfs/) for more details.
 
+
+## DjongoCS
+
+Djongo Cloud Server is the fastest way to deploy to the cloud your djongo powered apps. The DjongoCS package and
+dependencies come preconfigured and installed on a Google Cloud Platform server. 
+
+### Generate access token
+
+Once logged into the [dashboard](/djongocs/dashboard/) click on _generate token_. This generates and installs a pass token
+needed for downloading the latest version of djongo for local development. 
+Copy and add the generated token into the `~/.netrc` file located in
+your home directory.
+
+
+```shell
+machine pypi.djongomapper.com
+login <djongocs username>
+password <generated token>
+```
+
+You can then install the latest version of djongo:
+
+```shell
+pip install --extra-index-url https://pypi.djongomapper.com/latest-updates/ djongo
+```
+
+Make sure to safely install and store the pass token. The pass token is not saved on the DjongoCS server locally.
+
+### SSH
+On account creation you install your public SSH key at the dashboard.
+This gives the SSH access to the VM instance for uploading a 
+[Django App](https://docs.djangoproject.com/en/dev/intro/tutorial01/). Once the key is installed, 
+the dashboard displays the SSH port number over which you can connect to the VM instance. 
+
+Establish a secure shell connection using:
+
+```shell
+ssh <username>@api.djongomapper.com -p <port> 
+``` 
+
+The `username` is the same as the username used while creating the DjongoCS account.
+
+
+When you create an account on DjongoCS you get a unique URL path assigned to you. The Django views that you
+create for servicing your API can be accessed
+and extended further starting from the base URL: `https://api.djongomapper.com/<username>`
+
+### Launching the App
+Establishing an SSH connection to your server logs you into the `/home/$USER` directory. The typical home directory
+structure looks like:
+ 
+```shell
+~home
+| -- .ssh/
+| -- site/
+|   -- api/
+|     -- settings.py
+|     -- urls.py
+|   -- apps/
+|     -- app1/
+|       -- views.py
+|       -- models.py
+|     -- app2/
+|       -- views.py
+|       -- models.py
+```
+
+In your `urls.py` if you add an entry like `path('hello/', app1.views.hello)`, the URL path becomes
+`https://api.djongomapper.com/<username>/hello`
+
+
+{% comment %}
+### Installing dependencies
+
+{% endcomment %}
+
 ## DjongoCS Features
 
-Features under development on DjongoCS are not a part of the standard Djongo package. Visit the [support page][support_page] for more information.
+Features under development on DjongoCS are not a part of the standard Djongo package. 
 {: .notice--info}
 
 DjongoCS supports multiple features of MongoDB including:
