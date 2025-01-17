@@ -1,7 +1,7 @@
 # main links
 main:
-  - title: "Create Account"
-    url: /djongocs/create-account/
+  - title: "Login"
+    url: /djongocs/login/
     id: 'nav-create-account'
   - title: "Contact Us"
     url: /djongocs/contact-us/
