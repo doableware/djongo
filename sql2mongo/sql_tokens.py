@@ -20,7 +20,7 @@ class SQLToken:
     @abc.abstractmethod
     def __init__(self,
                  token: Token,
-                 query: 'query_module.BaseQuery'):
+                 query: 'query_module.Query'):
         self._token = token
         self.query = query
 
@@ -28,8 +28,15 @@ class SQLToken:
         return str(self._token)
 
     @staticmethod
+    def to_sting(token: Token):
+        tok_str = str(token)
+        if tok_str.startswith('WHERE'):
+            return 'WHERE'
+        return tok_str
+
+    @staticmethod
     def tokens2sql(token: Token,
-                   query: 'query_module.BaseQuery'
+                   query: 'query_module.Query'
                    ) -> Iterator[all_token_types]:
         from .functions import SQLFunc
         if isinstance(token, Identifier):
@@ -59,7 +66,7 @@ class SQLToken:
 
     @staticmethod
     def token2sql(token: Token,
-                  query: 'query_module.BaseQuery'
+                  query: 'query_module.Query'
                   ) -> all_token_types:
         return next(SQLToken.tokens2sql(token, query))
 
@@ -208,7 +215,7 @@ class SQLPlaceholder(SQLToken):
         else:
             yield self.get_value(tok)
 
-    def __init__(self, token: Token, query: 'query_module.BaseQuery'):
+    def __init__(self, token: Token, query: 'query_module.Query'):
         super().__init__(token, query)
 
     def get_value(self, tok: Token):

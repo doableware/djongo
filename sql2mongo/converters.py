@@ -41,19 +41,15 @@ class ColumnSelectConverter(Converter):
         self.select_all = False
         self.num_columns = 0
 
-        self.sql_tokens: List[
-            U[SQLIdentifier, SQLFunc]
-        ] = []
+        self.sql_tokens: list[SQLIdentifier| SQLFunc]  = []
         super().__init__(query, statement)
 
     def parse(self):
         tok = self.statement.next()
-
-        if tok.match(tokens.Keyword, 'DISTINCT'):
-            self.query.stages[str(tok)] = self.query.stages[str(tok)](self.query, self.statement)
-        else:
-            for sql_token in SQLToken.tokens2sql(tok, self.query):
-                self.sql_tokens.append(sql_token)
+        for sql_token in SQLToken.tokens2sql(tok, self.query):
+            if isinstance(sql_token, (SQLFunc, SQLConstIdentifier)):
+                self.query.stages.needs_aggregation = True
+            self.sql_tokens.append(sql_token)
 
     def to_mongo(self):
         doc = [selected.column for selected in self.sql_tokens]

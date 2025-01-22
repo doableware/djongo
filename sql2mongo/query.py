@@ -193,7 +193,7 @@ class SelectQueryStage(dict):
 
 
     def values(self):
-        if not self.needs_column_selection:
+        if not self.needs_column_selection and not isinstance(self['SELECT'], type):
             self['SELECT'].__class__ = VoidSelectConverter
 
         for stage in super().values():
@@ -222,9 +222,10 @@ class SelectQueryStageGet:
         return None
 
 class SelectQuery(DQLQuery):
+    distinct = SelectQueryStageGet()
+    selected_columns = SelectQueryStageGet('SELECT')
 
     def __init__(self, *args):
-
         self._cursor: Optional[U[BasicCursor, CommandCursor]] = None
         self._result_generator = None
         self.stages = SelectQueryStage(**{
@@ -243,21 +244,26 @@ class SelectQuery(DQLQuery):
         })
         super().__init__(*args)
 
-    distinct = SelectQueryStageGet()
-    selected_columns = SelectQueryStageGet('SELECT')
-
+    def _parsed_statement(self):
+        statement = SQLStatement(self.statement)
+        for tok in statement:
+            if (SQLToken.to_sting(tok) == 'SELECT' and
+                    SQLToken.to_sting(statement.next_token) == 'DISTINCT'):
+                continue
+            yield tok
 
     def parse(self):
         statement = SQLStatement(self.statement)
 
         for tok in statement:
+            tok_str = SQLToken.to_sting(tok)
+            if (tok_str == 'SELECT' and
+                    SQLToken.to_sting(statement.next_token) == 'DISTINCT'):
+                continue
             try:
-                self.stages[str(tok)] = self.stages[str(tok)](self, statement)
+                self.stages[tok_str] = self.stages[tok_str](self, statement)
             except KeyError:
-                if isinstance(tok, Where):
-                    self.stages['WHERE'] = self.stages['WHERE'](self, statement)
-                else:
-                    raise SQLDecodeError(f'Unknown keyword: {tok}')
+                raise SQLDecodeError(f'Unknown keyword: {tok}')
 
     def __iter__(self):
         try:
@@ -285,7 +291,6 @@ class SelectQuery(DQLQuery):
 
         for doc in cursor:
             yield self._align_results(doc)
-        return
 
     def __next__(self):
         if self._result_generator is None:
@@ -305,12 +310,6 @@ class SelectQuery(DQLQuery):
             self._cursor = self._get_cursor()
         return len(list(self._cursor))
 
-    def _check_aggregation(self):
-        if any(isinstance(sql_token, (SQLFunc, SQLConstIdentifier))
-               for sql_token in self.selected_columns.sql_tokens):
-            self.stages.needs_aggregation = True
-
-
     def _make_pipeline(self):
         pipeline = []
         for stage in self.stages.values():
@@ -322,9 +321,7 @@ class SelectQuery(DQLQuery):
 
         return pipeline
 
-
     def _get_cursor(self):
-        self._check_aggregation()
         if self.stages.needs_aggregation:
             pipeline = self._make_pipeline()
             cur = self.db[self.left_table].aggregate(pipeline)
