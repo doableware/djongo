@@ -1124,6 +1124,36 @@ class TestQueryCount(ResultQuery):
         ans = [(1,)]
         self.eval_aggregate(pipeline, return_value, ans)
 
+    # TMiles - 2022.XI.18
+    # Test for the django 4.x foreign key lookups.
+    def test_parameterizedConst(self):
+        self.sql = 'SELECT %s AS "a" FROM "table1" WHERE "table1"."col2" = %s LIMIT 1'
+        self.params = [1,2]
+        pipeline = [
+            {
+                '$match': {
+                    'col2': {
+                        '$eq': 2
+                    }
+                }
+            },
+            {
+                '$limit': 1
+            },
+            {
+                '$project': {
+                    'a': {
+                        '$literal': 1
+                    }
+                }
+            },
+
+        ]
+        return_value = [{'a': 1}]
+        ans = [(1,)]
+        self.eval_aggregate(pipeline, return_value, ans)
+
+
 @skip
 class TestQueryUpdate(ResultQuery):
 
