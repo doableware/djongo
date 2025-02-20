@@ -109,7 +109,8 @@ class _InNotInOp(_BinaryOp):
         raise NotImplementedError
 
     def _to_mongo(self, op):
-        if not isinstance(self.query.stages['nested_query'], type):
+        if (isinstance(self.query, query.SelectQuery)
+            and not isinstance(self.query.stages['nested_query'], type)):
             return {
                 '$expr': {
                     op: ['$' + self._field, '$_nested_in']
