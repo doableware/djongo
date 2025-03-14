@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Sequence, Any
 
-djongo_access_url = 'https://nesdis.github.io/djongo/support/'
+djongo_access_url = 'https://www.djongomapper.com/djongocs/contact-us/'
 _printed_features = set()
 
 
