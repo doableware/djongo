@@ -195,7 +195,9 @@ class ModelField(MongoField):
             super().validate(value, model_instance)
             return
 
+        self.model_container._meta.abstract = False
         container_instance = self.model_container(**value)
+        self.model_container._meta.abstract = True
         self._value_thru_fields('validate', value, container_instance)
 
     def value_to_string(self, obj):
@@ -203,7 +205,9 @@ class ModelField(MongoField):
         if value is None:
             raise TypeError(f'Type: {type(value)} cannot be serialized')
 
+        self.model_container._meta.abstract = False
         container_obj = self.model_container(**value)
+        self.model_container._meta.abstract = True
         processed_value = self._obj_thru_fields('value_to_string', container_obj)
         return json.dumps(processed_value)
 
@@ -212,7 +216,9 @@ class ModelField(MongoField):
         if value is None:
             return None
 
+        self.model_container._meta.abstract = False
         container_obj = self.model_container(**value)
+        self.model_container._meta.abstract = True
         processed_value = self._obj_thru_fields('value_from_object', container_obj)
         return processed_value
 
