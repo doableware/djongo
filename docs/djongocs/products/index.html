@@ -42,7 +42,8 @@
   <script async src="/assets/js/cookie-consent.js">
   </script>
   <script>
-   (function (w, d, s, l, i) {
+   if (window.location.hostname != 'localhost'){
+  (function (w, d, s, l, i) {
   w[l] = w[l] || [];
   w[l].push({
     'gtm.start':
@@ -55,6 +56,7 @@
     'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
   f.parentNode.insertBefore(j, f);
 })(window, document, 'script', 'dataLayer', 'GTM-T72KG6N');
+  }
   </script>
  </head>
  <body class="layout--splash l-splash-full">
