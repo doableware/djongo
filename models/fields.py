@@ -177,11 +177,15 @@ class ModelField(MongoField):
             processed_value[field.attname] = getattr(field, func_name)(obj, *other_args)
         return processed_value
 
-    def _value_thru_container(self, value):
-        processed_value = {}
+    def _make_container(self, value):
         self.model_container._meta.abstract = False
         inst = self.model_container(**value)
         self.model_container._meta.abstract = True
+        return inst
+
+    def _value_thru_container(self, value):
+        processed_value = {}
+        inst = self._make_container(value)
 
         for field in self.model_container._meta.get_fields():
             processed_value[field.attname] = getattr(inst, field.attname)
@@ -195,9 +199,7 @@ class ModelField(MongoField):
             super().validate(value, model_instance)
             return
 
-        self.model_container._meta.abstract = False
-        container_instance = self.model_container(**value)
-        self.model_container._meta.abstract = True
+        container_instance = self._make_container(value)
         self._value_thru_fields('validate', value, container_instance)
 
     def value_to_string(self, obj):
@@ -205,9 +207,7 @@ class ModelField(MongoField):
         if value is None:
             raise TypeError(f'Type: {type(value)} cannot be serialized')
 
-        self.model_container._meta.abstract = False
-        container_obj = self.model_container(**value)
-        self.model_container._meta.abstract = True
+        container_obj = self._make_container(value)
         processed_value = self._obj_thru_fields('value_to_string', container_obj)
         return json.dumps(processed_value)
 
@@ -216,9 +216,7 @@ class ModelField(MongoField):
         if value is None:
             return None
 
-        self.model_container._meta.abstract = False
-        container_obj = self.model_container(**value)
-        self.model_container._meta.abstract = True
+        container_obj = self._make_container(value)
         processed_value = self._obj_thru_fields('value_from_object', container_obj)
         return processed_value
 
@@ -360,7 +358,7 @@ class ArrayField(FormedField):
         value = self.value_from_object(obj)
         processed_value = []
         for _dict in value:
-            container_obj = self.model_container(**_dict)
+            container_obj = self._make_container(_dict)
             post_dict = self._obj_thru_fields('value_to_string', container_obj)
             processed_value.append(post_dict)
         return json.dumps(processed_value)
@@ -369,7 +367,7 @@ class ArrayField(FormedField):
         value = getattr(obj, self.attname)
         processed_value = []
         for _dict in value:
-            container_obj = self.model_container(**_dict)
+            container_obj = self._make_container(_dict)
             post_dict = self._obj_thru_fields('value_from_object', container_obj)
             processed_value.append(post_dict)
         return processed_value

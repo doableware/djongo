@@ -102,6 +102,10 @@ class Query:
         return
 
     @staticmethod
+    def _clean_sql(sql: str):
+        return sql.removesuffix('()')
+
+    @staticmethod
     def execute(client_connection: MongoClient,
                 db_connection: Database,
                 connection_properties: 'base.DjongoClient',
@@ -118,6 +122,7 @@ class Query:
             f'params: {params}'
         )
         count = itertools.count()
+        # sql = Query._clean_sql(sql)
         sql = re.sub(r'%s', lambda _: f'%({next(count)})s', sql)
         statement = sqlparse(sql)
 
@@ -135,15 +140,15 @@ class Query:
                                         params)
         except KeyError:
             logger.debug(f'Not implemented "{sm_type}" of "{statement}"')
-            raise exe
+            raise exe from None
 
         except MigrationError:
             raise
 
         except SQLDecodeError as e:
-            e.err_sql = sql,
-            e.params = params,
-            e.version = djongo.__version__
+            e.err_sql = exe.err_sql,
+            e.params = exe.params,
+            e.version = exe.version
             raise e
 
         except Exception as e:
@@ -603,6 +608,12 @@ class AlterQuery(DDLQuery):
             else:
                 raise SQLDecodeError
 
+    @staticmethod
+    def _field_transform(field: str):
+        if field.startswith('LOWER'):
+            return field.strip('LOWER(")').lower()
+        return field
+
     def _drop_index(self):
         self.db[self.left_table].drop_index(self._iden_name)
 
@@ -644,10 +655,11 @@ class AlterQuery(DDLQuery):
                 self._iden_name = tok.get_real_name()
 
             elif isinstance(tok, Parenthesis):
-                self.field_dir = [
-                    (field.strip(' "'), 1)
-                    for field in tok.value.strip('()').split(',')
-                ]
+                if tok.value != '()':
+                    self.field_dir = [
+                        (self._field_transform(field.strip(' "')), 1)
+                        for field in tok.value.strip('()').split(',')
+                    ]
 
             elif tok.match(tokens.Keyword, 'DEFAULT'):
                 tok = statement.next()
