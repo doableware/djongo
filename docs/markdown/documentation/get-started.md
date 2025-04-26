@@ -6,26 +6,9 @@ Setting up the mapping documents to python objects is easy with Djongo."
 layout: docs
 ---
 
-## Deploy
+## Install
 
-1. Start by [creating an account](/djongocs/create-account/). You will be assigned
-a working webserver instance running Django and MongoDB.
-2. (Optional) Test your instance by entering `https://api.djongomapper.com/<username>/` in your browser.
-The username is what was used while creating the account.
-3. Login to your [dashboard](/djongocs/dashboard/) and upload your Public SSH key. The command to open a shell
-to your instance will appear in the dashboard. You can upload your app specific Django scripts to the server.
-
-
-## Local Development
-
-### Prerequisites
-
-* You have a DjongoCS account.
-* Your access credentials have been successfully [setup](#generate-access-token).
-
-### Install
-
-* Start with: 
+* Install the latest version of djongo from: 
 
 ```shell
   pip install --extra-index-url https://pypi.djongomapper.com/latest-updates/ djongo
@@ -41,13 +24,18 @@ to your instance will appear in the dashboard. You can upload your app specific 
   }
 ```
 
+### Prerequisites
+
+* You have a DjongoCS account.
+* Your access credentials have been successfully [setup](#generate-access-token).
 * Alternatively, you can install an older version directly from pypi:
 
 ```shell
   pip install djongo
 ```
 
-## MongoDB and Django
+
+## Fields
 
 ### EmbeddedField
  Nest a `dict` inside a model with the `EmbeddedField`. The `model_container` is used to describe the structure of the 
@@ -287,6 +275,14 @@ Refer to [Using GridFSStorage](/using-django-with-mongodb-gridfs/) for more deta
 
 Djongo Cloud Server is the fastest way to deploy to the cloud your djongo powered apps. The DjongoCS package and
 dependencies come preconfigured and installed on a Google Cloud Platform server. 
+
+1. Start by [creating an account](/djongocs/create-account/). You will be assigned
+a working webserver instance running Django and MongoDB.
+2. (Optional) Test your instance by entering `https://api.djongomapper.com/<username>/` in your browser.
+The username is what was used while creating the account.
+3. Login to your [dashboard](/djongocs/dashboard/) and upload your Public SSH key. The command to open a shell
+to your instance will appear in the dashboard. You can upload your app specific Django scripts to the server.
+
 
 ### Generate access token
 
