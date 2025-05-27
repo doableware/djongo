@@ -9,10 +9,10 @@ main:
   - title: "Services"
     url: /app-development/
   - title: "Products"
-    url: /djongocs/products/
+    url: /products/
     id: 'nav-login'
   - title: "Docs"
-    url: /get-started/
+    url: /docs/get-started/
     id: 'nav-docs'
 
 #  - title: "Source"
@@ -31,7 +31,7 @@ docs:
       url: /using-django-with-mongodb-array-field/
     - title: "Array Reference Field"
       url: /using-django-with-mongodb-array-reference-field/
-    - title: "Other fields"
+    - title: "Other Fields"
       url: /using-django-with-other-fields/
 
   - title: "DjongoCS"
@@ -52,7 +52,7 @@ docs:
 #    - title: "Contact"
 #      url: /djongonxt-more-info/
 
-  - title: "Side stuff"
+  - title: "Side Stuff"
     children:
     - title: "Djongo vs Others"
       url: /djongo-comparison/
