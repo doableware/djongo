@@ -1,0 +1,205 @@
+<!DOCTYPE html><html lang="en" class="no-js" data-beasties-container><head>
+<meta charset="UTF-8">
+<title>Using Djongo Array Model Field</title>
+<meta name="description" content="Djongo is a smarter approach to database querying. It maps python objects to MongoDB documents. It is popularly referred to as an Object Document Mapper or ODM. It is an extension to the traditional Django object relational modeling framework. Use Django Admin to directly add and modify documents stored in MongoDB. Use other contrib modules such as Auth and Sessions without any changes.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Djongomapper">
+<meta property="og:title" content="Djongo">
+<meta property="og:url" content="https://www.djongomapper.com/">
+<meta property="og:description" content="Djongo is a smarter approach to database querying. It maps python objects to MongoDB documents. It is popularly referred to as an Object Document Mapper or ODM. It is an extension to the traditional Django object relational modeling framework. Use Django Admin to directly add and modify documents stored in MongoDB. Use other contrib modules such as Auth and Sessions without any changes.">
+<link rel="canonical" href="https://www.djongomapper.com/">
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+
+      "@type": "Organization",
+      "name": "Doableware",
+      "url": "https://www.djongomapper.com/",
+      "logo": "/assets/images/djongo-symbol-small.png"
+  }
+</script>
+<meta name="google-site-verification" content="tFNu7Nc9hzKF9v7f6kYaoMbBCNyGREchcKMVdxJuyJo">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css">
+</noscript>
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/custom.css">
+<link rel="shortcut icon" href="/assets/images/favicon.ico">
+<script async src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script async src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+<!--<script async src="/assets/js/cookie-consent.js"></script>-->
+
+<script>
+  if (window.location.hostname != 'localhost'){
+  (function (w, d, s, l, i) {
+  w[l] = w[l] || [];
+  w[l].push({
+    'gtm.start':
+      new Date().getTime(), event: 'gtm.js'
+  });
+  var f = d.getElementsByTagName(s)[0],
+    j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+  j.async = true;
+  j.src =
+    'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+  f.parentNode.insertBefore(j, f);
+})(window, document, 'script', 'dataLayer', 'GTM-T72KG6N');
+  }
+</script>
+
+  <base href="/">
+  <style>html{scroll-behavior:smooth}
+</style><link rel="stylesheet" href="styles-TPMX36DN.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="styles-TPMX36DN.css"></noscript><style ng-app-id="ng">.body[_ngcontent-ng-c4210415865]{display:grid;grid-template-columns:minmax(min-content,calc(300px - 1rem)) minmax(600px,1280px) minmax(min-content,calc(300px - 1rem));grid-template-rows:calc(100vh - 3rem) auto;justify-content:center;gap:1rem;padding-left:1rem;padding-right:1rem}.body[_ngcontent-ng-c4210415865] > div[_ngcontent-ng-c4210415865]{grid-row:1/-1}.body[_ngcontent-ng-c4210415865] > aside[_ngcontent-ng-c4210415865]{grid-row:1}.nav[_ngcontent-ng-c4210415865]{padding-top:1rem;padding-bottom:1rem;font-size:.7rem}.nav-sticky[_ngcontent-ng-c4210415865]{position:sticky;top:3rem;overflow:auto}.nav-side[_ngcontent-ng-c4210415865]   h3[_ngcontent-ng-c4210415865]{font-size:.7rem;opacity:.7;text-transform:uppercase;border-bottom:1px solid #f2f3f3;margin:.5rem 0;padding:.25rem 0}.nav-side[_ngcontent-ng-c4210415865]   a[_ngcontent-ng-c4210415865]{color:inherit;opacity:.7}.nav-side[_ngcontent-ng-c4210415865]   .active[_ngcontent-ng-c4210415865]{font-weight:700;opacity:1}.nav-side[_ngcontent-ng-c4210415865]   a[_ngcontent-ng-c4210415865]:hover{opacity:1}.nav-toc[_ngcontent-ng-c4210415865]   h3[_ngcontent-ng-c4210415865]{font-size:.75rem;font-weight:700;color:#fff;background:#6f777d;border-top-left-radius:4px;border-top-right-radius:4px;padding:.5rem .75rem;margin:0}.nav-toc[_ngcontent-ng-c4210415865]   a[_ngcontent-ng-c4210415865]{display:block;padding:.25rem .75rem;color:#646769;font-weight:700;line-height:1.5;border-bottom:1px solid #f2f3f3;border-left:1px solid #f2f3f3;border-right:1px solid #f2f3f3}.nav-toc[_ngcontent-ng-c4210415865]   a[_ngcontent-ng-c4210415865]:hover{text-decoration:underline}.nav-toc[_ngcontent-ng-c4210415865]   li[_ngcontent-ng-c4210415865]   li[_ngcontent-ng-c4210415865] > a[_ngcontent-ng-c4210415865]{font-weight:400;padding-left:1rem}.nav-toc[_ngcontent-ng-c4210415865]   .active[_ngcontent-ng-c4210415865]{background-color:#e2e4e5}.sidebar[_ngcontent-ng-c4210415865]{opacity:1}.sidebar[_ngcontent-ng-c4210415865]   li[_ngcontent-ng-c4210415865]{font-size:.7rem}.page__content[_ngcontent-ng-c4210415865]{margin-top:1em}</style></head>
+  <body><!--nghm--><script type="text/javascript" id="ng-event-dispatch-contract">(()=>{function p(t,n,r,o,e,i,f,m){return{eventType:t,event:n,targetElement:r,eic:o,timeStamp:e,eia:i,eirp:f,eiack:m}}function u(t){let n=[],r=e=>{n.push(e)};return{c:t,q:n,et:[],etc:[],d:r,h:e=>{r(p(e.type,e,e.target,t,Date.now()))}}}function s(t,n,r){for(let o=0;o<n.length;o++){let e=n[o];(r?t.etc:t.et).push(e),t.c.addEventListener(e,t.h,r)}}function c(t,n,r,o,e=window){let i=u(t);e._ejsas||(e._ejsas={}),e._ejsas[n]=i,s(i,r),s(i,o,!0)}window.__jsaction_bootstrap=c;})();
+</script><script>window.__jsaction_bootstrap(document.body,"ng",["click"],[]);</script>
+  <app-root ng-version="19.2.0" ngh="2" ng-server-context="ssg"><router-outlet></router-outlet><ng-component _nghost-ng-c4210415865 ngh="1"><app-body _ngcontent-ng-c4210415865 ngh="0"><div class="layout--splash"><nav class="skip-links"><ul><li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li><li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li><li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li></ul></nav><div class="masthead"><div class="masthead__inner-wrap"><div class="masthead__menu"><nav id="site-nav" class="greedy-nav"><a href="/" class="site-logo"><img src="/assets/images/djongo-symbol-small.png" alt="Djongo"></a><a href="/" class="site-title"> Djongo </a><ul class="visible-links"><li class="masthead__menu-item"><a href="/djongocs/login/">Login</a></li><li class="masthead__menu-item"><a href="/djongocs/contact-us/">Contact Us</a></li><li class="masthead__menu-item"><a href="/app-development/">Services</a></li><li class="masthead__menu-item"><a href="/products/">Products</a></li><li class="masthead__menu-item"><a href="/docs/get-started/">Docs</a></li></ul><button type="button" class="greedy-nav__toggle hidden"><span class="visually-hidden">Toggle Menu</span><div class="navicon"></div></button><ul class="hidden-links hidden"></ul></nav></div></div></div><div class="initial-content"><div _ngcontent-ng-c4210415865 class="body"><aside _ngcontent-ng-c4210415865 class="nav-sticky"><nav _ngcontent-ng-c4210415865 class="nav nav-side"><ul _ngcontent-ng-c4210415865><li _ngcontent-ng-c4210415865><h3 _ngcontent-ng-c4210415865>Djongo</h3><ul _ngcontent-ng-c4210415865><li _ngcontent-ng-c4210415865><a _ngcontent-ng-c4210415865 routerlinkactive="active" href="/docs/get-started" class jsaction="click:;"> Get Started </a></li><li _ngcontent-ng-c4210415865><a _ngcontent-ng-c4210415865 routerlinkactive="active" href="/docs/integrating-django-with-mongodb" class jsaction="click:;"> Django with MongoDB </a></li><li _ngcontent-ng-c4210415865><a _ngcontent-ng-c4210415865 routerlinkactive="active" href="/docs/using-django-with-mongodb-data-fields" class jsaction="click:;"> Embedded Field </a></li><li _ngcontent-ng-c4210415865><a _ngcontent-ng-c4210415865 routerlinkactive="active" href="/docs/using-django-with-mongodb-array-field" class="active" jsaction="click:;"> Array Field </a></li><li _ngcontent-ng-c4210415865><a _ngcontent-ng-c4210415865 routerlinkactive="active" href="/docs/using-django-with-mongodb-array-reference-field" class jsaction="click:;"> Array Reference Field </a></li><li _ngcontent-ng-c4210415865><a _ngcontent-ng-c4210415865 routerlinkactive="active" href="/docs/using-django-with-other-fields" class jsaction="click:;"> Other Fields </a></li><!----></ul></li><li _ngcontent-ng-c4210415865><h3 _ngcontent-ng-c4210415865>DjongoCS</h3><ul _ngcontent-ng-c4210415865><li _ngcontent-ng-c4210415865><a _ngcontent-ng-c4210415865 routerlinkactive="active" href="/docs/indexes" class jsaction="click:;"> Indexes </a></li><li _ngcontent-ng-c4210415865><a _ngcontent-ng-c4210415865 routerlinkactive="active" href="/docs/model-query" class jsaction="click:;"> Model Query </a></li><li _ngcontent-ng-c4210415865><a _ngcontent-ng-c4210415865 routerlinkactive="active" href="/docs/model-creation" class jsaction="click:;"> Model Creation </a></li><li _ngcontent-ng-c4210415865><a _ngcontent-ng-c4210415865 routerlinkactive="active" href="/docs/model-update" class jsaction="click:;"> Model Update </a></li><li _ngcontent-ng-c4210415865><a _ngcontent-ng-c4210415865 routerlinkactive="active" href="/docs/database-transactions" class jsaction="click:;"> Database Transactions </a></li><!----></ul></li><li _ngcontent-ng-c4210415865><h3 _ngcontent-ng-c4210415865>Side Stuff</h3><ul _ngcontent-ng-c4210415865><li _ngcontent-ng-c4210415865><a _ngcontent-ng-c4210415865 routerlinkactive="active" href="/docs/djongo-comparison" class jsaction="click:;"> Djongo vs Others </a></li><li _ngcontent-ng-c4210415865><a _ngcontent-ng-c4210415865 routerlinkactive="active" href="/docs/django-mongodb-connector-design-document" class jsaction="click:;"> Djongo Design </a></li><!----></ul></li><!----></ul></nav></aside><div _ngcontent-ng-c4210415865 class="page__content"><header _ngcontent-ng-c4210415865><h1 _ngcontent-ng-c4210415865 class="page__title">Using Djongo Array Model Field</h1></header><router-outlet _ngcontent-ng-c4210415865></router-outlet><ng-component ngh="0"><h2 id="arrayfield">ArrayField</h2><p>With Djongo there can be an <a href="https://docs.mongodb.com/manual/core/document/#arrays">array</a> of embedded documents inside the parent document. You can create an <strong>embed array/list of models inside the parent model</strong> and store it directly into MongoDB.</p><div class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">ArrayField</span><span class="p">(</span><span class="n">MongoField</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">model_container</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Type</span><span class="p">[</span><span class="n">Model</span><span class="p">],</span>
+                 <span class="n">model_form_class</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Type</span><span class="p">[</span><span class="n">forms</span><span class="o">.</span><span class="n">ModelForm</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">model_form_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</code></pre></div><h3 id="arguments">Arguments</h3><table><thead><tr><th>Argument</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>model_container</code></td><td><code>models.Model</code></td><td>The child model class type (not the instance) that this array field will contain.</td></tr><tr><td><code>model_form_class</code></td><td><code>models.forms.ModelForm</code></td><td>The child model form class type of the array model. All child models inside the array must be of the same type. Mixing different types of child models inside the embedded array is not supported.</td></tr><tr><td><code>model_form_kwargs</code></td><td><code>dict()</code></td><td>The kwargs (if any) that must be passed to the <code>forms.ModelForm</code> while instantiating it.</td></tr></tbody></table><h3 id="example">Example</h3><div class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">djongo</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">forms</span>
+
+<span class="k">class</span> <span class="nc">Blog</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">tagline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="k">class</span> <span class="nc">BlogForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">ModelForm</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">Blog</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'tagline'</span>
+        <span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Author</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+    <span class="n">email</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmailField</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="k">class</span> <span class="nc">AuthorForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">ModelForm</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">Author</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'email'</span>
+        <span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Entry</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">blog</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmbeddedField</span><span class="p">(</span>
+        <span class="n">model_container</span><span class="o">=</span><span class="n">Blog</span><span class="p">,</span>
+        <span class="n">model_form_class</span><span class="o">=</span><span class="n">BlogForm</span>
+    <span class="p">)</span>
+
+    <span class="n">headline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>    
+    <span class="n">authors</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ArrayField</span><span class="p">(</span>
+        <span class="n">model_container</span><span class="o">=</span><span class="n">Author</span><span class="p">,</span>
+        <span class="n">model_form_class</span><span class="o">=</span><span class="n">AuthorForm</span>
+    <span class="p">)</span>
+
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DjongoManager</span><span class="p">()</span>
+</code></pre></div><h3 id="creating-array-fields">Creating Array fields</h3><p>A Model with an Array field can be created as follows:</p><div class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="n">entry</span> <span class="o">=</span> <span class="n">Entry</span><span class="p">()</span>
+<span class="n">entry</span><span class="o">.</span><span class="n">authors</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'John'</span><span class="p">,</span> <span class="s1">'email'</span><span class="p">:</span> <span class="s1">'john@mail.com'</span><span class="p">},</span>
+                <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'Paul'</span><span class="p">,</span> <span class="s1">'email'</span><span class="p">:</span> <span class="s1">'paul@mail.com'</span><span class="p">}]</span>
+<span class="n">entry</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</code></pre></div><h3 id="querying-array-fields">Querying Array fields</h3><p>Djongo uses a mixture of Django query syntax and MongoDB query syntax. Consider a query to retrieve all entries made by the author <em>Paul</em>. Using <code>ManyToManyField</code> this requires 2 SQL queries. First selects the <code>id</code> for author Paul from the <code>author</code> table. Next, a JOIN with <code>entry_authors</code> and <code>entry</code> gives the corresponding entries. </p><p>With <code>ArrayField</code> the query reduces to a single simple query: </p><div class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="n">entries</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">authors</span><span class="o">=</span><span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'Paul'</span><span class="p">})</span>
+</code></pre></div><p>Djongo lets you get even more specific with your queries. To query all entries where the <em>third author is Paul</em>:</p><div class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="n">entries</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">authors</span><span class="o">=</span><span class="p">{</span><span class="s1">'2.name'</span><span class="p">:</span> <span class="s1">'Paul'</span><span class="p">})</span>
+</code></pre></div><p>Note: In MongoDB the first element in the array starts at index 0.</p><h2 id="using-arrayfield-in-django-admin">Using ArrayField in Django Admin</h2><p>The official <a href="https://docs.djangoproject.com/en/2.0/topics/db/queries/">Django documentation</a> exemplifies 3 models that interact with each other: <strong>Blog, Author and Entry</strong>. This tutorial considers the same 3 models. The <code>blog</code>; <code>ForeignKey</code> of the <code>Entry</code> model was optimized in the <a href="/using-django-with-mongodb-data-fields/">other tutorial</a>, here we optimize the <code>authors</code>; <code>ManyToManyField</code>.</p><div class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">djongo</span> <span class="kn">import</span> <span class="n">models</span>
+
+<span class="k">class</span> <span class="nc">Blog</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">tagline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+<span class="k">class</span> <span class="nc">Author</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+    <span class="n">email</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmailField</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+<span class="k">class</span> <span class="nc">Entry</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">blog</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">Blog</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">)</span>
+    <span class="n">headline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+    <span class="n">body_text</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+    <span class="n">pub_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">()</span>
+    <span class="n">mod_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">()</span>
+    <span class="n">authors</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">Author</span><span class="p">)</span>
+    <span class="n">n_comments</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+    <span class="n">n_pingbacks</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+    <span class="n">rating</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">headline</span>
+</code></pre></div><p>A <code>ManyToManyField</code> defines a relation wherein <em>an entry is made by several authors</em>. It also defines a relation wherein <em>an author could have made several entries</em>. Django handles this internally by <strong>creating another table</strong>, the <code>entry_authors</code> table which contains different mappings between <code>entry_id</code> and <code>author_id</code>.</p><p>Fetching an entry will require 2 SQL queries. The second query will be an expensive JOIN query across <code>entry_authors</code> and <code>authors</code>. The Model described above will work perfectly well on MongoDB as well, when you use Djongo as the connector. MongoDB however offers much more powerful ways to make such queries. These queries come at the cost of higher disk space utilization.</p><p>As a designer using Djongo, you have the freedom to continue with the above schema. Alternatively, you can define a schema having a trade off on disk space for higher performance.</p><p>Let us redefine the <code>authors</code> in the <code>Entry</code> models using the <code>ArrayField</code>:</p><div class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">djongo</span> <span class="kn">import</span> <span class="n">models</span>
+
+<span class="k">class</span> <span class="nc">Blog</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">tagline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="k">class</span> <span class="nc">MetaData</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">pub_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">()</span>
+    <span class="n">mod_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">()</span>
+    <span class="n">n_pingbacks</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+    <span class="n">rating</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="k">class</span> <span class="nc">Author</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+    <span class="n">email</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmailField</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+<span class="k">class</span> <span class="nc">Entry</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">blog</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmbeddedField</span><span class="p">(</span>
+        <span class="n">model_container</span><span class="o">=</span><span class="n">Blog</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">meta_data</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmbeddedField</span><span class="p">(</span>
+        <span class="n">model_container</span><span class="o">=</span><span class="n">MetaData</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">headline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+    <span class="n">body_text</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+
+    <span class="n">authors</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ArrayField</span><span class="p">(</span>
+        <span class="n">model_container</span><span class="o">=</span><span class="n">Author</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">n_comments</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">headline</span>
+</code></pre></div><p><strong>Notice</strong> how the <code>ManyToManyField</code> is now replaced by the <code>ArrayField</code>. To display the Array field in Django Admin, a <code>Form</code> for the field must be present. Since the array is made up of abstract <code>Author</code> models, the form can be easily created by using a <code>ModelForm</code>. If you do not specify a <code>ModelForm</code> for your array models in the <code>model_form_class</code> argument, Djongo will automatically generate a <code>ModelForm</code> for you.</p><p><img alt="Array-model-field" src="/assets/images/array-model-field.png"></p><blockquote><p>Django Admin reveals multiple neatly nested <code>Name</code> and <code>Email</code> fields under a single Author label.</p></blockquote><p>Retrieving an entry from the database will result in <strong>no JOINS and only a single database lookup. It is super fast</strong></p></ng-component><!----></div><aside _ngcontent-ng-c4210415865 class="nav-sticky"><nav _ngcontent-ng-c4210415865 class="nav nav-toc"><h3 _ngcontent-ng-c4210415865><i _ngcontent-ng-c4210415865 class="fas fa-file-alt"></i> On This Page</h3><ul _ngcontent-ng-c4210415865><!----></ul></nav></aside></div></div><div id="footer" class="page__footer"><footer><aside class="l-fixed-notice cookie-notice"><p>We use cookies to enhance user experience. You consent to their usage by browsing this site. <button id="cookie-accept" class="btn btn--success" jsaction="click:;">Accept</button></p></aside><div class="page__footer-copyright">© 2025 Doableware AB.</div></footer></div></div></app-body></ng-component><!----></app-root>
+<!--<script src="/assets/js/main.min.js"></script>-->
+<script>
+  window.ga = function () {
+    ga.q.push(arguments)
+  };
+  ga.q = [];
+  ga.l = +new Date;
+  ga('create', 'UA-75159067-1', 'auto');
+  ga('set', 'anonymizeIp', false);
+  ga('send', 'pageview')
+</script>
+<script src="https://www.google-analytics.com/analytics.js" async></script>  <link rel="modulepreload" href="chunk-27PYSS5C.js"><script src="polyfills-EONH2QZO.js" type="module"></script><script src="main-6KJRTQAE.js" type="module"></script>
+<script id="ng-state" type="application/json">{"__nghData__":[{},{"n":{"1":"0f2n2f"},"t":{"6":"t20","20":"t22"},"c":{"6":[{"i":"t20","r":1,"t":{"5":"t21"},"c":{"5":[{"i":"t21","r":1,"x":6}]}},{"i":"t20","r":1,"t":{"5":"t21"},"c":{"5":[{"i":"t21","r":1,"x":5}]}},{"i":"t20","r":1,"t":{"5":"t21"},"c":{"5":[{"i":"t21","r":1,"x":2}]}}],"12":[{"i":"c1439473956","r":1}],"20":[]}},{"c":{"0":[{"i":"c4210415865","r":1}]}}]}</script></body></html>
