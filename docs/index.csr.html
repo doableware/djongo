@@ -1,64 +1,63 @@
 <!DOCTYPE html>
 <html lang="en" class="no-js" data-beasties-container="">
-  <head>
-<meta charset="UTF-8">
-<title>Djongo - MongoDB Django Connector</title>
-<meta name="description" content="Djongo is a smarter approach to database querying. It maps python objects to MongoDB documents. It is popularly referred to as an Object Document Mapper or ODM. It is an extension to the traditional Django object relational modeling framework. Use Django Admin to directly add and modify documents stored in MongoDB. Use other contrib modules such as Auth and Sessions without any changes.">
-<meta property="og:type" content="website">
-<meta property="og:locale" content="en_US">
-<meta property="og:site_name" content="Djongomapper">
-<meta property="og:title" content="Djongo">
-<meta property="og:url" content="https://www.djongomapper.com/">
-<meta property="og:description" content="Djongo is a smarter approach to database querying. It maps python objects to MongoDB documents. It is popularly referred to as an Object Document Mapper or ODM. It is an extension to the traditional Django object relational modeling framework. Use Django Admin to directly add and modify documents stored in MongoDB. Use other contrib modules such as Auth and Sessions without any changes.">
-<link rel="canonical" href="https://www.djongomapper.com/">
-<script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-
+<head>
+  <meta charset="UTF-8">
+  <title>Djongo - MongoDB Django Connector</title>
+  <meta name="description" content="Djongo is a smarter approach to database querying. It maps python objects to MongoDB documents. It is popularly referred to as an Object Document Mapper or ODM. It is an extension to the traditional Django object relational modeling framework. Use Django Admin to directly add and modify documents stored in MongoDB. Use other contrib modules such as Auth and Sessions without any changes.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:site_name" content="Djongomapper">
+  <meta property="og:title" content="Djongo">
+  <meta property="og:url" content="https://www.djongomapper.com/">
+  <meta property="og:description" content="Djongo is a smarter approach to database querying. It maps python objects to MongoDB documents. It is popularly referred to as an Object Document Mapper or ODM. It is an extension to the traditional Django object relational modeling framework. Use Django Admin to directly add and modify documents stored in MongoDB. Use other contrib modules such as Auth and Sessions without any changes.">
+  <link rel="canonical" href="https://www.djongomapper.com/">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
       "@type": "Organization",
       "name": "Doableware",
       "url": "https://www.djongomapper.com/",
       "logo": "/assets/images/djongo-symbol-small.png"
-  }
-</script>
-<meta name="google-site-verification" content="tFNu7Nc9hzKF9v7f6kYaoMbBCNyGREchcKMVdxJuyJo">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script>
-  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
-</script>
-<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css">
-</noscript>
-<link rel="stylesheet" href="/assets/css/main.css">
-<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/custom.css">
-<link rel="shortcut icon" href="/assets/images/favicon.ico">
-<script async="" src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script async="" src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
-<!--<script async src="/assets/js/cookie-consent.js"></script>-->
+    }
+  </script>
+  <meta name="google-site-verification" content="tFNu7Nc9hzKF9v7f6kYaoMbBCNyGREchcKMVdxJuyJo">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  </script>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css">
+  </noscript>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="stylesheet" type="text/css" media="screen" href="/assets/css/custom.css">
+  <link rel="shortcut icon" href="/assets/images/favicon.ico">
+  <script async="" src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script async="" src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+  <!--<script async src="/assets/js/cookie-consent.js"></script>-->
 
-<script>
-  if (window.location.hostname != 'localhost'){
-  (function (w, d, s, l, i) {
-  w[l] = w[l] || [];
-  w[l].push({
-    'gtm.start':
-      new Date().getTime(), event: 'gtm.js'
-  });
-  var f = d.getElementsByTagName(s)[0],
-    j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
-  j.async = true;
-  j.src =
-    'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
-  f.parentNode.insertBefore(j, f);
-})(window, document, 'script', 'dataLayer', 'GTM-T72KG6N');
-  }
-</script>
+  <script>
+    if (window.location.hostname != 'localhost') {
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({
+                    'gtm.start':
+                      new Date().getTime(), event: 'gtm.js'
+                  });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+        j.async = true;
+        j.src =
+          'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', 'GTM-T72KG6N');
+    }
+  </script>
 
   <base href="/">
-  <style>html{scroll-behavior:smooth}</style><link rel="stylesheet" href="styles-TPMX36DN.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="styles-TPMX36DN.css"></noscript></head>
-  <body ngcm="">
-  <app-root></app-root>
+<style>html{scroll-behavior:smooth}</style><link rel="stylesheet" href="styles-TPMX36DN.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="styles-TPMX36DN.css"></noscript></head>
+<body ngcm="">
+<app-root></app-root>
 <!--<script src="/assets/js/main.min.js"></script>-->
 <script>
   window.ga = function () {
@@ -70,5 +69,6 @@
   ga('set', 'anonymizeIp', false);
   ga('send', 'pageview')
 </script>
-<script src="https://www.google-analytics.com/analytics.js" async=""></script>  <link rel="modulepreload" href="chunk-27PYSS5C.js"><script src="polyfills-EONH2QZO.js" type="module"></script><script src="main-6KJRTQAE.js" type="module"></script></body>
+<script src="https://www.google-analytics.com/analytics.js" async=""></script>
+<link rel="modulepreload" href="chunk-27PYSS5C.js"><script src="polyfills-EONH2QZO.js" type="module"></script><script src="main-FKZ2IASU.js" type="module"></script></body>
 </html>
