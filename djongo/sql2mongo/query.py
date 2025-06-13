@@ -309,7 +309,9 @@ class UpdateQuery(DMLQuery):
                 self.left_table = c.sql_tokens[0].table
 
             elif tok.match(tokens.Keyword, 'SET'):
+                self.is_set = True
                 c = self.set_columns = SetConverter(self, statement)
+                self.is_set = False
 
             elif isinstance(tok, Where):
                 c = self.where = WhereConverter(self, statement)

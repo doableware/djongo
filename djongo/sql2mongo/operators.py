@@ -565,7 +565,7 @@ class CmpOp(_Op):
         pass
 
     def to_mongo(self):
-        if not isinstance(self.query, query.UpdateQuery):
+        if not hasattr(self.query, 'is_set') or not self.query.is_set:
             field = self._identifier.field
             if self._field_ext:
                 field += '.' + self._field_ext
