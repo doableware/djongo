@@ -530,8 +530,14 @@ class CmpOp(_Op):
         #debug_operation(self.statement.left)
         self._identifier = SQLToken.token2sql(self.statement.left, self.query)
         self._is_expr = False
+        
+        # identifier_allow is special case for where a>b  or update a=b+1
+        identifier_allow = False
         if isinstance(self.statement.right, Identifier):
-            raise SQLDecodeError('Join using WHERE not supported')
+            self._right_identifier = SQLToken.token2sql(self.statement.right, self.query)
+            identifier_allow = (self._right_identifier.table == self.query.left_table) or (self._right_identifier.table == self._identifier.column)
+            if not identifier_allow:
+                raise SQLDecodeError('Join using WHERE not supported')
         
         self._operator = OPERATOR_MAP[self.statement.token_next(0)[1].value]
         if isinstance(self.statement.right, Parenthesis):
@@ -541,12 +547,16 @@ class CmpOp(_Op):
             self._constant = parser._op.to_mongo()
             self._field_ext = None
         else:
-            index = re_index(self.statement.right.value)
-            self._constant = self.params[index] if index is not None else None
-            if isinstance(self._constant, dict):
-                self._field_ext, self._constant = next(iter(self._constant.items()))
-            else:
+            if identifier_allow:
+                self._constant = f"${self._right_identifier.column}"
                 self._field_ext = None
+            else:
+                index = re_index(self.statement.right.value)
+                self._constant = self.params[index] if index is not None else None
+                if isinstance(self._constant, dict):
+                    self._field_ext, self._constant = next(iter(self._constant.items()))
+                else:
+                    self._field_ext = None
 
     def negate(self):
         self.is_negated = True
@@ -569,7 +579,7 @@ class CmpOp(_Op):
                 return {field: {'$not': {self._operator: self._constant}}}
         else:
             field = self._identifier.column
-            return {field: self._constant}
+            return {"$set":{field: self._constant}}
 
 class ArithmeticOp(_Op):
     OPERATORS = {

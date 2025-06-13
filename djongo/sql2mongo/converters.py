@@ -296,7 +296,7 @@ class SetConverter(Converter):
         tok = self.statement.next()
         self.sql_tokens.extend(SQLToken.tokens2sql(tok, self.query))
         
-        self.update_dict = {}
+        self.update_pipeline = []
         
         for sql_token in self.sql_tokens:
             if not isinstance(sql_token._token, Comparison):
@@ -304,14 +304,11 @@ class SetConverter(Converter):
                 
             parser = CmpOp(sql_token._token, self.query)
             parser.evaluate()
-            
-            update_result = parser.to_mongo()
-            for field, value in update_result.items():
-                self.update_dict[field] = value
+            self.update_pipeline.append(parser.to_mongo())
 
     def to_mongo(self):
         return {
-            'update': {'$set': self.update_dict}
+            'update': self.update_pipeline
         }
 
 
