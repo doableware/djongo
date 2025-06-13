@@ -4,7 +4,7 @@ import json
 from itertools import chain
 
 from sqlparse import tokens
-from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier, Function
+from sqlparse.sql import Token, Parenthesis, Comparison, IdentifierList, Identifier, Function,Operation
 
 from ..exceptions import SQLDecodeError
 from .sql_tokens import SQLToken, SQLStatement
@@ -432,6 +432,9 @@ class _StatementParser:
 
         elif isinstance(tok, Identifier):
             pass
+        elif isinstance(tok, Operation):
+            #debug_operation(tok)
+            op = ArithmeticOp(Comparison(tok), self.query)
         else:
             raise SQLDecodeError
 
@@ -524,19 +527,26 @@ class CmpOp(_Op):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        #debug_operation(self.statement.left)
         self._identifier = SQLToken.token2sql(self.statement.left, self.query)
-
+        self._is_expr = False
         if isinstance(self.statement.right, Identifier):
             raise SQLDecodeError('Join using WHERE not supported')
-
+        
         self._operator = OPERATOR_MAP[self.statement.token_next(0)[1].value]
-        index = re_index(self.statement.right.value)
-
-        self._constant = self.params[index] if index is not None else None
-        if isinstance(self._constant, dict):
-            self._field_ext, self._constant = next(iter(self._constant.items()))
-        else:
+        if isinstance(self.statement.right, Parenthesis):
+            parser = ParenthesisOp(self.statement.right, self.query)
+            parser.evaluate()
+            self._is_expr = True
+            self._constant = parser._op.to_mongo()
             self._field_ext = None
+        else:
+            index = re_index(self.statement.right.value)
+            self._constant = self.params[index] if index is not None else None
+            if isinstance(self._constant, dict):
+                self._field_ext, self._constant = next(iter(self._constant.items()))
+            else:
+                self._field_ext = None
 
     def negate(self):
         self.is_negated = True
@@ -545,14 +555,62 @@ class CmpOp(_Op):
         pass
 
     def to_mongo(self):
-        field = self._identifier.field
-        if self._field_ext:
-            field += '.' + self._field_ext
+        if not isinstance(self.query, query.UpdateQuery):
+            field = self._identifier.field
+            if self._field_ext:
+                field += '.' + self._field_ext
 
-        if not self.is_negated:
-            return {field: {self._operator: self._constant}}
+            if self._is_expr:
+                return {"$expr": {self._operator: ['$' + field, self._constant]}}
+
+            if not self.is_negated:
+                return {field: {self._operator: self._constant}}
+            else:
+                return {field: {'$not': {self._operator: self._constant}}}
         else:
-            return {field: {'$not': {self._operator: self._constant}}}
+            field = self._identifier.column
+            return {field: self._constant}
+
+class ArithmeticOp(_Op):
+    OPERATORS = {
+        '+': '$add',
+        '-': '$subtract',
+        '*': '$multiply',
+        '/': '$divide',
+        '%': '$mod'
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+            
+        if isinstance(self.statement.left, Parenthesis):
+            parser = ParenthesisOp(self.statement.left, self.query)
+            parser.evaluate()
+            self._left = parser.to_mongo()
+        elif isinstance(self.statement.left, Identifier):
+            self._left = '$' + SQLToken.token2sql(self.statement.left, self.query).field
+        else:
+            self._left = self.statement.left.value
+
+        self._operator = self.OPERATORS.get(self.statement.token_next(0)[1].value)
+
+        if isinstance(self.statement.right, Parenthesis):
+            parser = ParenthesisOp(self.statement.right, self.query)
+            parser.evaluate()
+            self._right = parser.to_mongo()
+        elif isinstance(self.statement.right, Identifier):
+            self._right = '$' + SQLToken.token2sql(self.statement.right, self.query).field
+        else:
+            index = re_index(self.statement.right.value)
+            self._right = self.params[index] if index is not None else self.statement.right.value
+
+    def evaluate(self):
+        pass
+
+    def to_mongo(self):
+        return {
+            self._operator: [self._left, self._right]
+        }
 
 
 class FuncOp(CmpOp):
@@ -592,3 +650,20 @@ OPERATOR_PRECEDENCE = {
     'OR': 1,
     'generic': 0
 }
+
+
+def debug_operation(op):
+    print("=== Operation Debug Info ===")
+    print(f"Operation: {op}")
+    print(f"Type: {type(op)}")
+    print(f"Value: {op.value}")
+    
+    # 打印所有tokens
+    print("All Tokens:")
+    for idx, token in enumerate(op.tokens):
+        print(f"  Token {idx}:")
+        print(f"    Value: {token.value}")
+        print(f"    Type: {type(token)}")
+        print(f"    ttype: {token.ttype}")
+        if hasattr(token, 'tokens'):
+            print(f"    Sub-tokens: {[t.value for t in token.tokens]}")
