@@ -320,7 +320,9 @@ class UpdateQuery(DMLQuery):
         self.kwargs = {}
         if self.where:
             self.kwargs.update(self.where.to_mongo())
-
+        else:
+            self.kwargs = {"filter":{}}
+        
         self.kwargs.update(self.set_columns.to_mongo())
 
     def execute(self):
