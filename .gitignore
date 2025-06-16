@@ -9,3 +9,4 @@ Gemfile.lock
 
 /docs/.jekyll-metadata
 /docs/djongocs/assets/*
+*.map
