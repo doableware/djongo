@@ -48,24 +48,27 @@
 <body><!--nghm--><script type="text/javascript" id="ng-event-dispatch-contract">(()=>{function p(t,n,r,o,e,i,f,m){return{eventType:t,event:n,targetElement:r,eic:o,timeStamp:e,eia:i,eirp:f,eiack:m}}function u(t){let n=[],r=e=>{n.push(e)};return{c:t,q:n,et:[],etc:[],d:r,h:e=>{r(p(e.type,e,e.target,t,Date.now()))}}}function s(t,n,r){for(let o=0;o<n.length;o++){let e=n[o];(r?t.etc:t.et).push(e),t.c.addEventListener(e,t.h,r)}}function c(t,n,r,o,e=window){let i=u(t);e._ejsas||(e._ejsas={}),e._ejsas[n]=i,s(i,r),s(i,o,!0)}window.__jsaction_bootstrap=c;})();
 </script><script>window.__jsaction_bootstrap(document.body,"ng",["click"],[]);</script>
 <app-root ng-version="19.2.0" ngh="4" ng-server-context="ssg"><router-outlet></router-outlet><ng-component _nghost-ng-c2949683947 ngh="3"><app-body _ngcontent-ng-c2949683947 _nghost-ng-c2286802093 ngh="1"><div _ngcontent-ng-c2286802093 class="page-splash"><div _ngcontent-ng-c2286802093 class="mast"><div _ngcontent-ng-c2286802093><div _ngcontent-ng-c2286802093 class="mast-logo"><a _ngcontent-ng-c2286802093 href="/"><img _ngcontent-ng-c2286802093 src="/assets/images/djongo-symbol-small.png" alt="Djongo"></a><!----></div><div _ngcontent-ng-c2286802093 class="mast-nav"><app-nav _ngcontent-ng-c2286802093 _nghost-ng-c40719357 ngh="0"><!----><!----><!----></app-nav></div></div></div><div _ngcontent-ng-c2286802093 class="initial-content"><div _ngcontent-ng-c2949683947 class="body"><aside _ngcontent-ng-c2949683947 class="nav-sticky aside-left"><app-nav _ngcontent-ng-c2949683947 _nghost-ng-c40719357 ngh="0"><!----><!----><!----></app-nav></aside><div _ngcontent-ng-c2949683947 class="page-content"><header _ngcontent-ng-c2949683947><h1 _ngcontent-ng-c2949683947 class="title-docs">Model Update</h1></header><router-outlet _ngcontent-ng-c2949683947></router-outlet><ng-component ngh="2"><h2 id="bulk-write">Bulk Write</h2><p>MongoDB lets you perform <a href="https://docs.mongodb.com/manual/core/bulk-write-operations/">Bulk Write operations</a> using <a href="https://api.mongodb.com/python/current/api/pymongo/collection.html#pymongo.collection.Collection.bulk_write"><code>bulk_write</code></a> which is currently not supported in Django. However, by using Djongo it is possible to perform bulk writes.</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">BulkWrite</span><span class="p">(</span><span class="n">ordered</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><h3 id="arguments">Arguments</h3><table><thead><tr><th>Argument</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>ordered</code></td><td><code>boolean</code></td><td>Perform the write operations either in order or arbitrarily.</td></tr></tbody></table><h3 id="example">Example</h3><p>```{.python .highlighter-rouge .highlight }
-from djongo import BulkWrite</p><p>with BulkWrite(): entry = Entry.objects.get(pk=p_key) # Queries the DB once entry.headline = 'The Beatles reconcile' entry.save() # Djongo does not really do a update to MongoDB Entry.objects.create(name='How the beatles reconciled') # Djongo does not really do a insert to MongoDB</p><h1 id="on-exit-does-dbentrybulk_writeupdateone-insertone">On exit, does: db.entry.bulk_write([UpdateOne(), InsertOne()])</h1><div appcodecopy class="codehilite"><pre><span></span><code>## Unordered Bulk Writes
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><h3 id="arguments">Arguments</h3><table><thead><tr><th>Argument</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>ordered</code></td><td><code>boolean</code></td><td>Perform the write operations either in order or arbitrarily.</td></tr></tbody></table><h3 id="example">Example</h3><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">djongo</span> <span class="kn">import</span> <span class="n">BulkWrite</span>
 
-### Example
+<span class="k">with</span> <span class="n">BulkWrite</span><span class="p">():</span>
+    <span class="n">entry</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="n">p_key</span><span class="p">)</span> <span class="c1"># Queries the DB once</span>
+    <span class="n">entry</span><span class="o">.</span><span class="n">headline</span> <span class="o">=</span> <span class="s1">'The Beatles reconcile'</span>
+    <span class="n">entry</span><span class="o">.</span><span class="n">save</span><span class="p">()</span> <span class="c1"># Djongo does not really do a update to MongoDB</span>
+    <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'How the beatles reconciled'</span><span class="p">)</span> <span class="c1"># Djongo does not really do a insert to MongoDB</span>
 
- ```{.python .highlighter-rouge .highlight }
-from djongo import BulkWrite
+<span class="c1"># On exit, does: db.entry.bulk_write([UpdateOne(), InsertOne()])</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><h2 id="unordered-bulk-writes">Unordered Bulk Writes</h2><h3 id="example_1">Example</h3><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">djongo</span> <span class="kn">import</span> <span class="n">BulkWrite</span>
 
-with BulkWrite(ordered=False):
-    entry = Entry.objects.get(pk=p_key) # Queries the DB once
-    entry.headline = 'The Beatles reconcile'
-    entry.save() # Djongo does not really do a update to MongoDB
-    Entry.objects.create(name='How the beatles reconciled') # Djongo does not really do a insert to MongoDB
+<span class="k">with</span> <span class="n">BulkWrite</span><span class="p">(</span><span class="n">ordered</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">entry</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="n">p_key</span><span class="p">)</span> <span class="c1"># Queries the DB once</span>
+    <span class="n">entry</span><span class="o">.</span><span class="n">headline</span> <span class="o">=</span> <span class="s1">'The Beatles reconcile'</span>
+    <span class="n">entry</span><span class="o">.</span><span class="n">save</span><span class="p">()</span> <span class="c1"># Djongo does not really do a update to MongoDB</span>
+    <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'How the beatles reconciled'</span><span class="p">)</span> <span class="c1"># Djongo does not really do a insert to MongoDB</span>
 
-# On exit, does: 
-# db.entry.bulk_write(
-#   [UpdateOne(), InsertOne()]
-#   ordered=False)
+<span class="c1"># On exit, does: </span>
+<span class="c1"># db.entry.bulk_write(</span>
+<span class="c1">#   [UpdateOne(), InsertOne()]</span>
+<span class="c1">#   ordered=False)</span>
 </code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div></ng-component><!----></div><aside _ngcontent-ng-c2949683947 class="nav-sticky aside-right"><nav _ngcontent-ng-c2949683947 class="nav nav-toc"><h3 _ngcontent-ng-c2949683947><i _ngcontent-ng-c2949683947 class="fas fa-file-alt"></i> On This Page</h3><ul _ngcontent-ng-c2949683947><!----></ul></nav></aside></div></div><div _ngcontent-ng-c2286802093 id="footer" class="page-footer"><footer _ngcontent-ng-c2286802093><aside _ngcontent-ng-c2286802093 class="l-fixed-notice cookie-notice open"><p _ngcontent-ng-c2286802093>We use cookies to enhance user experience. You consent to their usage by browsing this site. <button _ngcontent-ng-c2286802093 id="cookie-accept" class="btn btn-green" jsaction="click:;">Accept</button></p></aside><div _ngcontent-ng-c2286802093 class="page-footer-copyright">© 2025 Doableware AB.</div></footer></div></div></app-body></ng-component><!----></app-root>
 <script>
   window.ga = function () {
@@ -78,5 +81,5 @@ with BulkWrite(ordered=False):
   ga('send', 'pageview')
 </script>
 <script src="https://www.google-analytics.com/analytics.js" async></script>
-<script src="polyfills-EONH2QZO.js" type="module"></script><script src="main-COHCRE7W.js" type="module"></script>
-<script id="ng-state" type="application/json">{"__nghData__":[{"t":{"0":"t1","2":"t2","3":"t3"},"c":{"0":[],"2":[],"3":[]}},{"t":{"6":"t0"},"c":{"6":[]},"d":[9,10,12]},{},{"n":{"1":"0f2nf"},"d":[4,5,7],"c":{"13":[{"i":"c514045081","r":1}],"21":[]},"t":{"21":"t23"}},{"c":{"0":[{"i":"c2949683947","r":1}]}}]}</script></body></html>
+<script src="polyfills-EONH2QZO.js" type="module"></script><script src="main-ZYHIYD4K.js" type="module"></script>
+<script id="ng-state" type="application/json">{"__nghData__":[{"t":{"0":"t1","2":"t2","3":"t3"},"c":{"0":[],"2":[],"3":[]}},{"t":{"6":"t0"},"c":{"6":[]},"d":[9,10,12]},{},{"n":{"1":"0f2nf"},"d":[4,5,7],"c":{"13":[{"i":"c1613033335","r":1}],"21":[]},"t":{"21":"t20"}},{"c":{"0":[{"i":"c2949683947","r":1}]}}]}</script></body></html>
