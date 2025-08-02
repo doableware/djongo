@@ -1,0 +1,1 @@
+import{S as r,j as e}from"./chunk-HDX5X56L.js";var s=(()=>{class t{constructor(){this.request=new e,this.response=new e}static{this.\u0275fac=function(o){return new(o||t)}}static{this.\u0275prov=r({token:t,factory:t.\u0275fac})}}return t})();export{s as a};
