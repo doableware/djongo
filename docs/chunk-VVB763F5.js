@@ -1,0 +1,1 @@
+import{T as o,j as e}from"./chunk-MTC3QMKE.js";var a=(()=>{let t=class t{constructor(){this.request=new e,this.response=new e}};t.\u0275fac=function(n){return new(n||t)},t.\u0275prov=o({token:t,factory:t.\u0275fac});let r=t;return r})();export{a};
