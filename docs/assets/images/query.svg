@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   width="472.26294"
-   height="472.35251"
-   viewBox="0 0 124.95291 124.9766"
+   width="1023.9999"
+   height="560"
+   viewBox="0 0 270.93333 148.16667"
    version="1.1"
    id="svg8"
    xmlns="http://www.w3.org/2000/svg"
@@ -20,16 +20,13 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
   <g
-     id="layer1"
-     transform="translate(-93.43803,-11.595038)">
+     id="layer1">
     <g
-       id="g7841"
-       transform="translate(20.447818)">
+       id="g7841">
       <g
          id="g6408">
         <rect
