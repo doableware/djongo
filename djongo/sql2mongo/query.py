@@ -233,27 +233,34 @@ class SelectQuery(DQLQuery):
     def _get_cursor(self):
         if self._needs_aggregation():
             pipeline = self._make_pipeline()
-            cur = self.db[self.left_table].aggregate(pipeline)
+            cur = self.db[self.left_table].aggregate(pipeline, allowDiskUse=True)
             logger.debug(f'Aggregation query: {pipeline}')
         else:
-            kwargs = {}
-            if self.where:
-                kwargs.update(self.where.to_mongo())
+            query = self.where.to_mongo() if self.where else {}
+            selected_columns = self.selected_columns.to_mongo().get("projection", None) if self.selected_columns else None
+            projection = {i: 1 for i in selected_columns} if selected_columns else None
 
-            if self.selected_columns:
-                kwargs.update(self.selected_columns.to_mongo())
+            pipeline = [{"$match": query}]
+            if projection:
+                pipeline.append({"$project": projection})
 
-            if self.limit:
-                kwargs.update(self.limit.to_mongo())
+            sort_columns = self.order.to_mongo().get("sort") if self.order else None
+            if sort_columns:
+                pipeline.append({"$sort": dict(sort_columns)})
 
-            if self.order:
-                kwargs.update(self.order.to_mongo())
-            
-            if self.offset:
-                kwargs.update(self.offset.to_mongo())
+            skip_value = self.offset.to_mongo().get("skip") if self.offset else None
+            if skip_value:
+                pipeline.append({"$skip": skip_value})
 
-            cur = self.db[self.left_table].find(**kwargs)
-            logger.debug(f'Find query: {kwargs}')
+            limit_value = self.limit.to_mongo().get("limit") if self.limit else None
+            if limit_value:
+                pipeline.append({"$limit": limit_value})
+
+            cur = self.db[self.left_table].aggregate(pipeline, allowDiskUse=True)
+
+            logger.debug(
+                f'Aggregate query: {pipeline}, allowDiskUse=True'
+            )
 
         return cur
 
