@@ -128,7 +128,7 @@ class SelectQuery(DQLQuery):
             elif tok.match(tokens.Keyword, 'LIMIT'):
                 self.limit = LimitConverter(self, statement)
 
-            elif tok.match(tokens.Keyword, 'ORDER'):
+            elif tok.match(tokens.Keyword, 'ORDER BY'):
                 self.order = OrderConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'OFFSET'):
