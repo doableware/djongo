@@ -236,7 +236,7 @@ class SelectQuery(DQLQuery):
             cur = self.db[self.left_table].aggregate(pipeline, allowDiskUse=True)
             logger.debug(f'Aggregation query: {pipeline}')
         else:
-            query = self.where.to_mongo() if self.where else {}
+            query = self.where.to_mongo().get("filter", {}) if self.where else {}
             selected_columns = self.selected_columns.to_mongo().get("projection", None) if self.selected_columns else None
             projection = {i: 1 for i in selected_columns} if selected_columns else None
 
@@ -360,19 +360,20 @@ class InsertQuery(DMLQuery):
         tok = statement.next()
         self._cols = [token.column for token in SQLToken.tokens2sql(tok[1], self)]
 
-    def _fill_values(self, statement: SQLStatement):
+    def _fill_values(self, statement):
         for tok in statement:
             if isinstance(tok, Parenthesis):
                 placeholder = SQLToken.token2sql(tok, self)
-                values = []
-                for index in placeholder:
-                    if isinstance(index, int):
-                        values.append(self.params[index])
-                    else:
-                        values.append(index)
+                values = [self.params[i] if isinstance(i, int) else i for i in placeholder]
                 self._values.append(values)
-            elif not tok.match(tokens.Keyword, 'VALUES'):
-                raise SQLDecodeError
+
+            elif tok.value.upper().startswith("VALUES"):
+                matches = re.findall(r"%\((\d+)\)s", tok.value)
+                values = [self.params[int(i)] for i in matches]
+                self._values.append(values)
+
+            else:
+                raise SQLDecodeError(f"Unexpected token in _fill_values: {tok}")
 
     def execute(self):
         docs = []
