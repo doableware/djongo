@@ -6,7 +6,7 @@ requires = ["setuptools"]
 dynamic = ["version", "optional-dependencies"]
 name = "djongo"
 dependencies = [
-    'sqlparse==0.2.4',
+    'sqlparse>=0.2.4',
     'pymongo>=3.7.0,<=3.11.4',
     'django>=2.1,<=5.2',
     'pytz>=2018.5'
