@@ -35,7 +35,6 @@ docs:
       url: /using-django-with-other-fields/
 
   - title: "DjongoCS"
-#    url: /djongonxt/
     children:
     - title: "Indexes"
       url: /indexes/
