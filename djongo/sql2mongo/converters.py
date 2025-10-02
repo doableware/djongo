@@ -2,12 +2,12 @@ import abc
 import typing
 from collections import OrderedDict
 from sqlparse import tokens, parse as sqlparse
-from sqlparse.sql import Parenthesis
+from sqlparse.sql import Parenthesis,Comparison
 from typing import Union as U, List, Optional as O
 from . import query as query_module
 from .sql_tokens import SQLIdentifier, SQLConstIdentifier, SQLComparison
 from .functions import SQLFunc, CountFuncAll
-from .operators import WhereOp
+from .operators import WhereOp,CmpOp
 from ..exceptions import SQLDecodeError
 from .sql_tokens import SQLToken, SQLStatement
 
@@ -288,7 +288,6 @@ class OrderConverter(Converter):
 
 
 class SetConverter(Converter):
-
     def __init__(self, *args):
         self.sql_tokens: List[SQLComparison] = []
         super().__init__(*args)
@@ -296,15 +295,20 @@ class SetConverter(Converter):
     def parse(self):
         tok = self.statement.next()
         self.sql_tokens.extend(SQLToken.tokens2sql(tok, self.query))
+        
+        self.update_pipeline = []
+        
+        for sql_token in self.sql_tokens:
+            if not isinstance(sql_token._token, Comparison):
+                continue
+                
+            parser = CmpOp(sql_token._token, self.query)
+            parser.evaluate()
+            self.update_pipeline.append(parser.to_mongo())
 
     def to_mongo(self):
         return {
-            'update': {
-                '$set': {
-                    sql.left_column: self.query.params[sql.rhs_indexes]
-                    if sql.rhs_indexes is not None else None
-                    for sql in self.sql_tokens}
-            }
+            'update': self.update_pipeline
         }
 
 
