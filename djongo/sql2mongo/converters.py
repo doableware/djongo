@@ -283,7 +283,7 @@ class OrderConverter(Converter):
         # self.columns.extend(SQLToken.tokens2sql(tok, self.query))
 
     def to_mongo(self):
-        return {'sort': [('created_at', -1), ('_id', -1)]}
+        return {'sort': []}
 
 
 class SetConverter(Converter):
