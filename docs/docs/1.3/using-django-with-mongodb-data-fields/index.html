@@ -1,0 +1,325 @@
+<!DOCTYPE html><html lang="en" data-beasties-container><head>
+  <meta charset="UTF-8">
+  <title>Using Djongo Embedded field</title>
+  <meta name="description" content="Djongo is a smarter approach to database querying. It maps python objects to MongoDB documents.
+         It is popularly referred to as an Object Document Mapper or ODM.
+         It is an extension to the traditional Django object relational modeling framework.
+         Use Django Admin to directly add and modify documents stored in MongoDB.
+         Use other contrib modules such as Auth and Sessions without any changes.">
+  <meta name="keywords" content="Django, MongoDB, Django MongoDB connector, Object document mapper">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:site_name" content="Djongomapper">
+  <meta property="og:title" content="Djongo">
+  <meta property="og:url" content="https://www.djongomapper.com/">
+  <meta property="og:description" content="Djongo is a smarter approach to database querying. It maps python objects to MongoDB documents. It is popularly referred to as an Object Document Mapper or ODM. It is an extension to the traditional Django object relational modeling framework. Use Django Admin to directly add and modify documents stored in MongoDB. Use other contrib modules such as Auth and Sessions without any changes.">
+  <link rel="canonical" href="https://www.djongomapper.com/">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Doableware",
+      "url": "https://www.djongomapper.com/",
+      "logo": "/assets/images/djongo-symbol-small.png"
+    }
+  </script>
+  <meta name="google-site-verification" content="tFNu7Nc9hzKF9v7f6kYaoMbBCNyGREchcKMVdxJuyJo">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css">
+  </noscript>
+  <link rel="stylesheet" type="text/css" media="screen" href="/assets/css/styles.css">
+  <link rel="shortcut icon" href="/assets/images/favicon.ico">
+  <script>
+    if (window.location.hostname != 'localhost') {
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({
+                    'gtm.start':
+                      new Date().getTime(), event: 'gtm.js'
+                  });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+        j.async = true;
+        j.src =
+          'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', 'GTM-T72KG6N');
+    }
+  </script>
+  <base href="/">
+<link rel="stylesheet" href="styles-JF5ME2K6.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="styles-JF5ME2K6.css"></noscript><style ng-app-id="ng">.cookie-notice[_ngcontent-ng-c2830357685]{height:0}.open[_ngcontent-ng-c2830357685]{height:auto}.close[_ngcontent-ng-c2830357685]{height:0;transition:height .3s ease-out}.mast[_ngcontent-ng-c2830357685]{position:sticky;top:0;padding:.5em 0;z-index:10;background:#fff;border-bottom:1px solid rgb(241.7553,242.60496,243.2547)}@media (max-width: 90rem){.mast[_ngcontent-ng-c2830357685]{padding:.5em 1em}}.mast[_ngcontent-ng-c2830357685] > div[_ngcontent-ng-c2830357685]{margin:0 auto;max-width:80rem;display:flex;flex-direction:row;justify-content:space-between}.mast[_ngcontent-ng-c2830357685]   a[_ngcontent-ng-c2830357685]{display:block;color:#62696e;text-decoration:none}.mast[_ngcontent-ng-c2830357685]   .mast-logo[_ngcontent-ng-c2830357685]{display:flex;gap:var(--space-xs);align-items:center}.mast[_ngcontent-ng-c2830357685]   .mast-logo[_ngcontent-ng-c2830357685]   img[_ngcontent-ng-c2830357685]{max-height:2em}.mast[_ngcontent-ng-c2830357685]   .mast-nav[_ngcontent-ng-c2830357685]   ul[_ngcontent-ng-c2830357685]{display:flex;align-items:center;gap:var(--space-md)}.mast[_ngcontent-ng-c2830357685]   .mast-nav[_ngcontent-ng-c2830357685]   ul.media-small[_ngcontent-ng-c2830357685]{padding-top:var(--space-sm);padding-bottom:var(--space-sm);flex-direction:column;align-items:start;gap:var(--space-xs)}.mast[_ngcontent-ng-c2830357685]   .mast-nav[_ngcontent-ng-c2830357685]   .nav-link[_ngcontent-ng-c2830357685]{position:relative}.mast[_ngcontent-ng-c2830357685]   .mast-nav[_ngcontent-ng-c2830357685]   .nav-link[_ngcontent-ng-c2830357685]:hover:after{width:100%}.mast[_ngcontent-ng-c2830357685]   .mast-nav[_ngcontent-ng-c2830357685]   .nav-link[_ngcontent-ng-c2830357685]:after{content:"";position:absolute;left:50%;bottom:0;transform:translate(-50%);width:0;height:4px;background-color:#62696e;transition:width .2s ease-in-out}.mast[_ngcontent-ng-c2830357685]   .mast-nav[_ngcontent-ng-c2830357685]   .btn-nav[_ngcontent-ng-c2830357685]{padding:.5em 1em;font-size:var(--font-sm);font-weight:700;text-align:center;border-width:0;border-radius:.1875em;color:#fff}.burger[_ngcontent-ng-c2830357685]{display:flex;flex-direction:column;gap:4px}.burger[_ngcontent-ng-c2830357685] > div[_ngcontent-ng-c2830357685]{height:4px;width:var(--space-md);background-color:#62696e;border-radius:4px}.burger[_ngcontent-ng-c2830357685]:hover{cursor:pointer}</style><style ng-app-id="ng">.media-small[_ngcontent-ng-c40719357]{position:fixed;top:3rem;left:0;padding:0 var(--space-sm);background:#fff;height:100vh;border-right:1px solid rgb(241.7553,242.60496,243.2547);z-index:1}.cross[_ngcontent-ng-c40719357]{margin:var(--space-2xs) 0;aspect-ratio:1;width:var(--font-md)}.cross[_ngcontent-ng-c40719357]:hover{cursor:pointer}.cross[_ngcontent-ng-c40719357] > div[_ngcontent-ng-c40719357]{background:#000;height:1px;width:var(--font-md)}.cross[_ngcontent-ng-c40719357] > div[_ngcontent-ng-c40719357]:nth-child(1){transform:translateY(calc(var(--font-md) * .5)) rotate(-45deg)}.cross[_ngcontent-ng-c40719357] > div[_ngcontent-ng-c40719357]:nth-child(2){transform:translateY(calc(var(--font-md) * .5 - 1px)) rotate(45deg)}.open[_ngcontent-ng-c40719357]{transition:transform .4s ease-in;transform:translate(0)}.close[_ngcontent-ng-c40719357]{transform:translate(-100%);padding:0;overflow:hidden;transition:transform .3s ease-out}</style><style ng-app-id="ng">.body[_ngcontent-ng-c2001800090]{display:grid;grid-template-columns:minmax(max-content,calc(16rem - 1em)) minmax(16rem,80rem) minmax(min-content,calc(16rem - 1em)) max-content;grid-template-rows:repeat(2,auto);grid-template-areas:"aside-left page-content aside-right aside-right-2" ".          page-content .           .";justify-content:center;column-gap:1em;padding-left:1em;padding-right:1em}.page-content[_ngcontent-ng-c2001800090]{grid-area:page-content}.aside-left[_ngcontent-ng-c2001800090]{grid-area:aside-left}.aside-right[_ngcontent-ng-c2001800090]{grid-area:aside-right}.aside-right-2[_ngcontent-ng-c2001800090]{grid-area:aside-right-2}.aside-right-2[_ngcontent-ng-c2001800090]{display:flex;align-items:flex-end}.aside-right-2[_ngcontent-ng-c2001800090]   ul[_ngcontent-ng-c2001800090]{display:flex;flex-direction:column;gap:.5em}.btn-nav[_ngcontent-ng-c2001800090]{font-weight:400;margin-bottom:0}@media (max-width: 80rem){.body[_ngcontent-ng-c2001800090]{grid-template-columns:max-content minmax(24rem,80rem);grid-template-rows:repeat(3,auto);grid-template-areas:"aside-left aside-right-2" "aside-left aside-right" "aside-left page-content"}.aside-right-2[_ngcontent-ng-c2001800090]   ul[_ngcontent-ng-c2001800090]{flex-direction:row}}@media (max-width: 48rem){.aside-right-2[_ngcontent-ng-c2001800090]{flex-direction:row}}.nav[_ngcontent-ng-c2001800090]{padding-top:1em;padding-bottom:1em;min-width:min-content;max-width:max-content;font-size:var(--font-sm)}@media (max-width: 80rem){.nav[_ngcontent-ng-c2001800090]{font-size:var(--font-base)}}.nav[_ngcontent-ng-c2001800090]   a[_ngcontent-ng-c2001800090]{text-decoration:none}.nav-sticky[_ngcontent-ng-c2001800090]{position:sticky;top:3em;overflow:auto;height:calc(100vh - 3em)}.nav-sticky.aside-left[_ngcontent-ng-c2001800090]{z-index:1}@media (max-width: 80rem){.nav-sticky.aside-right[_ngcontent-ng-c2001800090], .nav-sticky.aside-right-2[_ngcontent-ng-c2001800090]{position:static;height:inherit}}.nav-side[_ngcontent-ng-c2001800090]{line-height:1.58}.nav-side[_ngcontent-ng-c2001800090]   h3[_ngcontent-ng-c2001800090]{font-size:1em;opacity:.7;text-transform:uppercase;border-bottom:1px solid rgb(241.7553,242.60496,243.2547);margin:.5em 0;padding:.25em 0}.nav-side[_ngcontent-ng-c2001800090]   a[_ngcontent-ng-c2001800090]{color:inherit;opacity:.7}.nav-side[_ngcontent-ng-c2001800090]   .active[_ngcontent-ng-c2001800090]{font-weight:700;opacity:1}.nav-side[_ngcontent-ng-c2001800090]   a[_ngcontent-ng-c2001800090]:hover{opacity:1}.nav-toc[_ngcontent-ng-c2001800090]   h3[_ngcontent-ng-c2001800090]{font-size:var(--font-base);font-weight:700;color:#fff;background:#62696e;border-top-left-radius:.375em;border-top-right-radius:.375em;padding:var(--space-2xs) var(--space-xs);margin:0}.nav-toc[_ngcontent-ng-c2001800090]   a[_ngcontent-ng-c2001800090]{display:block;padding:var(--space-2xs) var(--space-xs);color:#646769;font-weight:700;line-height:1.5;border-bottom:1px solid rgb(241.7553,242.60496,243.2547);border-left:1px solid rgb(241.7553,242.60496,243.2547);border-right:1px solid rgb(241.7553,242.60496,243.2547)}.nav-toc[_ngcontent-ng-c2001800090]   a[_ngcontent-ng-c2001800090]:hover{text-decoration:underline}.nav-toc[_ngcontent-ng-c2001800090]   li[_ngcontent-ng-c2001800090]   li[_ngcontent-ng-c2001800090] > a[_ngcontent-ng-c2001800090]{font-weight:400;padding-left:1em}.nav-toc[_ngcontent-ng-c2001800090]   .active[_ngcontent-ng-c2001800090]{background-color:#e2e4e5}.page-content[_ngcontent-ng-c2001800090]{margin-top:1em}</style></head>
+<body><!--nghm--><script type="text/javascript" id="ng-event-dispatch-contract">(()=>{function p(t,n,r,o,e,i,f,m){return{eventType:t,event:n,targetElement:r,eic:o,timeStamp:e,eia:i,eirp:f,eiack:m}}function u(t){let n=[],r=e=>{n.push(e)};return{c:t,q:n,et:[],etc:[],d:r,h:e=>{r(p(e.type,e,e.target,t,Date.now()))}}}function s(t,n,r){for(let o=0;o<n.length;o++){let e=n[o];(r?t.etc:t.et).push(e),t.c.addEventListener(e,t.h,r)}}function c(t,n,r,o,e=window){let i=u(t);e._ejsas||(e._ejsas={}),e._ejsas[n]=i,s(i,r),s(i,o,!0)}window.__jsaction_bootstrap=c;})();
+</script><script>window.__jsaction_bootstrap(document.body,"ng",["click"],[]);</script>
+<app-root ng-version="20.1.4" _nghost-ng-c2830357685 ngh="3" ng-server-context="ssg"><div _ngcontent-ng-c2830357685 class="page-splash"><div _ngcontent-ng-c2830357685 class="mast"><div _ngcontent-ng-c2830357685><div _ngcontent-ng-c2830357685 class="mast-logo"><a _ngcontent-ng-c2830357685 href="/"><img _ngcontent-ng-c2830357685 src="/assets/images/djongo-symbol-small.png" alt="Djongo"></a><!----></div><div _ngcontent-ng-c2830357685 class="mast-nav"><app-nav _ngcontent-ng-c2830357685 _nghost-ng-c40719357 ngh="0"><!----><!----><!----></app-nav></div></div></div><div _ngcontent-ng-c2830357685 class="initial-content"><router-outlet _ngcontent-ng-c2830357685></router-outlet><ng-component _nghost-ng-c2001800090 ngh="2"><div _ngcontent-ng-c2001800090 class="body"><aside _ngcontent-ng-c2001800090 class="nav-sticky aside-left"><app-nav _ngcontent-ng-c2001800090 _nghost-ng-c40719357 ngh="0"><!----><!----><!----></app-nav></aside><div _ngcontent-ng-c2001800090 class="page-content"><header _ngcontent-ng-c2001800090><h1 _ngcontent-ng-c2001800090 class="title-docs">Using Djongo Embedded field</h1></header><router-outlet _ngcontent-ng-c2001800090></router-outlet><using-djongo-embedded-field-1 class="3" ngh="1"><h2 id="embeddedfield">EmbeddedField</h2><p>MongoDB allows the creation of an <a href="https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding">embedded document</a>. You can include another model in the parent model through the <code>EmbeddedField</code>. </p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">djongo</span> <span class="kn">import</span> <span class="n">models</span>
+
+<span class="k">class</span> <span class="nc">Blog</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">tagline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="k">class</span> <span class="nc">Entry</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">_id</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ObjectIdField</span><span class="p">()</span>
+    <span class="n">blog</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmbeddedField</span><span class="p">(</span>
+        <span class="n">model_container</span><span class="o">=</span><span class="n">Blog</span>
+    <span class="p">)</span>
+
+    <span class="n">headline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+
+<span class="n">e</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">headline</span><span class="o">=</span><span class="s1">'h1'</span><span class="p">,</span>
+    <span class="n">blog</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'b1'</span><span class="p">,</span>
+        <span class="s1">'tagline'</span><span class="p">:</span> <span class="s1">'t1'</span>
+    <span class="p">})</span>
+
+<span class="n">g</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">headline</span><span class="o">=</span><span class="s1">'h1'</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">e</span> <span class="o">==</span> <span class="n">g</span>
+
+<span class="n">e</span> <span class="o">=</span> <span class="n">Entry</span><span class="p">()</span>
+<span class="n">e</span><span class="o">.</span><span class="n">blog</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'b2'</span><span class="p">,</span>
+    <span class="s1">'tagline'</span><span class="p">:</span> <span class="s1">'t2'</span>
+<span class="p">}</span>
+<span class="n">e</span><span class="o">.</span><span class="n">headline</span> <span class="o">=</span> <span class="s1">'h2'</span>
+<span class="n">e</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><h2 id="field-data-integrity-checks">Field data integrity checks</h2><p>Djongo automatically validates the value assigned to an EmbeddedField. Integrity criteria (<code>null=True</code> or <code>blank=False</code>) can be applied on the <code>ÈmbeddedField</code> or to the internal fields (<code>CharField</code>)</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">Entry</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">_id</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ObjectIdField</span><span class="p">()</span>
+    <span class="n">blog</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmbeddedField</span><span class="p">(</span>
+        <span class="n">model_container</span><span class="o">=</span><span class="n">Blog</span><span class="p">,</span>
+        <span class="n">null</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+
+    <span class="n">headline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>    
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DjongoManager</span><span class="p">()</span>
+
+<span class="n">e</span> <span class="o">=</span> <span class="n">Entry</span><span class="p">(</span><span class="n">headline</span><span class="o">=</span><span class="s1">'h1'</span><span class="p">,</span> <span class="n">blog</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="n">e</span><span class="o">.</span><span class="n">clean_fields</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span>
+<span class="c1"># No validation error</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">Entry</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">_id</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ObjectIdField</span><span class="p">()</span>
+    <span class="n">blog</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmbeddedField</span><span class="p">(</span>
+        <span class="n">model_container</span><span class="o">=</span><span class="n">Blog</span><span class="p">,</span>
+        <span class="n">null</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="n">headline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>    
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DjongoManager</span><span class="p">()</span>
+
+<span class="n">e</span> <span class="o">=</span> <span class="n">Entry</span><span class="p">(</span><span class="n">headline</span><span class="o">=</span><span class="s1">'h1'</span><span class="p">,</span> <span class="n">blog</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="n">e</span><span class="o">.</span><span class="n">clean_fields</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> 
+    <span class="n">ValidationError</span><span class="p">({</span><span class="s1">'blog'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'This field cannot be null.'</span><span class="p">]})</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><h2 id="nesting-embedded-fields">Nesting Embedded Fields</h2><p>An <code>EmbeddedField</code> or <code>ArrayField</code> can be nested inside an <code>EmbeddedField</code>. There is no limitation on the depth of nesting.</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">djongo</span> <span class="kn">import</span> <span class="n">models</span>
+
+<span class="k">class</span> <span class="nc">Tagline</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">)</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">subtitle</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="k">class</span> <span class="nc">Blog</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">tagline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmbeddedField</span><span class="p">(</span><span class="n">model_container</span><span class="o">=</span><span class="n">Tagline</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="k">class</span> <span class="nc">Entry</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">_id</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ObjectIdField</span><span class="p">()</span>
+    <span class="n">blog</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmbeddedField</span><span class="p">(</span>
+        <span class="n">model_container</span><span class="o">=</span><span class="n">Blog</span>
+    <span class="p">)</span>
+
+    <span class="n">headline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>    
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DjongoManager</span><span class="p">()</span>
+
+<span class="n">e</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">headline</span><span class="o">=</span><span class="s1">'h1'</span><span class="p">,</span>
+    <span class="n">blog</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'b1'</span><span class="p">,</span>
+        <span class="s1">'tagline'</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">'title'</span><span class="p">:</span> <span class="s1">'Tagline Title'</span><span class="p">,</span>
+            <span class="s1">'subtitle'</span><span class="p">:</span> <span class="s1">'Tagline Subtitle'</span>
+        <span class="p">}</span>
+    <span class="p">})</span>
+
+<span class="n">g</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">headline</span><span class="o">=</span><span class="s1">'h1'</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">e</span> <span class="o">==</span> <span class="n">g</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><h2 id="embedded-form">Embedded Form</h2><p>While creating a Form for <a href="https://docs.djangoproject.com/en/dev/topics/forms/modelforms/">the ModelForm</a>, the embedded forms <strong>are automatically generated</strong>. Multiple embedded forms get automatically generated when the Model contains an array of embedded models. However, you can still override this by specifying the <code>model_form_class</code> argument in the <code>EmbeddedField</code>.</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">djongo</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">forms</span>
+
+<span class="k">class</span> <span class="nc">Blog</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">tagline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="k">class</span> <span class="nc">BlogForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">ModelForm</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">Blog</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'tagline'</span>
+        <span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Entry</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">blog</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmbeddedField</span><span class="p">(</span>
+        <span class="n">model_container</span><span class="o">=</span><span class="n">Blog</span><span class="p">,</span>
+        <span class="n">model_form_class</span><span class="o">=</span><span class="n">BlogForm</span>
+    <span class="p">)</span>
+
+    <span class="n">headline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>    
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DjongoManager</span><span class="p">()</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><h2 id="querying-embedded-fields">Querying Embedded fields</h2><p>To query all BlogPost with content made by authors whose name startswith <em>Beatles</em> use the following query:</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="n">entries</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">blog__startswith</span><span class="o">=</span><span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'Beatles'</span><span class="p">})</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>Internally Djongo converts this query (for BlogPost collection) to the form:</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="nb">filter</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">'blog.name'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">'$regex'</span><span class="p">:</span> <span class="s1">'^Beatles.*$'</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>For querying nested embedded fields provide the appropriate dictionary value</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="n">entries</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">blog__startswith</span><span class="o">=</span><span class="p">{</span><span class="s1">'tagline'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'subtitle'</span><span class="p">:</span> <span class="s1">'Artist'</span><span class="p">})</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>Internally Djongo converts this query (for BlogPost collection) to the form:</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="nb">filter</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">'blog.tagline.subtitle'</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">'$regex'</span><span class="p">:</span> <span class="s1">'^Artist.*$'</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><h2 id="using-embeddedfield-in-django-admin">Using EmbeddedField in Django Admin</h2><p>Django Admin is a powerful tool for managing data used in an app. When the models use Djongo relational fields, NoSQL "embedded models" can be created directly
+from Django Admin. <strong>These fields provide better performance
+when compared with traditional Django relational fields.</strong></p><p>Django admin can use models to automatically build a site area that can be used to create, view, update, and delete records. This can save a lot of time during development, making it very easy to test the models and get a feel for the right data. Django Admin is already quite well known, but to demonstrate how to use it with Djongo, here is a simple example.</p><p>First define our basic models. In these tutorials, the same example used in the official <a href="https://docs.djangoproject.com/en/2.0/topics/db/queries/">Django documentation</a> is used. The documentation talks about 3 models that interact with each other: <strong>Blog, Author and Entry</strong>. To
+make the example clearer, few fields from the original models are omitted. </p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">djongo</span> <span class="kn">import</span> <span class="n">models</span>
+
+<span class="k">class</span> <span class="nc">Blog</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">tagline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+<span class="k">class</span> <span class="nc">Author</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+    <span class="n">email</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmailField</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+<span class="k">class</span> <span class="nc">Entry</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">blog</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">Blog</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">)</span>
+    <span class="n">headline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+    <span class="n">body_text</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+    <span class="n">pub_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">()</span>
+    <span class="n">mod_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">()</span>
+    <span class="n">authors</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">Author</span><span class="p">)</span>
+    <span class="n">n_comments</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+    <span class="n">n_pingbacks</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+    <span class="n">rating</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">headline</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>Start with the admin development by <em>registering</em> a model. Register the models defined above in the <code>admin.py</code> file.</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">django.contrib</span> <span class="kn">import</span> <span class="n">admin</span>
+<span class="kn">from</span> <span class="nn">.models</span> <span class="kn">import</span> <span class="n">Blog</span><span class="p">,</span> <span class="n">Author</span><span class="p">,</span> <span class="n">Entry</span>
+
+<span class="n">admin</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">Blog</span><span class="p">,</span> <span class="n">Author</span><span class="p">,</span> <span class="n">Entry</span><span class="p">])</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><h2 id="data-model">Data Model</h2><p>The <code>Entry</code> model defined in the documentation consists of 3 parts:
+* 1-to-Many Relationship: A <code>Blog</code> is made up of multiple <code>Entry</code>s’ and each <code>Entry</code> is associated with just <em>one</em><code>Blog</code>. The same entry cannot appear in two <code>Blog</code>s’ and this defines the 1-to-Many relationship.
+* Many-to-Many Relationship: An <code>Entry</code> can have <em>multiple</em><code>Author</code>s’ and an <code>Author</code> can make multiple <code>Entry</code>s’. This defines the many-to-many relationship for our data model.
+* Normal data columns.</p><p><strong>An interesting point of note</strong> is that the <code>Blog</code> model consists of just 2 fields. Most of the data is stored in the <code>Entry</code> model.</p><p>So what happens when a user enters a blog? The user wants to view the ‘Beatles blog’. In the project you could probably do:</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="n">blog</span> <span class="o">=</span> <span class="n">Blog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'Beatles Blog'</span><span class="p">)</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>Next, to retrieve all entries related to the Beatles blog, follow it up with:</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="n">entries</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">blog_id</span><span class="o">=</span><span class="n">blog</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>While it is fine to obtain entries in this fashion, you end up <strong>making 2 trips</strong> to the database.
+For SQL based backend this is not the most efficient way. The number of trips can be reduced to one. Djongo makes the query more efficient:</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="n">entries</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">blog__name</span><span class="o">=</span><span class="s1">'Beatles Blog'</span><span class="p">)</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>This query will hit the database just once. All entries associated
+with a <code>Blog</code> having the name ‘Beatles Blog’ will be retrieved. However, this query generates a SQL JOIN. <strong>JOINs are much slower when compared to single table lookups</strong>.</p><p>Since a <code>Blog</code> model shares a 1-to-many relationship with <code>Entry</code> the <code>Entry</code> model can be written as:</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">Entry</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">blog_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">blog_tagline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+    <span class="n">headline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+    <span class="n">body_text</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+    <span class="n">pub_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">()</span>
+    <span class="n">mod_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">()</span>
+    <span class="n">authors</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">Author</span><span class="p">)</span>
+    <span class="n">n_comments</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+    <span class="n">n_pingbacks</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+    <span class="n">rating</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">headline</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>The <code>Blog</code> fields have been inserted into the <code>Entry</code> model. With this new data model the query changes to:</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="n">entries</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">blog_name</span><span class="o">=</span><span class="s1">'Beatles Blog'</span><span class="p">)</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>There are no JOINs generated with this and queries will be much faster. There is data duplication, but only if the backend database does not use data compression.</p><p>Using compression to mitigate data duplication is
+fine but take a look at the Entry model, it has 10 columns and is getting unmanageable.</p><h2 id="the-embedded-data-model">The Embedded Data Model</h2><p>A <code>Blog</code> contains a <code>name</code> and a <code>tagline</code>. An <code>Entry</code> contains details of the <code>Blog</code>, the <code>Authors</code>, <code>body_text</code> and some <code>Meta</code>
+data. To make the <code>Entry</code> model manageable it can be redefined with an <code>EmbeddedField</code>.</p><p>Embedded data models should be used when it does not make sense to store a data set as another table in the database and refer to it every time with a foreign key lookup. However, you still want to group the data set
+in a hierarchical fashion, to isolate its functionality.</p><p>In case you don't plan on using your embedded model as a standalone
+model (which means it will always be embedded inside a parent model) you should add the <code>class Meta</code> and <code>abstract = True</code> This way
+Djongo will never register this model as an <a href="https://docs.djangoproject.com/en/dev/topics/db/models/#abstract-base-classes">actual model</a>.</p><p>It is a good practice to <strong>define embedded models as abstract models</strong> and this is <strong>strongly recommended</strong>.</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">djongo</span> <span class="kn">import</span> <span class="n">models</span>
+
+<span class="k">class</span> <span class="nc">Blog</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">tagline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="k">class</span> <span class="nc">MetaData</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">pub_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">()</span>
+    <span class="n">mod_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">()</span>
+    <span class="n">n_pingbacks</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+    <span class="n">rating</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="k">class</span> <span class="nc">Author</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+    <span class="n">email</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmailField</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+<span class="k">class</span> <span class="nc">Entry</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">blog</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmbeddedField</span><span class="p">(</span>
+        <span class="n">model_container</span><span class="o">=</span><span class="n">Blog</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">meta_data</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmbeddedField</span><span class="p">(</span>
+        <span class="n">model_container</span><span class="o">=</span><span class="n">MetaData</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">headline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+    <span class="n">body_text</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+    <span class="n">authors</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">Author</span><span class="p">)</span>
+    <span class="n">n_comments</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">headline</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>To display the embedded models in Django Admin, a <code>Form</code> for the
+embedded fields is required. Since the embedded field is an abstract model, the form is easily created by using a <code>ModelForm</code>. The <code>BlogForm</code> defines <code>Blog</code> as the model with <code>name</code> and <code>tagline</code> as the form fields. </p><p>If you do not specify a <code>ModelForm</code> for your embedded models, and pass it using the <code>model_form_class</code> argument, Djongo will automatically generate a <code>ModelForm</code> for you.</p><p>Register the new models in <code>admin.py</code>. </p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">django.contrib</span> <span class="kn">import</span> <span class="n">admin</span>
+<span class="kn">from</span> <span class="nn">.embedded_models</span> <span class="kn">import</span> <span class="n">Author</span><span class="p">,</span> <span class="n">Entry</span>
+
+<span class="n">admin</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">register</span><span class="p">([</span><span class="n">Author</span><span class="p">,</span> <span class="n">Entry</span><span class="p">])</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>The number of fields in the <code>Entry</code> model is reduce to 6. Fire up Django Admin to check what is up!</p><p><img alt="Django Admin" src="/assets/images/embedded-admin.png"></p><p>Only the <code>Entry</code> and <code>Author</code> model are registered. I click on <em>Entrys Add</em> and get:</p><p><img alt="Django Admin" src="/assets/images/embedded-nested.png"></p><p>The <code>Name</code> and <code>Tagline</code> fields are neatly nested within Blog. <code>Pub date</code>, <code>Mod date</code>, <code>N pingbanks</code> and <code>Rating</code> are neatly nested within Meta data.</p><p>When a user queries for a blog named ‘Beatles Blog’, the query for filtering an embedded model changes to:</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="n">entries</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">blog</span><span class="o">=</span><span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'Beatles Blog'</span><span class="p">})</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>This query will return all entries having an embedded blog with the name ‘Beatles Blog’. <strong>The query will hit the database just once and there are no JOINs involved.</strong></p><h2 id="api-reference">API Reference</h2><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">EmbeddedField</span><span class="p">(</span><span class="n">MongoField</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">model_container</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Type</span><span class="p">[</span><span class="n">Model</span><span class="p">],</span>
+                 <span class="n">model_form_class</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Type</span><span class="p">[</span><span class="n">forms</span><span class="o">.</span><span class="n">ModelForm</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">model_form_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><h3 id="arguments">Arguments</h3><table><thead><tr><th>Argument</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>model_container</code></td><td><code>models.Model</code></td><td>The child model class type (not instance) that this embedded field will contain.</td></tr><tr><td><code>model_form_class</code></td><td><code>models.forms.ModelForm</code></td><td>The child model form class type of the embedded model.</td></tr><tr><td><code>model_form_kwargs</code></td><td><code>dict()</code></td><td>The kwargs (if any) that must be passed to the <code>forms.ModelForm</code> while instantiating it.</td></tr></tbody></table></using-djongo-embedded-field-1><!----></div><aside _ngcontent-ng-c2001800090 class="nav-sticky aside-right"><nav _ngcontent-ng-c2001800090 class="nav nav-toc"><h3 _ngcontent-ng-c2001800090><i _ngcontent-ng-c2001800090 class="fas fa-file-alt"></i> On This Page</h3><ul _ngcontent-ng-c2001800090><!----></ul></nav></aside><aside _ngcontent-ng-c2001800090 class="nav-sticky aside-right-2"><nav _ngcontent-ng-c2001800090 class="nav"><ul _ngcontent-ng-c2001800090><li _ngcontent-ng-c2001800090><a _ngcontent-ng-c2001800090 class="btn btn-invert btn-green-invert btn-nav" href="/docs/1.3/get-started" jsaction="click:;"> 1.3 </a></li><li _ngcontent-ng-c2001800090><a _ngcontent-ng-c2001800090 class="btn btn-invert btn-green-invert btn-nav" href="/docs/2.0/get-started" jsaction="click:;"> 2.0 </a></li><!----></ul></nav></aside></div></ng-component><!----></div><div _ngcontent-ng-c2830357685 id="footer" class="page-footer"><footer _ngcontent-ng-c2830357685><aside _ngcontent-ng-c2830357685 class="l-fixed-notice cookie-notice open"><p _ngcontent-ng-c2830357685>We use cookies to enhance user experience. You consent to their usage by browsing this site. <button _ngcontent-ng-c2830357685 id="cookie-accept" class="btn btn-green" jsaction="click:;">Accept</button></p></aside><div _ngcontent-ng-c2830357685 class="page-footer-copyright">© 2025 Doableware AB.</div></footer></div></div></app-root>
+<script>
+  window.ga = function () {
+    ga.q.push(arguments)
+  };
+  ga.q = [];
+  ga.l = +new Date;
+  ga('create', 'UA-75159067-1', 'auto');
+  ga('set', 'anonymizeIp', false);
+  ga('send', 'pageview')
+</script>
+<script src="https://www.google-analytics.com/analytics.js" async></script>
+<link rel="modulepreload" href="chunk-GTGB5SJ3.js"><link rel="modulepreload" href="chunk-HEUFHRRO.js"><link rel="modulepreload" href="chunk-XPVX74O3.js"><link rel="modulepreload" href="chunk-YECZU7CY.js"><link rel="modulepreload" href="chunk-UZ35QZ23.js"><link rel="modulepreload" href="chunk-FDEVB4XX.js"><script src="polyfills-BUUDEW7V.js" type="module"></script><script src="main-BTR4JFYM.js" type="module"></script>
+<link rel="modulepreload" href="chunk-ZTGAAWUA.js">
+
+<script id="ng-state" type="application/json">{"__nghData__":[{"t":{"0":"t1","2":"t2","3":"t3"},"c":{"0":[],"2":[],"3":[]}},{},{"d":[3,4,6],"t":{"6":"t21","20":"t22","25":"t23"},"c":{"12":[{"i":"c894210162","r":1}],"20":[],"25":[{"i":"t23","r":1,"x":2}]}},{"t":{"6":"t0","12":"t4"},"c":{"6":[],"14":[{"i":"c2001800090","r":1}]},"d":[9,10,12]}]}</script></body></html>
