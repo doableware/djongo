@@ -40,5 +40,9 @@ Homepage = "https://www.djongomapper.com/"
 Documentation = "https://www.djongomapper.com/docs/"
 Repository = "https://github.com/doableware/djongo.git"
 
+[tool.setuptools.packages.find]
+include = ["djongo*"]
+exclude = ["tmp*", "docs*", "tests*"]
+
 [tool.setuptools.dynamic]
 version = {attr = "djongo.__version__"}
