@@ -71,23 +71,7 @@
     <span class="p">},</span>
     <span class="n">headline</span><span class="o">=</span><span class="s1">'h2'</span>
 <span class="p">)</span> <span class="c1"># Saves to database</span>
-</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><h3 id="schema-validation-and-checkconstraint">Schema Validation and CheckConstraint</h3><p>Djongo automatically generates schema validation JSON documents for your models providing an extra layer of data validation and checking from within MongoDB.
-By creating <a href="https://docs.djangoproject.com/en/3.0/ref/models/constraints/#checkconstraint">check constraints</a>
-in the Model Meta definition, djongo automatically interprets it to generate a
-<a href="https://docs.mongodb.com/manual/core/schema-validation/#json-schema">JSON Schema</a> and a <a href="https://docs.mongodb.com/manual/core/schema-validation/#other-query-expressions">query expression</a></p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">djongo.models</span> <span class="kn">import</span> <span class="n">CheckConstraint</span><span class="p">,</span> <span class="n">Q</span>
-<span class="kn">from</span> <span class="nn">djongo</span> <span class="kn">import</span> <span class="n">models</span>
-<span class="kn">from</span> <span class="nn">pymongo.read_concern</span> <span class="kn">import</span> <span class="n">ReadConcern</span>
-
-<span class="k">class</span> <span class="nc">Blog</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
-    <span class="n">tagline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
-    <span class="n">author_age</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
-
-    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
-        <span class="n">constraints</span> <span class="o">=</span> <span class="p">[</span>
-             <span class="n">CheckConstraint</span><span class="p">(</span><span class="n">check</span><span class="o">=</span><span class="n">Q</span><span class="p">(</span><span class="n">author_age__gte</span><span class="o">=</span><span class="mi">18</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s1">'age_gte_18'</span><span class="p">)</span>
-        <span class="p">]</span>
-</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><h2 id="embeddedfield">EmbeddedField</h2><p>MongoDB allows the creation of an <a href="https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding">embedded document</a>. You can include another model in the parent model through the <code>EmbeddedField</code>. </p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">djongo</span> <span class="kn">import</span> <span class="n">models</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><h2 id="embeddedfield">EmbeddedField</h2><p>MongoDB allows the creation of an <a href="https://docs.mongodb.com/manual/core/data-model-design/#data-modeling-embedding">embedded document</a>. You can include another model in the parent model through the <code>EmbeddedField</code>. </p><p class="file-name">models.py</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">djongo</span> <span class="kn">import</span> <span class="n">models</span>
 
 <span class="k">class</span> <span class="nc">Blog</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
@@ -151,7 +135,7 @@ in the Model Meta definition, djongo automatically interprets it to generate a
 
 <span class="o">&gt;&gt;&gt;</span> 
     <span class="n">ValidationError</span><span class="p">({</span><span class="s1">'blog'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'This field cannot be null.'</span><span class="p">]})</span>
-</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><h3 id="nesting-embedded-fields">Nesting Embedded Fields</h3><p>An <code>EmbeddedField</code> or <code>ArrayField</code> can be nested inside an <code>EmbeddedField</code>.</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">djongo</span> <span class="kn">import</span> <span class="n">models</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><h3 id="nesting-embedded-fields">Nesting Embedded Fields</h3><p>An <code>EmbeddedField</code> or <code>ArrayField</code> can be nested inside an <code>EmbeddedField</code>.</p><p class="file-name">models.py</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">djongo</span> <span class="kn">import</span> <span class="n">models</span>
 
 <span class="k">class</span> <span class="nc">Tagline</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">)</span>
     <span class="n">title</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
@@ -188,7 +172,7 @@ in the Model Meta definition, djongo automatically interprets it to generate a
 
 <span class="n">g</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">headline</span><span class="o">=</span><span class="s1">'h1'</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">e</span> <span class="o">==</span> <span class="n">g</span>
-</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><h2 id="array-fields">Array fields</h2><p>A Model with an Array field can be created as follows:</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">djongo</span> <span class="kn">import</span> <span class="n">models</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><h2 id="array-fields">Array fields</h2><p>A Model with an Array field can be created as follows:</p><p class="file-name">models.py</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">djongo</span> <span class="kn">import</span> <span class="n">models</span>
 <span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">forms</span>
 
 <span class="k">class</span> <span class="nc">Blog</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
@@ -233,7 +217,7 @@ in the Model Meta definition, djongo automatically interprets it to generate a
   ga('send', 'pageview')
 </script>
 <script src="https://www.google-analytics.com/analytics.js" async></script>
-<link rel="modulepreload" href="chunk-YHKEKZUQ.js"><link rel="modulepreload" href="chunk-IOCISPUH.js"><link rel="modulepreload" href="chunk-ZAJCJXQ3.js"><link rel="modulepreload" href="chunk-LW2U55N7.js"><link rel="modulepreload" href="chunk-W5ZXQ2TO.js"><link rel="modulepreload" href="chunk-ZA456F7C.js"><script src="polyfills-BUUDEW7V.js" type="module"></script><script src="main-LLJD4YKQ.js" type="module"></script>
-<link rel="modulepreload" href="chunk-UZFEGGEV.js">
+<link rel="modulepreload" href="chunk-YHKEKZUQ.js"><link rel="modulepreload" href="chunk-IOCISPUH.js"><link rel="modulepreload" href="chunk-ZAJCJXQ3.js"><link rel="modulepreload" href="chunk-LW2U55N7.js"><link rel="modulepreload" href="chunk-W5ZXQ2TO.js"><link rel="modulepreload" href="chunk-ZA456F7C.js"><script src="polyfills-BUUDEW7V.js" type="module"></script><script src="main-RQO5TJOE.js" type="module"></script>
+<link rel="modulepreload" href="chunk-JFFSDSKP.js">
 
-<script id="ng-state" type="application/json">{"__nghData__":[{"t":{"0":"t1","2":"t2","3":"t3"},"c":{"0":[],"2":[],"3":[]}},{},{"d":[3,4,6],"t":{"6":"t31","20":"t32","25":"t33"},"c":{"12":[{"i":"c3451205412","r":1}],"20":[],"25":[{"i":"t33","r":1,"x":2}]}},{"t":{"6":"t0","12":"t4"},"c":{"6":[],"14":[{"i":"c980711198","r":1}]},"d":[9,10,12]}]}</script></body></html>
+<script id="ng-state" type="application/json">{"__nghData__":[{"t":{"0":"t1","2":"t2","3":"t3"},"c":{"0":[],"2":[],"3":[]}},{},{"d":[3,4,6],"t":{"6":"t21","20":"t22","25":"t23"},"c":{"12":[{"i":"c3963722385","r":1}],"20":[],"25":[{"i":"t23","r":1,"x":2}]}},{"t":{"6":"t0","12":"t4"},"c":{"6":[],"14":[{"i":"c980711198","r":1}]},"d":[9,10,12]}]}</script></body></html>
