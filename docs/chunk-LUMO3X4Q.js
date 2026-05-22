@@ -1,0 +1,1 @@
+import{N as t,g as o}from"./chunk-WQN4GUIJ.js";var n=class e{constructor(){this.request=new o;this.response=new o}static{this.\u0275fac=function(r){return new(r||e)}}static{this.\u0275prov=t({token:e,factory:e.\u0275fac})}};export{n as a};
