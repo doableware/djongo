@@ -276,10 +276,10 @@ class OrderConverter(Converter):
 
     def parse(self):
         tok = self.statement.next()
-        if not tok.match(tokens.Keyword, 'BY'):
-            raise SQLDecodeError
-
-        tok = self.statement.next()
+        # In sqlparse >= 0.5, 'ORDER BY' is a single token, so there's no separate 'BY'
+        # In sqlparse < 0.5, 'ORDER' and 'BY' are separate tokens
+        if tok.match(tokens.Keyword, 'BY'):
+            tok = self.statement.next()
         self.columns.extend(SQLToken.tokens2sql(tok, self.query))
 
     def to_mongo(self):
@@ -443,9 +443,10 @@ class GroupbyConverter(Converter, _Tokens2Id):
 
     def parse(self):
         tok = self.statement.next()
-        if not tok.match(tokens.Keyword, 'BY'):
-            raise SQLDecodeError
-        tok = self.statement.next()
+        # In sqlparse >= 0.5, 'GROUP BY' is a single token, so there's no separate 'BY'
+        # In sqlparse < 0.5, 'GROUP' and 'BY' are separate tokens
+        if tok.match(tokens.Keyword, 'BY'):
+            tok = self.statement.next()
         self.sql_tokens.extend(SQLToken.tokens2sql(tok, self.query))
 
     def to_mongo(self):

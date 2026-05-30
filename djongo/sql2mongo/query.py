@@ -20,6 +20,12 @@ from sqlparse.sql import (
     Where,
     Statement)
 
+# Try to import Values for sqlparse >= 0.4.0
+try:
+    from sqlparse.sql import Values
+except ImportError:
+    Values = None
+
 from ..exceptions import SQLDecodeError, MigrationError, print_warn
 from .functions import SQLFunc
 from .sql_tokens import (SQLToken, SQLStatement, SQLIdentifier,
@@ -128,7 +134,8 @@ class SelectQuery(DQLQuery):
             elif tok.match(tokens.Keyword, 'LIMIT'):
                 self.limit = LimitConverter(self, statement)
 
-            elif tok.match(tokens.Keyword, 'ORDER'):
+            elif tok.match(tokens.Keyword, 'ORDER') or tok.match(tokens.Keyword, 'ORDER BY'):
+                # Handle both 'ORDER' (sqlparse < 0.5) and 'ORDER BY' (sqlparse >= 0.5)
                 self.order = OrderConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'OFFSET'):
@@ -142,7 +149,8 @@ class SelectQuery(DQLQuery):
                 converter = OuterJoinConverter(self, statement)
                 self.joins.append(converter)
 
-            elif tok.match(tokens.Keyword, 'GROUP'):
+            elif tok.match(tokens.Keyword, 'GROUP') or tok.match(tokens.Keyword, 'GROUP BY'):
+                # Handle both 'GROUP' (sqlparse < 0.5) and 'GROUP BY' (sqlparse >= 0.5)
                 self.groupby = GroupbyConverter(self, statement)
 
             elif tok.match(tokens.Keyword, 'HAVING'):
@@ -356,16 +364,25 @@ class InsertQuery(DMLQuery):
     def _fill_values(self, statement: SQLStatement):
         for tok in statement:
             if isinstance(tok, Parenthesis):
-                placeholder = SQLToken.token2sql(tok, self)
-                values = []
-                for index in placeholder:
-                    if isinstance(index, int):
-                        values.append(self.params[index])
-                    else:
-                        values.append(index)
-                self._values.append(values)
+                self._process_values_parenthesis(tok)
+            elif Values is not None and isinstance(tok, Values):
+                # sqlparse >= 0.4.0 wraps VALUES (...) in a Values token
+                for subtok in tok.tokens:
+                    if isinstance(subtok, Parenthesis):
+                        self._process_values_parenthesis(subtok)
             elif not tok.match(tokens.Keyword, 'VALUES'):
                 raise SQLDecodeError
+
+    def _process_values_parenthesis(self, tok):
+        """Process a Parenthesis token containing values."""
+        placeholder = SQLToken.token2sql(tok, self)
+        values = []
+        for index in placeholder:
+            if isinstance(index, int):
+                values.append(self.params[index])
+            else:
+                values.append(index)
+        self._values.append(values)
 
     def execute(self):
         docs = []
