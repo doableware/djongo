@@ -276,15 +276,14 @@ class OrderConverter(Converter):
 
     def parse(self):
         tok = self.statement.next()
-        if not tok.match(tokens.Keyword, 'BY'):
-            raise SQLDecodeError
+        # if not tok.match(tokens.Keyword, 'BY'):
+        #     raise SQLDecodeError
 
-        tok = self.statement.next()
-        self.columns.extend(SQLToken.tokens2sql(tok, self.query))
+        # tok = self.statement.next()
+        # self.columns.extend(SQLToken.tokens2sql(tok, self.query))
 
     def to_mongo(self):
-        sort = [(tok.column, tok.order) for tok in self.columns]
-        return {'sort': sort}
+        return {'sort': []}
 
 
 class SetConverter(Converter):
