@@ -57,7 +57,8 @@ which allows you to interact with MongoDB using Python code instead of pymongo q
 At the core of querying are <strong>QuerySets</strong>, which represent a lazy collection of database objects that can
 be filtered, ordered, and manipulated. A QuerySet does not hit the database immediately;
 instead, it is evaluated only when the data is actually needed.
-This lazy behavior allows QuerySets to be efficiently reused and combined. QuerySets form the foundation for all read operations.</p><p>The most common methods to retrieve data are <code>all()</code>, <code>get()</code>, and <code>filter()</code>.
+This lazy behavior allows QuerySets to be efficiently reused and combined.
+QuerySets form the foundation for all read operations.</p><p>The most common methods to retrieve data are <code>all()</code>, <code>get()</code>, and <code>filter()</code>.
 Both <code>all()</code> and <code>filter()</code> return a new QuerySet. The <code>filter()</code> method, which returns a new QuerySet
 containing objects that match given conditions. Filters are non-destructive, meaning they always return
 a new QuerySet rather than modifying the original one.
@@ -106,19 +107,10 @@ needed and improve application performance.</p><h2 id="query-documents">Query do
     <span class="s2">"pk"</span><span class="p">:</span> <span class="s2">"61d2d6c07d26e98969f8b8c2"</span><span class="p">,</span>
     <span class="s2">"fields"</span><span class="p">:</span> <span class="p">{</span>
       <span class="s2">"headline"</span><span class="p">:</span> <span class="s2">"The Headline"</span><span class="p">,</span>
-      <span class="s2">"blog"</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"John"</span><span class="p">,</span>
-        <span class="s2">"content"</span><span class="p">:</span> <span class="s2">"content"</span>
-      <span class="p">},</span>
+      <span class="s2">"blog"</span><span class="p">:</span> <span class="p">{</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"John"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="s2">"content"</span> <span class="p">},</span>
       <span class="s2">"authors"</span><span class="p">:</span> <span class="p">[</span>
-        <span class="p">{</span>
-          <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"James"</span><span class="p">,</span>
-          <span class="s2">"verified"</span><span class="p">:</span> <span class="n">true</span>
-        <span class="p">},</span>
-        <span class="p">{</span>
-          <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Guest"</span><span class="p">,</span>
-          <span class="s2">"verified"</span><span class="p">:</span> <span class="n">false</span>
-        <span class="p">}</span>
+        <span class="p">{</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"James"</span><span class="p">,</span> <span class="s2">"verified"</span><span class="p">:</span> <span class="n">true</span> <span class="p">},</span>
+        <span class="p">{</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Guest"</span><span class="p">,</span> <span class="s2">"verified"</span><span class="p">:</span> <span class="n">false</span> <span class="p">}</span>
       <span class="p">]</span>
     <span class="p">}</span>
   <span class="p">},</span>
@@ -127,19 +119,10 @@ needed and improve application performance.</p><h2 id="query-documents">Query do
     <span class="s2">"pk"</span><span class="p">:</span> <span class="s2">"61d2d6c07d26e98969f8b8c3"</span><span class="p">,</span>
     <span class="s2">"fields"</span><span class="p">:</span> <span class="p">{</span>
       <span class="s2">"headline"</span><span class="p">:</span> <span class="s2">"Breaking News"</span><span class="p">,</span>
-      <span class="s2">"blog"</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"James"</span><span class="p">,</span>
-        <span class="s2">"content"</span><span class="p">:</span> <span class="s2">"content"</span>
-      <span class="p">},</span>
+      <span class="s2">"blog"</span><span class="p">:</span> <span class="p">{</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"James"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="s2">"content"</span> <span class="p">},</span>
       <span class="s2">"authors"</span><span class="p">:</span> <span class="p">[</span>
-        <span class="p">{</span>
-          <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"James"</span><span class="p">,</span>
-          <span class="s2">"verified"</span><span class="p">:</span> <span class="n">true</span>
-        <span class="p">},</span>
-        <span class="p">{</span>
-          <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Guest"</span><span class="p">,</span>
-          <span class="s2">"verified"</span><span class="p">:</span> <span class="n">false</span>
-        <span class="p">}</span>
+        <span class="p">{</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"James"</span><span class="p">,</span> <span class="s2">"verified"</span><span class="p">:</span> <span class="n">true</span> <span class="p">},</span>
+        <span class="p">{</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Guest"</span><span class="p">,</span> <span class="s2">"verified"</span><span class="p">:</span> <span class="n">false</span> <span class="p">}</span>
       <span class="p">]</span>
     <span class="p">}</span>
   <span class="p">}</span>
@@ -158,7 +141,8 @@ hit the database until iterated over.</p><p class="file-name">main.py</p><div ap
 </code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>Next, in the command line run:</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code>python<span class="w"> </span>manage.py<span class="w"> </span>main
 </code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>The following pymongo commands are generated:</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="n">db</span><span class="p">[</span><span class="s2">"myapp_entry"</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">projection</span><span class="o">=</span><span class="p">[</span><span class="s1">'_id'</span><span class="p">,</span> <span class="s1">'headline'</span><span class="p">,</span> <span class="s1">'blog'</span><span class="p">,</span> <span class="s1">'authors'</span><span class="p">])</span>
 </code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>More information can be found in the <a href="https://docs.djangoproject.com/en/dev/topics/db/queries/#retrieving-all-objects">Django reference documentation</a></p><h3 id="select-a-unique-document-from-a-collection">Select a unique document from a Collection</h3><p>To retrieve a single unique document from the collection use <code>get()</code>. The method takes kwargs that can be used to specify
-equality conditions. The lhs of the kwarg specifies the document field name, while the rhs part specifies the value the field name must match. The method directly hits the database when called and does not need to be iterated over.</p><p class="file-name">main.py</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">django.core.management.base</span> <span class="kn">import</span> <span class="n">BaseCommand</span>
+equality conditions. The lhs of the kwarg specifies the document field name,
+while the rhs part specifies the value the field name must match. The method directly hits the database when called and does not need to be iterated over.</p><p class="file-name">main.py</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">django.core.management.base</span> <span class="kn">import</span> <span class="n">BaseCommand</span>
 <span class="kn">from</span> <span class="nn">models</span> <span class="kn">import</span> <span class="n">Entry</span>
 
 <span class="k">class</span> <span class="nc">Command</span><span class="p">(</span><span class="n">BaseCommand</span><span class="p">):</span>
@@ -334,8 +318,7 @@ Next, a JOIN with <code>entry_authors</code> and <code>entry</code> gives the co
         <span class="n">entry</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">authors</span><span class="o">=</span><span class="p">[</span>
                 <span class="p">{</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"James"</span><span class="p">,</span> <span class="s2">"verified"</span><span class="p">:</span> <span class="kc">True</span> <span class="p">},</span>
                 <span class="p">{</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Guest"</span><span class="p">,</span> <span class="s2">"verified"</span><span class="p">:</span> <span class="kc">False</span> <span class="p">}</span>
-              <span class="p">]</span>
-        <span class="p">)</span>
+              <span class="p">])</span>
         <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">entry</span><span class="p">))</span>
 </code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>Next, in the command line run:</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code>python<span class="w"> </span>manage.py<span class="w"> </span>main
 </code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>The following pymongo commands are generated:</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="n">db</span><span class="p">[</span><span class="s2">"myapp_entry"</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">filter</span><span class="o">=</span><span class="p">{</span><span class="s1">'authors'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'$eq'</span><span class="p">:</span> <span class="p">[</span>
@@ -468,7 +451,7 @@ Results of the querySet can only be accessed by generating an iterator by callin
   ga('send', 'pageview')
 </script>
 <script src="https://www.google-analytics.com/analytics.js" async></script>
-<link rel="modulepreload" href="chunk-JYDSR7HO.js"><link rel="modulepreload" href="chunk-HBP7BZ2L.js"><link rel="modulepreload" href="chunk-LUMO3X4Q.js"><link rel="modulepreload" href="chunk-TEEM6U4T.js"><link rel="modulepreload" href="chunk-SHZTIXAM.js"><link rel="modulepreload" href="chunk-N5YZNLN7.js"><link rel="modulepreload" href="chunk-WQN4GUIJ.js"><script src="main-KJQY5WCU.js" type="module"></script>
-<link rel="modulepreload" href="chunk-7FL24NYI.js">
+<link rel="modulepreload" href="chunk-JYDSR7HO.js"><link rel="modulepreload" href="chunk-LUMO3X4Q.js"><link rel="modulepreload" href="chunk-TEEM6U4T.js"><link rel="modulepreload" href="chunk-SHZTIXAM.js"><link rel="modulepreload" href="chunk-N5YZNLN7.js"><link rel="modulepreload" href="chunk-WQN4GUIJ.js"><script src="main-HC5KZ4YD.js" type="module"></script>
+<link rel="modulepreload" href="chunk-L74TMH6Y.js">
 
-<script id="ng-state" type="application/json">{"__nghData__":[{"t":{"0":"t1","2":"t2","3":"t3"},"c":{"0":[],"2":[],"3":[]}},{},{"d":[3,4,6],"t":{"6":"t21","20":"t22","25":"t23"},"c":{"12":[{"i":"c3839148713","r":1}],"20":[],"25":[{"i":"t23","r":1,"x":2}]}},{"t":{"6":"t0","12":"t4"},"c":{"6":[],"14":[{"i":"c1337500416","r":1}]},"d":[9,10,12]}]}</script></body></html>
+<script id="ng-state" type="application/json">{"__nghData__":[{"t":{"0":"t1","2":"t2","3":"t3"},"c":{"0":[],"2":[],"3":[]}},{},{"d":[3,4,6],"t":{"6":"t21","20":"t22","25":"t23"},"c":{"12":[{"i":"c787736710","r":1}],"20":[],"25":[{"i":"t23","r":1,"x":2}]}},{"t":{"6":"t0","12":"t4"},"c":{"6":[],"14":[{"i":"c1337500416","r":1}]},"d":[9,10,12]}]}</script></body></html>
