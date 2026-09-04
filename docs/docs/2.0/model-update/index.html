@@ -58,7 +58,7 @@ and committing the changes using the <code>save()</code> method. When only certa
 <code>save(update_fields=[...])</code> ensures that only specified fields are written back to the database.
 For direct database-level updates without loading model instances into memory, <code>QuerySet.update(**kwargs)</code>
 executes the pymongo query update statement efficiently.</p><p>When the existence of a record is uncertain, <code>update_or_create()</code> attempts to locate
-an entry based on lookup parameters and applies updates using the defaults dictionary,
+an entry based on lookup parameters and applies updates using the default dictionary,
 or creates a new record if none is found.</p><p>More information on updating methods can be found
 in the <a href="https://docs.djangoproject.com/en/dev/ref/models/querysets/">Django queryset reference</a></p><h2 id="update-documents-in-a-collection">Update documents in a Collection</h2><p>Define the models in <code>models.py</code> to setup the relevant collections in the database.</p><p class="file-name">models.py</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">djongo</span> <span class="kn">import</span> <span class="n">models</span>
 
@@ -71,7 +71,6 @@ in the <a href="https://docs.djangoproject.com/en/dev/ref/models/querysets/">Dja
     <span class="s2">"pk"</span><span class="p">:</span> <span class="s2">"61d2d6c07d26e98969f8b8c2"</span><span class="p">,</span>
     <span class="s2">"fields"</span><span class="p">:</span> <span class="p">{</span>
       <span class="s2">"headline"</span><span class="p">:</span> <span class="s2">"The Headline"</span><span class="p">,</span>
-      <span class="s2">"blog"</span><span class="p">:</span> <span class="p">{</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"John"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="s2">"content"</span> <span class="p">},</span>        
     <span class="p">}</span>
   <span class="p">},</span>
   <span class="p">{</span>
@@ -79,7 +78,6 @@ in the <a href="https://docs.djangoproject.com/en/dev/ref/models/querysets/">Dja
     <span class="s2">"pk"</span><span class="p">:</span> <span class="s2">"61d2d6c07d26e98969f8b8c3"</span><span class="p">,</span>
     <span class="s2">"fields"</span><span class="p">:</span> <span class="p">{</span>
       <span class="s2">"headline"</span><span class="p">:</span> <span class="s2">"Breaking News"</span><span class="p">,</span>
-      <span class="s2">"blog"</span><span class="p">:</span> <span class="p">{</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"James"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="s2">"content"</span> <span class="p">},</span>        
     <span class="p">}</span>
   <span class="p">}</span>
 <span class="p">]</span>
@@ -94,6 +92,7 @@ in the <a href="https://docs.djangoproject.com/en/dev/ref/models/querysets/">Dja
         <span class="n">entry</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">headline</span><span class="o">=</span><span class="s1">'The Headline'</span><span class="p">)</span>
         <span class="n">entry</span><span class="o">.</span><span class="n">headline</span> <span class="o">=</span> <span class="s1">'Breaking News'</span>
         <span class="n">entry</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>Next, in the command line run:</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code>python<span class="w"> </span>manage.py<span class="w"> </span>main
 </code></pre><img alt="copy code" src="/assets/images/copy.svg" class="docs-copy"></div><p>The following pymongo commands are generated:</p><div appcodecopy class="highlighter-rouge highlight codehilite"><pre><span></span><code><span class="n">db</span><span class="p">[</span><span class="s2">"myapp_entry"</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">filter</span><span class="o">=</span><span class="p">{</span><span class="s1">'headline'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'$eq'</span><span class="p">:</span> <span class="s1">'The Headline'</span><span class="p">}},</span>
                        <span class="n">limit</span><span class="o">=</span><span class="mi">21</span><span class="p">,</span>
                        <span class="n">projection</span><span class="o">=</span><span class="p">[</span><span class="s1">'_id'</span><span class="p">,</span> <span class="s1">'headline'</span><span class="p">])</span>
@@ -137,7 +136,7 @@ using <a href="https://api.mongodb.com/python/current/api/pymongo/collection.htm
   ga('send', 'pageview')
 </script>
 <script src="https://www.google-analytics.com/analytics.js" async></script>
-<link rel="modulepreload" href="chunk-JYDSR7HO.js"><link rel="modulepreload" href="chunk-LUMO3X4Q.js"><link rel="modulepreload" href="chunk-TEEM6U4T.js"><link rel="modulepreload" href="chunk-SHZTIXAM.js"><link rel="modulepreload" href="chunk-N5YZNLN7.js"><link rel="modulepreload" href="chunk-WQN4GUIJ.js"><script src="main-2FS5PP7X.js" type="module"></script>
-<link rel="modulepreload" href="chunk-EXAYHE6O.js">
+<link rel="modulepreload" href="chunk-JYDSR7HO.js"><link rel="modulepreload" href="chunk-LUMO3X4Q.js"><link rel="modulepreload" href="chunk-TEEM6U4T.js"><link rel="modulepreload" href="chunk-SHZTIXAM.js"><link rel="modulepreload" href="chunk-N5YZNLN7.js"><link rel="modulepreload" href="chunk-WQN4GUIJ.js"><script src="main-3E7SPEMG.js" type="module"></script>
+<link rel="modulepreload" href="chunk-NOWUF7TI.js">
 
-<script id="ng-state" type="application/json">{"__nghData__":[{"t":{"0":"t1","2":"t2","3":"t3"},"c":{"0":[],"2":[],"3":[]}},{},{"d":[3,4,6],"t":{"6":"t5","20":"t6","25":"t7"},"c":{"12":[{"i":"c326148877","r":1}],"20":[],"25":[{"i":"t7","r":1,"x":2}]}},{"t":{"6":"t0","12":"t4"},"c":{"6":[],"14":[{"i":"c1337500416","r":1}]},"d":[9,10,12]}]}</script></body></html>
+<script id="ng-state" type="application/json">{"__nghData__":[{"t":{"0":"t1","2":"t2","3":"t3"},"c":{"0":[],"2":[],"3":[]}},{},{"d":[3,4,6],"t":{"6":"t5","20":"t6","25":"t7"},"c":{"12":[{"i":"c3272565389","r":1}],"20":[],"25":[{"i":"t7","r":1,"x":2}]}},{"t":{"6":"t0","12":"t4"},"c":{"6":[],"14":[{"i":"c1337500416","r":1}]},"d":[9,10,12]}]}</script></body></html>
