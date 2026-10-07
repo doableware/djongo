@@ -1,6 +1,11 @@
 from logging import getLogger
 from pymongo import MongoClient
-
+# DriverInfo was added in PyMongo 3.7
+try:
+    from pymongo.driver_info import DriverInfo
+except ImportError:
+    DriverInfo = None
+    
 logger = getLogger(__name__)
 clients = {}
 
@@ -10,6 +15,10 @@ def connect(db, **kwargs):
         return clients[db]
     except KeyError:
         logger.debug('New MongoClient connection')
+        kwargs.setdefault("connect", False)
+        if DriverInfo is not None:
+            import djongo
+            kwargs.setdefault("driver", DriverInfo("djongo", djongo.__version__))
         clients[db] = MongoClient(**kwargs, connect=False)
     return clients[db]
 
